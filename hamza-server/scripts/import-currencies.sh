@@ -1,0 +1,2 @@
+cp ../currency-data/server/adminui-ui-src-utils/currencies.ts node_modules/@medusajs/admin-ui/ui/src/utils/
+cp ../currency-data/server/utils-dist-defaults/currencies.js node_modules/@medusajs/utils/dist/defaults/

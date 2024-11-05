@@ -1,0 +1,6 @@
+.env
+.env.local
+node_modules
+yarn.lock
+
+hamza_dev_db@localhost.session.sql
