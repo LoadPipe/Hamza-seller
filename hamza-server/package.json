@@ -1,8 +1,8 @@
 {
-    "name": "hamza-server",
-    "version": "1.0.3",
-    "description": "Hamza Medusa server backend",
-    "author": "Garo Nazarian, Beau Troxclair, Jonny Bajada, Karan Chugh, John R. Kosinski",
+    "name": "hamza-seller",
+    "version": "0.0.1",
+    "description": "Hamza Seller server backend",
+    "author": "Garo Nazarian, Jonny Bajada, John R. Kosinski, Jan Mesaric",
     "license": "MIT",
     "keywords": [
         "sqlite",

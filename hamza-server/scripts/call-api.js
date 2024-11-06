@@ -37,54 +37,12 @@ async function main() {
                 },
                 body: JSON.stringify({
                     email: 'goblinvendor@hamza.com',
-                    password: 'password'
-                })
+                    password: 'password',
+                }),
             }
         );
         console.log(storeResponse);
         console.log(await storeResponse.json());
-
-        //await fetch(`http://localhost:${port}/admin/custom/massmarket`, {
-        //    method: 'GET',
-        //    headers: {
-        //        Cookie: authCookie.substring(0, authCookie.indexOf(';')),
-        //    },
-        //});
-
-        const buckySetupResponse = await fetch(
-            `http://localhost:${port}/custom/bucky/setup`,
-            {
-                method: 'GET',
-                headers: {
-                    Cookie: authCookie.substring(0, authCookie.indexOf(';')),
-                },
-            }
-        );
-        console.log(buckySetupResponse);
-
-        const buckyResponse = await fetch(
-            `http://localhost:${port}/admin/custom/bucky/import?keyword=electronics&count=2`,
-            {
-                method: 'GET',
-                headers: {
-                    Cookie: authCookie.substring(0, authCookie.indexOf(';')),
-                },
-            }
-        );
-        console.log(buckyResponse);
-
-        /*
-        const whitelistResponse = await fetch(
-            `http://localhost:${port}/admin/custom/whitelist?store=Hamza Official`,
-            {
-                method: 'GET',
-                headers: {
-                    Cookie: authCookie.substring(0, authCookie.indexOf(';')),
-                },
-            }
-        );
-        console.log(whitelistResponse);
-        */
     } catch (e) {
         console.error(e);
     }
