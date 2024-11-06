@@ -414,7 +414,6 @@ export default class OrderService extends MedusaOrderService {
         const products = [];
         let cart: Cart = null;
 
-        console.log('***** ORDER ******', orders);
         orders.forEach((order) => {
             cart = order.cart;
             order.cart.items.forEach((item) => {
