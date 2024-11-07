@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
-import OrderService from '../../../services/order';
 import { RouteHandler } from '../../route-handler';
+import StoreOrderService from '../../../services/store-order';
 
 /**
  * Retrieves a list of orders belonging to a store
@@ -15,10 +15,11 @@ import { RouteHandler } from '../../route-handler';
  * count: number
  */
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-    const orderService: OrderService = req.scope.resolve('orderService');
+    const orderService: StoreOrderService =
+        req.scope.resolve('storeOrderService');
 
     const handler = new RouteHandler(req, res, 'GET', '/seller/order', [
-        'cart_id',
+        'store_id',
     ]);
 
     await handler.handle(async () => {

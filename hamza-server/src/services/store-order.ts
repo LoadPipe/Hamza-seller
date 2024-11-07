@@ -8,7 +8,14 @@ import CustomerRepository from '../repositories/customer';
 import { LineItemService } from '@medusajs/medusa';
 import { Order } from '../models/order';
 import { Lifetime } from 'awilix';
-import { In, Not } from 'typeorm';
+import {
+    In,
+    Not,
+    MoreThan,
+    LessThan,
+    MoreThanOrEqual,
+    LessThanOrEqual,
+} from 'typeorm';
 import { BuckyClient } from '../buckydrop/bucky-client';
 import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 import { createLogger, ILogger } from '../utils/logging/logger';
@@ -46,12 +53,36 @@ export default class StoreOrderService extends TransactionBaseService {
         page: number,
         count: number
     ): Promise<Order[]> {
-        const where: { store_id?: string } = { store_id: storeId };
+        //basic query is store id
+        const where = { store_id: storeId };
 
+        //apply filter if any
+        if (filter) {
+            for (let prop in filter) {
+                if (filter[prop].ne) {
+                    where[prop] = Not(filter[prop].ne);
+                } else if (filter[prop].eq) {
+                    where[prop] = filter[prop].eq;
+                } else if (filter[prop].lt) {
+                    where[prop] = LessThan(filter[prop].lt);
+                } else if (filter[prop].gt) {
+                    where[prop] = MoreThan(filter[prop].gt);
+                } else if (filter[prop].lte) {
+                    where[prop] = LessThanOrEqual(filter[prop].lte);
+                } else if (filter[prop].gte) {
+                    where[prop] = MoreThanOrEqual(filter[prop].gte);
+                } else {
+                    where[prop] = filter[prop];
+                }
+            }
+        }
+
+        //get orders
         const orders = await this.orderRepository_.find({
             where,
             take: count ?? DEFAULT_PAGE_COUNT,
             skip: page * count,
+            order: sort ?? undefined,
         });
 
         return orders;
