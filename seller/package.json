@@ -30,7 +30,10 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8",
-    "zustand": "^5.0.1"
+    "@rainbow-me/rainbowkit": "^2.2.0",
+    "zustand": "^5.0.1",
+    "viem": "^2.21.44",
+    "wagmi": "^2.12.29"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
