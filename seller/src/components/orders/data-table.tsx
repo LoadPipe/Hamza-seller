@@ -153,6 +153,11 @@ export function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
             </div>
+            <div className="flex-1 text-sm text-muted-foreground mt-4">
+                {table.getFilteredSelectedRowModel().rows.length} of{" "}
+                {table.getFilteredRowModel().rows.length} row(s) selected.
+            </div>
+
             <div className="flex items-center justify-end space-x-2 py-4">
                 <Button
                     variant="outline"
