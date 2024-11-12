@@ -32,7 +32,7 @@ const errorHandler = (error: ApiErrorResponse) => {
     setLoading(false);
 
     const errorMessage =
-        error.response?.data?.message || 'An error occurred. Please try again.';
+        error.response?.data?.message || 'Internal Server Error';
     toast.error(errorMessage);
 
     return Promise.reject(error);
