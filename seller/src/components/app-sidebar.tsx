@@ -1,6 +1,15 @@
-import { useState } from "react"
-import { Home, Settings, BarChart, Box, Wallet, Headset, MessageSquareText, Archive } from "lucide-react"
-import { Link } from "@tanstack/router"
+import { useState } from 'react';
+import {
+    Home,
+    Settings,
+    BarChart,
+    Box,
+    Wallet,
+    Headset,
+    MessageSquareText,
+    Archive,
+} from 'lucide-react';
+import { Link } from '@tanstack/router';
 import {
     Sidebar,
     SidebarContent,
@@ -10,73 +19,79 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from '@/components/ui/sidebar';
 
 // Menu items.
 const items = [
     {
-        title: "Dashboard",
-        url: "/",
+        title: 'Dashboard',
+        url: '/',
         icon: Home,
     },
     {
-        title: "Products",
-        url: "#",
+        title: 'Products',
+        url: '#',
         icon: Box,
         isDropdown: true,
         submenu: [
-            { title: "All Products", url: "#all-products" },
-            { title: "Add Product", url: "#add-product" },
-            { title: "Product Categories", url: "#categories" },
+            { title: 'All Products', url: '#all-products' },
+            { title: 'Add Product', url: '#add-product' },
+            { title: 'Product Categories', url: '#categories' },
         ],
     },
     {
-        title: "Orders",
-        url: "/orders",
+        title: 'Orders',
+        url: '/orders',
         icon: Archive,
     },
     {
-        title: "Wallet",
-        url: "#",
+        title: 'Wallet',
+        url: '#',
         icon: Wallet,
     },
     {
-        title: "Messages",
-        url: "#",
+        title: 'Messages',
+        url: '#',
         icon: MessageSquareText,
     },
     {
-        title: "Analytics",
-        url: "#",
+        title: 'Analytics',
+        url: '#',
         icon: BarChart,
     },
     {
-        title: "Help Center",
-        url: "#",
+        title: 'Help Center',
+        url: '#',
         icon: Headset,
     },
     {
-        title: "Settings",
-        url: "#",
+        title: 'Settings',
+        url: '#',
         icon: Settings,
     },
-]
+];
 
 export function AppSidebar() {
-    const [expanded, setExpanded] = useState<boolean>(false)
+    const [expanded, setExpanded] = useState<boolean>(false);
 
     return (
         <Sidebar>
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel className="my-4">
-                        <img src="/Hamza-logo.svg" alt="Logo" width="106" height="37" />
-
+                        <img
+                            src="/Hamza-logo.svg"
+                            alt="Logo"
+                            width="106"
+                            height="37"
+                        />
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
-                                <div key={item.title}> {/* Use a div here to avoid nested <li> */}
+                                <div key={item.title}>
+                                    {' '}
+                                    {/* Use a div here to avoid nested <li> */}
                                     <SidebarMenuItem>
                                         {/* Main Menu Item */}
                                         <SidebarMenuButton asChild>
@@ -86,13 +101,14 @@ export function AppSidebar() {
                                             </a>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
-
                                     {/* Dropdown for Products */}
                                     {item.isDropdown && (
                                         <div>
                                             <SidebarMenuButton
                                                 asChild
-                                                onClick={() => setExpanded(!expanded)}
+                                                onClick={() =>
+                                                    setExpanded(!expanded)
+                                                }
                                             >
                                                 <a href="#">
                                                     <item.icon />
@@ -104,15 +120,31 @@ export function AppSidebar() {
                                             {expanded && (
                                                 <div className="pl-4">
                                                     <ul>
-                                                        {item.submenu?.map((submenuItem) => (
-                                                            <SidebarMenuItem key={submenuItem.title}>
-                                                                <SidebarMenuButton asChild>
-                                                                    <a href={submenuItem.url}>
-                                                                        <span>{submenuItem.title}</span>
-                                                                    </a>
-                                                                </SidebarMenuButton>
-                                                            </SidebarMenuItem>
-                                                        ))}
+                                                        {item.submenu?.map(
+                                                            (submenuItem) => (
+                                                                <SidebarMenuItem
+                                                                    key={
+                                                                        submenuItem.title
+                                                                    }
+                                                                >
+                                                                    <SidebarMenuButton
+                                                                        asChild
+                                                                    >
+                                                                        <a
+                                                                            href={
+                                                                                submenuItem.url
+                                                                            }
+                                                                        >
+                                                                            <span>
+                                                                                {
+                                                                                    submenuItem.title
+                                                                                }
+                                                                            </span>
+                                                                        </a>
+                                                                    </SidebarMenuButton>
+                                                                </SidebarMenuItem>
+                                                            )
+                                                        )}
                                                     </ul>
                                                 </div>
                                             )}
@@ -125,5 +157,5 @@ export function AppSidebar() {
                 </SidebarGroup>
             </SidebarContent>
         </Sidebar>
-    )
+    );
 }
