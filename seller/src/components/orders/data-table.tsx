@@ -64,6 +64,7 @@ export function DataTable<TData, TValue>({
             sorting,
             columnFilters,
             columnVisibility,
+            rowSelection,
         },
     })
 
