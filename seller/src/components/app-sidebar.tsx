@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Home, Settings, BarChart, Box, Wallet, Headset, MessageSquareText, Archive } from "lucide-react"
+import { Link } from "@tanstack/router"
 import {
     Sidebar,
     SidebarContent,
@@ -15,7 +16,7 @@ import {
 const items = [
     {
         title: "Dashboard",
-        url: "#",
+        url: "/",
         icon: Home,
     },
     {
@@ -31,7 +32,7 @@ const items = [
     },
     {
         title: "Orders",
-        url: "#",
+        url: "/orders",
         icon: Archive,
     },
     {
