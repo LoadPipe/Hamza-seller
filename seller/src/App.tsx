@@ -15,12 +15,12 @@ const queryClient = new QueryClient();
 function App() {
     return (
         <QueryClientProvider client={queryClient}>
-            <div style={{ display: 'flex', minHeight: '100vh' }}>
+            <div className="flex min-h-screen">
                 <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 
                 <SidebarProvider>
                 <AppSidebar /> {/* Sidebar Component */}
-                <main style={{ flex: 1, padding: '16px' }}>
+                <main className="flex-1 p-4">
                     <RouterProvider router={router}>
                         <TanStackRouterDevtools initialIsOpen={false} />
                         <SidebarTrigger />

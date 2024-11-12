@@ -75,14 +75,16 @@ export function AppSidebar() {
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    {/* Main Menu Item */}
-                                    <SidebarMenuButton asChild>
-                                        <a href={item.url}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </a>
-                                    </SidebarMenuButton>
+                                <div key={item.title}> {/* Use a div here to avoid nested <li> */}
+                                    <SidebarMenuItem>
+                                        {/* Main Menu Item */}
+                                        <SidebarMenuButton asChild>
+                                            <a href={item.url}>
+                                                <item.icon />
+                                                <span>{item.title}</span>
+                                            </a>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
 
                                     {/* Dropdown for Products */}
                                     {item.isDropdown && (
@@ -100,20 +102,22 @@ export function AppSidebar() {
                                             {/* Render Submenu */}
                                             {expanded && (
                                                 <div className="pl-4">
-                                                    {item.submenu?.map((submenuItem) => (
-                                                        <SidebarMenuItem key={submenuItem.title}>
-                                                            <SidebarMenuButton asChild>
-                                                                <a href={submenuItem.url}>
-                                                                    <span>{submenuItem.title}</span>
-                                                                </a>
-                                                            </SidebarMenuButton>
-                                                        </SidebarMenuItem>
-                                                    ))}
+                                                    <ul>
+                                                        {item.submenu?.map((submenuItem) => (
+                                                            <SidebarMenuItem key={submenuItem.title}>
+                                                                <SidebarMenuButton asChild>
+                                                                    <a href={submenuItem.url}>
+                                                                        <span>{submenuItem.title}</span>
+                                                                    </a>
+                                                                </SidebarMenuButton>
+                                                            </SidebarMenuItem>
+                                                        ))}
+                                                    </ul>
                                                 </div>
                                             )}
                                         </div>
                                     )}
-                                </SidebarMenuItem>
+                                </div>
                             ))}
                         </SidebarMenu>
                     </SidebarGroupContent>
