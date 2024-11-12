@@ -14,24 +14,30 @@ import StoreOrderService from '../../../services/store-order';
  * page: number
  * count: number
  */
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const orderService: StoreOrderService =
         req.scope.resolve('storeOrderService');
 
-    const handler = new RouteHandler(req, res, 'GET', '/seller/order', [
+    const handler = new RouteHandler(req, res, 'POST', '/seller/order', [
         'store_id',
+        'count',
+        'page',
+        'sort',
+        'filter',
     ]);
 
     await handler.handle(async () => {
         if (!handler.requireParam('store_id')) return;
 
         const filter: any = handler.inputParams.filter;
-        const sort: any = handler.inputParams.sort;
+        const sort: any = handler.hasParam('sort')
+            ? handler.inputParams.sort
+            : null;
         const page: number = handler.hasParam('page')
-            ? parseInt(handler.inputParams.page)
+            ? parseInt(handler.inputParams.page.toString())
             : 0;
         const count: number = handler.hasParam('count')
-            ? parseInt(handler.inputParams.count)
+            ? parseInt(handler.inputParams.count.toString())
             : 0;
 
         const store_id = handler.inputParams.store_id;

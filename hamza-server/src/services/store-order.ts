@@ -77,13 +77,15 @@ export default class StoreOrderService extends TransactionBaseService {
             }
         }
 
-        //get orders
-        const orders = await this.orderRepository_.find({
+        const params = {
             where,
             take: count ?? DEFAULT_PAGE_COUNT,
             skip: page * count,
             order: sort ?? undefined,
-        });
+        };
+
+        //get orders
+        const orders = await this.orderRepository_.find(params);
 
         return orders;
     }

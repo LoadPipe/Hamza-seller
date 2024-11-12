@@ -93,8 +93,13 @@ export class RouteHandler {
             payloadString = payloadString.substring(0, truncateToMax) + '...';
 
         if (status == 500)
-            this.logger.error(`${this.method} ${this.route} Returning ${status} with ${payloadString}`);
-        else this.logger.info(`${this.method} ${this.route} Returning ${status} with ${payloadString}`);
+            this.logger.error(
+                `${this.method} ${this.route} Returning ${status} with ${payloadString}`
+            );
+        else
+            this.logger.info(
+                `${this.method} ${this.route} Returning ${status} with ${payloadString}`
+            );
         return this.response.status(status).json(payload);
     }
 
@@ -161,6 +166,6 @@ export class RouteHandler {
     }
 
     hasParam(param): boolean {
-        return this.inputParams[param]?.length ? true : false;
+        return this.inputParams[param] ? true : false;
     }
 }

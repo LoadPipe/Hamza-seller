@@ -351,7 +351,6 @@ export default class OrderService extends MedusaOrderService {
 
     // Just checking if we have orders and returning a boolean
     async checkCustomerOrderBucket(customerId: string): Promise<boolean> {
-        console.log(`WTF`);
         const buckets = await Promise.all([
             this.getCustomerOrderBucket(customerId, OrderBucketType.PROCESSING),
             this.getCustomerOrderBucket(customerId, OrderBucketType.SHIPPED),
