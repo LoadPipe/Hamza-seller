@@ -1,28 +1,32 @@
-import OrdersComponent from './pages/orders/OrdersComponent.tsx';
 import NotFoundComponent from './pages/NotFoundComponent.tsx';
 import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
-import RootComponent from './pages/RootComponent.tsx';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
+import OrdersPage from '@/pages/orders/orders-page.tsx';
+import HomePage from '@/pages/home/home-page.tsx';
+import RootComponent from '@/pages/RootComponent.tsx';
 
-const routes= [{
+const routes = [{
     path: '/',
-    component: OrdersComponent,
-},{
+    component: HomePage,
+},
+{
+    path: '/orders',
+    component: OrdersPage,
+
+},
+{
     path: '*',
     component: NotFoundComponent,
 },
-    {
-        path: '/orders'
-    }
 
-]
+];
 
 // Create the root route
 const rootRoute = createRootRoute({
     component: () => (
         <>
             {/* The main layout component */}
-            <OrdersComponent/>
+            <RootComponent />
             <TanStackRouterDevtools initialIsOpen={false} />
         </>
     ),
@@ -33,7 +37,7 @@ rootRoute.addChildren(routes.map(route => {
     return createRoute({
         ...route,
         getParentRoute: () => rootRoute, // Specify the parent route
-    })
+    });
 }));
 
 // Create the router
