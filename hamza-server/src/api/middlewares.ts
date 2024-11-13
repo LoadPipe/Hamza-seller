@@ -15,6 +15,8 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 
 const STORE_CORS = process.env.STORE_CORS || 'http://localhost:8000';
+const SELLER_CORS = 'http://localhost:5173';
+
 const ADMIN_CORS =
     process.env.ADMIN_CORS || 'http://localhost:7001;http://localhost:7000';
 const registerLoggedInUser = async (
@@ -109,6 +111,15 @@ export const config: MiddlewaresConfig = {
             middlewares: [
                 cors({
                     origin: [STORE_CORS],
+                    credentials: true,
+                }),
+            ],
+        },
+        {
+            matcher: '/seller/*',
+            middlewares: [
+                cors({
+                    origin: [SELLER_CORS],
                     credentials: true,
                 }),
             ],

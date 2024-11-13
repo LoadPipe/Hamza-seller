@@ -1,6 +1,6 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { CgBell } from 'react-icons/cg';
-import { FaSortDown } from 'react-icons/fa';
+import { ChevronDown, BellRing } from "lucide-react"
+
 
 const TopDash = () => {
     return (
@@ -9,7 +9,7 @@ const TopDash = () => {
 
             <div className="flex  ml-auto">
                 <div className="flex justify-center items-center h-[56px] w-[56px] rounded-full bg-[#121212]">
-                    <CgBell size={'24px'} />
+                    <BellRing size={'24px'} />
                 </div>
 
                 <div className="h-[56px] border-l-[1px] border-white mx-4" />
@@ -22,7 +22,7 @@ const TopDash = () => {
                         </p>
                         <p className="text-sm mr-auto">Admin</p>
                     </div>
-                    <FaSortDown />
+                    <ChevronDown />
                 </button>
             </div>
         </div>
