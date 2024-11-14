@@ -2,7 +2,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { AppSidebar } from '@/components/app-sidebar.tsx';
 // Import your components
 import { router } from './routes.tsx';
@@ -27,14 +26,11 @@ function App() {
                         <SidebarProvider>
                             <AppSidebar /> {/* Sidebar Component */}
                             <RainbowKitProvider>
-                                <main className="flex-1 p-4">
-                                    <RouterProvider router={router}>
-                                        <TanStackRouterDevtools
-                                            initialIsOpen={false}
-                                        />
+                                <RouterProvider router={router}/>
+                                    {/* Wrap your content with RouterProvider */}
+                                    <main className="flex-1 p-4">
                                         <SidebarTrigger />
-                                    </RouterProvider>
-                                </main>
+                                    </main>
                             </RainbowKitProvider>
                         </SidebarProvider>
                     </ThemeProvider>

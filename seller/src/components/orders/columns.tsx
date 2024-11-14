@@ -86,7 +86,7 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                     accessorKey: "customer", // Use accessor key as customer
                     header: "Customer Name",
                     cell: ({ row }) => {
-                        const customer = row.getValue("customer");
+                        const customer = row.getValue("customer") as Order['customer'];
                         if (!customer) return <div>Unknown Customer</div>;
                         const fullName = `${customer.first_name} ${customer.last_name}`;
                         return <div>{fullName}</div>;
@@ -117,7 +117,7 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                     accessorKey: "payment_status",
                     header: "PAYMENT",
                     cell: ({ row }) => {
-                        const paymentStatus = row.getValue("payment_status");
+                        const paymentStatus = row.getValue("payment_status") as Order['payment_status'];
                         return <div>{formatStatus(paymentStatus)}</div>;
                     },
                 };
@@ -126,7 +126,7 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                     accessorKey: "fulfillment_status",
                     header: "ORDER STATUS",
                     cell: ({ row }) => {
-                        const orderStatus = row.getValue("fulfillment_status");
+                        const orderStatus = row.getValue("fulfillment_status") as Order['fulfillment_status'];
 
                         // Determine the class based on the fulfillment status
                         let statusClass = "bg-gray-800 text-white"; // Default gray class
@@ -153,7 +153,7 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                     accessorKey: "price",
                     header: "PRICE",
                     cell: ({ row }) => {
-                        const price = row.getValue("price");
+                        const price = row.getValue("price") as Order['price'];
                         if (price === undefined) return <div>--</div>;
                         const formatted = new Intl.NumberFormat("en-US", {
                             style: "currency",
