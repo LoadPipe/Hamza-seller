@@ -52,7 +52,7 @@ export default class StoreOrderService extends TransactionBaseService {
         sort: any,
         page: number,
         count: number
-    ): Promise<Order[]> {
+    ): Promise<{ orders: Order[], totalRecords: number }> {
         //basic query is store id
         const where = { store_id: storeId };
 
@@ -86,9 +86,13 @@ export default class StoreOrderService extends TransactionBaseService {
             // relations: ['customer', 'items.variant.product']
         };
 
+        // Get total count of matching record
+        const totalRecords = await this.orderRepository_.count({ where });
+
+
         //get orders
         const orders = await this.orderRepository_.find(params);
 
-        return orders;
+        return { orders, totalRecords };
     }
 }
