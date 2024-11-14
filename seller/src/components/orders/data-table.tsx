@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from 'react';
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -10,16 +10,16 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
-} from "@tanstack/react-table"
+} from '@tanstack/react-table';
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 
 import {
     Table,
@@ -28,7 +28,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -38,15 +38,28 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
                                              columns,
                                              data,
-                                         }: DataTableProps<TData, TValue>) {
-    const [sorting, setSorting] = React.useState<SortingState>([])
+                                             pageIndex,
+                                             pageSize,
+                                             setPageIndex,
+                                             setPageSize,
+                                             totalRecords,
+                                         }: DataTableProps<TData, TValue> & {
+    pageIndex: number,
+    pageSize: number,
+    setPageIndex: React.Dispatch<React.SetStateAction<number>>,
+    setPageSize: React.Dispatch<React.SetStateAction<number>>,
+    totalRecords: number,
+}) {
+    const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-        []
-    )
+        [],
+    );
 
     const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = React.useState({})
+        React.useState<VisibilityState>({});
+    const [rowSelection, setRowSelection] = React.useState({});
+
+    const pageCount = Math.ceil(totalRecords / pageSize);
 
     const table = useReactTable({
         data,
@@ -54,6 +67,8 @@ export function DataTable<TData, TValue>({
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
+        manualPagination: true,
+        pageCount,
         getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
@@ -65,8 +80,12 @@ export function DataTable<TData, TValue>({
             columnFilters,
             columnVisibility,
             rowSelection,
+            pagination: {
+                pageIndex,
+                pageSize,
+            },
         },
-    })
+    });
 
 
     return (
@@ -130,10 +149,10 @@ export function DataTable<TData, TValue>({
                                                 ? null
                                                 : flexRender(
                                                     header.column.columnDef.header,
-                                                    header.getContext()
+                                                    header.getContext(),
                                                 )}
                                         </TableHead>
-                                    )
+                                    );
                                 })}
                             </TableRow>
                         ))}
@@ -143,7 +162,7 @@ export function DataTable<TData, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
+                                    data-state={row.getIsSelected() && 'selected'}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
@@ -164,24 +183,27 @@ export function DataTable<TData, TValue>({
             </div>
 
 
-            <div className="flex justify-center py-4">
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-center py-4 space-x-4">
                 <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => table.previousPage()}
+                    onClick={() => setPageIndex(old => Math.max(old - 1, 0))}
                     disabled={!table.getCanPreviousPage()}
                 >
                     Previous
                 </Button>
+                <span className="flex items-center justify-center w-8 h-8">{pageIndex + 1}</span>
                 <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => table.nextPage()}
+                    onClick={() => setPageIndex(old => old + 1)}
                     disabled={!table.getCanNextPage()}
                 >
                     Next
                 </Button>
             </div>
+
         </div>
-    )
+    );
 }
