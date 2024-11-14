@@ -16,28 +16,30 @@ const queryClient = new QueryClient();
 
 function App() {
     return (
-        <WagmiProvider config={config}>
-            <QueryClientProvider client={queryClient}>
-                <div className="flex min-h-screen">
-                    <ThemeProvider
-                        defaultTheme="dark"
-                        storageKey="vite-ui-theme"
-                    >
-                        <SidebarProvider>
-                            <AppSidebar /> {/* Sidebar Component */}
-                            <RainbowKitProvider>
-                                <RouterProvider router={router}/>
+        <div className="flex min-h-screen bg-background text-foreground">
+            <WagmiProvider config={config}>
+                <QueryClientProvider client={queryClient}>
+                    <div className="flex min-h-screen">
+                        <ThemeProvider
+                            defaultTheme="dark"
+                            storageKey="vite-ui-theme"
+                        >
+                            <SidebarProvider>
+                                <RainbowKitProvider>
+                                    <RouterProvider router={router} />
                                     {/* Wrap your content with RouterProvider */}
-                                    <main className="flex-1 p-4">
+                                    <AppSidebar /> {/* Sidebar Component */}
+                                    <main>
                                         <SidebarTrigger />
                                     </main>
-                            </RainbowKitProvider>
-                        </SidebarProvider>
-                    </ThemeProvider>
-                </div>
-                <ReactQueryDevtools initialIsOpen={false} />
-            </QueryClientProvider>
-        </WagmiProvider>
+                                </RainbowKitProvider>
+                            </SidebarProvider>
+                        </ThemeProvider>
+                    </div>
+                    <ReactQueryDevtools initialIsOpen={false} />
+                </QueryClientProvider>
+            </WagmiProvider>
+        </div>
     );
 }
 

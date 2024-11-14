@@ -53,9 +53,9 @@ module.exports = {
                     5: 'hsl(var(--chart-5))',
                 },
                 sidebar: {
-                    DEFAULT: 'hsl(var(--sidebar-background))',
+                    DEFAULT: '#121212',
                     foreground: 'hsl(var(--sidebar-foreground))',
-                    primary: 'hsl(var(--sidebar-primary))',
+                    primary: '#FFFFFF',
                     'primary-foreground':
                         'hsl(var(--sidebar-primary-foreground))',
                     accent: 'hsl(var(--sidebar-accent))',
