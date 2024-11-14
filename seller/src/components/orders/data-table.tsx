@@ -32,7 +32,7 @@ import {
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
-    data: TData[]
+    data: TData[],
 }
 
 export function DataTable<TData, TValue>({
@@ -74,23 +74,27 @@ export function DataTable<TData, TValue>({
             <div className="flex items-center py-4">
                 <Input
                     placeholder="Filter emails..."
-                    value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+                    value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
                     onChange={(event) =>
-                        table.getColumn("email")?.setFilterValue(event.target.value)
+                        table.getColumn('email')?.setFilterValue(event.target.value)
                     }
                     className="max-w-sm"
                 />
+
+
                 <DropdownMenu>
+
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">
                             Columns
                         </Button>
+
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         {table
                             .getAllColumns()
                             .filter(
-                                (column) => column.getCanHide()
+                                (column) => column.getCanHide(),
                             )
                             .map((column) => {
                                 return (
@@ -104,12 +108,17 @@ export function DataTable<TData, TValue>({
                                     >
                                         {column.id}
                                     </DropdownMenuCheckboxItem>
-                                )
+                                );
                             })}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+            <div className="flex text-sm text-muted-foreground m-2">
+                {table.getFilteredSelectedRowModel().rows.length} of{' '}
+                {table.getFilteredRowModel().rows.length} row(s) selected.
+            </div>
             <div className="rounded-md border">
+
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -153,12 +162,9 @@ export function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex-1 text-sm text-muted-foreground mt-4">
-                {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                {table.getFilteredRowModel().rows.length} row(s) selected.
-            </div>
 
-            <div className="flex items-center justify-end space-x-2 py-4">
+
+            <div className="flex justify-center py-4">
                 <Button
                     variant="outline"
                     size="sm"

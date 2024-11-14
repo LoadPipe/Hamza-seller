@@ -3,9 +3,9 @@ POST http://localhost:9000/seller/order
 Content-Type: application/json
 
 {
-    "store_id": "store_01JC1019NTY8MR49DYTJGESZZ9",
+    "store_id": "store_01JCG0V7CDSB1QWV7111KJ1DDY",
     "page": 0,
-    "count":2,
+    "count": 50,
     "sort": {"created_at": "ASC"},
     "filter": {"status": {"eq": "pending"}}
 }

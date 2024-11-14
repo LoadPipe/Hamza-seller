@@ -82,6 +82,8 @@ export default class StoreOrderService extends TransactionBaseService {
             take: count ?? DEFAULT_PAGE_COUNT,
             skip: page * count,
             order: sort ?? undefined,
+            relations: ['customer']
+            // relations: ['customer', 'items.variant.product']
         };
 
         //get orders
