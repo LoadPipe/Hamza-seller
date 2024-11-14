@@ -7,8 +7,7 @@ import React from 'react';
 
 type Order = z.infer<typeof OrderSchema>;
 
-// Define the function to fetch seller orders using axios
-async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: Order[]; totalRecords: string}> {
+async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: Order[]; totalRecords: number}> {
     try {
         const response = await axios.post("http://localhost:9000/seller/order", {
             store_id: "store_01JCG0V7CDSB1QWV7111KJ1DDY",
@@ -23,9 +22,10 @@ async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: 
             withCredentials: true
         });
 
-        // Ensure the response conforms to the Order schema
-        const data = response.data.orders;
-        const totalRecords = response.data.totalRecords;
+        // SS orders: object => typecast: object ...
+        const data: object = response.data.orders as object;
+        // SS totalRecords: string => typecast: number...
+        const totalRecords: number = response.data.totalRecords as number;
         return {
             orders: OrderSchema.array().parse(data), // Validate using Zod
             totalRecords,
@@ -36,30 +36,26 @@ async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: 
     }
 }
 
-// Define the OrdersPage component
 export default function OrdersPage() {
     // Use TanStack Query to fetch data
     const [pageIndex, setPageIndex] = React.useState(0);
     const [pageSize, setPageSize] = React.useState(10);
     const { data, isLoading, error } = useQuery<{
         orders: Order[];
-        totalRecords: string;
+        totalRecords: number;
     }, Error>({
         queryKey: ['orders', pageIndex, pageSize],
         queryFn: () => getSellerOrders(pageIndex, pageSize), // Fetch with pagination
     });
 
-    // Handle loading state
     if (isLoading) {
         return <div>Loading...</div>;
     }
 
-    // Handle error state
     if (error instanceof Error) {
         return <div>{error.message}</div>;
     }
 
-    // Render the data table once data is loaded
     return (
         <div className="container mx-auto py-10">
             <DataTable

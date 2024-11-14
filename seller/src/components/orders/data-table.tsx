@@ -41,7 +41,7 @@ export function DataTable<TData, TValue>({
                                              pageIndex,
                                              pageSize,
                                              setPageIndex,
-                                             setPageSize,
+                                             // setPageSize,
                                              totalRecords,
                                          }: DataTableProps<TData, TValue> & {
     pageIndex: number,

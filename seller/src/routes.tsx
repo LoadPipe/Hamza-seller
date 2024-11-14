@@ -4,7 +4,6 @@ import {
     createRoute,
     createRouter,
 } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import OrdersPage from '@/pages/orders/orders-page.tsx';
 import HomePage from '@/pages/home/home-page.tsx';
 import RootComponent from '@/pages/RootComponent.tsx';
@@ -30,7 +29,6 @@ const rootRoute = createRootRoute({
         <>
             {/* The main layout component */}
             <RootComponent />
-            <TanStackRouterDevtools initialIsOpen={false} />
         </>
     ),
 });

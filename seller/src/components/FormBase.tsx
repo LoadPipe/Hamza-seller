@@ -1,22 +1,22 @@
-import React from 'react';
-import { useForm } from '@tanstack/react-form';
+// import React from 'react';
+// import { useForm } from '@tanstack/react-form';
 
 // Define the type for a single form field
-interface Field {
-    name: string;
-    label: string;
-    type?: string;
-    defaultValue?: string;
-    validation?: object; // You can make this more specific if needed
-}
+// interface Field {
+//     name: string;
+//     label: string;
+//     type?: string;
+//     defaultValue?: string;
+//     validation?: object; // You can make this more specific if needed
+// }
 
 // Define the props type for the FormBase component
-interface FormBaseProps {
-    fields: Field[];
-    onSubmit: (data: Record<string, string>) => void;
-}
+// interface FormBaseProps {
+//     fields: Field[];
+//     onSubmit: (data: Record<string, string>) => void;
+// }
 
-const FormBase: React.FC<FormBaseProps> = ({ fields, onSubmit }) => {
+// const FormBase: React.FC<FormBaseProps> = ({ fields, onSubmit }) => {
     // const { handleSubmit, register, formState: { errors } } = useForm<Record<string, string>>({
     //     defaultValues: fields.reduce((acc, field) => {
     //         acc[field.name] = field.defaultValue || '';
@@ -40,6 +40,6 @@ const FormBase: React.FC<FormBaseProps> = ({ fields, onSubmit }) => {
     //         <button type="submit">Submit</button>
     //     </form>
     // );
-};
-
-export default FormBase;
+// };
+//
+// export default FormBase;

@@ -9,7 +9,6 @@ import {
     MessageSquareText,
     Archive,
 } from 'lucide-react';
-import { Link } from '@tanstack/router';
 import {
     Sidebar,
     SidebarContent,
