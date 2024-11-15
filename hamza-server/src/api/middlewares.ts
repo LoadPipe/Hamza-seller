@@ -3,19 +3,28 @@ import {
     type User,
     type UserService,
     type MedusaNextFunction,
-    type CustomerService,
     type MedusaRequest,
     type MedusaResponse,
-    authenticateCustomer,
     Logger,
     generateEntityId,
 } from '@medusajs/medusa';
 import { asyncLocalStorage, sessionStorage } from '../utils/context';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
+import { readRequestBody } from '../utils/request-body';
+import { Store } from '../models/store';
+import StoreRepository from '../repositories/store';
 
 const STORE_CORS = process.env.STORE_CORS || 'http://localhost:8000';
 const SELLER_CORS = process.env.SELLER_CORS || 'http://localhost:5173';
+
+function getRequestedStoreId(req: MedusaRequest): string {
+    if (req.body) {
+        const output = readRequestBody(req.body, ['store_id']);
+        return output?.store_id?.toString();
+    }
+    return req.query.store_id?.toString();
+}
 
 const ADMIN_CORS =
     process.env.ADMIN_CORS || 'http://localhost:7001;http://localhost:7000';
@@ -39,6 +48,57 @@ const registerLoggedInUser = async (
             resolve: () => loggedInUser,
         },
     });
+
+    next();
+};
+
+const restrictLoggedInSeller = async (
+    req: MedusaRequest,
+    res: MedusaResponse,
+    next: MedusaNextFunction
+) => {
+    const logger = req.scope.resolve('logger') as Logger;
+    const storeRepository: typeof StoreRepository =
+        req.scope.resolve('storeRepository');
+    const jwtToken: any = jwt.decode(req.headers.authorization);
+    const storeId = jwtToken?.store_id;
+    const wallet = jwtToken?.wallet_address;
+
+    const requestedStoreId = getRequestedStoreId(req);
+    let authorized: boolean = false;
+
+    logger.debug(
+        `Auth middleware: wallet: ${wallet}, store: ${storeId}, requested store: ${requestedStoreId}`
+    );
+
+    //compare store ids, owners, etc
+    if (wallet && storeId && requestedStoreId && storeId === requestedStoreId) {
+        const store: Store = await storeRepository.findOne({
+            where: { id: storeId },
+            relations: ['owner'],
+        });
+
+        if (store) {
+            if (
+                store.owner?.wallet_address?.trim()?.toLowerCase() ===
+                wallet.trim().toLowerCase()
+            ) {
+                logger.debug('Authorized');
+                authorized = true;
+            } else {
+                logger.warn(
+                    `Store ${storeId} wallet address ${store.owner?.wallet_address} != ${wallet}`
+                );
+            }
+        } else {
+            logger.warn(`Store ${storeId} was not found.`);
+        }
+    }
+
+    if (!authorized) {
+        res.status(401).json({ status: false });
+        return;
+    }
 
     next();
 };
@@ -122,6 +182,7 @@ export const config: MiddlewaresConfig = {
                     origin: [SELLER_CORS],
                     credentials: true,
                 }),
+                restrictLoggedInSeller,
             ],
         },
         {

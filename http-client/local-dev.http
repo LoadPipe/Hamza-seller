@@ -1,3 +1,12 @@
+// POST auth
+POST http://localhost:9000/seller/auth
+Content-Type: application/json
+
+{
+    "store_id": "store_01JCG0V7CDSB1QWV7111KJ1DDY"
+}
+
+###
 // Get Seller Orders
 POST http://localhost:9000/seller/order
 Content-Type: application/json
@@ -9,4 +18,3 @@ Content-Type: application/json
     "sort": {"created_at": "ASC"},
     "filter": {"status": {"eq": "pending"}}
 }
-
