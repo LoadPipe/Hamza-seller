@@ -10,7 +10,7 @@ import jwt from 'jsonwebtoken';
  * OUTPUTS:
  * JWT token
  */
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const handler = new RouteHandler(req, res, 'POST', '/seller/auth', [
         'store_id',
         'wallet_address',

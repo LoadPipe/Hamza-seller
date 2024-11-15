@@ -60,42 +60,60 @@ const restrictLoggedInSeller = async (
     const logger = req.scope.resolve('logger') as Logger;
     const storeRepository: typeof StoreRepository =
         req.scope.resolve('storeRepository');
-    const jwtToken: any = jwt.decode(req.headers.authorization);
-    const storeId = jwtToken?.store_id;
-    const wallet = jwtToken?.wallet_address;
 
-    const requestedStoreId = getRequestedStoreId(req);
     let authorized: boolean = false;
 
-    logger.debug(
-        `Auth middleware: wallet: ${wallet}, store: ${storeId}, requested store: ${requestedStoreId}`
-    );
+    logger.debug(`Auth middleware: token: ${req.headers.authorization}`);
 
-    //compare store ids, owners, etc
-    if (wallet && storeId && requestedStoreId && storeId === requestedStoreId) {
-        const store: Store = await storeRepository.findOne({
-            where: { id: storeId },
-            relations: ['owner'],
-        });
+    if (req.headers.authorization) {
+        //decode the token //TODO: put this somewhere accessible
+        const jwtToken: any = jwt.decode(
+            req.headers.authorization
+                ?.replace('Bearer', '')
+                ?.replace(':', '')
+                ?.trim()
+        );
+        const storeId = jwtToken?.store_id;
+        const wallet = jwtToken?.wallet_address;
 
-        if (store) {
-            if (
-                store.owner?.wallet_address?.trim()?.toLowerCase() ===
-                wallet.trim().toLowerCase()
-            ) {
-                logger.debug('Authorized');
-                authorized = true;
+        const requestedStoreId = getRequestedStoreId(req);
+
+        logger.debug(
+            `Auth middleware: wallet: ${wallet}, store: ${storeId}, requested store: ${requestedStoreId}`
+        );
+
+        //compare store ids, owners, etc
+        if (
+            wallet &&
+            storeId &&
+            requestedStoreId &&
+            storeId === requestedStoreId
+        ) {
+            const store: Store = await storeRepository.findOne({
+                where: { id: storeId },
+                relations: ['owner'],
+            });
+
+            if (store) {
+                if (
+                    store.owner?.wallet_address?.trim()?.toLowerCase() ===
+                    wallet.trim().toLowerCase()
+                ) {
+                    logger.debug('Authorized');
+                    authorized = true;
+                } else {
+                    logger.warn(
+                        `Store ${storeId} wallet address ${store.owner?.wallet_address} != ${wallet}`
+                    );
+                }
             } else {
-                logger.warn(
-                    `Store ${storeId} wallet address ${store.owner?.wallet_address} != ${wallet}`
-                );
+                logger.warn(`Store ${storeId} was not found.`);
             }
-        } else {
-            logger.warn(`Store ${storeId} was not found.`);
         }
     }
 
     if (!authorized) {
+        logger.debug('Seller unauthorized');
         res.status(401).json({ status: false });
         return;
     }
@@ -176,7 +194,7 @@ export const config: MiddlewaresConfig = {
             ],
         },
         {
-            matcher: '/seller/*',
+            matcher: '/seller/order',
             middlewares: [
                 cors({
                     origin: [SELLER_CORS],

@@ -3,16 +3,18 @@ POST http://localhost:9000/seller/auth
 Content-Type: application/json
 
 {
-    "store_id": "store_01JCG0V7CDSB1QWV7111KJ1DDY"
+    "store_id": "store_01JCK8MX8DZCHXDMMR8SNKN7E3",
+    "wallet_address": "0x4fBCF49cC0f91d66Bc5bBbE931913D8709592012"
 }
 
 ###
 // Get Seller Orders
 POST http://localhost:9000/seller/order
 Content-Type: application/json
+Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0b3JlXzAxSkNLOE1YOERaQ0hYRE1NUjhTTktON0UzIiwid2FsbGV0X2FkZHJlc3MiOiIweDRmQkNGNDljQzBmOTFkNjZCYzViQmJFOTMxOTEzRDg3MDk1OTIwMTIiLCJpYXQiOjE3MzE2NjI1NDEsImV4cCI6MTczMTc0ODk0MX0.OjDrBiusqm7muqCsdZLcgSZdxmwX0OPCJj3q_mDTGxc
 
 {
-    "store_id": "store_01JCG0V7CDSB1QWV7111KJ1DDY",
+    "store_id": "store_01JCK8MX8DZCHXDMMR8SNKN7E3",
     "page": 0,
     "count": 50,
     "sort": {"created_at": "ASC"},
