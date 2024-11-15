@@ -1,11 +1,21 @@
 import { OrderSchema, columns } from "@/components/orders/columns";
-import { DataTable } from "@/components/orders/data-table.tsx";
+import { DataTable } from "@/components/table/data-table.tsx";
 import { useQuery } from "@tanstack/react-query";
 import axios from 'axios';
 import { z } from 'zod';
 import React from 'react';
+import { useSearch, useNavigate } from '@tanstack/react-router';
 
 type Order = z.infer<typeof OrderSchema>;
+
+const OrderSearchSchema = z.object({
+    page: z.coerce.number().catch(0),
+    count: z.coerce.number().catch(10),
+    filter: z.string().optional(),
+    sort: z.string().optional(),
+});
+
+type OrderSearch = z.infer<typeof OrderSearchSchema>;
 
 async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: Order[]; totalRecords: number}> {
     try {
@@ -37,6 +47,8 @@ async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: 
 }
 
 export default function OrdersPage() {
+
+
     // Use TanStack Query to fetch data
     const [pageIndex, setPageIndex] = React.useState(0);
     const [pageSize, setPageSize] = React.useState(10);

@@ -4,3 +4,14 @@ node_modules
 yarn.lock
 
 hamza_dev_db@localhost.session.sql
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
