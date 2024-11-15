@@ -1,26 +1,36 @@
-import { OrderSchema, columns } from "@/components/orders/columns";
-import { DataTable } from "@/components/orders/data-table.tsx";
-import { useQuery } from "@tanstack/react-query";
+import { OrderSchema, columns } from '@/components/orders/columns';
+import { DataTable } from '@/components/orders/data-table.tsx';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { z } from 'zod';
 import React from 'react';
 
 type Order = z.infer<typeof OrderSchema>;
 
-async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: Order[]; totalRecords: number}> {
+const MEDUSA_SERVER_URL =
+    process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000';
+
+async function getSellerOrders(
+    pageIndex = 0,
+    pageSize = 10
+): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
-        const response = await axios.post("http://localhost:9000/seller/order", {
-            store_id: "store_01JCG0V7CDSB1QWV7111KJ1DDY",
-            page: pageIndex,
-            count: pageSize,
-            sort: { created_at: "ASC" },
-            filter: { status: { eq: "pending" } },
-        }, {
-            headers: {
-                "Content-Type": "application/json",
+        const response = await axios.post(
+            `${MEDUSA_SERVER_URL}/seller/order`,
+            {
+                store_id: 'store_01JCG0V7CDSB1QWV7111KJ1DDY',
+                page: pageIndex,
+                count: pageSize,
+                sort: { created_at: 'ASC' },
+                filter: { status: { eq: 'pending' } },
             },
-            withCredentials: true
-        });
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            }
+        );
 
         // SS orders: object => typecast: object ...
         const data: object = response.data.orders as object;
@@ -31,8 +41,8 @@ async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: 
             totalRecords,
         };
     } catch (error) {
-        console.error("Failed to fetch seller orders:", error);
-        throw new Error("Failed to fetch seller orders");
+        console.error('Failed to fetch seller orders:', error);
+        throw new Error('Failed to fetch seller orders');
     }
 }
 
@@ -40,10 +50,13 @@ export default function OrdersPage() {
     // Use TanStack Query to fetch data
     const [pageIndex, setPageIndex] = React.useState(0);
     const [pageSize, setPageSize] = React.useState(10);
-    const { data, isLoading, error } = useQuery<{
-        orders: Order[];
-        totalRecords: number;
-    }, Error>({
+    const { data, isLoading, error } = useQuery<
+        {
+            orders: Order[];
+            totalRecords: number;
+        },
+        Error
+    >({
         queryKey: ['orders', pageIndex, pageSize],
         queryFn: () => getSellerOrders(pageIndex, pageSize), // Fetch with pagination
     });
