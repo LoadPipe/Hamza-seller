@@ -4,18 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import axios from 'axios';
 import { z } from 'zod';
 import React from 'react';
-import { useSearch, useNavigate } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
+import { OrderSearchSchema } from '@/routes.tsx';
 
 type Order = z.infer<typeof OrderSchema>;
 
-const OrderSearchSchema = z.object({
-    page: z.coerce.number().catch(0),
-    count: z.coerce.number().catch(10),
-    filter: z.string().optional(),
-    sort: z.string().optional(),
-});
-
-type OrderSearch = z.infer<typeof OrderSearchSchema>;
 
 async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: Order[]; totalRecords: number}> {
     try {
@@ -48,10 +41,13 @@ async function getSellerOrders(pageIndex = 0, pageSize = 10): Promise<{ orders: 
 
 export default function OrdersPage() {
 
+    const search = useSearch({ from: '/orders' });
 
-    // Use TanStack Query to fetch data
-    const [pageIndex, setPageIndex] = React.useState(0);
-    const [pageSize, setPageSize] = React.useState(10);
+    const { page, count } = OrderSearchSchema.parse(search);
+
+    const [pageIndex, setPageIndex] = React.useState(page);
+    const [pageSize, setPageSize] = React.useState(count);
+
     const { data, isLoading, error } = useQuery<{
         orders: Order[];
         totalRecords: number;
