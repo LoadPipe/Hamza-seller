@@ -8,7 +8,8 @@ import React from 'react';
 type Order = z.infer<typeof OrderSchema>;
 
 const MEDUSA_SERVER_URL =
-    process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000';
+    import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000';
+
 
 async function getSellerOrders(
     pageIndex = 0,
