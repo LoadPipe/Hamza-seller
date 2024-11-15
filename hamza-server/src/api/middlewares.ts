@@ -15,7 +15,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 
 const STORE_CORS = process.env.STORE_CORS || 'http://localhost:8000';
-const SELLER_CORS = 'http://localhost:5173';
+const SELLER_CORS = process.env.SELLER_CORS || 'http://localhost:5173';
 
 const ADMIN_CORS =
     process.env.ADMIN_CORS || 'http://localhost:7001;http://localhost:7000';
