@@ -95,4 +95,28 @@ export default class StoreOrderService extends TransactionBaseService {
 
         return { orders, totalRecords };
     }
+
+    async getOrderDetails(orderId: string) {
+        try {
+            // Fetch the order with the specific relation
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+                relations: ['items', 'items.variant', 'items.variant.product'],
+            });
+
+            if (!order) {
+                throw new Error(`Order with id ${orderId} not found`);
+            }
+
+            return order;
+        } catch (error) {
+            this.logger.error(`Failed to fetch order details for order ${orderId}: ${error.message}`);
+            throw error;
+        }
+    }
+
+
+
+
+
 }
