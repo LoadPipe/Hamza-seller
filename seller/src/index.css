@@ -9,17 +9,11 @@
 
     color-scheme: light dark;
     color: rgba(255, 255, 255, 0.87);
-    background-color: #121212;
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
 }
 
 a {
@@ -30,12 +24,10 @@ a:hover {
 }
 
 body {
-    margin: 0;
-    display: flex;
-    place-items: center;
-    min-width: 320px;
-    min-height: 100vh;
-    background-color: #040404;
+    padding-top: 1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 3rem;
+    background: linear-gradient(to bottom, #020202 20vh, #2c272d 40vh);
 }
 
 h1 {

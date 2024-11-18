@@ -1,12 +1,10 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { ChevronDown, BellRing } from "lucide-react"
-
+import { ChevronDown, BellRing } from 'lucide-react';
 
 const TopDash = () => {
     return (
-        <div className="flex items-center bg-black h-[56px]">
+        <div className="flex items-center bg-invisable h-[56px]">
             <SidebarTrigger className="ml-2" />
-
             <div className="flex  ml-auto">
                 <div className="flex justify-center items-center h-[56px] w-[56px] rounded-full bg-[#121212]">
                     <BellRing size={'24px'} />
