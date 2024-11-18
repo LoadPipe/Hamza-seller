@@ -3,7 +3,7 @@ const tailwindcssAnimate = require('tailwindcss-animate');
 
 module.exports = {
     darkMode: ['class'],
-    content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}'],
+    content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}', './index.css'],
     theme: {
         extend: {
             fontFamily: {
