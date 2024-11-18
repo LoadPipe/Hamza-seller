@@ -12,6 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 
 // Define the Zod schema for the columns you want to display
 export const OrderSchema = z.object({
@@ -198,7 +199,7 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem>View customer</DropdownMenuItem>
-                                    <DropdownMenuItem>View order details</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={openOrderSidebar}>View order details</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         );
