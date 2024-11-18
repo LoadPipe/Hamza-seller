@@ -79,7 +79,7 @@ export function AppSidebar() {
 
     return (
         <Sidebar>
-            <SidebarContent className="bg-[#121212] max-w-[200px]">
+            <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel className="my-4">
                         <img
