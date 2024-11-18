@@ -104,13 +104,13 @@ export function DataTable<TData, TValue>({
                 <DropdownMenu>
 
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
+                        <Button variant="outline" className="ml-auto whitespace-nowrap">
                             Columns
                         </Button>
 
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        {table
+                    <DropdownMenuContent
+                    >                        {table
                             .getAllColumns()
                             .filter(
                                 (column) => column.getCanHide(),

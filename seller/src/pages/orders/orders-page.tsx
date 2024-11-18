@@ -6,6 +6,7 @@ import { z } from 'zod';
 import React from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
+import { OrderDetailsSidebar } from '@/components/orders/order-details-sidebar';
 
 type Order = z.infer<typeof OrderSchema>;
 

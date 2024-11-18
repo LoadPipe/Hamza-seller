@@ -16,6 +16,8 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+
+
 a {
     @apply font-medium text-white no-underline;
 }
@@ -24,9 +26,6 @@ a:hover {
 }
 
 body {
-    padding-top: 1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 3rem;
     background: linear-gradient(to bottom, #020202 20vh, #2c272d 40vh);
 }
 
