@@ -25,13 +25,14 @@ function App() {
                             storageKey="vite-ui-theme"
                         >
                             <SidebarProvider>
+                                <AppSidebar /> {/* Sidebar Component */}
                                 <RainbowKitProvider>
                                     <RouterProvider router={router} />
                                     {/* Wrap your content with RouterProvider */}
-                                    <AppSidebar /> {/* Sidebar Component */}
                                     <main>
                                         <SidebarTrigger />
                                     </main>
+
                                 </RainbowKitProvider>
                             </SidebarProvider>
                         </ThemeProvider>
