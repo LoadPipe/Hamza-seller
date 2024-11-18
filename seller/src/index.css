@@ -17,10 +17,11 @@
 }
 
 a {
-    @apply font-medium text-white no-underline;
+    color: text-white;
 }
+
 a:hover {
-    @apply text-primary-green-900;
+    color: @apply text-primary-green-900;
 }
 
 body {
