@@ -1,4 +1,4 @@
-// Get Seller Orders
+### Get Seller Orders
 POST http://localhost:9000/seller/order
 Content-Type: application/json
 
@@ -9,4 +9,9 @@ Content-Type: application/json
     "sort": {"created_at": "ASC"},
     "filter": {"status": {"eq": "pending"}}
 }
+
+### Get Seller Order Details
+GET http://localhost:9000/seller/order/detail?order_id=order_01JCHZ33D14HBQ298MAQ6JC1D2
+Content-Type: application/json
+
 
