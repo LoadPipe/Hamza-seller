@@ -1,9 +1,6 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useNavigate } from '@tanstack/react-router'; // or 'react-router-dom'
 
 export const WalletConnect = () => {
-    const navigate = useNavigate(); // Initialize the navigate hook
-
     return (
         <ConnectButton.Custom>
             {({
@@ -25,9 +22,6 @@ export const WalletConnect = () => {
                     (!authenticationStatus ||
                         authenticationStatus === 'authenticated');
 
-                if (connected) {
-                    navigate({ to: '/orders' }); // Pass an object with 'to'
-                }
                 return (
                     <div
                         {...(!ready && {
