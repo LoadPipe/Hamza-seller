@@ -21,8 +21,8 @@ interface FindOneOptions<Store> extends TypeOrmFindOneOptions<Store> {
  */
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const handler = new RouteHandler(req, res, 'POST', '/seller/auth', [
-        'store_id',
-        'wallet_address',
+        'message',
+        'signature',
     ]);
 
     await handler.handle(async () => {
@@ -65,7 +65,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         //once authorized, return a JWT token
         const token = jwt.sign(
             {
-                store_id: handler.inputParams.store_id,
+                store_id: store.id,
                 wallet_address: handler.inputParams.wallet_address,
             },
             process.env.JWT_SECRET,
