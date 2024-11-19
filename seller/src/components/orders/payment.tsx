@@ -1,4 +1,16 @@
-const Payment = ({ subtotal, discount, shippingFee, total }) => {
+type PaymentProps = {
+    subtotal: string;
+    discount: string;
+    shippingFee: string;
+    total: string;
+};
+
+const Payment: React.FC<PaymentProps> = ({
+    subtotal,
+    discount,
+    shippingFee,
+    total,
+}) => {
     return (
         <div className="flex flex-col">
             {/* Payment Header */}

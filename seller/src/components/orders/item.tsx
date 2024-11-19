@@ -1,4 +1,13 @@
-const Item = ({
+type ItemProps = {
+    name: string;
+    variants: string;
+    quantity: number;
+    subtotal: string;
+    discount: string;
+    total: string;
+    image: string;
+};
+const Item: React.FC<ItemProps> = ({
     name,
     variants,
     quantity,

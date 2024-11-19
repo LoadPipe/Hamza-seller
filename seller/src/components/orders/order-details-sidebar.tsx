@@ -3,11 +3,6 @@ import {
     Sidebar,
     SidebarHeader,
     SidebarContent,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarMenu,
-    // SidebarMenuButton,
-    SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useStore } from '@tanstack/react-store'; // Import useStore to read the store state
 import {
@@ -17,7 +12,7 @@ import {
 import Timeline from '@/components/orders/timeline.tsx';
 import Item from '@/components/orders/item.tsx';
 import Payment from '@/components/orders/payment.tsx';
-import { X, Clock, ShoppingCart, CheckCircle, Loader } from 'lucide-react'; // Icons from lucide-react
+import { X } from 'lucide-react'; // Icons from lucide-react
 
 const items = [
     {
