@@ -1,7 +1,6 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { BellRing } from 'lucide-react';
 import { WalletConnect } from './wallet-connect/WalletConnect';
-import HamzaLogo from '../../public/Hamza-logo.svg';
 
 const TopDash = () => {
     return (
