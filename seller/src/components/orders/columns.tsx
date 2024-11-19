@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown } from "lucide-react";
-import { MoreHorizontal } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,7 +11,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 
 // Define the Zod schema for the columns you want to display
@@ -19,7 +19,7 @@ export const OrderSchema = z.object({
     id: z.string(),
     customer_id: z.string(),
     created_at: z.string(),
-    payment_status: z.enum(["awaiting", "completed", "failed"]),
+    payment_status: z.enum(['awaiting', 'completed', 'failed']),
     fulfillment_status: z.enum(['not_fulfilled', 'partially_fulfilled', 'fulfilled', 'partially_shipped', 'shipped', 'partially_returned', 'returned', 'canceled', 'requires_action']),
     price: z.number().optional(),  // Optional since it's not always passed
     email: z.string().email(),  // Add email back to the schema
@@ -43,19 +43,18 @@ const formatStatus = (status: string) => {
 };
 
 
-
 // Define a dynamic column generation function
 export const generateColumns = (includeColumns: Array<keyof Order | 'select' | 'actions'>): ColumnDef<Order>[] => {
     const baseColumns: ColumnDef<Order>[] = includeColumns.map(column => {
         switch (column) {
             case 'select':
                 return {
-                    id: "select",
+                    id: 'select',
                     header: ({ table }) => (
                         <Checkbox
                             checked={
                                 table.getIsAllPageRowsSelected() ||
-                                (table.getIsSomePageRowsSelected() && "indeterminate")
+                                (table.getIsSomePageRowsSelected() && 'indeterminate')
                             }
                             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
                             aria-label="Select all"
@@ -73,10 +72,10 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                 };
             case 'id':
                 return {
-                    accessorKey: "id",
-                    header: "ORDER",
+                    accessorKey: 'id',
+                    header: 'ORDER',
                     cell: ({ row }) => {
-                        const orderId: string = row.getValue("id");
+                        const orderId: string = row.getValue('id');
                         // Remove 'order_' prefix
                         const cleanedId = orderId.replace(/^order_/, '#');
                         return <div>{cleanedId}</div>;
@@ -84,10 +83,10 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                 };
             case 'customer':
                 return {
-                    accessorKey: "customer", // Use accessor key as customer
-                    header: "Customer Name",
+                    accessorKey: 'customer', // Use accessor key as customer
+                    header: 'Customer Name',
                     cell: ({ row }) => {
-                        const customer = row.getValue("customer") as Order['customer'];
+                        const customer = row.getValue('customer') as Order['customer'];
                         if (!customer) return <div>Unknown Customer</div>;
                         const fullName = `${customer.first_name} ${customer.last_name}`;
                         return <div>{fullName}</div>;
@@ -95,10 +94,10 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                 };
             case 'created_at':
                 return {
-                    accessorKey: "created_at",
-                    header: "DATE",
+                    accessorKey: 'created_at',
+                    header: 'DATE',
                     cell: ({ row }) => {
-                        const date = new Date(row.getValue("created_at"));
+                        const date = new Date(row.getValue('created_at'));
 
                         // Custom format: "Month Date, Year, Hour:Minute AM/PM"
                         const formattedDate = date.toLocaleString('en-US', {
@@ -115,26 +114,26 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                 };
             case 'payment_status':
                 return {
-                    accessorKey: "payment_status",
-                    header: "PAYMENT",
+                    accessorKey: 'payment_status',
+                    header: 'PAYMENT',
                     cell: ({ row }) => {
-                        const paymentStatus = row.getValue("payment_status") as Order['payment_status'];
+                        const paymentStatus = row.getValue('payment_status') as Order['payment_status'];
                         return <div>{formatStatus(paymentStatus)}</div>;
                     },
                 };
             case 'fulfillment_status':
                 return {
-                    accessorKey: "fulfillment_status",
-                    header: "ORDER STATUS",
+                    accessorKey: 'fulfillment_status',
+                    header: 'ORDER STATUS',
                     cell: ({ row }) => {
-                        const orderStatus = row.getValue("fulfillment_status") as Order['fulfillment_status'];
+                        const orderStatus = row.getValue('fulfillment_status') as Order['fulfillment_status'];
 
                         // Determine the class based on the fulfillment status
-                        let statusClass = "bg-gray-800 text-white"; // Default gray class
+                        let statusClass = 'bg-gray-800 text-white'; // Default gray class
                         if (orderStatus === 'fulfilled' || orderStatus === 'returned') {
-                            statusClass = "bg-green-800 text-green-800"; // Green box for fulfilled or returned
+                            statusClass = 'bg-green-800 text-green-800'; // Green box for fulfilled or returned
                         } else if (orderStatus === 'canceled') {
-                            statusClass = "bg-red-800 text-red-800"; // Red box for canceled
+                            statusClass = 'bg-red-800 text-red-800'; // Red box for canceled
                         }
 
                         // Format the status using your `formatStatus` function
@@ -151,25 +150,25 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
 
             case 'price':
                 return {
-                    accessorKey: "price",
-                    header: "PRICE",
+                    accessorKey: 'price',
+                    header: 'PRICE',
                     cell: ({ row }) => {
-                        const price = row.getValue("price") as Order['price'];
+                        const price = row.getValue('price') as Order['price'];
                         if (price === undefined) return <div>--</div>;
-                        const formatted = new Intl.NumberFormat("en-US", {
-                            style: "currency",
-                            currency: "USD",
+                        const formatted = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
                         }).format(price);
                         return <div className="text-right font-medium">{formatted}</div>;
                     },
                 };
             case 'email':
                 return {
-                    accessorKey: "email",
+                    accessorKey: 'email',
                     header: ({ column }) => (
                         <Button
                             variant="ghost"
-                            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                         >
                             Email
                             <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -178,7 +177,7 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
                 };
             case 'actions':
                 return {
-                    id: "actions",
+                    id: 'actions',
                     cell: ({ row }) => {
                         const order = row.original;
 
@@ -214,4 +213,4 @@ export const generateColumns = (includeColumns: Array<keyof Order | 'select' | '
 };
 
 // Usage
-export const columns = generateColumns(['select', 'id', 'customer_id', 'customer','created_at', 'payment_status', 'price', 'email', 'fulfillment_status', 'actions']);
+export const columns = generateColumns(['select', 'id', 'customer_id', 'customer', 'created_at', 'payment_status', 'price', 'email', 'fulfillment_status', 'actions']);
