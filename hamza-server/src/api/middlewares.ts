@@ -18,6 +18,7 @@ import OrderRepository from '../repositories/order';
 
 const STORE_CORS = process.env.STORE_CORS || 'http://localhost:8000';
 const SELLER_CORS = process.env.SELLER_CORS || 'http://localhost:5173';
+const SELLER_AUTH_ENABLED: boolean = false;
 
 function getRequestParam(req: MedusaRequest, param: string): string {
     if (req.body) {
@@ -66,6 +67,12 @@ const restrictLoggedInSeller = async (
     res: MedusaResponse,
     next: MedusaNextFunction
 ) => {
+    //ignore if disabled
+    if (SELLER_AUTH_ENABLED) {
+        next();
+        return;
+    }
+
     const logger = req.scope.resolve('logger') as Logger;
     const storeRepository: typeof StoreRepository =
         req.scope.resolve('storeRepository');
@@ -121,6 +128,7 @@ const restrictLoggedInSeller = async (
                     );
             }
 
+            //if eligible to this point, check that the store exists and that it belongs to the right guy
             if (eligible) {
                 const store: Store = await storeRepository.findOne({
                     where: { id: storeId },
@@ -132,6 +140,7 @@ const restrictLoggedInSeller = async (
                         store.owner?.wallet_address?.trim()?.toLowerCase() ===
                         wallet.trim().toLowerCase()
                     ) {
+                        //finally, auth is set to true, if all of the conditions are true
                         logger.debug('Authorized');
                         authorized = true;
                     } else {
