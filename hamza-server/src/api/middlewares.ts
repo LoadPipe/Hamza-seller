@@ -14,16 +14,25 @@ import jwt from 'jsonwebtoken';
 import { readRequestBody } from '../utils/request-body';
 import { Store } from '../models/store';
 import StoreRepository from '../repositories/store';
+import OrderRepository from '../repositories/order';
 
 const STORE_CORS = process.env.STORE_CORS || 'http://localhost:8000';
 const SELLER_CORS = process.env.SELLER_CORS || 'http://localhost:5173';
 
-function getRequestedStoreId(req: MedusaRequest): string {
+function getRequestParam(req: MedusaRequest, param: string): string {
     if (req.body) {
-        const output = readRequestBody(req.body, ['store_id']);
-        return output?.store_id?.toString();
+        const output = readRequestBody(req.body, [param]);
+        return output[param]?.toString();
     }
-    return req.query.store_id?.toString();
+    return req.query[param]?.toString();
+}
+
+function getRequestedStoreId(req: MedusaRequest): string {
+    return getRequestParam(req, 'store_id');
+}
+
+function getRequestedOrderId(req: MedusaRequest): string {
+    return getRequestParam(req, 'order_id');
 }
 
 const ADMIN_CORS =
@@ -60,6 +69,8 @@ const restrictLoggedInSeller = async (
     const logger = req.scope.resolve('logger') as Logger;
     const storeRepository: typeof StoreRepository =
         req.scope.resolve('storeRepository');
+    const orderRepository: typeof OrderRepository =
+        req.scope.resolve('orderRepository');
 
     let authorized: boolean = false;
 
@@ -77,37 +88,60 @@ const restrictLoggedInSeller = async (
         const wallet = jwtToken?.wallet_address;
 
         const requestedStoreId = getRequestedStoreId(req);
+        const requestedOrderId = getRequestedOrderId(req);
 
         logger.debug(
             `Auth middleware: wallet: ${wallet}, store: ${storeId}, requested store: ${requestedStoreId}`
         );
 
         //compare store ids, owners, etc
-        if (
-            wallet &&
-            storeId &&
-            requestedStoreId &&
-            storeId === requestedStoreId
-        ) {
-            const store: Store = await storeRepository.findOne({
-                where: { id: storeId },
-                relations: ['owner'],
-            });
+        if (wallet && storeId) {
+            let eligible: boolean = false;
 
-            if (store) {
-                if (
-                    store.owner?.wallet_address?.trim()?.toLowerCase() ===
-                    wallet.trim().toLowerCase()
-                ) {
-                    logger.debug('Authorized');
-                    authorized = true;
-                } else {
+            //if there is a requested store id, then it's only eligible if it matches the store id from the token
+            if (requestedStoreId?.length) {
+                eligible = requestedStoreId?.trim() == storeId.trim();
+                if (!eligible)
                     logger.warn(
-                        `Store ${storeId} wallet address ${store.owner?.wallet_address} != ${wallet}`
+                        `Request for store ${requestedStoreId} by ${storeId} is invalid`
                     );
+            } else if (requestedOrderId?.length) {
+                //if there's an order id, then it should belong to the right store
+                eligible = (await orderRepository.findOne({
+                    where: {
+                        id: requestedOrderId,
+                        store_id: storeId,
+                    },
+                }))
+                    ? true
+                    : false;
+                if (!eligible)
+                    logger.warn(
+                        `Request for order ${requestedOrderId} by ${storeId} is invalid`
+                    );
+            }
+
+            if (eligible) {
+                const store: Store = await storeRepository.findOne({
+                    where: { id: storeId },
+                    relations: ['owner'],
+                });
+
+                if (store) {
+                    if (
+                        store.owner?.wallet_address?.trim()?.toLowerCase() ===
+                        wallet.trim().toLowerCase()
+                    ) {
+                        logger.debug('Authorized');
+                        authorized = true;
+                    } else {
+                        logger.warn(
+                            `Store ${storeId} wallet address ${store.owner?.wallet_address} != ${wallet}`
+                        );
+                    }
+                } else {
+                    logger.warn(`Store ${storeId} was not found.`);
                 }
-            } else {
-                logger.warn(`Store ${storeId} was not found.`);
             }
         }
     }
