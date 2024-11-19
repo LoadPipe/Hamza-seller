@@ -1,4 +1,4 @@
-import { Outlet, useRouter } from '@tanstack/react-router';
+import { Outlet } from '@tanstack/react-router';
 import TopDash from '@/components/TopDash';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { SidebarProvider } from '@/components/ui/sidebar';
