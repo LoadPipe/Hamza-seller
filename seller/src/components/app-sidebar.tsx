@@ -71,7 +71,11 @@ const items = [
 ];
 
 export function AppSidebar() {
-    const [expanded, setExpanded] = useState<boolean>(false);
+    const [expandedItem, setExpandedItem] = useState<string | null>(null);
+
+    const toggleDropdown = (title: string) => {
+        setExpandedItem(expandedItem === title ? null : title);
+    };
 
     return (
         <Sidebar>
@@ -89,66 +93,66 @@ export function AppSidebar() {
                         <SidebarMenu>
                             {items.map((item) => (
                                 <div key={item.title}>
-                                    {' '}
-                                    {/* Use a div here to avoid nested <li> */}
                                     <SidebarMenuItem>
-                                        {/* Main Menu Item */}
-                                        <SidebarMenuButton asChild>
-                                            <a href={item.url}>
-                                                <item.icon />
-                                                <span>{item.title}</span>
-                                            </a>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                    {/* Dropdown for Products */}
-                                    {item.isDropdown && (
-                                        <div>
-                                            <SidebarMenuButton
-                                                asChild
-                                                onClick={() =>
-                                                    setExpanded(!expanded)
-                                                }
-                                            >
-                                                <a href="#">
-                                                    <item.icon />
-                                                    <span>Products</span>
-                                                </a>
-                                            </SidebarMenuButton>
-
-                                            {/* Render Submenu */}
-                                            {expanded && (
-                                                <div className="pl-4">
-                                                    <ul>
-                                                        {item.submenu?.map(
-                                                            (submenuItem) => (
-                                                                <SidebarMenuItem
-                                                                    key={
-                                                                        submenuItem.title
-                                                                    }
-                                                                >
-                                                                    <SidebarMenuButton
-                                                                        asChild
+                                        {item.isDropdown ? (
+                                            <>
+                                                <SidebarMenuButton
+                                                    asChild
+                                                    onClick={() =>
+                                                        toggleDropdown(
+                                                            item.title
+                                                        )
+                                                    }
+                                                >
+                                                    <a href="#">
+                                                        <item.icon />
+                                                        <span>
+                                                            {item.title}
+                                                        </span>
+                                                    </a>
+                                                </SidebarMenuButton>
+                                                {expandedItem ===
+                                                    item.title && (
+                                                    <div className="pl-4">
+                                                        <ul>
+                                                            {item.submenu.map(
+                                                                (
+                                                                    submenuItem
+                                                                ) => (
+                                                                    <SidebarMenuItem
+                                                                        key={
+                                                                            submenuItem.title
+                                                                        }
                                                                     >
-                                                                        <a
-                                                                            href={
-                                                                                submenuItem.url
-                                                                            }
+                                                                        <SidebarMenuButton
+                                                                            asChild
                                                                         >
-                                                                            <span>
+                                                                            <a
+                                                                                href={
+                                                                                    submenuItem.url
+                                                                                }
+                                                                            >
                                                                                 {
                                                                                     submenuItem.title
                                                                                 }
-                                                                            </span>
-                                                                        </a>
-                                                                    </SidebarMenuButton>
-                                                                </SidebarMenuItem>
-                                                            )
-                                                        )}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                                                            </a>
+                                                                        </SidebarMenuButton>
+                                                                    </SidebarMenuItem>
+                                                                )
+                                                            )}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <SidebarMenuButton asChild>
+                                                <a href={item.url}>
+                                                    <item.icon />
+                                                    <span>{item.title}</span>
+                                                </a>
+                                            </SidebarMenuButton>
+                                        )}
+                                    </SidebarMenuItem>
                                 </div>
                             ))}
                         </SidebarMenu>

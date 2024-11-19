@@ -1,5 +1,8 @@
 // POST auth
 POST http://localhost:9000/seller/auth
+
+### Get Seller Orders
+POST http://localhost:9000/seller/order
 Content-Type: application/json
 
 {
@@ -20,3 +23,9 @@ Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0
     "sort": {"created_at": "ASC"},
     "filter": {"status": {"eq": "pending"}}
 }
+
+### Get Seller Order Details
+GET http://localhost:9000/seller/order/detail?order_id=order_01JCHZ33D14HBQ298MAQ6JC1D2
+Content-Type: application/json
+
+
