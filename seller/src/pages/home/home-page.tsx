@@ -1,4 +1,5 @@
 import HamzaLogo from '../../../public/Hamza-logo.svg';
+import { WalletConnect } from '@/components/wallet-connect/WalletConnect';
 
 export default function HomePage() {
     return (
@@ -7,7 +8,7 @@ export default function HomePage() {
             <nav className="w-full py-4">
                 <div className="max-w-[1280px] mx-auto flex items-center justify-between px-4">
                     <img src={HamzaLogo} />
-                    <p>Connect Wallet</p>
+                    <WalletConnect />
                 </div>
             </nav>
 

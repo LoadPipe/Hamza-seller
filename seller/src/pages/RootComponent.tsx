@@ -6,18 +6,13 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { OrderDetailsSidebar } from '@/components/orders/order-details-sidebar.tsx';
 
 const RootComponent = () => {
-    const router = useRouter();
-
-    // Determine if the current route is the home page
-    const isHomePage = router.state.location.pathname === '/';
-
     return (
         <div>
             {/* Separate Provider for App Sidebar */}
             <SidebarProvider>
-                {!isHomePage && <AppSidebar />}
+                <AppSidebar />
                 <div className="flex flex-col w-full">
-                    {!isHomePage && <TopDash />}
+                    <TopDash />
                     <Outlet />
                 </div>
             </SidebarProvider>
