@@ -23,15 +23,8 @@ import SmtpMailService from './smtp-mail';
 import CustomerNotificationService from './customer-notification';
 import OrderHistoryService from './order-history';
 import StoreOrderRepository from '../repositories/order';
-
+import { OrderStatus } from '@medusajs/medusa';
 const DEFAULT_PAGE_COUNT = 30;
-export enum OrderStatus {
-    PENDING = 'pending',
-    COMPLETED = 'completed',
-    ARCHIVED = 'archived',
-    CANCELED = 'canceled',
-    REQUIRES_ACTION = 'requires_action',
-}
 
 export default class StoreOrderService extends TransactionBaseService {
     static LIFE_TIME = Lifetime.SINGLETON;
