@@ -16,19 +16,6 @@ import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 
 export function RainbowWrapper({ children }: { children: React.ReactNode }) {
     const { authData, setCustomerAuthData } = useCustomerAuthStore();
-    //const [customer_id, setCustomerId] = useState('');
-
-    const clearLogin = () => {
-        console.log('CLEARING LOGIN');
-        setCustomerAuthData({
-            customer_id: '',
-            is_verified: false,
-            status: 'unauthenticated',
-            token: '',
-            wallet_address: '',
-        });
-        // clearAuthCookie();
-    };
 
     const walletSignature = createAuthenticationAdapter({
         getNonce: async () => {
