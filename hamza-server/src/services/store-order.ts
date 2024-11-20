@@ -52,7 +52,7 @@ export default class StoreOrderService extends TransactionBaseService {
         sort: any,
         page: number,
         count: number
-    ): Promise<{ orders: Order[], totalRecords: number }> {
+    ): Promise<{ orders: Order[]; totalRecords: number }> {
         //basic query is store id
         const where = { store_id: storeId };
 
@@ -82,13 +82,12 @@ export default class StoreOrderService extends TransactionBaseService {
             take: count ?? DEFAULT_PAGE_COUNT,
             skip: page * count,
             order: sort ?? undefined,
-            relations: ['customer']
+            relations: ['customer'],
             // relations: ['customer', 'items.variant.product']
         };
 
         // Get total count of matching record
         const totalRecords = await this.orderRepository_.count({ where });
-
 
         //get orders
         const orders = await this.orderRepository_.find(params);
@@ -101,7 +100,13 @@ export default class StoreOrderService extends TransactionBaseService {
             // Fetch the order with the specific relation
             const order = await this.orderRepository_.findOne({
                 where: { id: orderId },
-                relations: ['items', 'items.variant', 'items.variant.product'],
+                relations: [
+                    'items',
+                    'items.variant',
+                    'items.variant.product',
+                    'customer.walletAddresses',
+                    'shipping_address',
+                ],
             });
 
             if (!order) {
@@ -110,13 +115,10 @@ export default class StoreOrderService extends TransactionBaseService {
 
             return order;
         } catch (error) {
-            this.logger.error(`Failed to fetch order details for order ${orderId}: ${error.message}`);
+            this.logger.error(
+                `Failed to fetch order details for order ${orderId}: ${error.message}`
+            );
             throw error;
         }
     }
-
-
-
-
-
 }
