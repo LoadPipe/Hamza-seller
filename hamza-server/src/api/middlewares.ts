@@ -68,7 +68,7 @@ const restrictLoggedInSeller = async (
     next: MedusaNextFunction
 ) => {
     //ignore if disabled
-    if (SELLER_AUTH_ENABLED) {
+    if (!SELLER_AUTH_ENABLED) {
         next();
         return;
     }
