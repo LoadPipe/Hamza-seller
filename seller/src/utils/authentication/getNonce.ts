@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+//TODO: why no process.env?
 const GET_NONCE_URL = `http://localhost:9000/seller/auth/nonce`;
 
 export default async function getNonce() {
