@@ -49,6 +49,8 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
         },
 
         verify: async ({ message, signature }) => {
+            console.log('message', message);
+            console.log('signature', signature);
             try {
                 const response = await sendVerifyRequest(message, signature);
 
