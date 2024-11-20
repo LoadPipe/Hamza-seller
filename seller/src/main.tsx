@@ -11,7 +11,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { ThemeProvider } from '@/components/theme-provider';
-import { config } from './wagmi';
+import { config } from './rainbowkit/wagmi.ts';
 
 // Initialize the Query Client
 const queryClient = new QueryClient();

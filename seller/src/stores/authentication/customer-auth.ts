@@ -27,7 +27,7 @@ type Actions = {
 
 export const useCustomerAuthStore = create<State & Actions>()(
     persist(
-        (set, get) => ({
+        (set) => ({
             walletAddress: '',
             hnsAvatar: null,
             hnsName: null,
