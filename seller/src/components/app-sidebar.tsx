@@ -78,7 +78,8 @@ export function AppSidebar() {
     };
 
     return (
-        <Sidebar>
+        // <Sidebar side="left" className="w-navigation-sidebar">
+        <Sidebar side="left">
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel className="my-4">
@@ -100,7 +101,7 @@ export function AppSidebar() {
                                                     asChild
                                                     onClick={() =>
                                                         toggleDropdown(
-                                                            item.title
+                                                            item.title,
                                                         )
                                                     }
                                                 >
@@ -113,36 +114,36 @@ export function AppSidebar() {
                                                 </SidebarMenuButton>
                                                 {expandedItem ===
                                                     item.title && (
-                                                    <div className="pl-4">
-                                                        <ul>
-                                                            {item.submenu.map(
-                                                                (
-                                                                    submenuItem
-                                                                ) => (
-                                                                    <SidebarMenuItem
-                                                                        key={
-                                                                            submenuItem.title
-                                                                        }
-                                                                    >
-                                                                        <SidebarMenuButton
-                                                                            asChild
+                                                        <div className="pl-4">
+                                                            <ul>
+                                                                {item.submenu.map(
+                                                                    (
+                                                                        submenuItem,
+                                                                    ) => (
+                                                                        <SidebarMenuItem
+                                                                            key={
+                                                                                submenuItem.title
+                                                                            }
                                                                         >
-                                                                            <a
-                                                                                href={
-                                                                                    submenuItem.url
-                                                                                }
+                                                                            <SidebarMenuButton
+                                                                                asChild
                                                                             >
-                                                                                {
-                                                                                    submenuItem.title
-                                                                                }
-                                                                            </a>
-                                                                        </SidebarMenuButton>
-                                                                    </SidebarMenuItem>
-                                                                )
-                                                            )}
-                                                        </ul>
-                                                    </div>
-                                                )}
+                                                                                <a
+                                                                                    href={
+                                                                                        submenuItem.url
+                                                                                    }
+                                                                                >
+                                                                                    {
+                                                                                        submenuItem.title
+                                                                                    }
+                                                                                </a>
+                                                                            </SidebarMenuButton>
+                                                                        </SidebarMenuItem>
+                                                                    ),
+                                                                )}
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                             </>
                                         ) : (
                                             <SidebarMenuButton asChild>
