@@ -25,6 +25,13 @@ import OrderHistoryService from './order-history';
 import StoreOrderRepository from '../repositories/order';
 
 const DEFAULT_PAGE_COUNT = 30;
+export enum OrderStatus {
+    PENDING = 'pending',
+    COMPLETED = 'completed',
+    ARCHIVED = 'archived',
+    CANCELED = 'canceled',
+    REQUIRES_ACTION = 'requires_action',
+}
 
 export default class StoreOrderService extends TransactionBaseService {
     static LIFE_TIME = Lifetime.SINGLETON;
@@ -93,6 +100,52 @@ export default class StoreOrderService extends TransactionBaseService {
         const orders = await this.orderRepository_.find(params);
 
         return { orders, totalRecords };
+    }
+
+    async changeOrderStatus(
+        orderId: string,
+        newStatus: string,
+        note?: Record<string, any>
+    ) {
+        try {
+            // Fetch the order
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+            });
+
+            // Handle the case where the order doesn't exist
+            if (!order) {
+                throw new Error(`Order with id ${orderId} not found`);
+            }
+
+            // Map string `newStatus` to corresponding `OrderStatus` enum value
+            const mappedStatus = Object.values(OrderStatus).find(
+                (status) => status === newStatus
+            );
+
+            // Validate `newStatus` against `OrderStatus`
+            if (!mappedStatus) {
+                throw new Error(`Invalid order status: ${newStatus}`);
+            }
+
+            // Update the order's status
+            order.status = mappedStatus;
+
+            // Optionally update metadata if `note` is provided
+            if (note) {
+                order.metadata = note;
+            }
+
+            // Save the updated order
+            await this.orderRepository_.save(order);
+
+            return order;
+        } catch (error) {
+            this.logger.error(
+                `Failed to update order status for order ${orderId}: ${error.message}`
+            );
+            throw error;
+        }
     }
 
     async getOrderDetails(orderId: string) {

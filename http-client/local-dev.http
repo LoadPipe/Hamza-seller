@@ -28,16 +28,14 @@ Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0
 GET http://localhost:9000/seller/order/detail?order_id=order_01JCHZ33D14HBQ298MAQ6JC1D2
 Content-Type: application/json
 
-#
-#
-#const { data, error, isLoading, isFetching } = useQuery(
-#['wishlist', productVariantId], // Use the variant ID directly as part of the query key
-#async () => {
-#const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 'http://localhost:9000'}/custom/product/inventory?variant_id=${productVariantId}`;
-#const response = await axios.get(url);
-#return response.data; // Return only the data part of the response
-#},
-#{
-#enabled: !!productVariantId, // Ensure the query only runs if productVarientId is defined
-#}
-#);
+### MODIFY ORDER STATUS && ADD NOTE?
+PUT http://localhost:9000/seller/order/change-status
+Content-Type: application/json
+
+{
+  "order_id": "order_01JCHZ33D14HBQ298MAQ6JC1D2",
+  "status": "canceled",
+  "note": "this guy just wasted our time, just return his money so he shuts up"
+
+}
+
