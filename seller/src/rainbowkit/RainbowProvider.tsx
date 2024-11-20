@@ -49,14 +49,11 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
         },
 
         verify: async ({ message, signature }) => {
-            const verifyRes = await fetch(
-                'http://localhost:9000/custom/verify',
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message, signature }),
-                }
-            );
+            const verifyRes = await fetch('http://localhost:9000/seller/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, signature }),
+            });
 
             return Boolean(verifyRes.ok);
         },

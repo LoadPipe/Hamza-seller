@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const VERIFY_MSG_URL = `http://localhost:9000/custom/verify`;
+const VERIFY_MSG_URL = `http://localhost:9000/seller/auth`;
 
 export default async function sendVerifyRequest(
     message: string,
