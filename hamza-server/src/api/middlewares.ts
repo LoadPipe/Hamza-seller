@@ -246,7 +246,15 @@ export const config: MiddlewaresConfig = {
                 restrictLoggedInSeller,
             ],
         },
-
+        {
+            matcher: '/seller',
+            middlewares: [
+                cors({
+                    origin: [SELLER_CORS],
+                    credentials: true,
+                }),
+            ],
+        },
         {
             matcher: '/admin/*',
             middlewares: [
