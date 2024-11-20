@@ -4,7 +4,6 @@ import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { OrderDetailsSidebar } from '@/components/orders/order-details-sidebar.tsx';
-import React from 'react';
 
 const RootComponent = () => {
     return (
@@ -12,10 +11,10 @@ const RootComponent = () => {
             {/* Separate Provider for App Sidebar */}
             <SidebarProvider>
                 <AppSidebar />
-            <div className="flex flex-col w-full">
-                <TopDash />
-                <Outlet />
-            </div>
+                <div className="flex flex-col w-full">
+                    <TopDash />
+                    <Outlet />
+                </div>
             </SidebarProvider>
             {/* Separate Provider for Order Details Sidebar */}
             <SidebarProvider>

@@ -3,9 +3,13 @@ const tailwindcssAnimate = require('tailwindcss-animate');
 
 module.exports = {
     darkMode: ['class'],
-    content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}', './index.css'],
+    content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}', './src/index.css'],
     theme: {
         extend: {
+            width: {
+                'order-details': 'var(--order-details-width)', // Define a custom width class
+                'navigation-sidebar': 'var(--navigation-sidebar-width)',
+            },
             fontFamily: {
                 sans: [
                     'Inter',
@@ -95,6 +99,13 @@ module.exports = {
                         100: '#CCCCCC',
                         50: '#E6E6E6',
                     },
+                    black: {
+                        90: '#121212',
+                        85: '#242424',
+                        70: '#272727',
+                        65: '#676767',
+                        60: '#C2C2C2',
+                    },
                 },
                 secondary: {
                     DEFAULT: 'hsl(var(--secondary))',
@@ -172,6 +183,15 @@ module.exports = {
                 },
                 switchBackground: {
                     500: '#4b5669',
+                },
+                fontSize: {
+                    sm: ['12px', '16px'], // Small font size with line height
+                    md: ['14px', '20px'], // Medium font size with line height
+                    lg: ['16px', '24px'], // Large font size with line height
+                },
+                lineHeight: {
+                    tighter: '1.1',
+                    relaxed: '1.7',
                 },
             },
         },

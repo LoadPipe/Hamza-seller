@@ -1,39 +1,310 @@
-// order-details-sidebar.tsx
 import {
     Sidebar,
+    SidebarHeader,
     SidebarContent,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useStore } from '@tanstack/react-store'; // Import useStore to read the store state
-import { orderSidebarStore, closeOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
+import { useStore } from '@tanstack/react-store';
+import {
+    orderSidebarStore,
+    closeOrderSidebar,
+} from '@/stores/order-sidebar/order-sidebar-store';
+import Timeline from '@/components/orders/timeline';
+import Item from '@/components/orders/item';
+import Payment from '@/components/orders/payment';
+import { X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import {
+    formatStatus,
+    formatDate,
+    customerName,
+    formatShippingAddress,
+} from '@/utils/format-data.ts';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
-    const isSidebarOpen = useStore(orderSidebarStore, (state) => state.isSidebarOpen);
-
+    const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
+    const MEDUSA_SERVER_URL =
+        import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000';
+    const {
+        data: orderDetails,
+        isLoading,
+        isError,
+    } = useQuery({
+        queryKey: ['orderDetails', orderId],
+        queryFn: async () => {
+            if (!orderId) {
+                throw new Error('Order ID is required');
+            }
+            const response = await axios.get(
+                `${MEDUSA_SERVER_URL}/seller/order/detail?order_id=${orderId}`
+            );
+            return response.data;
+        },
+        enabled: !!orderId && isSidebarOpen, // Fetch only when these conditions are met
+        refetchOnWindowFocus: false, // Prevent refetching on focus
+        retry: 1, // Optional: Limit retries to avoid overloading the API
+        staleTime: 5 * 60 * 1000, // Optional: Cache data for 5 minutes
+    });
     // Conditionally render the sidebar only when it's open
     if (!isSidebarOpen) return null;
 
+    const statusDetails = orderDetails && {
+        status: orderDetails.status,
+        fulfillment_status: orderDetails.fulfillment_status,
+        payment_status: orderDetails.payment_status,
+        created_at: orderDetails.created_at,
+        updated_at: orderDetails.updated_at,
+    };
+    console.log(`WTF ${JSON.stringify(statusDetails)}`);
+
     return (
-        <div className="fixed right-0 top-0 h-full w-80 z-50"> {/* Sidebar container */}
-            <Sidebar side="right">
-                <SidebarContent>
-                    <SidebarGroup>
-                        <SidebarGroupContent>
-                            <SidebarMenu>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton asChild>
-                                        <button onClick={closeOrderSidebar}>Close Sidebar</button>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                                {/* Additional content for the sidebar can go here */}
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
+        <div>
+            <Sidebar
+                side="right"
+                className="fixed right-0 top-0 h-full w-order-details bg-primary-black-90"
+            >
+                <SidebarHeader className="bg-primary-black-85 h-[87px] p-[24px]">
+                    <div className="flex justify-between">
+                        <div className="flex-col">
+                            <h1 className="text-xl font-bold text-white">
+                                #{orderDetails?.id || 'Loading...'}
+                            </h1>
+                            <span className="text-sm text-primary-black-60">
+                                ORDER ID
+                            </span>
+                        </div>
+                        <div
+                            onClick={closeOrderSidebar}
+                            role="button"
+                            tabIndex={0}
+                            className="cursor-pointer text-white hover:text-primary-green-800 flex-end"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ')
+                                    closeOrderSidebar();
+                            }}
+                        >
+                            <X className="text-white hover:text-green-900" />
+                        </div>
+                    </div>
+                </SidebarHeader>
+                <SidebarContent className="p-[24px]">
+                    {isLoading ? (
+                        <div>Loading...</div>
+                    ) : isError ? (
+                        <div>Error loading order details.</div>
+                    ) : (
+                        <>
+                            {/* Order Info */}
+                            <div className="flex justify-between">
+                                <div className="flex flex-col">
+                                    <span className="text-primary-black-60 text-sm leading-relaxed">
+                                        CREATED AT
+                                    </span>
+                                    <span className="text-white text-md">
+                                        {formatDate(orderDetails.created_at)}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-primary-black-60 text-sm leading-relaxed">
+                                        PAYMENT
+                                    </span>
+                                    <span className="text-white text-md">
+                                        {formatStatus(
+                                            orderDetails.payment_status
+                                        )}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-primary-black-60 text-sm leading-relaxed">
+                                        STATUS
+                                    </span>
+                                    <span className="text-white text-md">
+                                        {formatStatus(
+                                            orderDetails.fulfillment_status
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                            <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
+
+                            {/* Customer Info */}
+                            <div className="flex flex-col">
+                                <div>
+                                    <span className="text-primary-black-60 text-md leading-relaxed mb-[16px]">
+                                        Customer
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between">
+                                    <div className="w-1/3">
+                                        <span className="text-primary-black-60">
+                                            Name:
+                                        </span>
+                                    </div>
+                                    <div className="w-2/3 text-left">
+                                        <span className="text-white">
+                                            {customerName(
+                                                orderDetails?.customer
+                                                    ?.first_name,
+                                                orderDetails?.customer
+                                                    ?.last_name
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between">
+                                    <div className="w-1/3">
+                                        <span className="text-primary-black-60">
+                                            Customer ID:
+                                        </span>
+                                    </div>
+                                    <div className="w-2/3 text-left">
+                                        <span className="text-white">
+                                            {orderDetails.customer_id}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Wallet Address Row */}
+                                <div className="flex justify-between">
+                                    <div className="w-1/3">
+                                        <span className="text-primary-black-60">
+                                            Wallet Address:
+                                        </span>
+                                    </div>
+                                    <div className="w-2/3 text-left break-words">
+                                        <span className="text-white">
+                                            {
+                                                orderDetails?.customer
+                                                    ?.walletAddresses?.[0]
+                                                    ?.wallet_address
+                                            }
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between">
+                                    <div className="w-1/3">
+                                        <span className="text-primary-black-60">
+                                            Email Address:
+                                        </span>
+                                    </div>
+                                    <div className="w-2/3 text-left">
+                                        <span className="text-white">
+                                            {orderDetails.email}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between">
+                                    <div className="w-1/3">
+                                        <span className="text-primary-black-60">
+                                            Shipping Address:
+                                        </span>
+                                    </div>
+                                    <div className="w-2/3 text-left">
+                                        <span className="text-white">
+                                            {formatShippingAddress(
+                                                orderDetails.shipping_address
+                                                    .address_1,
+                                                orderDetails.shipping_address
+                                                    .address_2 || '',
+                                                orderDetails.shipping_address
+                                                    .city,
+                                                orderDetails.shipping_address
+                                                    .province,
+                                                orderDetails.shipping_address
+                                                    .postal_code
+                                            )}{' '}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
+
+                            {/* Timeline */}
+                            <Timeline orderDetails={statusDetails} />
+
+                            <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
+
+                            {/* Items */}
+                            <div className="flex flex-col">
+                                <h2 className="text-primary-black-60 text-md leading-relaxed mb-4">
+                                    ITEMS
+                                </h2>
+                                {orderDetails.items.map(
+                                    (item: any, index: number) => (
+                                        <div
+                                            key={item.id}
+                                            className="flex flex-col"
+                                        >
+                                            <Item
+                                                name={item.title}
+                                                variants={item.variant.title}
+                                                quantity={item.quantity.toString()}
+                                                subtotal={`$${(
+                                                    item.unit_price / 100
+                                                ).toFixed(2)}`}
+                                                discount="N/A" // Adjust as needed
+                                                total={`$${(
+                                                    (item.unit_price *
+                                                        item.quantity) /
+                                                    100
+                                                ).toFixed(2)}`}
+                                                image={item.thumbnail}
+                                            />
+                                            {index !==
+                                                orderDetails.items.length -
+                                                    1 && (
+                                                <div className="border-t border-dashed border-primary-black-60 my-[16px]"></div>
+                                            )}
+                                        </div>
+                                    )
+                                )}
+                            </div>
+
+                            <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
+
+                            {/* Payment */}
+                            <Payment
+                                subtotal={`$${(
+                                    orderDetails.items.reduce(
+                                        (sum: number, item: any) =>
+                                            sum +
+                                            item.unit_price * item.quantity,
+                                        0
+                                    ) / 100
+                                ).toFixed(2)}`}
+                                discount="0.00" // Adjust as needed
+                                shippingFee="0.00" // Adjust as needed
+                                total={`$${(
+                                    orderDetails.items.reduce(
+                                        (sum: number, item: any) =>
+                                            sum +
+                                            item.unit_price * item.quantity,
+                                        0
+                                    ) / 100
+                                ).toFixed(2)}`}
+                            />
+
+                            <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
+
+                            {/* Buttons */}
+                            <div className="flex justify-between space-x-4">
+                                <button className="flex-1 py-2 bg-primary-black-85 text-white text-sm font-semibold rounded">
+                                    Download Invoice
+                                </button>
+                                <button className="flex-1 py-2 bg-primary-black-85 text-white text-sm font-semibold rounded">
+                                    Message Buyer
+                                </button>
+                                <button className="flex-1 py-2 bg-primary-black-85 text-white text-sm font-semibold rounded">
+                                    Edit Order
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </SidebarContent>
             </Sidebar>
         </div>
