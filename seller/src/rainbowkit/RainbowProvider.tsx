@@ -49,13 +49,19 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
         },
 
         verify: async ({ message, signature }) => {
-            const verifyRes = await fetch('http://localhost:9000/seller/auth', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message, signature }),
-            });
+            try {
+                const response = await sendVerifyRequest(message, signature);
 
-            return Boolean(verifyRes.ok);
+                // Extract JWT from response
+                const { token } = response.data;
+
+                // Set the JWT as a secure cookie
+                document.cookie = `jwt=${token}; path=/; secure; HttpOnly`;
+
+                return response.data;
+            } catch (error) {
+                console.error('Verification failed:', error);
+            }
         },
 
         // verify: async ({ message, signature }) => {
