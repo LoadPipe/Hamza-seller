@@ -101,30 +101,24 @@ export default class StoreOrderService extends TransactionBaseService {
         note?: Record<string, any>
     ) {
         try {
-            // Fetch the order
             const order = await this.orderRepository_.findOne({
                 where: { id: orderId },
             });
 
-            // Handle the case where the order doesn't exist
             if (!order) {
                 throw new Error(`Order with id ${orderId} not found`);
             }
 
-            // Map string `newStatus` to corresponding `OrderStatus` enum value
             const mappedStatus = Object.values(OrderStatus).find(
                 (status) => status === newStatus
             );
 
-            // Validate `newStatus` against `OrderStatus`
             if (!mappedStatus) {
                 throw new Error(`Invalid order status: ${newStatus}`);
             }
 
-            // Update the order's status
             order.status = mappedStatus;
 
-            // Optionally update metadata if `note` is provided
             if (note) {
                 order.metadata = note;
             }
