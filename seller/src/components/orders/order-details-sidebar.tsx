@@ -49,6 +49,15 @@ export function OrderDetailsSidebar() {
     // Conditionally render the sidebar only when it's open
     if (!isSidebarOpen) return null;
 
+    const statusDetails = orderDetails && {
+        status: orderDetails.status,
+        fulfillment_status: orderDetails.fulfillment_status,
+        payment_status: orderDetails.payment_status,
+        created_at: orderDetails.created_at,
+        updated_at: orderDetails.updated_at,
+    };
+    console.log(`WTF ${JSON.stringify(statusDetails)}`);
+
     return (
         <div>
             <Sidebar
@@ -216,7 +225,7 @@ export function OrderDetailsSidebar() {
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
                             {/* Timeline */}
-                            <Timeline />
+                            <Timeline orderDetails={statusDetails} />
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
@@ -225,32 +234,35 @@ export function OrderDetailsSidebar() {
                                 <h2 className="text-primary-black-60 text-md leading-relaxed mb-4">
                                     ITEMS
                                 </h2>
-                                {orderDetails.items.map((item, index) => (
-                                    <div
-                                        key={item.id}
-                                        className="flex flex-col"
-                                    >
-                                        <Item
-                                            name={item.title}
-                                            variants={item.variant.title}
-                                            quantity={item.quantity.toString()}
-                                            subtotal={`$${(
-                                                item.unit_price / 100
-                                            ).toFixed(2)}`}
-                                            discount="N/A" // Adjust as needed
-                                            total={`$${(
-                                                (item.unit_price *
-                                                    item.quantity) /
-                                                100
-                                            ).toFixed(2)}`}
-                                            image={item.thumbnail}
-                                        />
-                                        {index !==
-                                            orderDetails.items.length - 1 && (
-                                            <div className="border-t border-dashed border-primary-black-60 my-[16px]"></div>
-                                        )}
-                                    </div>
-                                ))}
+                                {orderDetails.items.map(
+                                    (item: any, index: number) => (
+                                        <div
+                                            key={item.id}
+                                            className="flex flex-col"
+                                        >
+                                            <Item
+                                                name={item.title}
+                                                variants={item.variant.title}
+                                                quantity={item.quantity.toString()}
+                                                subtotal={`$${(
+                                                    item.unit_price / 100
+                                                ).toFixed(2)}`}
+                                                discount="N/A" // Adjust as needed
+                                                total={`$${(
+                                                    (item.unit_price *
+                                                        item.quantity) /
+                                                    100
+                                                ).toFixed(2)}`}
+                                                image={item.thumbnail}
+                                            />
+                                            {index !==
+                                                orderDetails.items.length -
+                                                    1 && (
+                                                <div className="border-t border-dashed border-primary-black-60 my-[16px]"></div>
+                                            )}
+                                        </div>
+                                    )
+                                )}
                             </div>
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
@@ -259,7 +271,7 @@ export function OrderDetailsSidebar() {
                             <Payment
                                 subtotal={`$${(
                                     orderDetails.items.reduce(
-                                        (sum, item) =>
+                                        (sum: number, item: any) =>
                                             sum +
                                             item.unit_price * item.quantity,
                                         0
@@ -269,7 +281,7 @@ export function OrderDetailsSidebar() {
                                 shippingFee="0.00" // Adjust as needed
                                 total={`$${(
                                     orderDetails.items.reduce(
-                                        (sum, item) =>
+                                        (sum: number, item: any) =>
                                             sum +
                                             item.unit_price * item.quantity,
                                         0

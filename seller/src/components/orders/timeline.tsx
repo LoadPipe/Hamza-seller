@@ -1,28 +1,45 @@
-const Timeline = () => {
-    const events = [
+import React from 'react';
+import { formatDate, formatStatus } from '@/utils/format-data.ts';
+
+interface TimelineEvent {
+    title: string;
+    details: string;
+    timestamp?: string; // Optional since some statuses won't have timestamps
+}
+
+interface TimelineProps {
+    orderDetails: {
+        created_at: string;
+        updated_at: string;
+        status: string;
+        fulfillment_status: string;
+        payment_status: string;
+    };
+}
+
+const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
+    // Map order statuses to timeline events
+    const events: TimelineEvent[] = [
         {
-            title: 'Order delivered',
-            details: 'Delivery confirmation from courier.',
-            reference: 'Reference no. 984366608123',
-            timestamp: 'Aug. 28, 2024, 4:54 PM',
+            title: 'Order Placed',
+            details: 'The order was created.',
+            timestamp: formatDate(orderDetails.created_at),
         },
         {
-            title: 'Order in transit',
-            details: 'Status changed from Processing to In Transit.',
-            reference: 'Aug. 28, 2024, 4:54 PM',
-            timestamp: 'Aug. 28, 2024, 4:54 PM',
+            title: 'Order Status Updated',
+            details: `Status changed to ${formatStatus(orderDetails.status)}.`,
+            timestamp:
+                orderDetails.updated_at !== orderDetails.created_at
+                    ? formatDate(orderDetails.updated_at)
+                    : undefined,
         },
         {
-            title: 'Processing',
-            details: 'Status changed from Packing to Processing.',
-            reference: 'Aug. 28, 2024, 4:54 PM',
-            timestamp: 'Aug. 28, 2024, 4:54 PM',
+            title: 'Fulfillment Status',
+            details: `Fulfillment is currently ${formatStatus(orderDetails.fulfillment_status)}.`,
         },
         {
-            title: 'Order received',
-            details: 'Status changed from In Transit to Order Received.',
-            reference: 'Aug. 28, 2024, 4:54 PM',
-            timestamp: 'Aug. 28, 2024, 4:54 PM',
+            title: 'Payment Status',
+            details: `Payment is currently ${formatStatus(orderDetails.payment_status)}.`,
         },
     ];
 
@@ -49,18 +66,15 @@ const Timeline = () => {
                                 <h3 className="text-white font-bold">
                                     {event.title}
                                 </h3>
-                                <span className="text-primary-black-60 text-sm">
-                                    {event.timestamp}
-                                </span>
+                                {event.timestamp && (
+                                    <span className="text-primary-black-60 text-sm">
+                                        {event.timestamp}
+                                    </span>
+                                )}
                             </div>
-                            <div className="">
-                                <p className="text-primary-black-60 text-sm">
-                                    {event.details}
-                                </p>
-                                <p className="text-primary-black-60 text-sm font-medium">
-                                    {event.reference}
-                                </p>
-                            </div>
+                            <p className="text-primary-black-60 text-sm">
+                                {event.details}
+                            </p>
                         </div>
                     </div>
                 ))}
