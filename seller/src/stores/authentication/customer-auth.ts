@@ -23,6 +23,7 @@ type Actions = {
     setCustomerAuthData: (authData: State['authData']) => void;
     setCustomerPreferredCurrency: (currency: string) => void;
     setIsVerified: (isVerified: boolean) => void;
+    setStatus: (status: AuthenticationStatus) => void;
 };
 
 export const useCustomerAuthStore = create<State & Actions>()(
@@ -38,7 +39,17 @@ export const useCustomerAuthStore = create<State & Actions>()(
                 token: '',
                 wallet_address: '',
             },
+
             preferred_currency_code: null,
+
+            setStatus: (status: AuthenticationStatus) => {
+                set((state) => ({
+                    authData: {
+                        ...state.authData,
+                        status,
+                    },
+                }));
+            },
 
             // Correctly define setWalletAddress
             setWalletAddress: (walletAddress: string) => {

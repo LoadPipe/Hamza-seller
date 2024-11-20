@@ -246,6 +246,7 @@ export const config: MiddlewaresConfig = {
                 restrictLoggedInSeller,
             ],
         },
+
         {
             matcher: '/admin/*',
             middlewares: [
