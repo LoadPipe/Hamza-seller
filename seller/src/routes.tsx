@@ -5,7 +5,6 @@ import {
     createRouter,
 } from '@tanstack/react-router';
 import OrdersPage from '@/pages/orders/orders-page.tsx';
-import HomePage from '@/pages/home/home-page.tsx';
 import RootComponent from '@/pages/RootComponent.tsx';
 import { z } from 'zod';
 import { zodValidator } from '@tanstack/zod-adapter';

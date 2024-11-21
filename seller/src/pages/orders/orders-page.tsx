@@ -15,7 +15,7 @@ async function getSellerOrders(
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
         const response = await axios.post(
-            'http://localhost:9000/seller/order',
+            `${import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000'}/seller/order`,
             {
                 store_id: 'store_01JCG0V7CDSB1QWV7111KJ1DDY',
                 page: pageIndex,

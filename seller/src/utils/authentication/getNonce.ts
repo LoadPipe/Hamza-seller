@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 //TODO: why no process.env?
-const GET_NONCE_URL = `http://localhost:9000/seller/auth/nonce`;
+const GET_NONCE_URL = `${import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000'}/seller/auth/nonce`;
 
 export default async function getNonce() {
     //const response = await fetch(GET_NONCE_URL);
