@@ -38,7 +38,7 @@ const ordersRoute = createRoute({
 // Add additional routes
 const homeRoute = createRoute({
     path: '/',
-    component: HomePage,
+    component: OrdersPage,
     getParentRoute: () => rootRoute,
 });
 

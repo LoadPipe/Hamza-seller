@@ -4,7 +4,7 @@ import { WalletConnect } from './wallet-connect/WalletConnect';
 
 const TopDash = () => {
     return (
-        <div className="flex flex-col min-h-screen text-white">
+        <div className="flex flex-col text-white">
             {/* Top Navigation */}
             <nav className="w-full py-4">
                 <div className="max-w-[1280px] mx-auto flex items-center justify-between px-4">
