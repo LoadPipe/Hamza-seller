@@ -206,17 +206,17 @@ export function OrderDetailsSidebar() {
                                     <div className="w-2/3 text-left">
                                         <span className="text-white">
                                             {formatShippingAddress(
-                                                orderDetails.shipping_address
-                                                    .address_1,
-                                                orderDetails.shipping_address
-                                                    .address_2 || '',
-                                                orderDetails.shipping_address
-                                                    .city,
-                                                orderDetails.shipping_address
-                                                    .province,
-                                                orderDetails.shipping_address
-                                                    .postal_code
-                                            )}{' '}
+                                                orderDetails?.shipping_address
+                                                    ?.address_1,
+                                                orderDetails?.shipping_address
+                                                    ?.address_2,
+                                                orderDetails?.shipping_address
+                                                    ?.city,
+                                                orderDetails?.shipping_address
+                                                    ?.province,
+                                                orderDetails?.shipping_address
+                                                    ?.postal_code
+                                            )}
                                         </span>
                                     </div>
                                 </div>
