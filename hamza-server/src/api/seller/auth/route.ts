@@ -30,7 +30,6 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
     await handler.handle(async () => {
         const { message, signature } = handler.inputParams;
-        const wallet_address = message.address?.trim()?.toLowerCase();
 
         //verify the signature
         const siweMessage = new SiweMessage(message);
@@ -41,6 +40,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         if (!siweResponse.success) {
             throw new Error('Error in validating wallet address signature');
         }
+
+        const wallet_address = siweResponse.data?.address
+            ?.trim()
+            ?.toLowerCase();
 
         //get the user record
         handler.logger.debug('finding user...');
