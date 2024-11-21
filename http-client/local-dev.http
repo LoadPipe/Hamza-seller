@@ -14,7 +14,7 @@ Content-Type: application/json
 // Get Seller Orders
 POST http://localhost:9000/seller/order
 Content-Type: application/json
-Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0b3JlXzAxSkNLOE1YOERaQ0hYRE1NUjhTTktON0UzIiwid2FsbGV0X2FkZHJlc3MiOiIweDRmQkNGNDljQzBmOTFkNjZCYzViQmJFOTMxOTEzRDg3MDk1OTIwMTIiLCJpYXQiOjE3MzE2NjI1NDEsImV4cCI6MTczMTc0ODk0MX0.OjDrBiusqm7muqCsdZLcgSZdxmwX0OPCJj3q_mDTGxc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0b3JlXzAxSkNLOE1YOERaQ0hYRE1NUjhTTktON0UzIiwid2FsbGV0X2FkZHJlc3MiOiIweDhiYTM1NTEzYzNmNWFjNjU5OTA3ZDIyMmUzZGFiMzhiMjBmOGY1MmEiLCJpYXQiOjE3MzIxODk1MjUsImV4cCI6MTczMjI3NTkyNX0.wlBjfKGidxycjc5RUDiU1pW32zKBlnurYA-4IQxfFxw
 
 {
     "store_id": "store_01JCK8MX8DZCHXDMMR8SNKN7E3",
@@ -25,11 +25,12 @@ Authorization: Bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0
 }
 
 ### Get Seller Order Details
-GET http://localhost:9000/seller/order/detail?order_id=order_01JCHZ33D14HBQ298MAQ6JC1D2
+GET http://localhost:9000/seller/order/detail?order_id=order_01JD18FD8K1SRPBZY9MAEN6GXC
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0b3JlXzAxSkNLOE1YOERaQ0hYRE1NUjhTTktON0UzIiwid2FsbGV0X2FkZHJlc3MiOiIweDhiYTM1NTEzYzNmNWFjNjU5OTA3ZDIyMmUzZGFiMzhiMjBmOGY1MmEiLCJpYXQiOjE3MzIxODk1MjUsImV4cCI6MTczMjI3NTkyNX0.wlBjfKGidxycjc5RUDiU1pW32zKBlnurYA-4IQxfFxw
 
 ### MODIFY ORDER STATUS && ADD NOTE?
-PUT http://localhost:9000/seller/order/change-status
+PUT http://localhost:9000/seller/order/status
 Content-Type: application/json
 
 {
