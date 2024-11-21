@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const VERIFY_MSG_URL = `http://localhost:9000/seller/auth`;
+const VERIFY_MSG_URL = `${import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000'}/seller/auth`;
 
 export default async function sendVerifyRequest(
     message: string,
