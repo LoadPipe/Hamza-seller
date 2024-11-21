@@ -20,6 +20,9 @@ interface FindOneOptions<Store> extends TypeOrmFindOneOptions<Store> {
  * JWT token
  */
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+    const storeRepository: typeof StoreRepository =
+        req.scope.resolve('storeRepository');
+
     const handler = new RouteHandler(req, res, 'POST', '/seller/auth', [
         'message',
         'signature',
@@ -40,9 +43,11 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         }
 
         //get the user record
+        handler.logger.debug('finding user...');
         let storeOwner = await UserRepository.findOne({
             where: { wallet_address },
         });
+        handler.logger.debug('found user ' + storeOwner?.id);
 
         if (!storeOwner) {
             return handler.returnStatusWithMessage(
@@ -52,8 +57,11 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         }
 
         //get the corresponding store
-        const options: FindOneOptions<Store> = { owner_id: storeOwner.id };
-        const store = await StoreRepository.findOne(options);
+        handler.logger.debug('finding store...');
+        const options: FindOneOptions<Store> = {
+            where: { owner_id: storeOwner.id },
+        };
+        const store = await storeRepository.findOne(options);
 
         if (!store) {
             return handler.returnStatusWithMessage(

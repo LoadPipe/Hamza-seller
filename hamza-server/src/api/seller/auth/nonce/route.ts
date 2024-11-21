@@ -7,7 +7,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         req,
         res,
         'GET',
-        '/custom/nonce'
+        '/seller/auth/nonce'
     );
 
     await handler.handle(async () => {

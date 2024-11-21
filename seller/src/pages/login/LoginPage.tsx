@@ -1,9 +1,9 @@
 import HamzaLogo from '../../../public/Hamza-logo.svg';
 import { WalletConnect } from '@/components/wallet-connect/WalletConnect';
 
-export default function HomePage() {
+export default function LoginPage() {
     return (
-        <div className="flex flex-col min-h-screen text-white">
+        <div className="flex flex-col min-h-screen  text-white">
             {/* Top Navigation */}
             <nav className="w-full py-4">
                 <div className="max-w-[1280px] mx-auto flex items-center justify-between px-4">

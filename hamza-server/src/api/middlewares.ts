@@ -68,7 +68,7 @@ const restrictLoggedInSeller = async (
     next: MedusaNextFunction
 ) => {
     //ignore if disabled
-    if (SELLER_AUTH_ENABLED) {
+    if (!SELLER_AUTH_ENABLED) {
         next();
         return;
     }
@@ -244,6 +244,15 @@ export const config: MiddlewaresConfig = {
                     credentials: true,
                 }),
                 restrictLoggedInSeller,
+            ],
+        },
+        {
+            matcher: '/seller',
+            middlewares: [
+                cors({
+                    origin: [SELLER_CORS],
+                    credentials: true,
+                }),
             ],
         },
         {

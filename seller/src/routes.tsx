@@ -8,7 +8,7 @@ import OrdersPage from '@/pages/orders/orders-page.tsx';
 import HomePage from '@/pages/home/home-page.tsx';
 import RootComponent from '@/pages/RootComponent.tsx';
 import { z } from 'zod';
-import { zodValidator } from '@tanstack/zod-adapter'
+import { zodValidator } from '@tanstack/zod-adapter';
 
 export const OrderSearchSchema = z.object({
     page: z.coerce.number().catch(0),
@@ -17,13 +17,10 @@ export const OrderSearchSchema = z.object({
     sort: z.string().optional(),
 });
 
-
-
 // Create the root route
 const rootRoute = createRootRoute({
     component: () => (
         <>
-            {/* The main layout component */}
             <RootComponent />
         </>
     ),
@@ -38,11 +35,10 @@ const ordersRoute = createRoute({
     validateSearch: zodValidator(OrderSearchSchema),
 });
 
-
 // Add additional routes
 const homeRoute = createRoute({
     path: '/',
-    component: HomePage,
+    component: OrdersPage,
     getParentRoute: () => rootRoute,
 });
 

@@ -29,6 +29,6 @@ package-lock.json
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-
+hamza_dev_db.session.sql
 
 all.log
