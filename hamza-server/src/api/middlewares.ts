@@ -18,7 +18,7 @@ import OrderRepository from '../repositories/order';
 
 const STORE_CORS = process.env.STORE_CORS || 'http://localhost:8000';
 const SELLER_CORS = process.env.SELLER_CORS || 'http://localhost:5173';
-const SELLER_AUTH_ENABLED: boolean = false;
+const SELLER_AUTH_ENABLED: boolean = true;
 
 function getRequestParam(req: MedusaRequest, param: string): string {
     if (req.body) {
