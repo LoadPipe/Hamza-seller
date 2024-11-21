@@ -13,9 +13,11 @@ import { createSiweMessage } from 'viem/siwe';
 import getNonce from '@/utils/authentication/getNonce.ts';
 import sendVerifyRequest from '@/utils/authentication/sendVerifyRequest.ts';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
+import LoginPage from '@/pages/login/LoginPage.tsx';
 
 export function RainbowWrapper({ children }: { children: React.ReactNode }) {
     const { authData, setCustomerAuthData } = useCustomerAuthStore();
+    const [walletAddress, setWalletAddress] = useState<string>('');
 
     const walletSignature = createAuthenticationAdapter({
         getNonce: async () => {
@@ -24,6 +26,12 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
         },
 
         createMessage: ({ nonce, address, chainId }) => {
+            console.log('createMessage called with', {
+                nonce,
+                address,
+                chainId,
+            });
+            setWalletAddress(address);
             return createSiweMessage({
                 domain: window.location.host,
                 address,
@@ -43,9 +51,21 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
 
                 // Extract JWT from response
                 const { token } = response.data;
+                console.log('respnse data', response.data);
+                console.log('respnse', response);
+                console.log('token', token);
 
                 // Set the JWT as a secure cookie
                 document.cookie = `jwt=${token}; path=/; secure; HttpOnly`;
+
+                if (response.status === 200) {
+                    setCustomerAuthData({
+                        token: token,
+                        wallet_address: walletAddress,
+                        is_verified: true,
+                        status: 'authenticated',
+                    });
+                }
 
                 return response.data;
             } catch (error) {
@@ -53,73 +73,14 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
             }
         },
 
-        // verify: async ({ message, signature }) => {
-        //     try {
-        //         console.log(
-        //             'Verifying message with signature:',
-        //             message,
-        //             signature
-        //         );
-        //         const response = await sendVerifyRequest(message, signature);
-
-        //         let data = response.data;
-        //         if (data.status == true && data.data?.created == true) {
-        //             //if just creating, then a second request is needed
-        //             const authResponse = await sendVerifyRequest(
-        //                 message,
-        //                 signature
-        //             );
-        //             data = authResponse.data;
-        //         }
-
-        //         if (data.status == true) {
-        //             const tokenResponse = await getToken({
-        //                 wallet_address: message.address,
-        //                 email: data.data?.email?.trim()?.toLowerCase(),
-        //                 password: '',
-        //             });
-
-        //             //check that customer data and wallet address match
-        //             if (
-        //                 data.data.wallet_address.trim().toLowerCase() ===
-        //                 clientWallet?.trim()?.toLowerCase()
-        //             ) {
-        //                 const customerId = data.data.customer_id;
-        //                 setCustomerId(customerId);
-        //                 Cookies.set('_medusa_jwt', tokenResponse);
-
-        //                 setCustomerAuthData({
-        //                     token: tokenResponse,
-        //                     wallet_address: message?.address,
-        //                     customer_id: data.data?.customer_id,
-        //                     is_verified: data.data?.is_verified,
-        //                     status: 'authenticated',
-        //                 });
-
-        //                 setCustomerPreferredCurrency(
-        //                     data.data?.preferred_currency?.code
-        //                 );
-
-        //                 return true;
-        //             } else {
-        //                 console.log('Wallet address mismatch on login');
-        //                 clearLogin();
-        //                 return false;
-        //             }
-        //         } else {
-        //             console.log('running verify unauthenticated');
-        //             clearLogin();
-        //             throw new Error(data.message);
-        //         }
-
-        //         return false;
-        //     } catch (e) {
-        //         console.error('Error in signing in:', e);
-        //         return false;
-        //     }
-        // },
-
         signOut: async () => {
+            setCustomerAuthData({
+                token: '',
+                wallet_address: '',
+                is_verified: false,
+                status: 'unauthenticated', // Set status to unauthenticated
+            });
+
             await fetch('/api/logout');
         },
     });
@@ -146,7 +107,13 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                             adapter={walletSignature}
                             status={authData.status}
                         >
-                            <RainbowKitProvider>{children}</RainbowKitProvider>
+                            <RainbowKitProvider>
+                                {authData.status !== 'authenticated' ? (
+                                    <LoginPage />
+                                ) : (
+                                    children
+                                )}
+                            </RainbowKitProvider>
                         </RainbowKitAuthenticationProvider>
                     </ThemeProvider>
                     <ReactQueryDevtools initialIsOpen={false} />

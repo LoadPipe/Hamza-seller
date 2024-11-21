@@ -9,7 +9,6 @@ type State = {
     authData: {
         wallet_address: string;
         token: string;
-        customer_id: string;
         status: AuthenticationStatus;
         is_verified: boolean;
     };
@@ -33,7 +32,6 @@ export const useCustomerAuthStore = create<State & Actions>()(
             hnsAvatar: null,
             hnsName: null,
             authData: {
-                customer_id: '',
                 is_verified: false,
                 status: 'unauthenticated' as AuthenticationStatus, // Make sure to cast if needed
                 token: '',
