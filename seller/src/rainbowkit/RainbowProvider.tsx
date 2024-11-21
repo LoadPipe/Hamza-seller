@@ -10,8 +10,7 @@ import { config } from './wagmi.ts';
 import { useState } from 'react';
 import { createAuthenticationAdapter } from '@rainbow-me/rainbowkit';
 import { createSiweMessage } from 'viem/siwe';
-import getNonce from '@/utils/authentication/getNonce.ts';
-import sendVerifyRequest from '@/utils/authentication/sendVerifyRequest.ts';
+import { sendVerifyRequest, getNonce } from '@/utils/authentication/';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import LoginPage from '@/pages/login/LoginPage.tsx';
 
@@ -50,13 +49,14 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 const response = await sendVerifyRequest(message, signature);
 
                 // Extract JWT from response
-                const { token } = response.data;
+                const token = response.data;
                 console.log('respnse data', response.data);
-                console.log('respnse', response);
+                console.log('response', response);
                 console.log('token', token);
 
                 // Set the JWT as a secure cookie
-                document.cookie = `jwt=${token}; path=/; secure; HttpOnly`;
+                document.cookie = `jwt=${token}; path=/;`; // secure; HttpOnly`;
+                console.log('document.cookie=', document.cookie);
 
                 if (response.status === 200) {
                     setCustomerAuthData({
