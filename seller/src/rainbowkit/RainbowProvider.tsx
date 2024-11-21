@@ -78,7 +78,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 token: '',
                 wallet_address: '',
                 is_verified: false,
-                status: 'unauthenticated', // Set status to unauthenticated
+                status: 'unauthenticated',
             });
 
             await fetch('/api/logout');
