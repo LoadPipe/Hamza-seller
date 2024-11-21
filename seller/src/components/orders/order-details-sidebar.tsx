@@ -20,6 +20,7 @@ import {
     customerName,
     formatShippingAddress,
 } from '@/utils/format-data.ts';
+import { getJwtToken } from '@/utils/authentication';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
@@ -37,7 +38,12 @@ export function OrderDetailsSidebar() {
                 throw new Error('Order ID is required');
             }
             const response = await axios.get(
-                `${MEDUSA_SERVER_URL}/seller/order/detail?order_id=${orderId}`
+                `${MEDUSA_SERVER_URL}/seller/order/detail?order_id=${orderId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${getJwtToken()}`,
+                    },
+                }
             );
             return response.data;
         },

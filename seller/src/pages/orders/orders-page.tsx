@@ -6,6 +6,7 @@ import { z } from 'zod';
 import React from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
+import { getJwtField, getJwtToken } from '@/utils/authentication';
 
 type Order = z.infer<typeof OrderSchema>;
 
@@ -14,10 +15,11 @@ async function getSellerOrders(
     pageSize = 10
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
+        console.log('document.cookie = ', document.cookie);
         const response = await axios.post(
             `${import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000'}/seller/order`,
             {
-                store_id: 'store_01JCG0V7CDSB1QWV7111KJ1DDY',
+                store_id: getJwtField('store_id'),
                 page: pageIndex,
                 count: pageSize,
                 sort: { created_at: 'ASC' },
@@ -26,6 +28,7 @@ async function getSellerOrders(
             {
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${getJwtToken()}`,
                 },
                 withCredentials: true,
             }
