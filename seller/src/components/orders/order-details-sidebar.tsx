@@ -102,7 +102,7 @@ export function OrderDetailsSidebar() {
                                         CREATED AT
                                     </span>
                                     <span className="text-white text-md">
-                                        {formatDate(orderDetails.created_at)}
+                                        {formatDate(orderDetails?.created_at)}
                                     </span>
                                 </div>
                                 <div className="flex flex-col">
@@ -111,7 +111,7 @@ export function OrderDetailsSidebar() {
                                     </span>
                                     <span className="text-white text-md">
                                         {formatStatus(
-                                            orderDetails.payment_status
+                                            orderDetails?.payment_status
                                         )}
                                     </span>
                                 </div>
@@ -121,7 +121,7 @@ export function OrderDetailsSidebar() {
                                     </span>
                                     <span className="text-white text-md">
                                         {formatStatus(
-                                            orderDetails.fulfillment_status
+                                            orderDetails?.fulfillment_status
                                         )}
                                     </span>
                                 </div>
@@ -162,7 +162,7 @@ export function OrderDetailsSidebar() {
                                     </div>
                                     <div className="w-2/3 text-left">
                                         <span className="text-white">
-                                            {orderDetails.customer_id}
+                                            {orderDetails?.customer_id}
                                         </span>
                                     </div>
                                 </div>
@@ -193,7 +193,7 @@ export function OrderDetailsSidebar() {
                                     </div>
                                     <div className="w-2/3 text-left">
                                         <span className="text-white">
-                                            {orderDetails.email}
+                                            {orderDetails?.email}
                                         </span>
                                     </div>
                                 </div>
@@ -206,17 +206,17 @@ export function OrderDetailsSidebar() {
                                     <div className="w-2/3 text-left">
                                         <span className="text-white">
                                             {formatShippingAddress(
-                                                orderDetails.shipping_address
-                                                    .address_1,
-                                                orderDetails.shipping_address
-                                                    .address_2 || '',
-                                                orderDetails.shipping_address
-                                                    .city,
-                                                orderDetails.shipping_address
-                                                    .province,
-                                                orderDetails.shipping_address
-                                                    .postal_code
-                                            )}{' '}
+                                                orderDetails?.shipping_address
+                                                    ?.address_1,
+                                                orderDetails?.shipping_address
+                                                    ?.address_2,
+                                                orderDetails?.shipping_address
+                                                    ?.city,
+                                                orderDetails?.shipping_address
+                                                    ?.province,
+                                                orderDetails?.shipping_address
+                                                    ?.postal_code
+                                            )}
                                         </span>
                                     </div>
                                 </div>
