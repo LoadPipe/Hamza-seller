@@ -13,20 +13,17 @@ import Item from '@/components/orders/item';
 import Payment from '@/components/orders/payment';
 import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import {
     formatStatus,
     formatDate,
     customerName,
     formatShippingAddress,
 } from '@/utils/format-data.ts';
-import { getJwtToken } from '@/utils/authentication';
+import { getSecure } from '@/utils/api-calls';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
-    const MEDUSA_SERVER_URL =
-        import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000';
     const {
         data: orderDetails,
         isLoading,
@@ -37,15 +34,9 @@ export function OrderDetailsSidebar() {
             if (!orderId) {
                 throw new Error('Order ID is required');
             }
-            const response = await axios.get(
-                `${MEDUSA_SERVER_URL}/seller/order/detail?order_id=${orderId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${getJwtToken()}`,
-                    },
-                }
-            );
-            return response.data;
+            return await getSecure('/seller/order/detail', {
+                order_id: orderId,
+            });
         },
         enabled: !!orderId && isSidebarOpen, // Fetch only when these conditions are met
         refetchOnWindowFocus: false, // Prevent refetching on focus
