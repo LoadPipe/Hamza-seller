@@ -16,13 +16,11 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
     const orderService: StoreOrderService =
         req.scope.resolve('storeOrderService');
 
-    const handler = new RouteHandler(
-        req,
-        res,
-        'PUT',
-        '/seller/order/change-status',
-        ['order_id', 'status', 'note']
-    );
+    const handler = new RouteHandler(req, res, 'PUT', '/seller/order/status', [
+        'order_id',
+        'status',
+        'note',
+    ]);
 
     await handler.handle(async () => {
         // Ensure required parameters are provided

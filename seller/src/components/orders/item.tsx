@@ -1,21 +1,25 @@
+import currencyIcons from '../../../public/currencies/crypto-currencies.ts';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
+
 type ItemProps = {
     name: string;
     variants: string;
     quantity: number;
-    subtotal: string;
-    discount: string;
-    total: string;
+    unitPrice: number;
+    discount: number;
+    currencyCode: string;
     image: string;
 };
 const Item: React.FC<ItemProps> = ({
     name,
     variants,
     quantity,
-    subtotal,
+    unitPrice,
     discount,
-    total,
+    currencyCode,
     image,
 }) => {
+    const total = unitPrice * quantity;
     return (
         <div className="flex flex-col mb-[24px] last:mb-0">
             {/* Main Content Row */}
@@ -50,10 +54,18 @@ const Item: React.FC<ItemProps> = ({
 
                     {/* Price Breakdown */}
                     <div className="text-right text-primary-black-60 text-sm">
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                             <span>Subtotal:</span>
+                            <img
+                                className="ml-2 mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                                src={currencyIcons[currencyCode ?? 'usdc']}
+                                alt={currencyCode ?? 'usdc'}
+                            />
                             <span className="text-white font-semibold text-right">
-                                {subtotal}
+                                {formatCryptoPrice(
+                                    unitPrice,
+                                    currencyCode || 'USDC'
+                                )}
                             </span>
                         </div>
                         <div className="flex justify-between">
@@ -62,10 +74,18 @@ const Item: React.FC<ItemProps> = ({
                                 {discount}
                             </span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                             <span>Total:</span>
+                            <img
+                                className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                                src={currencyIcons[currencyCode ?? 'usdc']}
+                                alt={currencyCode ?? 'usdc'}
+                            />
                             <span className="text-white font-semibold text-right">
-                                {total}
+                                {formatCryptoPrice(
+                                    total,
+                                    currencyCode || 'USDC'
+                                )}
                             </span>
                         </div>
                     </div>

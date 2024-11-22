@@ -43,7 +43,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         const store_id = handler.inputParams.store_id;
 
         const orders = await orderService.getOrdersForStore(
-            store_id,
+            handler.inputParams.store_id,
             filter,
             sort,
             page,

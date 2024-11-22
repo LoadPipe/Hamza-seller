@@ -62,7 +62,7 @@ const FormBase = forwardRef(({ fields, onSubmit }: FormBaseProps, ref) => {
     return (
         <form
             onSubmit={(e) => {
-                console.log('fff', form.state);
+                // console.log('fff', form.state);
                 e.preventDefault();
                 form.handleSubmit();
             }}

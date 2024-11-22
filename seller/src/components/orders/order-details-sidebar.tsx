@@ -13,19 +13,18 @@ import Item from '@/components/orders/item';
 import Payment from '@/components/orders/payment';
 import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import {
     formatStatus,
     formatDate,
     customerName,
     formatShippingAddress,
 } from '@/utils/format-data.ts';
+import { getSecure } from '@/utils/api-calls';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
-    const MEDUSA_SERVER_URL =
-        import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000';
     const {
         data: orderDetails,
         isLoading,
@@ -36,10 +35,9 @@ export function OrderDetailsSidebar() {
             if (!orderId) {
                 throw new Error('Order ID is required');
             }
-            const response = await axios.get(
-                `${MEDUSA_SERVER_URL}/seller/order/detail?order_id=${orderId}`
-            );
-            return response.data;
+            return await getSecure('/seller/order/detail', {
+                order_id: orderId,
+            });
         },
         enabled: !!orderId && isSidebarOpen, // Fetch only when these conditions are met
         refetchOnWindowFocus: false, // Prevent refetching on focus
@@ -56,8 +54,15 @@ export function OrderDetailsSidebar() {
         created_at: orderDetails.created_at,
         updated_at: orderDetails.updated_at,
     };
-    console.log(`WTF ${JSON.stringify(statusDetails)}`);
-
+    const totalPrice = (orderDetails?.items || []).reduce(
+        (acc: number, item: any) => {
+            const unitPrice = Number(item.unit_price) || 0; // Ensure it's a number
+            const quantity = Number(item.quantity) || 0; // Ensure it's a number
+            return acc + unitPrice * quantity;
+        },
+        0 // Initial accumulator value
+    );
+    console.log(`WTF ${totalPrice}`);
     return (
         <div>
             <Sidebar
@@ -244,15 +249,11 @@ export function OrderDetailsSidebar() {
                                                 name={item.title}
                                                 variants={item.variant.title}
                                                 quantity={item.quantity.toString()}
-                                                subtotal={`$${(
-                                                    item.unit_price / 100
-                                                ).toFixed(2)}`}
-                                                discount="N/A" // Adjust as needed
-                                                total={`$${(
-                                                    (item.unit_price *
-                                                        item.quantity) /
-                                                    100
-                                                ).toFixed(2)}`}
+                                                unitPrice={item.unit_price}
+                                                discount={0} // Adjust as needed
+                                                currencyCode={
+                                                    item.currency_code || 'USDC'
+                                                }
                                                 image={item.thumbnail}
                                             />
                                             {index !==
@@ -269,24 +270,18 @@ export function OrderDetailsSidebar() {
 
                             {/* Payment */}
                             <Payment
-                                subtotal={`$${(
-                                    orderDetails.items.reduce(
-                                        (sum: number, item: any) =>
-                                            sum +
-                                            item.unit_price * item.quantity,
-                                        0
-                                    ) / 100
-                                ).toFixed(2)}`}
-                                discount="0.00" // Adjust as needed
+                                subtotal={`${formatCryptoPrice(totalPrice, orderDetails?.items[0]?.currency_code || 'usdc')}`}
+                                discount={0} // Adjust as needed
                                 shippingFee="0.00" // Adjust as needed
-                                total={`$${(
-                                    orderDetails.items.reduce(
-                                        (sum: number, item: any) =>
-                                            sum +
-                                            item.unit_price * item.quantity,
-                                        0
-                                    ) / 100
-                                ).toFixed(2)}`}
+                                currencyCode={
+                                    orderDetails?.items[0]?.currency_code ||
+                                    'usdc'
+                                }
+                                total={formatCryptoPrice(
+                                    totalPrice,
+                                    orderDetails?.items[0]?.currency_code ||
+                                        'usdc'
+                                )}
                             />
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />

@@ -20,7 +20,17 @@ export const OrderSchema = z.object({
     id: z.string(),
     customer_id: z.string(),
     created_at: z.string(),
-    payment_status: z.enum(['awaiting', 'completed', 'failed']),
+    payment_status: z.enum([
+        'awaiting',
+        'completed',
+        'failed',
+        'not_paid',
+        'requires_action',
+        'captured',
+        'partially_refunded',
+        'refunded',
+        'canceled',
+    ]),
     fulfillment_status: z.enum([
         'not_fulfilled',
         'partially_fulfilled',
@@ -82,7 +92,19 @@ export const generateColumns = (
             case 'id':
                 return {
                     accessorKey: 'id',
-                    header: 'ORDER',
+                    header: ({ column }) => (
+                        <Button
+                            variant="ghost"
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Order
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    ),
                     cell: ({ row }) => {
                         const orderId: string = row.getValue('id');
                         // Remove 'order_' prefix
@@ -93,7 +115,19 @@ export const generateColumns = (
             case 'customer':
                 return {
                     accessorKey: 'customer', // Use accessor key as customer
-                    header: 'Customer Name',
+                    header: ({ column }) => (
+                        <Button
+                            variant="ghost"
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Customer Name
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    ),
                     cell: ({ row }) => {
                         const customer = row.getValue(
                             'customer'
@@ -112,7 +146,19 @@ export const generateColumns = (
             case 'created_at':
                 return {
                     accessorKey: 'created_at',
-                    header: 'DATE',
+                    header: ({ column }) => (
+                        <Button
+                            variant="ghost"
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Date
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    ),
                     cell: ({ row }) => {
                         const date = new Date(row.getValue('created_at'));
                         return <div>{formatDate(date)}</div>;
@@ -121,7 +167,19 @@ export const generateColumns = (
             case 'payment_status':
                 return {
                     accessorKey: 'payment_status',
-                    header: 'PAYMENT',
+                    header: ({ column }) => (
+                        <Button
+                            variant="ghost"
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Payment
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    ),
                     cell: ({ row }) => {
                         const paymentStatus = row.getValue(
                             'payment_status'
@@ -132,7 +190,19 @@ export const generateColumns = (
             case 'fulfillment_status':
                 return {
                     accessorKey: 'fulfillment_status',
-                    header: 'ORDER STATUS',
+                    header: ({ column }) => (
+                        <Button
+                            variant="ghost"
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Fulfillment Status
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    ),
                     cell: ({ row }) => {
                         const orderStatus = row.getValue(
                             'fulfillment_status'
@@ -165,7 +235,19 @@ export const generateColumns = (
             case 'price':
                 return {
                     accessorKey: 'price',
-                    header: 'PRICE',
+                    header: ({ column }) => (
+                        <Button
+                            variant="ghost"
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Price
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    ),
                     cell: ({ row }) => {
                         const price = row.getValue('price') as Order['price'];
                         if (price === undefined) return <div>--</div>;

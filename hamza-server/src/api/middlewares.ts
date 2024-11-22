@@ -23,7 +23,7 @@ const SELLER_AUTH_ENABLED: boolean = false;
 function getRequestParam(req: MedusaRequest, param: string): string {
     if (req.body) {
         const output = readRequestBody(req.body, [param]);
-        return output[param]?.toString();
+        if (output[param]) return output[param]?.toString();
     }
     return req.query[param]?.toString();
 }
@@ -98,7 +98,7 @@ const restrictLoggedInSeller = async (
         const requestedOrderId = getRequestedOrderId(req);
 
         logger.debug(
-            `Auth middleware: wallet: ${wallet}, store: ${storeId}, requested store: ${requestedStoreId}`
+            `Auth middleware: wallet: ${wallet}, store: ${storeId}, requested store: ${requestedStoreId}, requested order: ${requestedOrderId}`
         );
 
         //compare store ids, owners, etc

@@ -25,12 +25,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.18.1 # Specify the required Node.js version
-          cache: 'yarn'
 
       # Install dependencies
       - name: Install Dependencies
         run: yarn install
+        working-directory: seller
 
       # Build the project
       - name: Build Project
         run: yarn build
+        working-directory: seller
