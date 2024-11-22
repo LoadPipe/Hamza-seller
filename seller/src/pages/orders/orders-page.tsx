@@ -20,7 +20,6 @@ async function getSellerOrders(
             page: pageIndex,
             count: pageSize,
             sort: { created_at: 'ASC' },
-            filter: { status: { eq: 'pending' } },
         });
 
         // SS orders: object => typecast: object ...
