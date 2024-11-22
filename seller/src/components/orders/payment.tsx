@@ -1,13 +1,17 @@
+import currencyIcons from '../../../public/currencies/crypto-currencies.ts';
+
 type PaymentProps = {
-    subtotal: string;
-    discount: string;
+    subtotal: string | number;
+    discount: number;
+    currencyCode: string;
     shippingFee: string;
-    total: string;
+    total: string | number;
 };
 
 const Payment: React.FC<PaymentProps> = ({
     subtotal,
     discount,
+    currencyCode,
     shippingFee,
     total,
 }) => {
@@ -21,11 +25,16 @@ const Payment: React.FC<PaymentProps> = ({
             </div>
 
             {/* Subtotal, Discount, Shipping Fee Rows */}
-            <div className="flex flex-col">
-                <div className="flex justify-between">
+            <div className="flex flex-col ">
+                <div className="flex justify-between items-center">
                     <span className="text-white text-sm font-semibold">
                         Subtotal
                     </span>
+                    <img
+                        className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                        src={currencyIcons[currencyCode ?? 'usdc']}
+                        alt={currencyCode ?? 'usdc'}
+                    />
                     <span className="text-white font-semibold text-lg">
                         {subtotal}
                     </span>
@@ -55,9 +64,9 @@ const Payment: React.FC<PaymentProps> = ({
                 </span>
                 <div className="flex items-center">
                     <img
-                        src="" // Replace with your icon path
-                        alt="Currency Icon"
-                        className="h-6 w-6 mr-2"
+                        className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                        src={currencyIcons[currencyCode ?? 'usdc']}
+                        alt={currencyCode ?? 'usdc'}
                     />
                     <span className="text-white font-bold text-xl">
                         {total}

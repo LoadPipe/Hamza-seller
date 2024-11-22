@@ -54,8 +54,15 @@ export function OrderDetailsSidebar() {
         created_at: orderDetails.created_at,
         updated_at: orderDetails.updated_at,
     };
-    console.log(`WTF ${JSON.stringify(statusDetails)}`);
-
+    const totalPrice = (orderDetails?.items || []).reduce(
+        (acc: number, item: any) => {
+            const unitPrice = Number(item.unit_price) || 0; // Ensure it's a number
+            const quantity = Number(item.quantity) || 0; // Ensure it's a number
+            return acc + unitPrice * quantity;
+        },
+        0 // Initial accumulator value
+    );
+    console.log(`WTF ${totalPrice}`);
     return (
         <div>
             <Sidebar
@@ -238,27 +245,15 @@ export function OrderDetailsSidebar() {
                                             key={item.id}
                                             className="flex flex-col"
                                         >
-                                            {/*return formatCryptoPrice(amount, order.currency_code || 'USDC');*/}
-
                                             <Item
                                                 name={item.title}
                                                 variants={item.variant.title}
                                                 quantity={item.quantity.toString()}
-                                                subtotal={`${formatCryptoPrice(
-                                                    item.unit_price,
-                                                    item.currency_code || 'USDC'
-                                                )}`}
-                                                discount="N/A" // Adjust as needed
+                                                unitPrice={item.unit_price}
+                                                discount={0} // Adjust as needed
                                                 currencyCode={
                                                     item.currency_code || 'USDC'
                                                 }
-                                                total={`${
-                                                    (formatCryptoPrice(
-                                                        item.unit_price,
-                                                        item.currency_code ||
-                                                            'USDC'
-                                                    ) as number) * item.quantity
-                                                }`}
                                                 image={item.thumbnail}
                                             />
                                             {index !==
@@ -275,24 +270,18 @@ export function OrderDetailsSidebar() {
 
                             {/* Payment */}
                             <Payment
-                                subtotal={`$${(
-                                    orderDetails.items.reduce(
-                                        (sum: number, item: any) =>
-                                            sum +
-                                            item.unit_price * item.quantity,
-                                        0
-                                    ) / 100
-                                ).toFixed(2)}`}
-                                discount="0.00" // Adjust as needed
+                                subtotal={`${formatCryptoPrice(totalPrice, orderDetails?.items[0]?.currency_code || 'usdc')}`}
+                                discount={0} // Adjust as needed
                                 shippingFee="0.00" // Adjust as needed
-                                total={`$${(
-                                    orderDetails.items.reduce(
-                                        (sum: number, item: any) =>
-                                            sum +
-                                            item.unit_price * item.quantity,
-                                        0
-                                    ) / 100
-                                ).toFixed(2)}`}
+                                currencyCode={
+                                    orderDetails?.items[0]?.currency_code ||
+                                    'usdc'
+                                }
+                                total={formatCryptoPrice(
+                                    totalPrice,
+                                    orderDetails?.items[0]?.currency_code ||
+                                        'usdc'
+                                )}
                             />
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
