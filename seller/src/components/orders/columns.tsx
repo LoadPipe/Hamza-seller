@@ -20,7 +20,17 @@ export const OrderSchema = z.object({
     id: z.string(),
     customer_id: z.string(),
     created_at: z.string(),
-    payment_status: z.enum(['awaiting', 'completed', 'failed']),
+    payment_status: z.enum([
+        'awaiting',
+        'completed',
+        'failed',
+        'not_paid',
+        'requires_action',
+        'captured',
+        'partially_refunded',
+        'refunded',
+        'canceled',
+    ]),
     fulfillment_status: z.enum([
         'not_fulfilled',
         'partially_fulfilled',
