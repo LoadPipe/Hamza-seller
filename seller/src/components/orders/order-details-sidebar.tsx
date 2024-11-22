@@ -13,20 +13,17 @@ import Item from '@/components/orders/item';
 import Payment from '@/components/orders/payment';
 import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import {
     formatStatus,
     formatDate,
     customerName,
     formatShippingAddress,
 } from '@/utils/format-data.ts';
-import { getJwtToken } from '@/utils/authentication';
+import { getSecure } from '@/utils/api-calls';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
-    const MEDUSA_SERVER_URL =
-        import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000';
     const {
         data: orderDetails,
         isLoading,
@@ -37,15 +34,9 @@ export function OrderDetailsSidebar() {
             if (!orderId) {
                 throw new Error('Order ID is required');
             }
-            const response = await axios.get(
-                `${MEDUSA_SERVER_URL}/seller/order/detail?order_id=${orderId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${getJwtToken()}`,
-                    },
-                }
-            );
-            return response.data;
+            return await getSecure('/seller/order/detail', {
+                order_id: orderId,
+            });
         },
         enabled: !!orderId && isSidebarOpen, // Fetch only when these conditions are met
         refetchOnWindowFocus: false, // Prevent refetching on focus
@@ -108,7 +99,7 @@ export function OrderDetailsSidebar() {
                                         CREATED AT
                                     </span>
                                     <span className="text-white text-md">
-                                        {formatDate(orderDetails.created_at)}
+                                        {formatDate(orderDetails?.created_at)}
                                     </span>
                                 </div>
                                 <div className="flex flex-col">
@@ -117,7 +108,7 @@ export function OrderDetailsSidebar() {
                                     </span>
                                     <span className="text-white text-md">
                                         {formatStatus(
-                                            orderDetails.payment_status
+                                            orderDetails?.payment_status
                                         )}
                                     </span>
                                 </div>
@@ -127,7 +118,7 @@ export function OrderDetailsSidebar() {
                                     </span>
                                     <span className="text-white text-md">
                                         {formatStatus(
-                                            orderDetails.fulfillment_status
+                                            orderDetails?.fulfillment_status
                                         )}
                                     </span>
                                 </div>
@@ -168,7 +159,7 @@ export function OrderDetailsSidebar() {
                                     </div>
                                     <div className="w-2/3 text-left">
                                         <span className="text-white">
-                                            {orderDetails.customer_id}
+                                            {orderDetails?.customer_id}
                                         </span>
                                     </div>
                                 </div>
@@ -199,7 +190,7 @@ export function OrderDetailsSidebar() {
                                     </div>
                                     <div className="w-2/3 text-left">
                                         <span className="text-white">
-                                            {orderDetails.email}
+                                            {orderDetails?.email}
                                         </span>
                                     </div>
                                 </div>
@@ -212,17 +203,17 @@ export function OrderDetailsSidebar() {
                                     <div className="w-2/3 text-left">
                                         <span className="text-white">
                                             {formatShippingAddress(
-                                                orderDetails.shipping_address
-                                                    .address_1,
-                                                orderDetails.shipping_address
-                                                    .address_2 || '',
-                                                orderDetails.shipping_address
-                                                    .city,
-                                                orderDetails.shipping_address
-                                                    .province,
-                                                orderDetails.shipping_address
-                                                    .postal_code
-                                            )}{' '}
+                                                orderDetails?.shipping_address
+                                                    ?.address_1,
+                                                orderDetails?.shipping_address
+                                                    ?.address_2,
+                                                orderDetails?.shipping_address
+                                                    ?.city,
+                                                orderDetails?.shipping_address
+                                                    ?.province,
+                                                orderDetails?.shipping_address
+                                                    ?.postal_code
+                                            )}
                                         </span>
                                     </div>
                                 </div>
