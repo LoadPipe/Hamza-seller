@@ -1,12 +1,12 @@
 import { OrderSchema, columns } from '@/components/orders/columns';
 import { DataTable } from '@/components/table/data-table.tsx';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { z } from 'zod';
 import React from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
-import { getJwtField, getJwtToken } from '@/utils/authentication';
+import { getJwtField } from '@/utils/authentication';
+import { postSecure } from '@/utils/api-calls';
 
 type Order = z.infer<typeof OrderSchema>;
 
@@ -15,29 +15,18 @@ async function getSellerOrders(
     pageSize = 10
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
-        console.log('document.cookie = ', document.cookie);
-        const response = await axios.post(
-            `${import.meta.env.VITE_MEDUSA_BACKEND_URL || 'http://localhost:9000'}/seller/order`,
-            {
-                store_id: getJwtField('store_id'),
-                page: pageIndex,
-                count: pageSize,
-                sort: { created_at: 'ASC' },
-                filter: { status: { eq: 'pending' } },
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${getJwtToken()}`,
-                },
-                withCredentials: true,
-            }
-        );
+        const response = await postSecure('/seller/order', {
+            store_id: getJwtField('store_id'),
+            page: pageIndex,
+            count: pageSize,
+            sort: { created_at: 'ASC' },
+            filter: { status: { eq: 'pending' } },
+        });
 
         // SS orders: object => typecast: object ...
-        const data: object = response.data.orders as object;
+        const data: object = response.orders as object;
         // SS totalRecords: string => typecast: number...
-        const totalRecords: number = response.data.totalRecords as number;
+        const totalRecords: number = response.totalRecords as number;
         return {
             orders: OrderSchema.array().parse(data), // Validate using Zod
             totalRecords,
