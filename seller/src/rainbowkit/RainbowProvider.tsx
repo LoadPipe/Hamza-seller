@@ -12,7 +12,7 @@ import { createAuthenticationAdapter } from '@rainbow-me/rainbowkit';
 import { createSiweMessage } from 'viem/siwe';
 import { sendVerifyRequest, getNonce } from '@/utils/authentication/';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
-import LoginPage from '@/pages/login/LoginPage.tsx';
+import LoginPage from '@/pages/login/login-page.tsx';
 
 export function RainbowWrapper({ children }: { children: React.ReactNode }) {
     const { authData, setCustomerAuthData } = useCustomerAuthStore();
