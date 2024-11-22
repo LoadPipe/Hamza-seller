@@ -21,6 +21,7 @@ async function getSellerOrders(
             count: pageSize,
             sort: { created_at: 'ASC' },
         });
+        console.log(`STORE_ID ${response.store_id}`);
 
         // SS orders: object => typecast: object ...
         const data: object = response.orders as object;

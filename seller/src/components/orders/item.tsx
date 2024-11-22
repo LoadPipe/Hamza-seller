@@ -1,3 +1,7 @@
+import { Image } from 'lucide-react';
+import cryptoCurrencies from '../../../public/currencies/crypto-currencies.ts';
+import currencyIcons from '../../../public/currencies/crypto-currencies.ts';
+
 type ItemProps = {
     name: string;
     variants: string;
@@ -5,6 +9,7 @@ type ItemProps = {
     subtotal: string;
     discount: string;
     total: string;
+    currencyCode: string;
     image: string;
 };
 const Item: React.FC<ItemProps> = ({
@@ -14,6 +19,7 @@ const Item: React.FC<ItemProps> = ({
     subtotal,
     discount,
     total,
+    currencyCode,
     image,
 }) => {
     return (
@@ -52,6 +58,11 @@ const Item: React.FC<ItemProps> = ({
                     <div className="text-right text-primary-black-60 text-sm">
                         <div className="flex justify-between">
                             <span>Subtotal:</span>
+                            <img
+                                className="ml-2 mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                                src={currencyIcons[currencyCode ?? 'usdc']}
+                                alt={currencyCode ?? 'usdc'}
+                            />
                             <span className="text-white font-semibold text-right">
                                 {subtotal}
                             </span>
@@ -64,6 +75,11 @@ const Item: React.FC<ItemProps> = ({
                         </div>
                         <div className="flex justify-between">
                             <span>Total:</span>
+                            <img
+                                className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                                src={currencyIcons[currencyCode ?? 'usdc']}
+                                alt={currencyCode ?? 'usdc'}
+                            />
                             <span className="text-white font-semibold text-right">
                                 {total}
                             </span>

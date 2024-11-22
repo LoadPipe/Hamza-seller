@@ -20,6 +20,7 @@ import {
     formatShippingAddress,
 } from '@/utils/format-data.ts';
 import { getSecure } from '@/utils/api-calls';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
@@ -237,19 +238,27 @@ export function OrderDetailsSidebar() {
                                             key={item.id}
                                             className="flex flex-col"
                                         >
+                                            {/*return formatCryptoPrice(amount, order.currency_code || 'USDC');*/}
+
                                             <Item
                                                 name={item.title}
                                                 variants={item.variant.title}
                                                 quantity={item.quantity.toString()}
-                                                subtotal={`$${(
-                                                    item.unit_price / 100
-                                                ).toFixed(2)}`}
+                                                subtotal={`${formatCryptoPrice(
+                                                    item.unit_price,
+                                                    item.currency_code || 'USDC'
+                                                )}`}
                                                 discount="N/A" // Adjust as needed
-                                                total={`$${(
-                                                    (item.unit_price *
-                                                        item.quantity) /
-                                                    100
-                                                ).toFixed(2)}`}
+                                                currencyCode={
+                                                    item.currency_code || 'USDC'
+                                                }
+                                                total={`${
+                                                    (formatCryptoPrice(
+                                                        item.unit_price,
+                                                        item.currency_code ||
+                                                            'USDC'
+                                                    ) as number) * item.quantity
+                                                }`}
                                                 image={item.thumbnail}
                                             />
                                             {index !==

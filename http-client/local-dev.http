@@ -14,10 +14,10 @@ Content-Type: application/json
 // Get Seller Orders
 POST http://localhost:9000/seller/order
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0b3JlXzAxSkNLOE1YOERaQ0hYRE1NUjhTTktON0UzIiwid2FsbGV0X2FkZHJlc3MiOiIweDhiYTM1NTEzYzNmNWFjNjU5OTA3ZDIyMmUzZGFiMzhiMjBmOGY1MmEiLCJpYXQiOjE3MzIxODk1MjUsImV4cCI6MTczMjI3NTkyNX0.wlBjfKGidxycjc5RUDiU1pW32zKBlnurYA-4IQxfFxw
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
 {
-    "store_id": "store_01JCK8MX8DZCHXDMMR8SNKN7E3",
+    "store_id": "store_01JD7CRC0GC894T18A815NCJGN",
     "page": 0,
     "count": 50,
     "sort": {"created_at": "ASC"},
@@ -25,9 +25,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0b
 }
 
 ### Get Seller Order Details
-GET http://localhost:9000/seller/order/detail?order_id=order_01JD18FD8K1SRPBZY9MAEN6GXC
+GET http://localhost:9000/seller/order/detail?order_id=order_01JD7D8YKNMK7YD1PTP2RARYVB
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdG9yZV9pZCI6InN0b3JlXzAxSkNLOE1YOERaQ0hYRE1NUjhTTktON0UzIiwid2FsbGV0X2FkZHJlc3MiOiIweDhiYTM1NTEzYzNmNWFjNjU5OTA3ZDIyMmUzZGFiMzhiMjBmOGY1MmEiLCJpYXQiOjE3MzIxODk1MjUsImV4cCI6MTczMjI3NTkyNX0.wlBjfKGidxycjc5RUDiU1pW32zKBlnurYA-4IQxfFxw
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
 ### MODIFY ORDER STATUS && ADD NOTE?
 PUT http://localhost:9000/seller/order/status
