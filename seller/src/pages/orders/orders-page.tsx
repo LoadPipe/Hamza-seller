@@ -65,7 +65,7 @@ export default function OrdersPage() {
     }
 
     return (
-        <div className="flex">
+        <div>
             <DataTable
                 columns={columns}
                 data={data?.orders ?? []}

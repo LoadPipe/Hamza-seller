@@ -45,13 +45,14 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             ?.trim()
             ?.toLowerCase();
 
+        console.log('Wallet adddy', wallet_address);
         //get the user record
         handler.logger.debug('finding user...');
         let storeOwner = await UserRepository.findOne({
             where: { wallet_address },
         });
         handler.logger.debug('found user ' + storeOwner?.id);
-
+        console.log('store owner id', storeOwner);
         if (!storeOwner) {
             return handler.returnStatusWithMessage(
                 404,
