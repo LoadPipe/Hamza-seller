@@ -23,8 +23,27 @@ import SmtpMailService from './smtp-mail';
 import CustomerNotificationService from './customer-notification';
 import OrderHistoryService from './order-history';
 import StoreOrderRepository from '../repositories/order';
-import { OrderStatus } from '@medusajs/medusa';
-const DEFAULT_PAGE_COUNT = 30;
+import {
+    OrderStatus,
+    FulfillmentStatus,
+    PaymentStatus,
+} from '@medusajs/medusa';
+
+const DEFAULT_PAGE_COUNT = 10;
+
+interface filterOrders {
+    orderStatus?: OrderStatus;
+    fulfillmentStatus?: FulfillmentStatus;
+    paymentStatus?: PaymentStatus;
+    price?: {
+        ne?: number;
+        eq?: number;
+        lt?: number;
+        gt?: number;
+        lte?: number;
+        gte?: number;
+    }; // range filtering
+}
 
 export interface StoreOrdersDTO {
     pageIndex: number;
@@ -32,7 +51,7 @@ export interface StoreOrdersDTO {
     rowsPerPage: number;
     sortedBy: any;
     sortDirection: string;
-    filtering: any;
+    filtering: filterOrders;
     orders: Order[];
     totalRecords: number;
 }
@@ -59,10 +78,10 @@ export default class StoreOrderService extends TransactionBaseService {
 
     async getOrdersForStore(
         storeId: string,
-        filter: any,
+        filter: filterOrders,
         sort: any,
         page: number,
-        count: number
+        ordersPerPage: number
     ): Promise<StoreOrdersDTO> {
         //basic query is store id
         const where = { store_id: storeId };
@@ -90,8 +109,8 @@ export default class StoreOrderService extends TransactionBaseService {
 
         const params = {
             where,
-            take: count ?? DEFAULT_PAGE_COUNT,
-            skip: page * count,
+            take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
+            skip: page * ordersPerPage,
             order: sort
                 ? {
                       [sort.field]: sort.direction, // e.g., ASC or DESC
@@ -109,8 +128,8 @@ export default class StoreOrderService extends TransactionBaseService {
 
         return {
             pageIndex: page,
-            pageCount: Math.ceil(totalRecords / count),
-            rowsPerPage: count,
+            pageCount: Math.ceil(totalRecords / ordersPerPage),
+            rowsPerPage: ordersPerPage,
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
