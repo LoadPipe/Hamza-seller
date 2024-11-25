@@ -11,7 +11,7 @@ const RootComponent = () => {
             {/* Separate Provider for App Sidebar */}
             <SidebarProvider>
                 <AppSidebar />
-                <div className="flex flex-col w-full">
+                <div className="flex flex-col flex-grow">
                     <TopDash />
                     <Outlet />
                 </div>
