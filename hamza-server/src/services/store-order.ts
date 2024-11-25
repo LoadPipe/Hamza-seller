@@ -26,6 +26,17 @@ import StoreOrderRepository from '../repositories/order';
 import { OrderStatus } from '@medusajs/medusa';
 const DEFAULT_PAGE_COUNT = 30;
 
+export interface StoreOrdersDTO {
+    pageIndex: number;
+    pageCount: number;
+    rowsPerPage: number;
+    sortedBy: any;
+    sortDirection: string;
+    filtering: any;
+    orders: Order[];
+    totalRecords: number;
+}
+
 export default class StoreOrderService extends TransactionBaseService {
     static LIFE_TIME = Lifetime.SINGLETON;
 
@@ -52,7 +63,7 @@ export default class StoreOrderService extends TransactionBaseService {
         sort: any,
         page: number,
         count: number
-    ): Promise<{ orders: Order[]; totalRecords: number }> {
+    ): Promise<StoreOrdersDTO> {
         //basic query is store id
         const where = { store_id: storeId };
 
@@ -81,7 +92,11 @@ export default class StoreOrderService extends TransactionBaseService {
             where,
             take: count ?? DEFAULT_PAGE_COUNT,
             skip: page * count,
-            order: sort ?? undefined,
+            order: sort
+                ? {
+                      [sort.field]: sort.direction, // e.g., ASC or DESC
+                  }
+                : undefined,
             relations: ['customer'],
             // relations: ['customer', 'items.variant.product']
         };
@@ -92,7 +107,16 @@ export default class StoreOrderService extends TransactionBaseService {
         //get orders
         const orders = await this.orderRepository_.find(params);
 
-        return { orders, totalRecords };
+        return {
+            pageIndex: page,
+            pageCount: Math.ceil(totalRecords / count),
+            rowsPerPage: count,
+            sortedBy: sort?.field ?? null,
+            sortDirection: sort?.direction ?? 'ASC',
+            filtering: filter,
+            orders,
+            totalRecords,
+        };
     }
 
     async changeOrderStatus(

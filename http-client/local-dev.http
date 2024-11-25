@@ -18,8 +18,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6I
 
 {
     "store_id": "store_01JD7CRC0GC894T18A815NCJGN",
-    "page": 0,
-    "count": 50,
+    "page": 1,
+    "count": 2,
     "sort": {"created_at": "ASC"},
     "filter": {"status": {"eq": "pending"}}
 }
