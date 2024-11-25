@@ -12,9 +12,9 @@ yarn setup-1
 # at this point, you can shut the server down if you wish
 ```
 
-### PR Procedures
+## PR Procedures
 
-#### PR Creator
+### PR Creator
 
 1. Give the PR a title: <jira id all caps>: Description
    EXAMPLES: "HAMSL-24: Fixed Build Error", "HAMSTR-118: Created Wallet Service"
@@ -31,7 +31,7 @@ yarn setup-1
 
 7. In Jira, add an Approver (same person from step 5)
 
-#### PR Reviewer
+### PR Reviewer
 
 1. Reads PR text
 
@@ -41,12 +41,12 @@ yarn setup-1
 
 4. Follows steps to test found in the PR
 
-##### On Failure:
+#### On Failure:
 
 -   request changes in PR (in github)
 -   ping the PR creator in discord to let them know
 
-##### On Success:
+#### On Success:
 
 -   approve the PR
 -   merge the branch
