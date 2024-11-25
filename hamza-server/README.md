@@ -16,7 +16,7 @@ yarn setup-1
 
 ### PR Creator
 
-1. Give the PR a title: <jira id all caps>: Description
+1. Give the PR a title: [JIRA-ID-ALL-CAPS]: Description
    EXAMPLES: "HAMSL-24: Fixed Build Error", "HAMSTR-118: Created Wallet Service"
 
 2. Next, enter a list, as detailed as you want, of the changes in the PR (summarized)
