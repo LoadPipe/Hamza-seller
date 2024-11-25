@@ -10,7 +10,7 @@
 3. Install Packages with yarn
 4. Install the Medusa CLI
 5. Set up the Database
-6. Run the Currency Conversion API 
+6. Run the Currency Conversion API
 7. Run medusa seed & migrations
 8. Run the Server
 
@@ -24,9 +24,9 @@ git clone
 ./hamza-server/scripts/.env
 ./hamza-client/.env.local
 
-See /hamza-server/.env.example 
-See /hamza-server/scripts/.env.example 
-See /hamza-client/scripts/.env.local.example 
+See /hamza-server/.env.example
+See /hamza-server/scripts/.env.example
+See /hamza-client/scripts/.env.local.example
 
 **3. Install Packages with yarn**
 
@@ -56,7 +56,6 @@ cd ./currency-conversion
 yarn start
 #just leave it running
 ```
-
 
 **7. Set up and Run the Server**
 
@@ -142,3 +141,43 @@ For Postgres database we can create entities in load-pipe/src/models
 ```
 
 ```
+
+## PR Procedures
+
+### PR Creator
+
+1. Give the PR a title: [JIRA-ID-ALL-CAPS]: Description
+   EXAMPLES: "HAMSL-24: Fixed Build Error", "HAMSTR-118: Created Wallet Service"
+
+2. Next, enter a list, as detailed as you want, of the changes in the PR (summarized)
+
+3. Next, any other info (optional) that you think is important (optional)
+
+4. Next, steps for the tester to follow, to basically test the workingness of the PR
+
+5. Assign a Reviewer in the PR, in github
+
+6. Move the task in Jira to IN REVIEW column
+
+7. In Jira, add an Approver (same person from step 5)
+
+### PR Reviewer
+
+1. Reads PR text
+
+2. Pulls branch
+
+3. Builds server & client (to make sure no build errors)
+
+4. Follows steps to test found in the PR
+
+#### On Failure:
+
+-   request changes in PR (in github)
+-   ping the PR creator in discord to let them know
+
+#### On Success:
+
+-   approve the PR
+-   merge the branch
+-   move Jira task to DONE
