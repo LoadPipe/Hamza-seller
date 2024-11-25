@@ -47,36 +47,22 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
         //get the user record
         handler.logger.debug('finding user...');
-        let storeOwner = await UserRepository.findOne({
+        let storeUser = await UserRepository.findOne({
             where: { wallet_address },
         });
-        handler.logger.debug('found user ' + storeOwner?.id);
+        handler.logger.debug('found user ' + storeUser?.id);
 
-        if (!storeOwner) {
+        if (!storeUser) {
             return handler.returnStatusWithMessage(
                 404,
                 `User with wallet address ${wallet_address} not found.`
             );
         }
 
-        //get the corresponding store
-        handler.logger.debug('finding store...');
-        const options: FindOneOptions<Store> = {
-            where: { owner_id: storeOwner.id },
-        };
-        const store = await storeRepository.findOne(options);
-
-        if (!store) {
-            return handler.returnStatusWithMessage(
-                404,
-                `Store with owner ${storeOwner.id} not found.`
-            );
-        }
-
         //once authorized, return a JWT token
         const token = jwt.sign(
             {
-                store_id: store.id,
+                store_id: storeUser.store_id ?? '',
                 wallet_address,
             },
             process.env.JWT_SECRET,
