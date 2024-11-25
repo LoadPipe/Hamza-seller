@@ -87,7 +87,7 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="max-w-[1280px] mx-auto p-4">
+        <div className="max-w-page-layout mx-auto p-4">
             <div className="flex items-center ">
                 <Input
                     placeholder="Filter emails..."
