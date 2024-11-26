@@ -87,8 +87,8 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div>
-            <div className="max-w-page-layout max-h-[858px] mx-auto p-4 rounded-xl bg-[#121212]">
+        <div className="flex flex-col h-full max-w-page-layout ">
+            <div className="max-h-[858px] mx-auto p-4 rounded-xl bg-[#121212]">
                 <div className="flex items-center ">
                     <Input
                         placeholder="Filter emails..."
@@ -197,27 +197,31 @@ export function DataTable<TData, TValue>({
 
                 {/* Pagination Controls */}
             </div>
-            {/* <div className="flex mt-auto sticky items-center justify-center py-4 space-x-4">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPageIndex((old) => Math.max(old - 1, 0))}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Previous
-                </Button>
-                <span className="flex items-center justify-center w-8 h-8">
-                    {pageIndex + 1}
-                </span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPageIndex((old) => old + 1)}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Next
-                </Button>
-            </div> */}
+            <div style={{ marginTop: 'auto' }}>
+                <div className="flex items-center justify-center py-4 space-x-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                            setPageIndex((old) => Math.max(old - 1, 0))
+                        }
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        Previous
+                    </Button>
+                    <span className="flex items-center justify-center w-8 h-8">
+                        {pageIndex + 1}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPageIndex((old) => old + 1)}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        Next
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 }

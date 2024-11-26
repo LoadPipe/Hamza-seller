@@ -66,7 +66,7 @@ export default function OrdersPage() {
     }
 
     return (
-        <div className="flex flex-col h-full">
+        <>
             <DataTable
                 columns={columns}
                 data={data?.orders ?? []}
@@ -76,9 +76,9 @@ export default function OrdersPage() {
                 setPageSize={setPageSize}
                 totalRecords={data?.totalRecords ?? 0}
             />
-            <div style={{ marginTop: 'auto' }}>
+            {/* <div style={{ marginTop: 'auto' }}>
                 <PagingFooter />
-            </div>
-        </div>
+            </div> */}
+        </>
     );
 }
