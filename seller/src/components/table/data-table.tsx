@@ -87,115 +87,117 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="max-w-page-layout mx-auto p-4">
-            <div className="flex items-center ">
-                <Input
-                    placeholder="Filter emails..."
-                    value={
-                        (table
-                            .getColumn('email')
-                            ?.getFilterValue() as string) ?? ''
-                    }
-                    onChange={(event) =>
-                        table
-                            .getColumn('email')
-                            ?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                />
+        <div>
+            <div className="max-w-page-layout max-h-[858px] mx-auto p-4 rounded-xl bg-[#121212]">
+                <div className="flex items-center ">
+                    <Input
+                        placeholder="Filter emails..."
+                        value={
+                            (table
+                                .getColumn('email')
+                                ?.getFilterValue() as string) ?? ''
+                        }
+                        onChange={(event) =>
+                            table
+                                .getColumn('email')
+                                ?.setFilterValue(event.target.value)
+                        }
+                        className="max-w-sm"
+                    />
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className="ml-auto whitespace-nowrap"
-                        >
-                            Columns
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        {table
-                            .getAllColumns()
-                            .filter((column) => column.getCanHide())
-                            .map((column) => (
-                                <DropdownMenuCheckboxItem
-                                    key={column.id}
-                                    className="capitalize"
-                                    checked={column.getIsVisible()}
-                                    onCheckedChange={(value) =>
-                                        column.toggleVisibility(!!value)
-                                    }
-                                    onSelect={(e) => e.preventDefault()} // Prevent menu close on select
-                                >
-                                    {column.id}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-            <div className="flex text-sm text-muted-foreground m-2">
-                {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                {table.getFilteredRowModel().rows.length} row(s) selected.
-            </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="ml-auto whitespace-nowrap"
+                            >
+                                Columns
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            {table
+                                .getAllColumns()
+                                .filter((column) => column.getCanHide())
+                                .map((column) => (
+                                    <DropdownMenuCheckboxItem
+                                        key={column.id}
+                                        className="capitalize"
+                                        checked={column.getIsVisible()}
+                                        onCheckedChange={(value) =>
+                                            column.toggleVisibility(!!value)
+                                        }
+                                        onSelect={(e) => e.preventDefault()} // Prevent menu close on select
+                                    >
+                                        {column.id}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                <div className="flex text-sm text-muted-foreground m-2">
+                    {table.getFilteredSelectedRowModel().rows.length} of{' '}
+                    {table.getFilteredRowModel().rows.length} row(s) selected.
+                </div>
 
-            {/* <div className="bg-[#121212] rounded-lg max-w-[1280px] h-[858px] p-4"> */}
-            <div className="rounded-md border mt-9">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef
-                                                          .header,
-                                                      header.getContext()
-                                                  )}
-                                        </TableHead>
-                                    );
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={
-                                        row.getIsSelected() && 'selected'
-                                    }
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
+                {/* <div className="bg-[#121212] rounded-lg max-w-[1280px] h-[858px] p-4"> */}
+                <div className="rounded-md border mt-9">
+                    <Table>
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => {
+                                        return (
+                                            <TableHead key={header.id}>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext()
+                                                      )}
+                                            </TableHead>
+                                        );
+                                    })}
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    No results.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-            {/* </div> */}
+                            ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows?.length ? (
+                                table.getRowModel().rows.map((row) => (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={
+                                            row.getIsSelected() && 'selected'
+                                        }
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={columns.length}
+                                        className="h-24 text-center"
+                                    >
+                                        No results.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+                {/* </div> */}
 
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-center py-4 space-x-4">
+                {/* Pagination Controls */}
+            </div>
+            {/* <div className="flex mt-auto sticky items-center justify-center py-4 space-x-4">
                 <Button
                     variant="outline"
                     size="sm"
@@ -215,7 +217,7 @@ export function DataTable<TData, TValue>({
                 >
                     Next
                 </Button>
-            </div>
+            </div> */}
         </div>
     );
 }

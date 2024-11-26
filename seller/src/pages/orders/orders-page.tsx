@@ -7,6 +7,7 @@ import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
 import { getJwtField } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
+import PagingFooter from '@/components/orders/paging-footer';
 
 type Order = z.infer<typeof OrderSchema>;
 
@@ -65,7 +66,7 @@ export default function OrdersPage() {
     }
 
     return (
-        <div>
+        <div className="flex flex-col h-full">
             <DataTable
                 columns={columns}
                 data={data?.orders ?? []}
@@ -75,6 +76,9 @@ export default function OrdersPage() {
                 setPageSize={setPageSize}
                 totalRecords={data?.totalRecords ?? 0}
             />
+            <div style={{ marginTop: 'auto' }}>
+                <PagingFooter />
+            </div>
         </div>
     );
 }
