@@ -88,7 +88,7 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="flex flex-col h-full justify-center items-center  mx-[1rem] ">
-            <div className="max-w-page-layout w-[100%] max-h-[858px]  p-4 rounded-xl bg-[#121212] overflow-y-scroll overflow-x-scroll">
+            <div className="flex-grow max-w-[1280px] w-[100%] max-h-[658px]  p-4 rounded-xl bg-[#121212] overflow-y-scroll overflow-x-scroll">
                 <div className="flex items-center ">
                     <Input
                         placeholder="Filter emails..."
