@@ -161,6 +161,8 @@ For Postgres database we can create entities in load-pipe/src/models
 
 7. In Jira, add an Approver (same person from step 5)
 
+8. Ping the PR creator in discord
+
 ### PR Reviewer
 
 1. Reads PR text
@@ -175,6 +177,7 @@ For Postgres database we can create entities in load-pipe/src/models
 
 -   request changes in PR (in github)
 -   ping the PR creator in discord to let them know
+-   move the task in Jira back to `In Progress`
 
 #### On Success:
 
