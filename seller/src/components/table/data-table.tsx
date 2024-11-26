@@ -75,7 +75,7 @@ export function DataTable<TData, TValue>({
         onRowSelectionChange: setRowSelection,
 
         state: {
-            sorting,
+            // sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
@@ -88,7 +88,7 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="flex flex-col h-full justify-center items-center  mx-[1rem] ">
-            <div className="flex-grow max-w-[1280px] w-[100%] max-h-[658px]  p-4 rounded-xl bg-[#121212] overflow-y-scroll overflow-x-scroll">
+            <div className="flex-grow max-w-[1280px] w-[100%] max-h-[658px]  p-6 rounded-xl bg-[#121212] overflow-y-scroll overflow-x-scroll">
                 <div className="flex items-center ">
                     <Input
                         placeholder="Filter emails..."
@@ -139,7 +139,6 @@ export function DataTable<TData, TValue>({
                     {table.getFilteredRowModel().rows.length} row(s) selected.
                 </div>
 
-                {/* <div className="bg-[#121212] rounded-lg max-w-[1280px] h-[858px] p-4"> */}
                 <div className="rounded-md border mt-9 ">
                     <Table>
                         <TableHeader>
@@ -147,7 +146,15 @@ export function DataTable<TData, TValue>({
                                 <TableRow key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => {
                                         return (
-                                            <TableHead key={header.id}>
+                                            <TableHead
+                                                key={header.id}
+                                                onClick={() =>
+                                                    console.log(
+                                                        'hello',
+                                                        header.id
+                                                    )
+                                                }
+                                            >
                                                 {header.isPlaceholder
                                                     ? null
                                                     : flexRender(

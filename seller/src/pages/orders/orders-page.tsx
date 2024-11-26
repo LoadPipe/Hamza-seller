@@ -7,20 +7,20 @@ import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
 import { getJwtField } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
-import PagingFooter from '@/components/orders/paging-footer';
 
 type Order = z.infer<typeof OrderSchema>;
 
 async function getSellerOrders(
     pageIndex = 0,
-    pageSize = 10
+    pageSize = 10,
+    sort = { field: 'created_at', direction: 'ASC' }
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
         const response = await postSecure('/seller/order', {
             store_id: getJwtField('store_id'),
             page: pageIndex,
             count: pageSize,
-            sort: { created_at: 'ASC' },
+            sort: sort,
         });
         console.log(`STORE_ID ${response.store_id}`);
 
@@ -45,6 +45,7 @@ export default function OrdersPage() {
 
     const [pageIndex, setPageIndex] = React.useState(page);
     const [pageSize, setPageSize] = React.useState(count);
+    const [sort, setSort] = React.useState({ created_at: 'DESC' });
 
     const { data, isLoading, error } = useQuery<
         {
@@ -76,9 +77,6 @@ export default function OrdersPage() {
                 setPageSize={setPageSize}
                 totalRecords={data?.totalRecords ?? 0}
             />
-            {/* <div style={{ marginTop: 'auto' }}>
-                <PagingFooter />
-            </div> */}
         </>
     );
 }

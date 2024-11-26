@@ -33,6 +33,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         const sort: any = handler.hasParam('sort')
             ? handler.inputParams.sort
             : null;
+        console.log('SORTTTTT', sort);
         const page: number = handler.hasParam('page')
             ? parseInt(handler.inputParams.page.toString())
             : 0;
