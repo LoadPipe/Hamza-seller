@@ -30,6 +30,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
+import useSortStore from '@/stores/order-page/sort-column';
+
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
@@ -51,6 +53,8 @@ export function DataTable<TData, TValue>({
     totalRecords: number;
 }) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
+
+    const { setSort } = useSortStore();
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
 
@@ -148,12 +152,13 @@ export function DataTable<TData, TValue>({
                                         return (
                                             <TableHead
                                                 key={header.id}
-                                                onClick={() =>
+                                                onClick={() => {
                                                     console.log(
                                                         'hello',
                                                         header.id
-                                                    )
-                                                }
+                                                    );
+                                                    setSort(header.id, 'asc');
+                                                }}
                                             >
                                                 {header.isPlaceholder
                                                     ? null

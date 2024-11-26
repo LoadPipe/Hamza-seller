@@ -7,6 +7,7 @@ import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
 import { getJwtField } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
+import useSortStore from '@/stores/order-page/sort-column';
 
 type Order = z.infer<typeof OrderSchema>;
 
@@ -42,10 +43,11 @@ export default function OrdersPage() {
     const search = useSearch({ from: '/orders' });
 
     const { page, count } = OrderSearchSchema.parse(search);
+    const { sort } = useSortStore();
 
+    console.log(sort);
     const [pageIndex, setPageIndex] = React.useState(page);
     const [pageSize, setPageSize] = React.useState(count);
-    const [sort, setSort] = React.useState({ created_at: 'DESC' });
 
     const { data, isLoading, error } = useQuery<
         {
@@ -54,8 +56,8 @@ export default function OrdersPage() {
         },
         Error
     >({
-        queryKey: ['orders', pageIndex, pageSize],
-        queryFn: () => getSellerOrders(pageIndex, pageSize), // Fetch with pagination
+        queryKey: ['orders', pageIndex, pageSize, sort],
+        queryFn: () => getSellerOrders(pageIndex, pageSize, sort), // Fetch with pagination
     });
 
     if (isLoading) {
