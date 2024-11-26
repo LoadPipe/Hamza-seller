@@ -98,9 +98,6 @@ export const WalletConnect = () => {
                                         type="button"
                                     >
                                         {account.displayName}
-                                        {account.displayBalance
-                                            ? ` (${account.displayBalance})`
-                                            : ''}
                                     </button>
                                 </div>
                             );
