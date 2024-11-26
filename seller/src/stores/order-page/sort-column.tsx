@@ -5,23 +5,29 @@ interface SortState {
         field: string;
         direction: 'asc' | 'desc';
     };
-    setSort: (field: string, direction: 'asc' | 'desc') => void;
+    setSort: (field: string, direction?: 'asc' | 'desc') => void;
 }
 
-const useSortStore = create<SortState>((set) => ({
-    // Initial sort state
+const useSortStore = create<SortState>((set, get) => ({
     sort: {
         field: 'created_at', // Default field
         direction: 'asc', // Default direction
     },
-    // Function to update the sort state
-    setSort: (field, direction) =>
+    setSort: (field, direction) => {
+        const { sort } = get();
+
         set(() => ({
             sort: {
                 field,
-                direction,
+                // If direction is provided, use it; otherwise, toggle
+                direction:
+                    direction ??
+                    (sort.field === field && sort.direction === 'asc'
+                        ? 'desc'
+                        : 'asc'),
             },
-        })),
+        }));
+    },
 }));
 
 export default useSortStore;

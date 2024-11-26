@@ -153,11 +153,7 @@ export function DataTable<TData, TValue>({
                                             <TableHead
                                                 key={header.id}
                                                 onClick={() => {
-                                                    console.log(
-                                                        'hello',
-                                                        header.id
-                                                    );
-                                                    setSort(header.id, 'asc');
+                                                    setSort(header.id);
                                                 }}
                                             >
                                                 {header.isPlaceholder
