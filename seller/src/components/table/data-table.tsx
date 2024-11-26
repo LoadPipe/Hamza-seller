@@ -197,30 +197,27 @@ export function DataTable<TData, TValue>({
 
                 {/* Pagination Controls */}
             </div>
-            <div style={{ marginTop: 'auto' }}>
-                <div className="flex items-center justify-center py-4 space-x-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setPageIndex((old) => Math.max(old - 1, 0))
-                        }
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <span className="flex items-center justify-center w-8 h-8">
-                        {pageIndex + 1}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPageIndex((old) => old + 1)}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
+
+            <div className="flex mt-auto items-center justify-center py-4 space-x-4">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPageIndex((old) => Math.max(old - 1, 0))}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    Previous
+                </Button>
+                <span className="flex items-center justify-center w-8 h-8">
+                    {pageIndex + 1}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPageIndex((old) => old + 1)}
+                    disabled={!table.getCanNextPage()}
+                >
+                    Next
+                </Button>
             </div>
         </div>
     );
