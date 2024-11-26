@@ -20,7 +20,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
     const handler = new RouteHandler(req, res, 'POST', '/seller/order', [
         'store_id',
-        'count',
+        'ordersPerPage',
         'page',
         'sort',
         'filter',
@@ -36,8 +36,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         const page: number = handler.hasParam('page')
             ? parseInt(handler.inputParams.page.toString())
             : 0;
-        const count: number = handler.hasParam('count')
-            ? parseInt(handler.inputParams.count.toString())
+        const ordersPerPage: number = handler.hasParam('ordersPerPage')
+            ? parseInt(handler.inputParams.ordersPerPage.toString())
             : 0;
 
         const store_id = handler.inputParams.store_id;
@@ -47,7 +47,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             filter,
             sort,
             page,
-            count
+            ordersPerPage
         );
 
         return handler.returnStatus(200, orders);
