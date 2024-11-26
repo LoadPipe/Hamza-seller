@@ -15,9 +15,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
+    --page-layout: 1280px;
     --order-details-width: 567px;
     --navigation-sidebar-width: 245px;
-
 }
 
 a {

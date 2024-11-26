@@ -23,8 +23,38 @@ import SmtpMailService from './smtp-mail';
 import CustomerNotificationService from './customer-notification';
 import OrderHistoryService from './order-history';
 import StoreOrderRepository from '../repositories/order';
-import { OrderStatus } from '@medusajs/medusa';
-const DEFAULT_PAGE_COUNT = 30;
+import {
+    OrderStatus,
+    FulfillmentStatus,
+    PaymentStatus,
+} from '@medusajs/medusa';
+
+const DEFAULT_PAGE_COUNT = 10;
+
+interface filterOrders {
+    orderStatus?: OrderStatus;
+    fulfillmentStatus?: FulfillmentStatus;
+    paymentStatus?: PaymentStatus;
+    price?: {
+        ne?: number;
+        eq?: number;
+        lt?: number;
+        gt?: number;
+        lte?: number;
+        gte?: number;
+    }; // range filtering
+}
+
+export interface StoreOrdersDTO {
+    pageIndex: number;
+    pageCount: number;
+    rowsPerPage: number;
+    sortedBy: any;
+    sortDirection: string;
+    filtering: filterOrders;
+    orders: Order[];
+    totalRecords: number;
+}
 
 export default class StoreOrderService extends TransactionBaseService {
     static LIFE_TIME = Lifetime.SINGLETON;
@@ -48,11 +78,11 @@ export default class StoreOrderService extends TransactionBaseService {
 
     async getOrdersForStore(
         storeId: string,
-        filter: any,
+        filter: filterOrders,
         sort: any,
         page: number,
-        count: number
-    ): Promise<{ orders: Order[]; totalRecords: number }> {
+        ordersPerPage: number
+    ): Promise<StoreOrdersDTO> {
         //basic query is store id
         const where = { store_id: storeId };
 
@@ -79,9 +109,13 @@ export default class StoreOrderService extends TransactionBaseService {
 
         const params = {
             where,
-            take: count ?? DEFAULT_PAGE_COUNT,
-            skip: page * count,
-            order: sort ?? undefined,
+            take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
+            skip: page * ordersPerPage,
+            order: sort
+                ? {
+                      [sort.field]: sort.direction, // e.g., ASC or DESC
+                  }
+                : undefined,
             relations: ['customer'],
             // relations: ['customer', 'items.variant.product']
         };
@@ -92,7 +126,16 @@ export default class StoreOrderService extends TransactionBaseService {
         //get orders
         const orders = await this.orderRepository_.find(params);
 
-        return { orders, totalRecords };
+        return {
+            pageIndex: page,
+            pageCount: Math.ceil(totalRecords / ordersPerPage),
+            rowsPerPage: ordersPerPage,
+            sortedBy: sort?.field ?? null,
+            sortDirection: sort?.direction ?? 'ASC',
+            filtering: filter,
+            orders,
+            totalRecords,
+        };
     }
 
     async changeOrderStatus(

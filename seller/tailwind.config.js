@@ -10,6 +10,9 @@ module.exports = {
                 'order-details': 'var(--order-details-width)', // Define a custom width class
                 'navigation-sidebar': 'var(--navigation-sidebar-width)',
             },
+            maxWidth: {
+                'page-layout': 'var(--page-layout)',
+            },
             fontFamily: {
                 sans: [
                     'Inter',
