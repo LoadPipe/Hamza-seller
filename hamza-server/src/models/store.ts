@@ -11,7 +11,7 @@ export class Store extends MedusaStore {
     @OneToMany(() => User, (user) => user.store, {
         onDelete: 'CASCADE',
     })
-    users: User[];
+    users?: User[];
 
     // Store already has a name field, let's make it unique, such that stores can be identified by their names
     @Column({ unique: true, nullable: false })
