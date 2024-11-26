@@ -87,8 +87,8 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="flex flex-col h-full max-w-page-layout ">
-            <div className="max-h-[858px] mx-auto p-4 rounded-xl bg-[#121212]">
+        <div className="flex flex-col h-full justify-center items-center  mx-[1rem] ">
+            <div className="max-w-page-layout w-[100%] max-h-[858px]  p-4 rounded-xl bg-[#121212] overflow-y-scroll overflow-x-scroll">
                 <div className="flex items-center ">
                     <Input
                         placeholder="Filter emails..."
@@ -140,7 +140,7 @@ export function DataTable<TData, TValue>({
                 </div>
 
                 {/* <div className="bg-[#121212] rounded-lg max-w-[1280px] h-[858px] p-4"> */}
-                <div className="rounded-md border mt-9">
+                <div className="rounded-md border mt-9 ">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
