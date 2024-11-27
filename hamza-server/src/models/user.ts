@@ -21,6 +21,7 @@ export class User extends MedusaUser {
     @Column({ nullable: true })
     role_id: string | null;
 
+    @Column()
     store_id: string;
 
     @ManyToOne(() => Role, (role) => role.users)
