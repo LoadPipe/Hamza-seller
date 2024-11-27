@@ -76,6 +76,18 @@ export default class StoreOrderService extends TransactionBaseService {
         this.logger = createLogger(container, 'StoreOrderService');
     }
 
+    private readonly fulfillmentStatusOrder = {
+        canceled: 1,
+        shipped: 2,
+        fulfilled: 3,
+        partially_fulfilled: 4,
+        not_fulfilled: 5,
+        partially_shipped: 6,
+        returned: 7,
+        partially_returned: 8,
+        requires_action: 9,
+    };
+
     async getOrdersForStore(
         storeId: string,
         filter: filterOrders,
@@ -111,11 +123,12 @@ export default class StoreOrderService extends TransactionBaseService {
             where,
             take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
             skip: page * ordersPerPage,
-            order: sort
-                ? {
-                      [sort.field]: sort.direction, // e.g., ASC or DESC
-                  }
-                : undefined,
+            order:
+                sort && sort.field !== 'customer'
+                    ? {
+                          [sort.field]: sort.direction, // e.g., ASC or DESC
+                      }
+                    : undefined,
             relations: ['customer'],
             // relations: ['customer', 'items.variant.product']
         };
@@ -125,6 +138,19 @@ export default class StoreOrderService extends TransactionBaseService {
 
         //get orders
         const orders = await this.orderRepository_.find(params);
+
+        if (sort?.field === 'customer') {
+            orders.sort((a, b) => {
+                const nameA = a.customer?.first_name?.toLowerCase() || '';
+                const nameB = b.customer?.first_name?.toLowerCase() || '';
+
+                if (sort.direction === 'asc') {
+                    return nameA.localeCompare(nameB);
+                } else if (sort.direction === 'desc') {
+                    return nameB.localeCompare(nameA);
+                }
+            });
+        }
 
         return {
             pageIndex: page,
