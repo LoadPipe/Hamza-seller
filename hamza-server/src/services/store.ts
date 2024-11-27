@@ -63,9 +63,8 @@ class StoreService extends MedusaStoreService {
 
         //save the store id for the user
         user.store_id = newStore.id;
-        console.log(`user ${user.id} getting store ${newStore.id}`);
+        this.logger.debug(`user ${user.id} getting store ${newStore.id}`);
         await this.userRepository_.save(user);
-        console.log('saved');
 
         return newStore; // Return the newly created and saved store
     }
