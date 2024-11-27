@@ -11,9 +11,16 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
+import { Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
+import {
+    PaymentStatus,
+    FulfillmentStatus,
+    OrderStatus,
+} from '@/utils/status-enum';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -29,7 +36,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-
+import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 import useSortStore from '@/stores/order-page/sort-column';
 
 interface DataTableProps<TData, TValue> {
@@ -91,24 +98,136 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="flex flex-col h-full justify-center items-center  mx-[1rem] ">
-            <div className="flex-grow max-w-[1280px] w-[100%] h-auto  p-6 rounded-xl bg-[#121212] overflow-y-scroll overflow-x-scroll">
-                <div className="flex items-center ">
+        <div className="max-w-page-layout mx-auto bg-primary-black-90 rounded-xl p-[24px]">
+            <div className="flex items-center justify-between pb-[40px]">
+                <DropdownMultiselectFilter
+                    title="Payment Status"
+                    optionsEnum={PaymentStatus}
+                />
+
+                {/* Order Status Filter */}
+                <DropdownMultiselectFilter
+                    title="Order Status"
+                    optionsEnum={OrderStatus}
+                />
+                <DropdownMultiselectFilter
+                    title="Fulfillment Status"
+                    optionsEnum={FulfillmentStatus}
+                />
+                <DatePickerFilter
+                    title="Date Picker"
+                    onDateRangeChange={(range) => {
+                        console.log('Selected Date Range:', range);
+                    }}
+                />
+
+                <div className="relative w-[376px]">
                     <Input
-                        placeholder="Filter emails..."
+                        placeholder="Search Order"
                         value={
                             (table
-                                .getColumn('email')
+                                .getColumn('id')
                                 ?.getFilterValue() as string) ?? ''
                         }
                         onChange={(event) =>
                             table
-                                .getColumn('email')
+                                .getColumn('id')
                                 ?.setFilterValue(event.target.value)
                         }
-                        className="max-w-sm"
+                        className="w-full h-[34px] bg-black pr-10"
                     />
+                    <Search
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        size={14} // Adjust the size as needed
+                    />
+                </div>
+            </div>
 
+            <div className="rounded-md border mt-9 ">
+                <Table>
+                    <TableHeader>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => {
+                                    return (
+                                        <TableHead
+                                            key={header.id}
+                                            onClick={() => {
+                                                setSort(header.id);
+                                            }}
+                                        >
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext()
+                                                  )}
+                                        </TableHead>
+                                    );
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+                        {table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id}>
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
+                                    No results.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+            {/* </div> */}
+
+            {/* Pagination Controls */}
+
+            <div className="flex items-center justify-center py-4 space-x-4">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPageIndex((old) => Math.max(old - 1, 0))}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    Previous
+                </Button>
+                <span className="flex items-center justify-center w-8 h-8">
+                    {pageIndex + 1}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPageIndex((old) => old + 1)}
+                    disabled={!table.getCanNextPage()}
+                >
+                    Next
+                </Button>
+            </div>
+            <div className="flex justify-between">
+                <div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -138,94 +257,10 @@ export function DataTable<TData, TValue>({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                <div className="flex text-sm text-muted-foreground m-2">
+                <div className="flex text-sm text-muted-foreground m-2 justify-end">
                     {table.getFilteredSelectedRowModel().rows.length} of{' '}
                     {table.getFilteredRowModel().rows.length} row(s) selected.
                 </div>
-
-                <div className="rounded-md border mt-9 ">
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
-                                        return (
-                                            <TableHead
-                                                key={header.id}
-                                                onClick={() => {
-                                                    setSort(header.id);
-                                                }}
-                                            >
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                          header.column
-                                                              .columnDef.header,
-                                                          header.getContext()
-                                                      )}
-                                            </TableHead>
-                                        );
-                                    })}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={
-                                            row.getIsSelected() && 'selected'
-                                        }
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={columns.length}
-                                        className="h-24 text-center"
-                                    >
-                                        No results.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-                {/* </div> */}
-
-                {/* Pagination Controls */}
-            </div>
-
-            <div className="flex mt-auto items-center justify-center py-4 space-x-4">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPageIndex((old) => Math.max(old - 1, 0))}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Previous
-                </Button>
-                <span className="flex items-center justify-center w-8 h-8">
-                    {pageIndex + 1}
-                </span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPageIndex((old) => old + 1)}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Next
-                </Button>
             </div>
         </div>
     );
