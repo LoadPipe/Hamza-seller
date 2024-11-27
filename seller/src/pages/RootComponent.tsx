@@ -17,9 +17,9 @@ const RootComponent = () => {
                 </div>
             </SidebarProvider>
             {/* Separate Provider for Order Details Sidebar */}
-            {/* <SidebarProvider>
+            <SidebarProvider>
                 <OrderDetailsSidebar />
-            </SidebarProvider> */}
+            </SidebarProvider>
             <TanStackRouterDevtools initialIsOpen={false} />
         </div>
     );
