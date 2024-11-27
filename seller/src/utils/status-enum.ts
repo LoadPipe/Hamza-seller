@@ -27,3 +27,13 @@ export enum PaymentStatus {
     CANCELED = 'canceled',
     REQUIRES_ACTION = 'requires_action',
 }
+
+export enum DateOptions {
+    WEEK = 'Last 7 days',
+    TWO_WEEKS = 'Last 14 days',
+    MONTH = 'This Month',
+    LAST_MONTH = 'Last Month',
+    YEAR = 'This Year',
+    LAST_YEAR = 'Last Year',
+    CUSTOM_DATE_RANGE = 'Custom Date Range',
+}

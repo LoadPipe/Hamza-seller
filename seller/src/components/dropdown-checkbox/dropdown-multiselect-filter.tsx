@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Check, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 type DropdownMultiselectFilterProps = {
     title: string;

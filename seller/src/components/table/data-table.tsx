@@ -36,6 +36,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -110,6 +111,13 @@ export function DataTable<TData, TValue>({
                     title="Fulfillment Status"
                     optionsEnum={FulfillmentStatus}
                 />
+                <DatePickerFilter
+                    title="Date Picker"
+                    onDateRangeChange={(range) => {
+                        console.log('Selected Date Range:', range);
+                    }}
+                />
+
                 <div className="relative w-[376px]">
                     <Input
                         placeholder="Search Order"
