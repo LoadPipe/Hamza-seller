@@ -11,9 +11,16 @@ import {
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
+import { Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
+import {
+    PaymentStatus,
+    FulfillmentStatus,
+    OrderStatus,
+} from '@/utils/status-enum';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -29,6 +36,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -87,55 +95,49 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="max-w-page-layout mx-auto p-4">
-            <div className="flex items-center ">
-                <Input
-                    placeholder="Filter emails..."
-                    value={
-                        (table
-                            .getColumn('email')
-                            ?.getFilterValue() as string) ?? ''
-                    }
-                    onChange={(event) =>
-                        table
-                            .getColumn('email')
-                            ?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
+        <div className="max-w-page-layout mx-auto bg-primary-black-90 rounded-xl p-[24px]">
+            <div className="flex items-center justify-between pb-[40px]">
+                <DropdownMultiselectFilter
+                    title="Payment Status"
+                    optionsEnum={PaymentStatus}
                 />
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className="ml-auto whitespace-nowrap"
-                        >
-                            Columns
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        {table
-                            .getAllColumns()
-                            .filter((column) => column.getCanHide())
-                            .map((column) => (
-                                <DropdownMenuCheckboxItem
-                                    key={column.id}
-                                    className="capitalize"
-                                    checked={column.getIsVisible()}
-                                    onCheckedChange={(value) =>
-                                        column.toggleVisibility(!!value)
-                                    }
-                                    onSelect={(e) => e.preventDefault()} // Prevent menu close on select
-                                >
-                                    {column.id}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-            <div className="flex text-sm text-muted-foreground m-2">
-                {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                {table.getFilteredRowModel().rows.length} row(s) selected.
+                {/* Order Status Filter */}
+                <DropdownMultiselectFilter
+                    title="Order Status"
+                    optionsEnum={OrderStatus}
+                />
+                <DropdownMultiselectFilter
+                    title="Fulfillment Status"
+                    optionsEnum={FulfillmentStatus}
+                />
+                <DatePickerFilter
+                    title="Date Picker"
+                    onDateRangeChange={(range) => {
+                        console.log('Selected Date Range:', range);
+                    }}
+                />
+
+                <div className="relative w-[376px]">
+                    <Input
+                        placeholder="Search Order"
+                        value={
+                            (table
+                                .getColumn('id')
+                                ?.getFilterValue() as string) ?? ''
+                        }
+                        onChange={(event) =>
+                            table
+                                .getColumn('id')
+                                ?.setFilterValue(event.target.value)
+                        }
+                        className="w-full h-[34px] bg-black pr-10"
+                    />
+                    <Search
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        size={14} // Adjust the size as needed
+                    />
+                </div>
             </div>
 
             {/* <div className="bg-[#121212] rounded-lg max-w-[1280px] h-[858px] p-4"> */}
@@ -195,6 +197,7 @@ export function DataTable<TData, TValue>({
             {/* </div> */}
 
             {/* Pagination Controls */}
+
             <div className="flex items-center justify-center py-4 space-x-4">
                 <Button
                     variant="outline"
@@ -215,6 +218,42 @@ export function DataTable<TData, TValue>({
                 >
                     Next
                 </Button>
+            </div>
+            <div className="flex justify-between">
+                <div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="ml-auto whitespace-nowrap"
+                            >
+                                Columns
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            {table
+                                .getAllColumns()
+                                .filter((column) => column.getCanHide())
+                                .map((column) => (
+                                    <DropdownMenuCheckboxItem
+                                        key={column.id}
+                                        className="capitalize"
+                                        checked={column.getIsVisible()}
+                                        onCheckedChange={(value) =>
+                                            column.toggleVisibility(!!value)
+                                        }
+                                        onSelect={(e) => e.preventDefault()} // Prevent menu close on select
+                                    >
+                                        {column.id}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                <div className="flex text-sm text-muted-foreground m-2 justify-end">
+                    {table.getFilteredSelectedRowModel().rows.length} of{' '}
+                    {table.getFilteredRowModel().rows.length} row(s) selected.
+                </div>
             </div>
         </div>
     );
