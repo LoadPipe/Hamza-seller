@@ -153,10 +153,6 @@ export function DataTable<TData, TValue>({
                                             <TableHead
                                                 key={header.id}
                                                 onClick={() => {
-                                                    console.log(
-                                                        'header id',
-                                                        header.id
-                                                    );
                                                     setSort(header.id);
                                                 }}
                                             >
