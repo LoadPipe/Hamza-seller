@@ -1,17 +1,12 @@
-// App.jsx
-import React from 'react';
 import { RouterProvider } from '@tanstack/react-router';
-
-// Import your components
 import { router } from './routes.tsx';
-
-// Initialize the Query Client
 
 function App() {
     return (
-        <>
+        <div>
+            {/* Show LoginPage if wallet is not connected */}
             <RouterProvider router={router} />
-        </>
+        </div>
     );
 }
 

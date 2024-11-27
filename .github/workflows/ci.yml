@@ -1,0 +1,37 @@
+name: CI for Seller
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  build:
+    name: Build Seller Project
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code from repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.18.1 # Specify the required Node.js version
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: yarn install
+        working-directory: seller
+
+      # Build the project
+      - name: Build Project
+        run: yarn build
+        working-directory: seller

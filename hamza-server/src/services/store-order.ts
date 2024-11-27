@@ -23,8 +23,38 @@ import SmtpMailService from './smtp-mail';
 import CustomerNotificationService from './customer-notification';
 import OrderHistoryService from './order-history';
 import StoreOrderRepository from '../repositories/order';
+import {
+    OrderStatus,
+    FulfillmentStatus,
+    PaymentStatus,
+} from '@medusajs/medusa';
 
-const DEFAULT_PAGE_COUNT = 30;
+const DEFAULT_PAGE_COUNT = 10;
+
+interface filterOrders {
+    orderStatus?: OrderStatus;
+    fulfillmentStatus?: FulfillmentStatus;
+    paymentStatus?: PaymentStatus;
+    price?: {
+        ne?: number;
+        eq?: number;
+        lt?: number;
+        gt?: number;
+        lte?: number;
+        gte?: number;
+    }; // range filtering
+}
+
+export interface StoreOrdersDTO {
+    pageIndex: number;
+    pageCount: number;
+    rowsPerPage: number;
+    sortedBy: any;
+    sortDirection: string;
+    filtering: filterOrders;
+    orders: Order[];
+    totalRecords: number;
+}
 
 export default class StoreOrderService extends TransactionBaseService {
     static LIFE_TIME = Lifetime.SINGLETON;
@@ -48,11 +78,11 @@ export default class StoreOrderService extends TransactionBaseService {
 
     async getOrdersForStore(
         storeId: string,
-        filter: any,
+        filter: filterOrders,
         sort: any,
         page: number,
-        count: number
-    ): Promise<Order[]> {
+        ordersPerPage: number
+    ): Promise<StoreOrdersDTO> {
         //basic query is store id
         const where = { store_id: storeId };
 
@@ -77,14 +107,101 @@ export default class StoreOrderService extends TransactionBaseService {
             }
         }
 
-        //get orders
-        const orders = await this.orderRepository_.find({
+        const params = {
             where,
-            take: count ?? DEFAULT_PAGE_COUNT,
-            skip: page * count,
-            order: sort ?? undefined,
-        });
+            take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
+            skip: page * ordersPerPage,
+            order: sort
+                ? {
+                      [sort.field]: sort.direction, // e.g., ASC or DESC
+                  }
+                : undefined,
+            relations: ['customer'],
+            // relations: ['customer', 'items.variant.product']
+        };
 
-        return orders;
+        // Get total count of matching record
+        const totalRecords = await this.orderRepository_.count({ where });
+
+        //get orders
+        const orders = await this.orderRepository_.find(params);
+
+        return {
+            pageIndex: page,
+            pageCount: Math.ceil(totalRecords / ordersPerPage),
+            rowsPerPage: ordersPerPage,
+            sortedBy: sort?.field ?? null,
+            sortDirection: sort?.direction ?? 'ASC',
+            filtering: filter,
+            orders,
+            totalRecords,
+        };
+    }
+
+    async changeOrderStatus(
+        orderId: string,
+        newStatus: string,
+        note?: Record<string, any>
+    ) {
+        try {
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+            });
+
+            if (!order) {
+                throw new Error(`Order with id ${orderId} not found`);
+            }
+
+            const mappedStatus = Object.values(OrderStatus).find(
+                (status) => status === newStatus
+            );
+
+            if (!mappedStatus) {
+                throw new Error(`Invalid order status: ${newStatus}`);
+            }
+
+            order.status = mappedStatus;
+
+            if (note) {
+                order.metadata = note;
+            }
+
+            // Save the updated order
+            await this.orderRepository_.save(order);
+
+            return order;
+        } catch (error) {
+            this.logger.error(
+                `Failed to update order status for order ${orderId}: ${error.message}`
+            );
+            throw error;
+        }
+    }
+
+    async getOrderDetails(orderId: string) {
+        try {
+            // Fetch the order with the specific relation
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+                relations: [
+                    'items',
+                    'items.variant',
+                    'items.variant.product',
+                    'customer.walletAddresses',
+                    'shipping_address',
+                ],
+            });
+
+            if (!order) {
+                throw new Error(`Order with id ${orderId} not found`);
+            }
+
+            return order;
+        } catch (error) {
+            this.logger.error(
+                `Failed to fetch order details for order ${orderId}: ${error.message}`
+            );
+            throw error;
+        }
     }
 }

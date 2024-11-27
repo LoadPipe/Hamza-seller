@@ -1,11 +1,26 @@
-import React from 'react';
 import { Outlet } from '@tanstack/react-router';
+import TopDash from '@/components/TopDash';
+import { TanStackRouterDevtools } from '@tanstack/router-devtools';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
+import { OrderDetailsSidebar } from '@/components/orders/order-details-sidebar.tsx';
 
 const RootComponent = () => {
     return (
         <div>
-            <h1 className='ml-4 hover:text-red-500 text-blue-500'>Hamza seller</h1>
-            <Outlet />
+            {/* Separate Provider for App Sidebar */}
+            <SidebarProvider>
+                <AppSidebar />
+                <div className="flex flex-col flex-grow">
+                    <TopDash />
+                    <Outlet />
+                </div>
+            </SidebarProvider>
+            {/* Separate Provider for Order Details Sidebar */}
+            <SidebarProvider>
+                <OrderDetailsSidebar />
+            </SidebarProvider>
+            <TanStackRouterDevtools initialIsOpen={false} />
         </div>
     );
 };
