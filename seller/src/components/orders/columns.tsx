@@ -126,11 +126,11 @@ export const generateColumns = (
                     header: ({ column }) => (
                         <Button
                             variant="ghost"
-                            onClick={() =>
+                            onClick={() => {
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
-                                )
-                            }
+                                );
+                            }}
                         >
                             Customer Name
                             {column.getIsSorted() === 'asc' && (
@@ -157,6 +157,28 @@ export const generateColumns = (
                                 )}
                             </div>
                         );
+                    },
+                    sortingFn: (rowA, rowB) => {
+                        const customerA = rowA.original.customer;
+                        const customerB = rowB.original.customer;
+
+                        // Handle cases where the customer data might be missing
+                        if (!customerA || !customerB) {
+                            return !customerA ? -1 : 1;
+                        }
+
+                        // Compare last names first
+                        const lastNameComparison = customerA.last_name
+                            .toLowerCase()
+                            .localeCompare(customerB.last_name.toLowerCase());
+                        if (lastNameComparison !== 0) {
+                            return lastNameComparison;
+                        }
+
+                        // If last names are the same, compare first names
+                        return customerA.first_name
+                            .toLowerCase()
+                            .localeCompare(customerB.first_name.toLowerCase());
                     },
                 };
             case 'created_at':
