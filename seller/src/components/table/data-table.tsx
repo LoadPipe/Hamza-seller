@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
     ColumnDef,
     ColumnFiltersState,
+    SortingState,
     flexRender,
     VisibilityState,
     getCoreRowModel,
@@ -58,6 +59,8 @@ export function DataTable<TData, TValue>({
     setPageSize: React.Dispatch<React.SetStateAction<number>>;
     totalRecords: number;
 }) {
+    const [sorting, setSorting] = React.useState<SortingState>([]);
+
     const { setSort } = useSortStore();
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -71,6 +74,7 @@ export function DataTable<TData, TValue>({
     const table = useReactTable({
         data,
         columns,
+        onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
         manualPagination: true,
@@ -82,7 +86,7 @@ export function DataTable<TData, TValue>({
         onRowSelectionChange: setRowSelection,
 
         state: {
-            // sorting,
+            sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
@@ -146,12 +150,7 @@ export function DataTable<TData, TValue>({
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead
-                                            key={header.id}
-                                            onClick={() => {
-                                                setSort(header.id);
-                                            }}
-                                        >
+                                        <TableHead key={header.id}>
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
