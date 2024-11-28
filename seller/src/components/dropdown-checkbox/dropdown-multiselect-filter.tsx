@@ -5,7 +5,7 @@ import { Check, ChevronDown } from 'lucide-react';
 type DropdownMultiselectFilterProps = {
     title: string;
     optionsEnum: Record<string, string>; // Dynamically accept any enum type
-    onFilterChange: (selected: string[]) => void; // Callback for changes
+    onFilterChange: (selected: string[] | null) => void; // Allow null to indicate filter removal
 };
 
 export default function DropdownMultiselectFilter({
@@ -32,8 +32,9 @@ export default function DropdownMultiselectFilter({
         onFilterChange(temporarySelection); // Notify parent about the changes
     };
 
-    const cancelFilter = () => {
-        setTemporarySelection(selectedOptions); // Reset to last applied state
+    const clearFilter = () => {
+        setSelectedOptions([]); // Clear the applied filters
+        onFilterChange(null); // Notify parent to remove the filter completely
     };
 
     return (
@@ -87,9 +88,9 @@ export default function DropdownMultiselectFilter({
                             </button>
                             <button
                                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                                onClick={cancelFilter}
+                                onClick={clearFilter}
                             >
-                                Cancel
+                                Clear Filters
                             </button>
                         </div>
                     </DropdownMenu.Content>

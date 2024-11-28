@@ -11,7 +11,7 @@ export const setFilter = (key: string, value: any) => {
         ...state,
         filters: {
             ...state.filters,
-            [key]: value, // Update the filter key with the new value
+            [key]: value,
         },
     }));
 };
@@ -20,7 +20,7 @@ export const setFilter = (key: string, value: any) => {
 export const clearFilter = (key: string) => {
     filterStore.setState((state) => {
         const newFilters = { ...state.filters };
-        delete newFilters[key]; // Remove the key from filters
+        delete newFilters[key];
         return {
             ...state,
             filters: newFilters,
@@ -28,9 +28,8 @@ export const clearFilter = (key: string) => {
     });
 };
 
-// Function to clear all filters
 export const clearAllFilters = () => {
     filterStore.setState(() => ({
-        filters: {}, // Reset filters to an empty object
+        filters: {},
     }));
 };

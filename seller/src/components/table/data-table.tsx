@@ -107,24 +107,30 @@ export function DataTable<TData, TValue>({
                     title="Payment Status"
                     optionsEnum={PaymentStatus}
                     onFilterChange={
-                        (values) => setFilter('payment_status', { in: values }) // Update store with selected values
+                        (values) =>
+                            values
+                                ? setFilter('payment_status', { in: values }) // Add or update the filter
+                                : clearFilter('payment_status') // Remove the filter
                     }
                 />
 
                 <DropdownMultiselectFilter
                     title="Order Status"
                     optionsEnum={OrderStatus}
-                    onFilterChange={
-                        (values) => setFilter('status', { in: values }) // Update store with selected values
+                    onFilterChange={(values) =>
+                        values
+                            ? setFilter('status', { in: values })
+                            : clearFilter('status')
                     }
                 />
 
                 <DropdownMultiselectFilter
                     title="Fulfillment Status"
                     optionsEnum={FulfillmentStatus}
-                    onFilterChange={
-                        (values) =>
-                            setFilter('fulfillment_status', { in: values }) // Update store with selected values
+                    onFilterChange={(values) =>
+                        values
+                            ? setFilter('fulfillment_status', { in: values })
+                            : clearFilter('fulfillment_status')
                     }
                 />
 
