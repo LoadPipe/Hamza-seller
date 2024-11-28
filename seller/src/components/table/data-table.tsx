@@ -36,6 +36,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useStore } from '@tanstack/react-store';
+import {
+    filterStore,
+    setFilter,
+    clearFilter,
+} from '@/stores/order-filter/order-filter-store.ts';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -64,6 +70,7 @@ export function DataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const { filters } = useStore(filterStore); // Subscribe to filter store
 
     const pageCount = Math.ceil(totalRecords / pageSize);
 
@@ -99,17 +106,28 @@ export function DataTable<TData, TValue>({
                 <DropdownMultiselectFilter
                     title="Payment Status"
                     optionsEnum={PaymentStatus}
+                    onFilterChange={
+                        (values) => setFilter('payment_status', { in: values }) // Update store with selected values
+                    }
                 />
 
-                {/* Order Status Filter */}
                 <DropdownMultiselectFilter
                     title="Order Status"
                     optionsEnum={OrderStatus}
+                    onFilterChange={
+                        (values) => setFilter('status', { in: values }) // Update store with selected values
+                    }
                 />
+
                 <DropdownMultiselectFilter
                     title="Fulfillment Status"
                     optionsEnum={FulfillmentStatus}
+                    onFilterChange={
+                        (values) =>
+                            setFilter('fulfillment_status', { in: values }) // Update store with selected values
+                    }
                 />
+
                 <div className="relative w-[376px]">
                     <Input
                         placeholder="Search Order"

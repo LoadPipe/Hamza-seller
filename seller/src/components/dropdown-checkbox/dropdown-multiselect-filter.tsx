@@ -5,11 +5,13 @@ import { Check, ChevronDown } from 'lucide-react';
 type DropdownMultiselectFilterProps = {
     title: string;
     optionsEnum: Record<string, string>; // Dynamically accept any enum type
+    onFilterChange: (selected: string[]) => void; // Callback for changes
 };
 
 export default function DropdownMultiselectFilter({
     title,
     optionsEnum,
+    onFilterChange,
 }: DropdownMultiselectFilterProps) {
     const [selectedOptions, setSelectedOptions] = React.useState<string[]>([]);
     const [temporarySelection, setTemporarySelection] = React.useState<
@@ -27,6 +29,7 @@ export default function DropdownMultiselectFilter({
 
     const applyFilter = () => {
         setSelectedOptions(temporarySelection);
+        onFilterChange(temporarySelection); // Notify parent about the changes
     };
 
     const cancelFilter = () => {
