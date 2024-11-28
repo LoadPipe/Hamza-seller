@@ -138,19 +138,18 @@ export default class StoreOrderService extends TransactionBaseService {
 
         //get orders
         const orders = await this.orderRepository_.find(params);
-        console.log('FIELD', sort);
+
         if (sort?.field === 'customer') {
             orders.sort((a, b) => {
-                const nameA = a.customer?.last_name?.toLowerCase() || '';
-                const nameB = b.customer?.last_name?.toLowerCase() || '';
+                const nameA = a.customer?.last_name?.toLowerCase();
+                const nameB = b.customer?.last_name?.toLowerCase();
 
-                if (sort.direction === 'asc') {
+                if (sort.direction === 'ASC') {
                     return nameA.localeCompare(nameB);
-                } else if (sort.direction === 'desc') {
+                } else if (sort.direction === 'DESC') {
                     return nameB.localeCompare(nameA);
                 }
             });
-            console.log('hello');
         }
 
         return {

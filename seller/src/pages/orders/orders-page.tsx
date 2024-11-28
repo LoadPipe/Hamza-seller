@@ -17,7 +17,6 @@ async function getSellerOrders(
     sorting: SortingState = []
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
-        console.log('HELLO sortttty', sorting);
         const sort = sorting[0]
             ? {
                   field: sorting[0].id,

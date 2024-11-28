@@ -19,7 +19,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6I
 {
     "store_id": "store_01JDH8E3NH8WS1YTXZW10WCQV6",
     "page": 1,
-    "ordersPerPage": 4,
+    "ordersPerPage": 20,
      "sort": {
     "field": "customer",
     "direction": "ASC"
