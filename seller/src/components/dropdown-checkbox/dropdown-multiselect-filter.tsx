@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Check, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 type DropdownMultiselectFilterProps = {
     title: string;
@@ -17,6 +17,7 @@ export default function DropdownMultiselectFilter({
     const [temporarySelection, setTemporarySelection] = React.useState<
         string[]
     >([]);
+    const [isOpen, setIsOpen] = React.useState(false);
     const options = Object.values(optionsEnum);
 
     const handleToggle = (option: string) => {
@@ -29,21 +30,23 @@ export default function DropdownMultiselectFilter({
 
     const applyFilter = () => {
         setSelectedOptions(temporarySelection);
-        onFilterChange(temporarySelection); // Notify parent about the changes
+        onFilterChange(temporarySelection);
+        setIsOpen(false); // Close dropdown
     };
 
     const clearFilter = () => {
-        setSelectedOptions([]); // Clear the applied filters
-        onFilterChange(null); // Notify parent to remove the filter completely
+        setSelectedOptions([]);
+        onFilterChange(null);
+        setIsOpen(false); // Close dropdown
     };
 
     return (
         <div className="relative">
-            <DropdownMenu.Root>
+            <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
                 <DropdownMenu.Trigger asChild>
                     <button
                         className="flex items-center gap-2 px-4 py-2 border h-[34px] rounded-xl shadow-sm bg-secondary-charcoal-69"
-                        aria-label="Customise options"
+                        aria-label="Customize options"
                     >
                         {title}
                         <ChevronDown className="h-4 w-4" />
@@ -54,6 +57,11 @@ export default function DropdownMultiselectFilter({
                     <DropdownMenu.Content
                         className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white"
                         sideOffset={5}
+                        onOpenChange={(open) => {
+                            if (open) {
+                                setTemporarySelection(selectedOptions); // Sync state on open
+                            }
+                        }}
                     >
                         {options.map((option) => (
                             <div
@@ -65,7 +73,7 @@ export default function DropdownMultiselectFilter({
                                     id={option}
                                     checked={temporarySelection.includes(
                                         option
-                                    )}
+                                    )} // Reflect selected state
                                     onChange={() => handleToggle(option)}
                                     className="form-checkbox h-5 w-5 text-blue-500 border-gray-300 rounded"
                                 />
@@ -84,7 +92,7 @@ export default function DropdownMultiselectFilter({
                                 className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
                                 onClick={applyFilter}
                             >
-                                Filter
+                                Apply
                             </button>
                             <button
                                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
