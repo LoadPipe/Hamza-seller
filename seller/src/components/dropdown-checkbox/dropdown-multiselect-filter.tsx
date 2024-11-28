@@ -6,17 +6,17 @@ type DropdownMultiselectFilterProps = {
     title: string;
     optionsEnum: Record<string, string>; // Dynamically accept any enum type
     onFilterChange: (selected: string[] | null) => void; // Allow null to indicate filter removal
+    selectedFilters: string[]; // External state for applied filters
 };
 
 export default function DropdownMultiselectFilter({
     title,
     optionsEnum,
     onFilterChange,
+    selectedFilters,
 }: DropdownMultiselectFilterProps) {
-    const [selectedOptions, setSelectedOptions] = React.useState<string[]>([]);
-    const [temporarySelection, setTemporarySelection] = React.useState<
-        string[]
-    >([]);
+    const [temporarySelection, setTemporarySelection] =
+        React.useState<string[]>(selectedFilters);
     const [isOpen, setIsOpen] = React.useState(false);
     const options = Object.values(optionsEnum);
 
@@ -29,16 +29,22 @@ export default function DropdownMultiselectFilter({
     };
 
     const applyFilter = () => {
-        setSelectedOptions(temporarySelection);
-        onFilterChange(temporarySelection);
+        onFilterChange(temporarySelection); // Notify parent with applied filters
         setIsOpen(false); // Close dropdown
     };
 
     const clearFilter = () => {
-        setSelectedOptions([]);
-        onFilterChange(null);
+        onFilterChange(null); // Notify parent to clear the filter
+        setTemporarySelection([]); // Reset temporary state
         setIsOpen(false); // Close dropdown
     };
+
+    React.useEffect(() => {
+        // Sync temporarySelection with external selectedFilters when dropdown opens
+        if (isOpen) {
+            setTemporarySelection(selectedFilters);
+        }
+    }, [isOpen, selectedFilters]);
 
     return (
         <div className="relative">
@@ -57,11 +63,6 @@ export default function DropdownMultiselectFilter({
                     <DropdownMenu.Content
                         className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white"
                         sideOffset={5}
-                        onOpenChange={(open) => {
-                            if (open) {
-                                setTemporarySelection(selectedOptions); // Sync state on open
-                            }
-                        }}
                     >
                         {options.map((option) => (
                             <div
@@ -73,7 +74,7 @@ export default function DropdownMultiselectFilter({
                                     id={option}
                                     checked={temporarySelection.includes(
                                         option
-                                    )} // Reflect selected state
+                                    )} // Reflect temporary state
                                     onChange={() => handleToggle(option)}
                                     className="form-checkbox h-5 w-5 text-blue-500 border-gray-300 rounded"
                                 />

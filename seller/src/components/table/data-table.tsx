@@ -73,7 +73,7 @@ export function DataTable<TData, TValue>({
     const { filters } = useStore(filterStore); // Subscribe to filter store
 
     const pageCount = Math.ceil(totalRecords / pageSize);
-
+    const getFilterValues = (key: string) => filters[key]?.in || [];
     const table = useReactTable({
         data,
         columns,
@@ -106,17 +106,18 @@ export function DataTable<TData, TValue>({
                 <DropdownMultiselectFilter
                     title="Payment Status"
                     optionsEnum={PaymentStatus}
-                    onFilterChange={
-                        (values) =>
-                            values
-                                ? setFilter('payment_status', { in: values }) // Add or update the filter
-                                : clearFilter('payment_status') // Remove the filter
+                    selectedFilters={getFilterValues('payment_status')} // Prepopulate selected filters
+                    onFilterChange={(values) =>
+                        values
+                            ? setFilter('payment_status', { in: values })
+                            : clearFilter('payment_status')
                     }
                 />
 
                 <DropdownMultiselectFilter
                     title="Order Status"
                     optionsEnum={OrderStatus}
+                    selectedFilters={getFilterValues('status')}
                     onFilterChange={(values) =>
                         values
                             ? setFilter('status', { in: values })
@@ -127,6 +128,7 @@ export function DataTable<TData, TValue>({
                 <DropdownMultiselectFilter
                     title="Fulfillment Status"
                     optionsEnum={FulfillmentStatus}
+                    selectedFilters={getFilterValues('fulfillment_status')}
                     onFilterChange={(values) =>
                         values
                             ? setFilter('fulfillment_status', { in: values })
