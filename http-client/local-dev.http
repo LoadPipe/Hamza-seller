@@ -17,11 +17,31 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
 {
-    "store_id": "store_01JD7CRC0GC894T18A815NCJGN",
-    "page": 1,
-    "ordersPerPage": 2,
-    "sort": {"created_at": "ASC"},
-    "filter": {"status": {"eq": "pending"}}
+  "store_id": "store_01JDNPEP4W20KBTH0QRCAYC1SG",
+  "page": 1,
+  "ordersPerPage": 2,
+  "sort": {
+    "created_at": "ASC"
+  },
+  "filter": {
+    "status": {
+      "in": [
+        "pending",
+        "completed"
+      ]
+    },
+    "fulfillment_status": {
+      "eq": "not_fulfilled"
+    },
+    "payment_status": {
+      "eq": "awaiting"
+    },
+    "created_at": {
+      "gte": "2024-11-01T00:00:00Z",
+      "lte": "2024-11-30T23:59:59Z"
+    }
+  }
+
 }
 
 ### Get Seller Order Details

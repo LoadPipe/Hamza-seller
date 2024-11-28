@@ -15,6 +15,7 @@ import {
     LessThan,
     MoreThanOrEqual,
     LessThanOrEqual,
+    Between,
 } from 'typeorm';
 import { BuckyClient } from '../buckydrop/bucky-client';
 import ProductRepository from '@medusajs/medusa/dist/repositories/product';
@@ -43,6 +44,10 @@ interface filterOrders {
         lte?: number;
         gte?: number;
     }; // range filtering
+    created_at?: {
+        gte?: string; // ISO 8601 timestamp
+        lte?: string; // ISO 8601 timestamp
+    };
 }
 
 export interface StoreOrdersDTO {
@@ -89,7 +94,9 @@ export default class StoreOrderService extends TransactionBaseService {
         //apply filter if any
         if (filter) {
             for (let prop in filter) {
-                if (filter[prop].ne) {
+                if (filter[prop].in) {
+                    where[prop] = In(filter[prop].in);
+                } else if (filter[prop].ne) {
                     where[prop] = Not(filter[prop].ne);
                 } else if (filter[prop].eq) {
                     where[prop] = filter[prop].eq;
@@ -103,6 +110,22 @@ export default class StoreOrderService extends TransactionBaseService {
                     where[prop] = MoreThanOrEqual(filter[prop].gte);
                 } else {
                     where[prop] = filter[prop];
+                }
+            }
+            if (filter.created_at) {
+                if (filter.created_at.gte && filter.created_at.lte) {
+                    where['created_at'] = Between(
+                        new Date(filter.created_at.gte),
+                        new Date(filter.created_at.lte)
+                    );
+                } else if (filter.created_at.gte) {
+                    where['created_at'] = MoreThanOrEqual(
+                        new Date(filter.created_at.gte)
+                    );
+                } else if (filter.created_at.lte) {
+                    where['created_at'] = LessThanOrEqual(
+                        new Date(filter.created_at.lte)
+                    );
                 }
             }
         }
