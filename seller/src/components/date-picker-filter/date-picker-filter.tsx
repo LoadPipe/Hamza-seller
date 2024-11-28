@@ -38,12 +38,20 @@ export default function DatePickerFilter({
         );
         if (selectedFilters) {
             console.log(
-                '[DatePickerFilter] Initializing customRange with selectedFilters:',
-                selectedFilters
+                '[DatePickerFilter] Initializing customRange and selectedOption'
             );
             setCustomRange(selectedFilters);
+            setSelectedOption(DateOptions.CUSTOM_DATE_RANGE); // Assume custom range for existing filters
         }
     }, [selectedFilters]);
+
+    useEffect(() => {
+        if (isOpen) {
+            console.log('[DatePickerFilter] Dropdown opened');
+            setTemporaryOption(selectedOption);
+            setTemporaryCustomRange(customRange);
+        }
+    }, [isOpen, selectedOption, customRange]);
 
     const handleSelect = (option: DateOptions) => {
         console.log('[handleSelect] Option selected:', option);
@@ -98,7 +106,17 @@ export default function DatePickerFilter({
     };
     return (
         <div className="relative">
-            <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenu.Root
+                open={isOpen}
+                onOpenChange={(state) => {
+                    setIsOpen(state);
+                    if (state) {
+                        console.log('[DatePickerFilter] Dropdown opened');
+                        setTemporaryOption(selectedOption);
+                        setTemporaryCustomRange(customRange);
+                    }
+                }}
+            >
                 <DropdownMenu.Trigger asChild>
                     <button
                         className="flex items-center gap-2 px-4 py-2 border h-[34px] rounded-xl shadow-sm bg-secondary-charcoal-69"
@@ -140,7 +158,8 @@ export default function DatePickerFilter({
                         {temporaryOption === DateOptions.CUSTOM_DATE_RANGE && (
                             <DatePickerWithRange
                                 className="mt-4 p-2 border-t border-gray-200"
-                                onRangeChange={handleCustomRangeChange}
+                                onRangeChange={handleCustomRangeChange} // Updates temporaryCustomRange
+                                selectedRange={temporaryCustomRange} // Show currently selected custom range
                             />
                         )}
 
