@@ -37,7 +37,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
-import useSortStore from '@/stores/order-page/sort-column';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
