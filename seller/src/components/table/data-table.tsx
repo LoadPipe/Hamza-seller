@@ -8,7 +8,6 @@ import {
     getCoreRowModel,
     getFilteredRowModel,
     getPaginationRowModel,
-    getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
 import { Search } from 'lucide-react';
@@ -51,15 +50,17 @@ export function DataTable<TData, TValue>({
     setPageIndex,
     // setPageSize,
     totalRecords,
+    sorting,
+    setSorting,
 }: DataTableProps<TData, TValue> & {
     pageIndex: number;
     pageSize: number;
     setPageIndex: React.Dispatch<React.SetStateAction<number>>;
     setPageSize: React.Dispatch<React.SetStateAction<number>>;
     totalRecords: number;
+    sorting: SortingState;
+    setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
 }) {
-    const [sorting, setSorting] = React.useState<SortingState>([]);
-
     // const { setSort } = useSortStore();
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -73,17 +74,16 @@ export function DataTable<TData, TValue>({
     const table = useReactTable({
         data,
         columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
+        manualSorting: true,
         manualPagination: true,
         pageCount,
+        onSortingChange: setSorting,
         getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        getCoreRowModel: getCoreRowModel(),
+        onColumnFiltersChange: setColumnFilters,
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-
         state: {
             sorting,
             columnFilters,
@@ -149,12 +149,7 @@ export function DataTable<TData, TValue>({
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead
-                                            key={header.id}
-                                            onClick={() =>
-                                                console.log(header.id)
-                                            }
-                                        >
+                                        <TableHead key={header.id}>
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
