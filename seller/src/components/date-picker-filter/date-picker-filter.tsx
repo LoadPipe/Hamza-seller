@@ -31,62 +31,62 @@ export default function DatePickerFilter({
         end: number;
     } | null>(null);
 
-    // Initialize from local storage or selectedFilters
     useEffect(() => {
-        const storedFilters = localStorage.getItem('created_at');
-        if (storedFilters) {
-            const parsedFilters = JSON.parse(storedFilters);
-            setCustomRange(parsedFilters);
-            onDateRangeChange(parsedFilters);
-        } else if (selectedFilters) {
+        console.log(
+            '[DatePickerFilter] Mounted with selectedFilters:',
+            selectedFilters
+        );
+        if (selectedFilters) {
+            console.log(
+                '[DatePickerFilter] Initializing customRange with selectedFilters:',
+                selectedFilters
+            );
             setCustomRange(selectedFilters);
         }
-    }, [selectedFilters, onDateRangeChange]);
+    }, [selectedFilters]);
 
     const handleSelect = (option: DateOptions) => {
-        setTemporaryOption(option);
+        console.log('[handleSelect] Option selected:', option);
+        setTemporaryOption(option); // Store the key directly
         if (option !== DateOptions.CUSTOM_DATE_RANGE) {
             const range = calculateDateRange(option);
-            setTemporaryCustomRange(range); // Update temporary range
+            console.log('[handleSelect] Calculated range for option:', range);
+            setTemporaryCustomRange(range);
         }
     };
 
     const handleCustomRangeChange = (range: { from: Date; to?: Date }) => {
+        console.log('Custom range change detected:', range);
         if (range.from && range.to) {
             const formattedRange = {
                 start: range.from.getTime(),
                 end: range.to.getTime(),
             };
-            setTemporaryCustomRange(formattedRange); // Save temporary custom range
+            console.log('Formatted custom range:', formattedRange);
+            setTemporaryCustomRange(formattedRange);
         }
     };
 
     const applyFilter = () => {
-        setSelectedOption(temporaryOption); // Finalize selection
-        setCustomRange(temporaryCustomRange); // Save finalized range
-        onDateRangeChange(temporaryCustomRange); // Notify parent with selected range
-
-        // Save to local storage
-        if (temporaryCustomRange) {
-            localStorage.setItem(
-                'created_at',
-                JSON.stringify(temporaryCustomRange)
-            );
-        }
-        setIsOpen(false); // Close dropdown after applying the filter
+        console.log('Applying filter with option:', temporaryOption);
+        console.log('Applying filter with range:', temporaryCustomRange);
+        setSelectedOption(temporaryOption);
+        setCustomRange(temporaryCustomRange);
+        onDateRangeChange(temporaryCustomRange);
+        setIsOpen(false);
     };
 
     const clearFilter = () => {
-        setSelectedOption(null); // Clear selected option
-        setTemporaryOption(null); // Reset temporary selection
-        setCustomRange(null); // Clear range
-        setTemporaryCustomRange(null); // Clear temporary range
-        onDateRangeChange(null); // Notify parent to clear filter
-
-        // Clear from local storage
-        localStorage.removeItem('created_at');
-        setIsOpen(false); // Close dropdown after clearing the filter
+        console.log('Clearing all filters');
+        setSelectedOption(null);
+        setTemporaryOption(null);
+        setCustomRange(null);
+        setTemporaryCustomRange(null);
+        onDateRangeChange(null);
+        setIsOpen(false);
     };
+
+    const getDateOptionLabel = (key: DateOptions): string => DateOptions[key];
 
     const getButtonLabel = () => {
         if (selectedOption === DateOptions.CUSTOM_DATE_RANGE && customRange) {
@@ -94,9 +94,8 @@ export default function DatePickerFilter({
                 customRange.end
             ).toLocaleDateString()}`;
         }
-        return selectedOption ? DateOptions[selectedOption] : title;
+        return selectedOption ? getDateOptionLabel(selectedOption) : title;
     };
-
     return (
         <div className="relative">
             <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
@@ -115,23 +114,25 @@ export default function DatePickerFilter({
                         className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white"
                         sideOffset={5}
                     >
-                        {Object.entries(DateOptions).map(([key, label]) => (
+                        {Object.entries(DateOptions).map(([key, value]) => (
                             <div
                                 key={key}
                                 className="flex items-center gap-2 p-2 cursor-pointer hover:bg-secondary-onyx-900 rounded-md"
-                                onClick={() => handleSelect(key as DateOptions)}
+                                onClick={() =>
+                                    handleSelect(value as DateOptions)
+                                } // Pass `value`, not `key`
                             >
                                 <input
                                     type="radio"
                                     id={key}
-                                    checked={temporaryOption === key}
+                                    checked={temporaryOption === value} // Compare using `value`
                                     onChange={() =>
-                                        handleSelect(key as DateOptions)
+                                        handleSelect(value as DateOptions)
                                     }
                                     className="form-radio h-5 w-5 text-blue-500 border-gray-300 rounded"
                                 />
                                 <label htmlFor={key} className="cursor-pointer">
-                                    {label}
+                                    {value}
                                 </label>
                             </div>
                         ))}
@@ -174,6 +175,7 @@ import {
 } from 'date-fns';
 
 const calculateDateRange = (option: DateOptions) => {
+    console.log('[calculateDateRange] Received option:', option);
     const now = new Date();
     switch (option) {
         case DateOptions.WEEK:
@@ -209,6 +211,7 @@ const calculateDateRange = (option: DateOptions) => {
                 end: endOfYear(lastYear).getTime(),
             };
         default:
+            console.warn('[calculateDateRange] Unrecognized option:', option);
             return null;
     }
 };
