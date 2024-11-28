@@ -42,6 +42,7 @@ import {
     setFilter,
     clearFilter,
 } from '@/stores/order-filter/order-filter-store.ts';
+import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -136,6 +137,19 @@ export function DataTable<TData, TValue>({
                     }
                 />
 
+                <DatePickerFilter
+                    title="Date Picker"
+                    selectedFilters={getFilterValues('created_at')}
+                    onDateRangeChange={(range) =>
+                        range
+                            ? setFilter('created_at', {
+                                  gte: range.start,
+                                  lte: range.end,
+                              })
+                            : clearFilter('created_at')
+                    }
+                />
+
                 <div className="relative w-[376px]">
                     <Input
                         placeholder="Search Order"
@@ -153,7 +167,7 @@ export function DataTable<TData, TValue>({
                     />
                     <Search
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                        size={14} // Adjust the size as needed
+                        size={14}
                     />
                 </div>
             </div>

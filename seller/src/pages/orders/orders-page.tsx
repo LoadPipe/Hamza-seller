@@ -7,11 +7,7 @@ import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
 import { getJwtField } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
-import {
-    filterStore,
-    setFilter,
-    clearFilter,
-} from '@/stores/order-filter/order-filter-store.ts';
+import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 import { useStore } from '@tanstack/react-store';
 
 type Order = z.infer<typeof OrderSchema>;

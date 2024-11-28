@@ -4,9 +4,9 @@ import { ChevronDown } from 'lucide-react';
 
 type DropdownMultiselectFilterProps = {
     title: string;
-    optionsEnum: Record<string, string>; // Dynamically accept any enum type
-    onFilterChange: (selected: string[] | null) => void; // Allow null to indicate filter removal
-    selectedFilters: string[]; // External state for applied filters
+    optionsEnum: Record<string, string>;
+    onFilterChange: (selected: string[] | null) => void;
+    selectedFilters: string[];
 };
 
 export default function DropdownMultiselectFilter({
@@ -29,18 +29,19 @@ export default function DropdownMultiselectFilter({
     };
 
     const applyFilter = () => {
-        onFilterChange(temporarySelection); // Notify parent with applied filters
-        setIsOpen(false); // Close dropdown
+        if (temporarySelection.length > 0) {
+            onFilterChange(temporarySelection);
+            setIsOpen(false);
+        }
     };
 
     const clearFilter = () => {
-        onFilterChange(null); // Notify parent to clear the filter
-        setTemporarySelection([]); // Reset temporary state
-        setIsOpen(false); // Close dropdown
+        onFilterChange(null);
+        setTemporarySelection([]);
+        setIsOpen(false);
     };
 
     React.useEffect(() => {
-        // Sync temporarySelection with external selectedFilters when dropdown opens
         if (isOpen) {
             setTemporarySelection(selectedFilters);
         }
