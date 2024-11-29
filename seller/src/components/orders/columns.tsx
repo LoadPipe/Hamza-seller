@@ -94,7 +94,8 @@ export const generateColumns = (
                     accessorKey: 'id',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -125,7 +126,8 @@ export const generateColumns = (
                     accessorKey: 'customer', // Use accessor key as customer
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() => {
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -164,7 +166,8 @@ export const generateColumns = (
                     accessorKey: 'created_at',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -193,7 +196,8 @@ export const generateColumns = (
                     accessorKey: 'payment_status',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -224,7 +228,8 @@ export const generateColumns = (
                     accessorKey: 'fulfillment_status',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -277,7 +282,8 @@ export const generateColumns = (
                     accessorKey: 'price',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -315,7 +321,8 @@ export const generateColumns = (
                     accessorKey: 'email',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
