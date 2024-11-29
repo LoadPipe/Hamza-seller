@@ -199,30 +199,7 @@ export function DataTable<TData, TValue>({
 
                 {/* Pagination Controls */}
 
-                <div className="flex items-center justify-center py-4 space-x-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            setPageIndex((old) => Math.max(old - 1, 0))
-                        }
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <span className="flex items-center justify-center w-8 h-8">
-                        {pageIndex + 1}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPageIndex((old) => old + 1)}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between mt-10">
                     <div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -252,6 +229,29 @@ export function DataTable<TData, TValue>({
                                     ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
+                    </div>
+                    <div className="flex items-center justify-center space-x-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                                setPageIndex((old) => Math.max(old - 1, 0))
+                            }
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Previous
+                        </Button>
+                        <span className="flex items-center justify-center w-8 h-8">
+                            {pageIndex + 1}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPageIndex((old) => old + 1)}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Next
+                        </Button>
                     </div>
                     <div className="flex text-sm text-muted-foreground m-2 justify-end">
                         {table.getFilteredSelectedRowModel().rows.length} of{' '}
