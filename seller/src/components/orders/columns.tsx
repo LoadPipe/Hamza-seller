@@ -116,9 +116,13 @@ export const generateColumns = (
                     ),
                     cell: ({ row }) => {
                         const orderId: string = row.getValue('id');
-                        // Remove 'order_' prefix
+                        // Truncate after 11 characters and add ellipsis
                         const cleanedId = orderId.replace(/^order_/, '#');
-                        return <div>{cleanedId}</div>;
+                        const truncatedId =
+                            cleanedId.length > 11
+                                ? `${cleanedId.slice(0, 11)}...`
+                                : cleanedId;
+                        return <div>{truncatedId}</div>;
                     },
                 };
             case 'customer':
