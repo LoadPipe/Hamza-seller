@@ -1,9 +1,8 @@
 import { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../../../route-handler';
+import { Config } from '../../../../../config';
 import WhiteListService from '../../../../../services/whitelist';
 import StoreService from '../../../../../services/store';
-import { ProductCollection } from '../../../../../models/product-collection';
-import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const userService = req.scope.resolve('userService');
@@ -13,8 +12,6 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const productCollectionService = req.scope.resolve(
         'productCollectionService'
     );
-    const productRepository: typeof ProductRepository =
-        req.scope.resolve('productRepository');
 
     const handler: RouteHandler = new RouteHandler(
         req,
@@ -31,7 +28,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'medusa',
                     last_name: 'Vendor',
                     wallet_address:
-                        '0xb794f5ea0ba39494ce839613fffba74279579268',
+                        '0xb794f5ea0ba39494ce839613fffba74279579268'.toLowerCase(),
                 },
                 'password'
             ),
@@ -41,7 +38,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Quality',
                     last_name: 'Vendor',
                     wallet_address:
-                        '0x6A75b412495838621e9352FE72fF5e9191DD5ab1',
+                        '0x6A75b412495838621e9352FE72fF5e9191DD5ab1'.toLowerCase(),
                 },
                 'password'
             ),
@@ -51,7 +48,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Headphones',
                     last_name: 'Vendor',
                     wallet_address:
-                        '0x5728C7b8b448332Acda43369afa3a2c25C947D43',
+                        '0x5728C7b8b448332Acda43369afa3a2c25C947D43'.toLowerCase(),
                 },
                 'password'
             ),
@@ -61,7 +58,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Indiana',
                     last_name: 'Jones',
                     wallet_address:
-                        '0x56348d548852e72d8c7fB24C89c7Fb1492504738',
+                        '0x56348d548852e72d8c7fB24C89c7Fb1492504738'.toLowerCase(),
                 },
                 'password'
             ),
@@ -71,7 +68,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Jarl',
                     last_name: 'Droischevnsky',
                     wallet_address:
-                        '0xc0ffee254729296a45a3885639AC7E10F9d54979',
+                        '0xc0ffee254729296a45a3885639AC7E10F9d54979'.toLowerCase(),
                 },
                 'password'
             ),
@@ -81,7 +78,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'GameFi',
                     last_name: 'Studios',
                     wallet_address:
-                        '0x999999cf1046e68e36E1aA2E0E07105eDDD1f08E',
+                        '0xb975Bf5ca0b09E17834d0b5A526F8315F82986D4'.toLowerCase(),
                 },
                 'password'
             ),
@@ -92,7 +89,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Razors',
                     last_name: 'Edge',
                     wallet_address:
-                        '0xaffa87A79F532Fe0F5eB1aFD299A4199b9502663',
+                        '0xfB20a78fD35D20925af6F7379Ab35Fa6C41e9834'.toLowerCase(),
                 },
                 'password'
             ),
@@ -102,7 +99,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: '21',
                     last_name: 'Laptops',
                     wallet_address:
-                        '0xcafd5561F02624D04D55F74297dD04e53f444B92',
+                        '0x9315fe04f0e18AA0F8C92e98f6783177A2156D1F'.toLowerCase(),
                 },
                 'password'
             ),
@@ -112,7 +109,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Jack',
                     last_name: 'Black',
                     wallet_address:
-                        '0xcafb8Cd7d8c5574f0c412619A08EC47f2eA1e434',
+                        '0xcafb8Cd7d8c5574f0c412619A08EC47f2eA1e434'.toLowerCase(),
                 },
                 'password'
             ),
@@ -123,7 +120,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Jern',
                     last_name: 'Javels',
                     wallet_address:
-                        '0x4fBCF49cC0f91d66Bc5bBbE931913D8709592012',
+                        '0x8bA35513C3F5ac659907D222e3DaB38b20f8F52A'.toLowerCase(),
                 },
                 'password'
             ),
@@ -133,7 +130,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Horatio',
                     last_name: 'Turdmuncher',
                     wallet_address:
-                        '0x0000F49cC0f91d66Bc5bBbE931913D8709500003',
+                        '0x0000F49cC0f91d66Bc5bBbE931913D8709500003'.toLowerCase(),
                 },
                 'password'
             ),
@@ -260,60 +257,79 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             store10,
         ] = stores;
 
-        const collectionIds = [
-            'pcol_01HRVF8HCVY8B00RF5S54THTPC',
-            'pcol_01HSGAM4918EX0DETKY6E662WT',
-            'pcol_01HSGAMXDJD725MR3VSW631SN2',
-            'pcol_01HSGAMXDJD725MR3VSW631DR0',
-            'pcol_01HSGAMXDJD725MR3VSW63LEG0',
-            'pcol_01HSGAMXDJD725MR3VSW63B0RD',
-            'pcol_01HSGAMXDJD725MR3VSW63W0GE',
-            'pcol_01HSGAMXDJD725MR3VSW63W0GA',
-            //'pcol_shake',
-            'pcol_lighting',
-            'pcol_01HSGAMXDJD725MR3VSW63LEG0',
-        ];
+        await Promise.all([
+            productCollectionService.update('pcol_01HRVF8HCVY8B00RF5S54THTPC', {
+                store_id: store0.id,
+            }),
+            productCollectionService.update('pcol_01HSGAM4918EX0DETKY6E662WT', {
+                store_id: store1.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW631SN2', {
+                store_id: store2.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW631DR0', {
+                store_id: store3.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63LEG0', {
+                store_id: store4.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63B0RD', {
+                store_id: store5.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63W0GE', {
+                store_id: store6.id,
+            }),
+            productCollectionService.update('pcol_drones', {
+                store_id: store3.id,
+            }),
+            productCollectionService.update('pcol_sound', {
+                store_id: store4.id,
+            }),
+            productCollectionService.update('pcol_gamefi', {
+                store_id: store5.id,
+            }),
+            productCollectionService.update('pcol_razor', {
+                store_id: store6.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63W0GA', {
+                store_id: store7.id,
+            }),
+            productCollectionService.update('pcol_shake', {
+                store_id: store8.id,
+            }),
+            productCollectionService.update('pcol_lighting', {
+                store_id: store9.id,
+            }),
+            productCollectionService.update('pcol_blocks', {
+                store_id: store10.id,
+            }),
+        ]);
 
-        const storeIds = [
-            store0.id,
-            store1.id,
-            store2.id,
-            store3.id,
-            store4.id,
-            store5.id,
-            store6.id,
-            store7.id,
-            //store8.id,
-            store9.id,
-            store10.id,
-        ];
+        //assign users to stores
 
-        const promises = [];
-        for (let n = 0; n < collectionIds.length; n++) {
-            promises.push(
-                productCollectionService.update(collectionIds[n], {
-                    store_id: storeIds[n],
-                })
-            );
-        }
-
-        await Promise.all(promises);
-
-        //sort the products into their houses of Gryffindor, Hufflepuff, etc.
-        for (let collectionId of collectionIds) {
-            const collection: ProductCollection =
-                await productCollectionService.retrieve(collectionId, {
-                    relations: ['products'],
-                });
-
-            if (collection) {
-                for (let product of collection.products) {
-                    product.store_id = collection.store_id;
-                }
-                await productRepository.save(collection.products);
-            }
-        }
-
-        return res.json({});
+        return res.json({
+            user0,
+            user1,
+            user2,
+            user3,
+            user4,
+            user5,
+            user6,
+            user7,
+            user8,
+            user9,
+            user10,
+            store0,
+            store1,
+            store2,
+            store3,
+            store4,
+            store5,
+            store6,
+            store7,
+            store8,
+            store9,
+            store10,
+        });
     });
 };
