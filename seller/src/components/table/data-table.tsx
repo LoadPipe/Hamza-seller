@@ -97,10 +97,10 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="flex justify-center items-center min-h-screen">
+        <div className="flex min-h-screen">
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-6">
                 <div className="flex flex-row">
-                    <div className="flex items-center pb-[40px] gap-5">
+                    <div className="flex pb-[40px] gap-5">
                         <DropdownMultiselectFilter
                             title="Payment Status"
                             optionsEnum={PaymentStatus}
@@ -136,10 +136,10 @@ export function DataTable<TData, TValue>({
                                     .getColumn('id')
                                     ?.setFilterValue(event.target.value)
                             }
-                            className="w-full h-[34px] border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
+                            className="w-full h-[34px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
                         />
                         <Search
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
+                            className="absolute right-3 top-1/4 transform -translate-y-2 text-white"
                             size={14} // Adjust the size as needed
                         />
                     </div>
