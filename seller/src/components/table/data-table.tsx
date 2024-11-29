@@ -97,162 +97,167 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="max-w-page-layout mx-auto bg-primary-black-90 rounded-xl p-[24px]">
-            <div className="flex flex-row">
-                <div className="flex items-center pb-[40px] gap-5">
-                    <DropdownMultiselectFilter
-                        title="Payment Status"
-                        optionsEnum={PaymentStatus}
-                    />
+        <div className="flex justify-center items-center min-h-screen">
+            <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-6">
+                <div className="flex flex-row">
+                    <div className="flex items-center pb-[40px] gap-5">
+                        <DropdownMultiselectFilter
+                            title="Payment Status"
+                            optionsEnum={PaymentStatus}
+                        />
 
-                    {/* Order Status Filter */}
-                    <DropdownMultiselectFilter
-                        title="Order Status"
-                        optionsEnum={OrderStatus}
-                    />
-                    <DropdownMultiselectFilter
-                        title="Fulfillment Status"
-                        optionsEnum={FulfillmentStatus}
-                    />
-                    <DatePickerFilter
-                        title="Date Picker"
-                        onDateRangeChange={(range) => {
-                            console.log('Selected Date Range:', range);
-                        }}
-                    />
+                        {/* Order Status Filter */}
+                        <DropdownMultiselectFilter
+                            title="Order Status"
+                            optionsEnum={OrderStatus}
+                        />
+                        <DropdownMultiselectFilter
+                            title="Fulfillment Status"
+                            optionsEnum={FulfillmentStatus}
+                        />
+                        <DatePickerFilter
+                            title="Date Picker"
+                            onDateRangeChange={(range) => {
+                                console.log('Selected Date Range:', range);
+                            }}
+                        />
+                    </div>
+
+                    <div className="ml-auto flex flex-row relative w-[376px]">
+                        <Input
+                            placeholder="Search Order"
+                            value={
+                                (table
+                                    .getColumn('id')
+                                    ?.getFilterValue() as string) ?? ''
+                            }
+                            onChange={(event) =>
+                                table
+                                    .getColumn('id')
+                                    ?.setFilterValue(event.target.value)
+                            }
+                            className="w-full h-[34px] border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
+                        />
+                        <Search
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
+                            size={14} // Adjust the size as needed
+                        />
+                    </div>
                 </div>
 
-                <div className="ml-auto flex flex-row relative w-[376px]">
-                    <Input
-                        placeholder="Search Order"
-                        value={
-                            (table
-                                .getColumn('id')
-                                ?.getFilterValue() as string) ?? ''
-                        }
-                        onChange={(event) =>
-                            table
-                                .getColumn('id')
-                                ?.setFilterValue(event.target.value)
-                        }
-                        className="w-full h-[34px] border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
-                    />
-                    {/* <Search
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
-                        size={14} // Adjust the size as needed
-                    /> */}
-                </div>
-            </div>
-
-            <div className="rounded-md mt-9 ">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef
-                                                          .header,
-                                                      header.getContext()
-                                                  )}
-                                        </TableHead>
-                                    );
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={
-                                        row.getIsSelected() && 'selected'
-                                    }
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
+                <div className="rounded-md mt-9 overflow-x-auto">
+                    <Table className="min-w-full">
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => {
+                                        return (
+                                            <TableHead key={header.id}>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext()
+                                                      )}
+                                            </TableHead>
+                                        );
+                                    })}
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={columns.length}>
-                                    No results.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-            {/* </div> */}
-
-            {/* Pagination Controls */}
-
-            <div className="flex items-center justify-center py-4 space-x-4">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPageIndex((old) => Math.max(old - 1, 0))}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Previous
-                </Button>
-                <span className="flex items-center justify-center w-8 h-8">
-                    {pageIndex + 1}
-                </span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPageIndex((old) => old + 1)}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Next
-                </Button>
-            </div>
-            <div className="flex justify-between">
-                <div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="ml-auto whitespace-nowrap"
-                            >
-                                Columns
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            {table
-                                .getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
+                            ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows?.length ? (
+                                table.getRowModel().rows.map((row) => (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={
+                                            row.getIsSelected() && 'selected'
                                         }
-                                        onSelect={(e) => e.preventDefault()} // Prevent menu close on select
                                     >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
-                                ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length}>
+                                        No results.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
-                <div className="flex text-sm text-muted-foreground m-2 justify-end">
-                    {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                    {table.getFilteredRowModel().rows.length} row(s) selected.
+                {/* </div> */}
+
+                {/* Pagination Controls */}
+
+                <div className="flex items-center justify-center py-4 space-x-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                            setPageIndex((old) => Math.max(old - 1, 0))
+                        }
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        Previous
+                    </Button>
+                    <span className="flex items-center justify-center w-8 h-8">
+                        {pageIndex + 1}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPageIndex((old) => old + 1)}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        Next
+                    </Button>
+                </div>
+                <div className="flex justify-between">
+                    <div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="ml-auto whitespace-nowrap"
+                                >
+                                    Columns
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) =>
+                                                column.toggleVisibility(!!value)
+                                            }
+                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
+                                        >
+                                            {column.id}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <div className="flex text-sm text-muted-foreground m-2 justify-end">
+                        {table.getFilteredSelectedRowModel().rows.length} of{' '}
+                        {table.getFilteredRowModel().rows.length} row(s)
+                        selected.
+                    </div>
                 </div>
             </div>
         </div>
