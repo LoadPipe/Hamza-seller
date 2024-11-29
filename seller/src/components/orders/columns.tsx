@@ -285,45 +285,45 @@ export const generateColumns = (
                     },
                 };
 
-            case 'price':
-                return {
-                    accessorKey: 'price',
-                    header: ({ column }) => (
-                        <Button
-                            variant={'ghost'}
-                            className=" text-white hover:text-opacity-70 "
-                            onClick={() =>
-                                column.toggleSorting(
-                                    column.getIsSorted() === 'asc'
-                                )
-                            }
-                        >
-                            Price
-                            {column.getIsSorted() === 'asc' && (
-                                <ArrowUp className="ml-2 h-4 w-4" />
-                            )}
-                            {column.getIsSorted() === 'desc' && (
-                                <ArrowDown className="ml-2 h-4 w-4" />
-                            )}
-                            {!column.getIsSorted() && (
-                                <ArrowUpDown className="ml-2 h-4 w-4" />
-                            )}
-                        </Button>
-                    ),
-                    cell: ({ row }) => {
-                        const price = row.getValue('price') as Order['price'];
-                        if (price === undefined) return <div>--</div>;
-                        const formatted = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(price);
-                        return (
-                            <div className="text-right font-medium">
-                                {formatted}
-                            </div>
-                        );
-                    },
-                };
+            // case 'price':
+            //     return {
+            //         accessorKey: 'price',
+            //         header: ({ column }) => (
+            //             <Button
+            //                 variant={'ghost'}
+            //                 className=" text-white hover:text-opacity-70 "
+            //                 onClick={() =>
+            //                     column.toggleSorting(
+            //                         column.getIsSorted() === 'asc'
+            //                     )
+            //                 }
+            //             >
+            //                 Price
+            //                 {column.getIsSorted() === 'asc' && (
+            //                     <ArrowUp className="ml-2 h-4 w-4" />
+            //                 )}
+            //                 {column.getIsSorted() === 'desc' && (
+            //                     <ArrowDown className="ml-2 h-4 w-4" />
+            //                 )}
+            //                 {!column.getIsSorted() && (
+            //                     <ArrowUpDown className="ml-2 h-4 w-4" />
+            //                 )}
+            //             </Button>
+            //         ),
+            //         cell: ({ row }) => {
+            //             const price = row.getValue('price') as Order['price'];
+            //             if (price === undefined) return <div>--</div>;
+            //             const formatted = new Intl.NumberFormat('en-US', {
+            //                 style: 'currency',
+            //                 currency: 'USD',
+            //             }).format(price);
+            //             return (
+            //                 <div className="text-right font-medium">
+            //                     {formatted}
+            //                 </div>
+            //             );
+            //         },
+            //     };
             case 'email':
                 return {
                     accessorKey: 'email',

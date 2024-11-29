@@ -10,7 +10,7 @@ import {
     getPaginationRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { Search } from 'lucide-react';
+// import { Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,13 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useStore } from '@tanstack/react-store';
+import {
+    filterStore,
+    setFilter,
+    clearFilter,
+    setDatePickerFilter,
+} from '@/stores/order-filter/order-filter-store.ts';
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 
 interface DataTableProps<TData, TValue> {
@@ -68,9 +75,10 @@ export function DataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const { filters } = useStore(filterStore); // Subscribe to filter store
 
     const pageCount = Math.ceil(totalRecords / pageSize);
-
+    const getFilterValues = (key: string) => filters[key]?.in || [];
     const table = useReactTable({
         data,
         columns,
@@ -104,21 +112,61 @@ export function DataTable<TData, TValue>({
                         <DropdownMultiselectFilter
                             title="Payment Status"
                             optionsEnum={PaymentStatus}
+                            selectedFilters={getFilterValues('payment_status')} // Prepopulate selected filters
+                            onFilterChange={(values) =>
+                                values
+                                    ? setFilter('payment_status', {
+                                          in: values,
+                                      })
+                                    : clearFilter('payment_status')
+                            }
                         />
 
-                        {/* Order Status Filter */}
                         <DropdownMultiselectFilter
                             title="Order Status"
                             optionsEnum={OrderStatus}
+                            selectedFilters={getFilterValues('status')}
+                            onFilterChange={(values) =>
+                                values
+                                    ? setFilter('status', { in: values })
+                                    : clearFilter('status')
+                            }
                         />
+
                         <DropdownMultiselectFilter
                             title="Fulfillment Status"
                             optionsEnum={FulfillmentStatus}
+                            selectedFilters={getFilterValues(
+                                'fulfillment_status'
+                            )}
+                            onFilterChange={(values) =>
+                                values
+                                    ? setFilter('fulfillment_status', {
+                                          in: values,
+                                      })
+                                    : clearFilter('fulfillment_status')
+                            }
                         />
+
                         <DatePickerFilter
                             title="Date Picker"
-                            onDateRangeChange={(range) => {
-                                console.log('Selected Date Range:', range);
+                            selectedFilters={filters['created_at']}
+                            onDateRangeChange={(range, selectedOption) => {
+                                console.log('[Parent] Received range:', range);
+                                console.log(
+                                    '[Parent] Received option:',
+                                    selectedOption
+                                );
+
+                                if (range) {
+                                    setDatePickerFilter(
+                                        'created_at',
+                                        { gte: range.start, lte: range.end },
+                                        selectedOption || 'Custom Date Range' // Default if label is null
+                                    );
+                                } else {
+                                    clearFilter('created_at');
+                                }
                             }}
                         />
                     </div>
@@ -138,10 +186,10 @@ export function DataTable<TData, TValue>({
                             }
                             className="w-full h-[34px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
                         />
-                        <Search
-                            className="absolute right-3 top-1/4 transform -translate-y-2 text-white"
-                            size={14} // Adjust the size as needed
-                        />
+                        {/*<Search*/}
+                        {/*    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"*/}
+                        {/*    size={14}*/}
+                        {/*/>*/}
                     </div>
                 </div>
 
