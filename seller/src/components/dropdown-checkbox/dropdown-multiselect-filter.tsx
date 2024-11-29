@@ -38,7 +38,7 @@ export default function DropdownMultiselectFilter({
             <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                     <button
-                        className="flex items-center gap-2 px-4 py-2 border h-[34px] rounded-xl shadow-sm bg-secondary-charcoal-69"
+                        className="flex items-center gap-2 px-4 py-2 border h-[34px] text-sm rounded-full shadow-sm bg-secondary-charcoal-69"
                         aria-label="Customise options"
                     >
                         {title}

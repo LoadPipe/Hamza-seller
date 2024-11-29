@@ -98,29 +98,31 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="max-w-page-layout mx-auto bg-primary-black-90 rounded-xl p-[24px]">
-            <div className="flex items-center justify-between pb-[40px]">
-                <DropdownMultiselectFilter
-                    title="Payment Status"
-                    optionsEnum={PaymentStatus}
-                />
+            <div className="flex flex-row">
+                <div className="flex items-center pb-[40px] gap-5">
+                    <DropdownMultiselectFilter
+                        title="Payment Status"
+                        optionsEnum={PaymentStatus}
+                    />
 
-                {/* Order Status Filter */}
-                <DropdownMultiselectFilter
-                    title="Order Status"
-                    optionsEnum={OrderStatus}
-                />
-                <DropdownMultiselectFilter
-                    title="Fulfillment Status"
-                    optionsEnum={FulfillmentStatus}
-                />
-                <DatePickerFilter
-                    title="Date Picker"
-                    onDateRangeChange={(range) => {
-                        console.log('Selected Date Range:', range);
-                    }}
-                />
+                    {/* Order Status Filter */}
+                    <DropdownMultiselectFilter
+                        title="Order Status"
+                        optionsEnum={OrderStatus}
+                    />
+                    <DropdownMultiselectFilter
+                        title="Fulfillment Status"
+                        optionsEnum={FulfillmentStatus}
+                    />
+                    <DatePickerFilter
+                        title="Date Picker"
+                        onDateRangeChange={(range) => {
+                            console.log('Selected Date Range:', range);
+                        }}
+                    />
+                </div>
 
-                <div className="relative w-[376px]">
+                <div className="ml-auto flex flex-row relative w-[376px]">
                     <Input
                         placeholder="Search Order"
                         value={
@@ -133,12 +135,12 @@ export function DataTable<TData, TValue>({
                                 .getColumn('id')
                                 ?.setFilterValue(event.target.value)
                         }
-                        className="w-full h-[34px] bg-black pr-10"
+                        className="w-full h-[34px] border-none placeholder-white  text-white rounded-full bg-black pr-10"
                     />
-                    <Search
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    {/* <Search
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
                         size={14} // Adjust the size as needed
-                    />
+                    /> */}
                 </div>
             </div>
 
