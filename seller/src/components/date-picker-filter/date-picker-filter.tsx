@@ -1,61 +1,127 @@
-import { useStore } from '@tanstack/react-store';
+import { useState, useEffect } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import { DateOptions } from '@/utils/status-enum';
-import {
-    filterStore,
-    setDatePickerFilter,
-    clearFilter,
-} from '@/stores/order-filter/order-filter-store';
 import DatePickerWithRange from '@/components/date-picker-filter/date-picker-with-range';
 
-export default function DatePickerFilter({ title }: { title: string }) {
-    const { filters } = useStore(filterStore); // Fetch global filters
-    const selectFilter = filters['created_at']; // Current filter state for "created_at"
+type DatePickerFilterProps = {
+    title: string;
+    selectedFilters?: { gte: number; lte: number; optionLabel?: string } | null;
+    onDateRangeChange: (
+        range: { start: number; end: number } | null,
+        selectedOption: DateOptions | null
+    ) => void;
+};
+
+export default function DatePickerFilter({
+    title,
+    selectedFilters,
+    onDateRangeChange,
+}: DatePickerFilterProps) {
+    // Combined State for Temporary Selection
+    const [temporarySelection, setTemporarySelection] = useState<{
+        selectedOption: DateOptions | null;
+        range: { start: number; end: number } | null;
+    }>({ selectedOption: null, range: null });
+
+    // Combined State for Selected Filters
+    const [selectedSelection, setSelectedSelection] = useState<{
+        selectedOption: DateOptions | null;
+        range: { start: number; end: number } | null;
+    }>({ selectedOption: null, range: null });
 
     const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        if (selectedFilters) {
+            const selectedOption =
+                (selectedFilters.optionLabel as DateOptions) ||
+                DateOptions.CUSTOM_DATE_RANGE;
+            setSelectedSelection({
+                selectedOption,
+                range: {
+                    start: selectedFilters.gte,
+                    end: selectedFilters.lte,
+                },
+            });
+            setTemporarySelection({
+                selectedOption,
+                range: {
+                    start: selectedFilters.gte,
+                    end: selectedFilters.lte,
+                },
+            });
+        }
+    }, [selectedFilters]);
 
     const handleSelect = (option: DateOptions) => {
         console.log('[handleSelect] Selected Option:', option);
 
         if (option !== DateOptions.CUSTOM_DATE_RANGE) {
             const { start, end } = calculateDateRange(option);
-            setDatePickerFilter('created_at', { gte: start, lte: end }, option);
+            setTemporarySelection({
+                selectedOption: option,
+                range: { start, end },
+            });
         } else {
-            setDatePickerFilter('created_at', { gte: 0, lte: 0 }, option); // Default for custom
+            setTemporarySelection({
+                selectedOption: option,
+                range: null, // Custom range will be set separately
+            });
         }
     };
 
     const handleCustomRangeChange = (range: { from: Date; to?: Date }) => {
-        if (range.from && range.to) {
-            setDatePickerFilter(
-                'created_at',
-                { gte: range.from.getTime(), lte: range.to.getTime() },
-                DateOptions.CUSTOM_DATE_RANGE
-            );
-        }
+        setTemporarySelection((prev) => ({
+            ...prev,
+            range: {
+                start: range.from.getTime(),
+                end: (range.to ?? range.from).getTime(), // Default to `from` if `to` is undefined
+            },
+        }));
     };
 
-    const clearFilters = () => {
-        clearFilter('created_at');
+    const applyFilter = () => {
+        console.log('[applyFilter] Temporary Selection:', temporarySelection);
+
+        setSelectedSelection(temporarySelection);
+        onDateRangeChange(
+            temporarySelection.range,
+            temporarySelection.selectedOption
+        );
+        setIsOpen(false);
+    };
+
+    const clearFilter = () => {
+        setSelectedSelection({ selectedOption: null, range: null });
+        setTemporarySelection({ selectedOption: null, range: null });
+        onDateRangeChange(null, null);
+        setIsOpen(false);
     };
 
     const getButtonLabel = () => {
-        if (selectFilter) {
-            const { gte, lte, optionLabel } = selectFilter;
-            if (optionLabel === DateOptions.CUSTOM_DATE_RANGE && gte && lte) {
-                return `${new Date(gte).toLocaleDateString()} - ${new Date(
-                    lte
-                ).toLocaleDateString()}`;
-            }
-            return optionLabel || title;
+        const { selectedOption, range } = selectedSelection;
+        if (selectedOption === DateOptions.CUSTOM_DATE_RANGE && range) {
+            return `${new Date(range.start).toLocaleDateString()} - ${new Date(
+                range.end
+            ).toLocaleDateString()}`;
         }
-        return title;
+        return selectedOption || title;
     };
+
+    console.log(`$$$ TEMPORARY ${JSON.stringify(temporarySelection)}`);
 
     return (
         <div className="relative">
-            <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenu.Root
+                open={isOpen}
+                onOpenChange={(open) => {
+                    setIsOpen(open);
+                    if (open) {
+                        setTemporarySelection(selectedSelection);
+                    }
+                }}
+            >
                 <DropdownMenu.Trigger asChild>
                     <button
                         className="flex items-center gap-2 px-4 py-2 border h-[34px] rounded-xl shadow-sm bg-secondary-charcoal-69"
@@ -66,7 +132,10 @@ export default function DatePickerFilter({ title }: { title: string }) {
                     </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                    <DropdownMenu.Content className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white">
+                    <DropdownMenu.Content
+                        forceMount
+                        className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white"
+                    >
                         {Object.entries(DateOptions).map(([key, value]) => (
                             <div
                                 key={key}
@@ -79,7 +148,8 @@ export default function DatePickerFilter({ title }: { title: string }) {
                                     type="radio"
                                     id={key}
                                     checked={
-                                        selectFilter?.optionLabel === value
+                                        temporarySelection.selectedOption ===
+                                        value
                                     }
                                     onChange={() =>
                                         handleSelect(value as DateOptions)
@@ -91,15 +161,20 @@ export default function DatePickerFilter({ title }: { title: string }) {
                                 </label>
                             </div>
                         ))}
-                        {selectFilter?.optionLabel ===
+                        {temporarySelection.selectedOption ===
                             DateOptions.CUSTOM_DATE_RANGE && (
                             <DatePickerWithRange
+                                className="mt-4 p-2 border-t border-gray-200"
                                 onRangeChange={handleCustomRangeChange}
                                 selectedRange={
-                                    selectFilter?.gte && selectFilter?.lte
+                                    temporarySelection.range
                                         ? {
-                                              from: new Date(selectFilter.gte),
-                                              to: new Date(selectFilter.lte),
+                                              from: new Date(
+                                                  temporarySelection.range.start
+                                              ),
+                                              to: new Date(
+                                                  temporarySelection.range.end
+                                              ),
                                           }
                                         : undefined
                                 }
@@ -107,16 +182,16 @@ export default function DatePickerFilter({ title }: { title: string }) {
                         )}
                         <div className="flex justify-end gap-2 mt-4">
                             <button
-                                onClick={() => setIsOpen(false)}
                                 className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                                onClick={applyFilter}
                             >
                                 Apply
                             </button>
                             <button
-                                onClick={clearFilters}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                                onClick={clearFilter}
                             >
-                                Clear
+                                Clear Filter
                             </button>
                         </div>
                     </DropdownMenu.Content>
@@ -134,10 +209,10 @@ import {
     startOfYear,
     endOfYear,
 } from 'date-fns';
-import { useState } from 'react';
 
 const calculateDateRange = (option: DateOptions) => {
     const now = new Date();
+
     switch (option) {
         case DateOptions.WEEK:
             return {
@@ -172,6 +247,9 @@ const calculateDateRange = (option: DateOptions) => {
                 end: endOfYear(lastYear).getTime(),
             };
         default:
-            return { start: null, end: null };
+            return {
+                start: subDays(now, 7).setHours(0, 0, 0, 0),
+                end: now.setHours(23, 59, 59, 999),
+            };
     }
 };
