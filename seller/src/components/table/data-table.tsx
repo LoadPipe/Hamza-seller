@@ -41,6 +41,7 @@ import {
     filterStore,
     setFilter,
     clearFilter,
+    setDatePickerFilter,
 } from '@/stores/order-filter/order-filter-store.ts';
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 
@@ -139,15 +140,24 @@ export function DataTable<TData, TValue>({
 
                 <DatePickerFilter
                     title="Date Picker"
-                    selectedFilters={getFilterValues('created_at')}
-                    onDateRangeChange={(range) =>
-                        range
-                            ? setFilter('created_at', {
-                                  gte: range.start,
-                                  lte: range.end,
-                              })
-                            : clearFilter('created_at')
-                    }
+                    selectedFilters={filters['created_at']}
+                    onDateRangeChange={(range, selectedOption) => {
+                        console.log('[Parent] Received range:', range);
+                        console.log(
+                            '[Parent] Received option:',
+                            selectedOption
+                        );
+
+                        if (range) {
+                            setDatePickerFilter(
+                                'created_at',
+                                { gte: range.start, lte: range.end },
+                                selectedOption || 'Custom Date Range' // Default if label is null
+                            );
+                        } else {
+                            clearFilter('created_at');
+                        }
+                    }}
                 />
 
                 <div className="relative w-[376px]">

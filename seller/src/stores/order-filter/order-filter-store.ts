@@ -31,6 +31,21 @@ export const setFilter = (key: string, value: any) => {
     });
 };
 
+export const setDatePickerFilter = (
+    key: string,
+    value: { gte: number; lte: number },
+    optionLabel: string
+) => {
+    filterStore.setState((state) => {
+        const updatedFilters = {
+            ...state.filters,
+            [key]: { ...value, optionLabel }, // Add the label specifically for DatePicker
+        };
+        saveFiltersToStorage(updatedFilters); // Persist changes to local storage
+        return { ...state, filters: updatedFilters };
+    });
+};
+
 // Function to clear a specific filter
 export const clearFilter = (key: string) => {
     filterStore.setState((state) => {
