@@ -138,7 +138,7 @@ export const generateColumns = (
                                 );
                             }}
                         >
-                            Customer Name
+                            Customer
                             {column.getIsSorted() === 'asc' && (
                                 <ArrowUp className="ml-2 h-4 w-4" />
                             )}
@@ -193,7 +193,7 @@ export const generateColumns = (
                     cell: ({ row }) => {
                         const date = new Date(row.getValue('created_at'));
                         return (
-                            <div className="flex flex-row whitespace-nowrap ">
+                            <div className="flex flex-row ">
                                 {formatDate(date)}
                             </div>
                         );
