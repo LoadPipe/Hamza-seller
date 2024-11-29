@@ -41,16 +41,24 @@ export default function DatePickerFilter({
                 start: selectedFilters.gte,
                 end: selectedFilters.lte,
             });
+
             const optionLabel =
                 'optionLabel' in selectedFilters
-                    ? selectedFilters.optionLabel
+                    ? (selectedFilters.optionLabel as DateOptions)
                     : DateOptions.CUSTOM_DATE_RANGE;
             setSelectedOption(optionLabel);
         }
     }, [selectedFilters]);
 
     const getDateOptionLabel = (option: DateOptions): string => {
-        return DateOptions[option] || 'Custom Date Range';
+        const dateOptionsMap: Record<DateOptions, string> = Object.fromEntries(
+            Object.entries(DateOptions).map(([value]) => [
+                value as DateOptions,
+                value,
+            ])
+        ) as Record<DateOptions, string>;
+
+        return dateOptionsMap[option] || 'Custom Date Range';
     };
 
     const handleSelect = (option: DateOptions) => {
@@ -140,7 +148,14 @@ export default function DatePickerFilter({
                             <DatePickerWithRange
                                 className="mt-4 p-2 border-t border-gray-200"
                                 onRangeChange={handleCustomRangeChange}
-                                selectedRange={temporaryCustomRange}
+                                selectedRange={
+                                    customRange
+                                        ? {
+                                              from: new Date(customRange.start),
+                                              to: new Date(customRange.end),
+                                          }
+                                        : undefined
+                                }
                             />
                         )}
                         <div className="flex justify-end gap-2 mt-4">
