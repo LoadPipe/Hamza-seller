@@ -9,7 +9,7 @@ type DatePickerFilterProps = {
     selectedFilters?: { gte: number; lte: number } | null;
     onDateRangeChange: (
         range: { start: number; end: number } | null,
-        selectedOption: string | null // Include selected option label
+        selectedOption: DateOptions | null
     ) => void;
 };
 
@@ -18,94 +18,85 @@ export default function DatePickerFilter({
     selectedFilters,
     onDateRangeChange,
 }: DatePickerFilterProps) {
-    const [selectedOption, setSelectedOption] = useState<DateOptions | null>(
-        null
-    );
+    // Combined State for Temporary Selection
+    const [temporarySelection, setTemporarySelection] = useState<{
+        selectedOption: DateOptions | null;
+        range: { start: number; end: number } | null;
+    }>({ selectedOption: null, range: null });
+
+    // Combined State for Selected Filters
+    const [selectedSelection, setSelectedSelection] = useState<{
+        selectedOption: DateOptions | null;
+        range: { start: number; end: number } | null;
+    }>({ selectedOption: null, range: null });
+
     const [isOpen, setIsOpen] = useState(false);
-    const [temporaryOption, setTemporaryOption] = useState<DateOptions | null>(
-        null
-    );
-    const [customRange, setCustomRange] = useState<{
-        start: number;
-        end: number;
-    } | null>(null);
-    const [temporaryCustomRange, setTemporaryCustomRange] = useState<{
-        start: number;
-        end: number;
-    } | null>(null);
 
     useEffect(() => {
-        console.log('[DatePickerFilter] Selected Filters:', selectedFilters);
         if (selectedFilters) {
-            setCustomRange({
-                start: selectedFilters.gte,
-                end: selectedFilters.lte,
+            setSelectedSelection({
+                selectedOption: DateOptions.CUSTOM_DATE_RANGE,
+                range: {
+                    start: selectedFilters.gte,
+                    end: selectedFilters.lte,
+                },
             });
-
-            const optionLabel =
-                'optionLabel' in selectedFilters
-                    ? (selectedFilters.optionLabel as DateOptions)
-                    : DateOptions.CUSTOM_DATE_RANGE;
-            setSelectedOption(optionLabel);
         }
     }, [selectedFilters]);
 
-    const getDateOptionLabel = (option: DateOptions): string => {
-        const dateOptionsMap: Record<DateOptions, string> = Object.fromEntries(
-            Object.entries(DateOptions).map(([value]) => [
-                value as DateOptions,
-                value,
-            ])
-        ) as Record<DateOptions, string>;
-
-        return dateOptionsMap[option] || 'Custom Date Range';
-    };
-
     const handleSelect = (option: DateOptions) => {
-        setTemporaryOption(option);
+        console.log('[handleSelect] Selected Option:', option);
+
         if (option !== DateOptions.CUSTOM_DATE_RANGE) {
-            const range = calculateDateRange(option);
-            setTemporaryCustomRange(range);
+            const { start, end } = calculateDateRange(option);
+            setTemporarySelection({
+                selectedOption: option,
+                range: { start, end },
+            });
+        } else {
+            setTemporarySelection({
+                selectedOption: option,
+                range: null, // Custom range will be set separately
+            });
         }
     };
 
     const handleCustomRangeChange = (range: { from: Date; to?: Date }) => {
-        if (range.from && range.to) {
-            setTemporaryCustomRange({
+        setTemporarySelection((prev) => ({
+            ...prev,
+            range: {
                 start: range.from.getTime(),
-                end: range.to.getTime(),
-            });
-        }
+                end: (range.to ?? range.from).getTime(), // Default to `from` if `to` is undefined
+            },
+        }));
     };
 
     const applyFilter = () => {
-        setSelectedOption(temporaryOption);
-        setCustomRange(temporaryCustomRange);
+        console.log('[applyFilter] Temporary Selection:', temporarySelection);
 
-        const optionLabel = temporaryOption
-            ? getDateOptionLabel(temporaryOption)
-            : null;
-
-        onDateRangeChange(temporaryCustomRange, optionLabel);
+        setSelectedSelection(temporarySelection);
+        onDateRangeChange(
+            temporarySelection.range,
+            temporarySelection.selectedOption
+        );
         setIsOpen(false);
     };
 
     const clearFilter = () => {
-        setSelectedOption(null);
-        setTemporaryOption(null);
-        setCustomRange(null);
-        setTemporaryCustomRange(null);
+        setSelectedSelection({ selectedOption: null, range: null });
+        setTemporarySelection({ selectedOption: null, range: null });
         onDateRangeChange(null, null);
         setIsOpen(false);
     };
 
     const getButtonLabel = () => {
-        if (selectedOption === DateOptions.CUSTOM_DATE_RANGE && customRange) {
-            return `${new Date(customRange.start).toLocaleDateString()} - ${new Date(
-                customRange.end
+        const { selectedOption, range } = selectedSelection;
+        if (selectedOption === DateOptions.CUSTOM_DATE_RANGE && range) {
+            return `${new Date(range.start).toLocaleDateString()} - ${new Date(
+                range.end
             ).toLocaleDateString()}`;
         }
-        return selectedOption ? getDateOptionLabel(selectedOption) : title;
+        return selectedOption || title;
     };
 
     return (
@@ -121,7 +112,10 @@ export default function DatePickerFilter({
                     </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                    <DropdownMenu.Content className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white">
+                    <DropdownMenu.Content
+                        forceMount
+                        className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white"
+                    >
                         {Object.entries(DateOptions).map(([key, value]) => (
                             <div
                                 key={key}
@@ -133,7 +127,10 @@ export default function DatePickerFilter({
                                 <input
                                     type="radio"
                                     id={key}
-                                    checked={temporaryOption === value}
+                                    checked={
+                                        temporarySelection.selectedOption ===
+                                        value
+                                    }
                                     onChange={() =>
                                         handleSelect(value as DateOptions)
                                     }
@@ -144,15 +141,20 @@ export default function DatePickerFilter({
                                 </label>
                             </div>
                         ))}
-                        {temporaryOption === DateOptions.CUSTOM_DATE_RANGE && (
+                        {temporarySelection.selectedOption ===
+                            DateOptions.CUSTOM_DATE_RANGE && (
                             <DatePickerWithRange
                                 className="mt-4 p-2 border-t border-gray-200"
                                 onRangeChange={handleCustomRangeChange}
                                 selectedRange={
-                                    customRange
+                                    temporarySelection.range
                                         ? {
-                                              from: new Date(customRange.start),
-                                              to: new Date(customRange.end),
+                                              from: new Date(
+                                                  temporarySelection.range.start
+                                              ),
+                                              to: new Date(
+                                                  temporarySelection.range.end
+                                              ),
                                           }
                                         : undefined
                                 }
@@ -179,6 +181,7 @@ export default function DatePickerFilter({
     );
 }
 
+// Calculate Date Range
 import {
     subDays,
     startOfMonth,
@@ -188,8 +191,8 @@ import {
 } from 'date-fns';
 
 const calculateDateRange = (option: DateOptions) => {
-    console.log('[calculateDateRange] Received option:', option);
     const now = new Date();
+
     switch (option) {
         case DateOptions.WEEK:
             return {
@@ -224,7 +227,9 @@ const calculateDateRange = (option: DateOptions) => {
                 end: endOfYear(lastYear).getTime(),
             };
         default:
-            console.warn('[calculateDateRange] Unrecognized option:', option);
-            return null;
+            return {
+                start: subDays(now, 7).setHours(0, 0, 0, 0),
+                end: now.setHours(23, 59, 59, 999),
+            };
     }
 };
