@@ -139,13 +139,6 @@ export function DataTable<TData, TValue>({
                             : clearFilter('fulfillment_status')
                     }
                 />
-                <DatePickerFilter
-                    title="Date Picker"
-                    onDateRangeChange={(range) => {
-                        console.log('Selected Date Range:', range);
-                    }}
-                />
-
 
                 <DatePickerFilter
                     title="Date Picker"
