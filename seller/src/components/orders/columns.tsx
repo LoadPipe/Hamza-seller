@@ -188,7 +188,11 @@ export const generateColumns = (
                     ),
                     cell: ({ row }) => {
                         const date = new Date(row.getValue('created_at'));
-                        return <div>{formatDate(date)}</div>;
+                        return (
+                            <div className="flex flex-row whitespace-nowrap ">
+                                {formatDate(date)}
+                            </div>
+                        );
                     },
                 };
             case 'payment_status':
