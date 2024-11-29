@@ -135,7 +135,7 @@ export function DataTable<TData, TValue>({
                                 .getColumn('id')
                                 ?.setFilterValue(event.target.value)
                         }
-                        className="w-full h-[34px] border-none placeholder-white  text-white rounded-full bg-black pr-10"
+                        className="w-full h-[34px] border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
                     />
                     {/* <Search
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
