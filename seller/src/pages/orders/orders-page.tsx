@@ -7,19 +7,28 @@ import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
 import { getJwtField } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
+import { SortingState } from '@tanstack/react-table';
 
 type Order = z.infer<typeof OrderSchema>;
 
 async function getSellerOrders(
     pageIndex = 0,
-    pageSize = 10
+    pageSize = 10,
+    sorting: SortingState = []
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
+        const sort = sorting[0]
+            ? {
+                  field: sorting[0].id,
+                  direction: sorting[0].desc ? 'DESC' : 'ASC',
+              }
+            : { field: 'created_at', direction: 'ASC' };
+
         const response = await postSecure('/seller/order', {
             store_id: getJwtField('store_id'),
             page: pageIndex,
             count: pageSize,
-            sort: { created_at: 'ASC' },
+            sort: sort,
         });
         console.log(`STORE_ID ${response.store_id}`);
 
@@ -42,8 +51,10 @@ export default function OrdersPage() {
 
     const { page, count } = OrderSearchSchema.parse(search);
 
+    // data table hooks
     const [pageIndex, setPageIndex] = React.useState(page);
     const [pageSize, setPageSize] = React.useState(count);
+    const [sorting, setSorting] = React.useState<SortingState>([]);
 
     const { data, isLoading, error } = useQuery<
         {
@@ -52,8 +63,8 @@ export default function OrdersPage() {
         },
         Error
     >({
-        queryKey: ['orders', pageIndex, pageSize],
-        queryFn: () => getSellerOrders(pageIndex, pageSize), // Fetch with pagination
+        queryKey: ['orders', pageIndex, pageSize, sorting],
+        queryFn: () => getSellerOrders(pageIndex, pageSize, sorting), // Fetch with pagination
     });
 
     if (isLoading) {
@@ -65,7 +76,7 @@ export default function OrdersPage() {
     }
 
     return (
-        <div>
+        <>
             <DataTable
                 columns={columns}
                 data={data?.orders ?? []}
@@ -74,7 +85,9 @@ export default function OrdersPage() {
                 setPageIndex={setPageIndex}
                 setPageSize={setPageSize}
                 totalRecords={data?.totalRecords ?? 0}
+                sorting={sorting}
+                setSorting={setSorting}
             />
-        </div>
+        </>
     );
 }
