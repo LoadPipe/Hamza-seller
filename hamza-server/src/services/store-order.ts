@@ -76,18 +76,6 @@ export default class StoreOrderService extends TransactionBaseService {
         this.logger = createLogger(container, 'StoreOrderService');
     }
 
-    private readonly fulfillmentStatusOrder = {
-        canceled: 1,
-        shipped: 2,
-        fulfilled: 3,
-        partially_fulfilled: 4,
-        not_fulfilled: 5,
-        partially_shipped: 6,
-        returned: 7,
-        partially_returned: 8,
-        requires_action: 9,
-    };
-
     async getOrdersForStore(
         storeId: string,
         filter: filterOrders,
