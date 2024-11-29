@@ -349,6 +349,14 @@ export const generateColumns = (
                             )}
                         </Button>
                     ),
+                    cell: ({ row }) => {
+                        const email = row.getValue('email') as string;
+                        // Check if email contains @evm
+                        if (email.includes('@evm')) {
+                            return <div>--</div>; // Render placeholder for undefined
+                        }
+                        return <div>{email}</div>; // Render the email otherwise
+                    },
                 };
             case 'actions':
                 return {
