@@ -7,6 +7,8 @@ import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
 import { getJwtField } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
+import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
+import { useStore } from '@tanstack/react-store';
 import { SortingState } from '@tanstack/react-table';
 
 type Order = z.infer<typeof OrderSchema>;
@@ -14,6 +16,7 @@ type Order = z.infer<typeof OrderSchema>;
 async function getSellerOrders(
     pageIndex = 0,
     pageSize = 10,
+    filters: Record<string, any>,
     sorting: SortingState = []
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
@@ -28,6 +31,7 @@ async function getSellerOrders(
             store_id: getJwtField('store_id'),
             page: pageIndex,
             count: pageSize,
+            filter: filters, // Add filters here
             sort: sort,
         });
         console.log(`STORE_ID ${response.store_id}`);
@@ -47,6 +51,8 @@ async function getSellerOrders(
 }
 
 export default function OrdersPage() {
+    const { filters } = useStore(filterStore); // Subscribe to filter store
+
     const search = useSearch({ from: '/orders' });
 
     const { page, count } = OrderSearchSchema.parse(search);
@@ -63,8 +69,8 @@ export default function OrdersPage() {
         },
         Error
     >({
-        queryKey: ['orders', pageIndex, pageSize, sorting],
-        queryFn: () => getSellerOrders(pageIndex, pageSize, sorting), // Fetch with pagination
+        queryKey: ['orders', pageIndex, pageSize, filters, sorting],
+        queryFn: () => getSellerOrders(pageIndex, pageSize, filters, sorting), // Fetch with pagination
     });
 
     if (isLoading) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import { DateOptions } from '@/utils/status-enum';
@@ -6,92 +6,202 @@ import DatePickerWithRange from '@/components/date-picker-filter/date-picker-wit
 
 type DatePickerFilterProps = {
     title: string;
-    onDateRangeChange: (range: { start: number; end: number }) => void;
+    selectedFilters?: { gte: number; lte: number; optionLabel?: string } | null;
+    onDateRangeChange: (
+        range: { start: number; end: number } | null,
+        selectedOption: DateOptions | null
+    ) => void;
 };
 
 export default function DatePickerFilter({
     title,
+    selectedFilters,
     onDateRangeChange,
 }: DatePickerFilterProps) {
-    const [selectedOption, setSelectedOption] = useState<DateOptions | null>(
-        DateOptions.WEEK // Default selection
-    );
-    // const [customRange, setCustomRange] = useState<{
-    //     start: number;
-    //     end: number;
-    // } | null>(null);
+    // Combined State for Temporary Selection
+    const [temporarySelection, setTemporarySelection] = useState<{
+        selectedOption: DateOptions | null;
+        range: { start: number; end: number } | null;
+    }>({ selectedOption: null, range: null });
+
+    // Combined State for Selected Filters
+    const [selectedSelection, setSelectedSelection] = useState<{
+        selectedOption: DateOptions | null;
+        range: { start: number; end: number } | null;
+    }>({ selectedOption: null, range: null });
+
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        if (selectedFilters) {
+            const selectedOption =
+                (selectedFilters.optionLabel as DateOptions) ||
+                DateOptions.CUSTOM_DATE_RANGE;
+            setSelectedSelection({
+                selectedOption,
+                range: {
+                    start: selectedFilters.gte,
+                    end: selectedFilters.lte,
+                },
+            });
+            setTemporarySelection({
+                selectedOption,
+                range: {
+                    start: selectedFilters.gte,
+                    end: selectedFilters.lte,
+                },
+            });
+        }
+    }, [selectedFilters]);
 
     const handleSelect = (option: DateOptions) => {
-        setSelectedOption(option);
+        console.log('[handleSelect] Selected Option:', option);
+
         if (option !== DateOptions.CUSTOM_DATE_RANGE) {
-            const range = calculateDateRange(option);
-            onDateRangeChange(range);
+            const { start, end } = calculateDateRange(option);
+            setTemporarySelection({
+                selectedOption: option,
+                range: { start, end },
+            });
+        } else {
+            setTemporarySelection({
+                selectedOption: option,
+                range: null, // Custom range will be set separately
+            });
         }
     };
 
-    const handleCustomRangeChange = (range: {
-        from: Date | null;
-        to?: Date | null;
-    }) => {
-        if (range.from && range.to) {
-            const formattedRange = {
+    const handleCustomRangeChange = (range: { from: Date; to?: Date }) => {
+        setTemporarySelection((prev) => ({
+            ...prev,
+            range: {
                 start: range.from.getTime(),
-                end: range.to.getTime(),
-            };
-            // setCustomRange(formattedRange);
-            onDateRangeChange(formattedRange);
-        }
+                end: (range.to ?? range.from).getTime(), // Default to `from` if `to` is undefined
+            },
+        }));
     };
+
+    const applyFilter = () => {
+        console.log('[applyFilter] Temporary Selection:', temporarySelection);
+
+        setSelectedSelection(temporarySelection);
+        onDateRangeChange(
+            temporarySelection.range,
+            temporarySelection.selectedOption
+        );
+        setIsOpen(false);
+    };
+
+    const clearFilter = () => {
+        setSelectedSelection({ selectedOption: null, range: null });
+        setTemporarySelection({ selectedOption: null, range: null });
+        onDateRangeChange(null, null);
+        setIsOpen(false);
+    };
+
+    const getButtonLabel = () => {
+        const { selectedOption, range } = selectedSelection;
+        if (selectedOption === DateOptions.CUSTOM_DATE_RANGE && range) {
+            return `${new Date(range.start).toLocaleDateString()} - ${new Date(
+                range.end
+            ).toLocaleDateString()}`;
+        }
+        return selectedOption || title;
+    };
+
+    console.log(`$$$ TEMPORARY ${JSON.stringify(temporarySelection)}`);
 
     return (
         <div className="relative">
-            <DropdownMenu.Root>
+            <DropdownMenu.Root
+                open={isOpen}
+                onOpenChange={(open) => {
+                    setIsOpen(open);
+                    if (open) {
+                        setTemporarySelection(selectedSelection);
+                    }
+                }}
+            >
                 <DropdownMenu.Trigger asChild>
                     <button
                         className="flex items-center gap-2 px-4 py-2 border h-[34px] rounded-xl shadow-sm bg-secondary-charcoal-69"
                         aria-label="Date Picker"
                     >
-                        {title}
+                        {getButtonLabel()}
                         <ChevronDown className="h-4 w-4" />
                     </button>
                 </DropdownMenu.Trigger>
-
                 <DropdownMenu.Portal>
                     <DropdownMenu.Content
+                        forceMount
                         className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white"
-                        sideOffset={5}
                     >
-                        {Object.entries(DateOptions).map(([key, label]) => (
+                        {Object.entries(DateOptions).map(([key, value]) => (
                             <div
                                 key={key}
                                 className="flex items-center gap-2 p-2 cursor-pointer hover:bg-secondary-onyx-900 rounded-md"
-                                onClick={() => handleSelect(key as DateOptions)}
+                                onClick={() =>
+                                    handleSelect(value as DateOptions)
+                                }
                             >
                                 <input
                                     type="radio"
                                     id={key}
-                                    checked={selectedOption === key}
+                                    checked={
+                                        temporarySelection.selectedOption ===
+                                        value
+                                    }
+                                    onChange={() =>
+                                        handleSelect(value as DateOptions)
+                                    }
                                     className="form-radio h-5 w-5 text-blue-500 border-gray-300 rounded"
                                 />
                                 <label htmlFor={key} className="cursor-pointer">
-                                    {label}
+                                    {value}
                                 </label>
                             </div>
                         ))}
+                        {temporarySelection.selectedOption ===
+                            DateOptions.CUSTOM_DATE_RANGE && (
+                            <DatePickerWithRange
+                                className="mt-4 p-2 border-t border-gray-200"
+                                onRangeChange={handleCustomRangeChange}
+                                selectedRange={
+                                    temporarySelection.range
+                                        ? {
+                                              from: new Date(
+                                                  temporarySelection.range.start
+                                              ),
+                                              to: new Date(
+                                                  temporarySelection.range.end
+                                              ),
+                                          }
+                                        : undefined
+                                }
+                            />
+                        )}
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                                onClick={applyFilter}
+                            >
+                                Apply
+                            </button>
+                            <button
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                                onClick={clearFilter}
+                            >
+                                Clear Filter
+                            </button>
+                        </div>
                     </DropdownMenu.Content>
                 </DropdownMenu.Portal>
             </DropdownMenu.Root>
-
-            {selectedOption === DateOptions.CUSTOM_DATE_RANGE && (
-                <DatePickerWithRange
-                    className="mt-4 p-2 border-t border-gray-200"
-                    onRangeChange={handleCustomRangeChange}
-                />
-            )}
         </div>
     );
 }
 
+// Calculate Date Range
 import {
     subDays,
     startOfMonth,
@@ -102,11 +212,18 @@ import {
 
 const calculateDateRange = (option: DateOptions) => {
     const now = new Date();
+
     switch (option) {
         case DateOptions.WEEK:
-            return { start: subDays(now, 7).getTime(), end: now.getTime() };
+            return {
+                start: subDays(now, 7).setHours(0, 0, 0, 0),
+                end: now.setHours(23, 59, 59, 999),
+            };
         case DateOptions.TWO_WEEKS:
-            return { start: subDays(now, 14).getTime(), end: now.getTime() };
+            return {
+                start: subDays(now, 14).setHours(0, 0, 0, 0),
+                end: now.setHours(23, 59, 59, 999),
+            };
         case DateOptions.MONTH:
             return {
                 start: startOfMonth(now).getTime(),
@@ -130,6 +247,9 @@ const calculateDateRange = (option: DateOptions) => {
                 end: endOfYear(lastYear).getTime(),
             };
         default:
-            return { start: 0, end: 0 }; // Default empty range
+            return {
+                start: subDays(now, 7).setHours(0, 0, 0, 0),
+                end: now.setHours(23, 59, 59, 999),
+            };
     }
 };

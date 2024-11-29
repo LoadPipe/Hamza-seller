@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 
@@ -14,21 +14,33 @@ import {
 
 type DatePickerWithRangeProps = React.HTMLAttributes<HTMLDivElement> & {
     onRangeChange?: (range: { from: Date; to?: Date }) => void;
+    selectedRange?: DateRange; // DateRange type from react-day-picker
 };
 
 export default function DatePickerWithRange({
     className,
     onRangeChange,
+    selectedRange,
 }: DatePickerWithRangeProps) {
-    const [date, setDate] = React.useState<DateRange | undefined>({
-        from: new Date(2022, 0, 20),
-        to: addDays(new Date(2022, 0, 20), 20),
-    });
+    const [date, setDate] = React.useState<DateRange | undefined>(
+        selectedRange
+    );
+
+    React.useEffect(() => {
+        if (selectedRange) {
+            setDate(selectedRange); // Sync the internal state with the parent state
+        }
+    }, [selectedRange]);
 
     const handleDateChange = (range: DateRange | undefined) => {
         setDate(range);
-        if (onRangeChange && range) {
-            onRangeChange({ from: range.from!, to: range.to });
+
+        // Ensure `from` is defined before calling `onRangeChange`
+        if (range?.from) {
+            onRangeChange?.({
+                from: range.from,
+                to: range.to,
+            });
         }
     };
 
@@ -38,7 +50,7 @@ export default function DatePickerWithRange({
                 <PopoverTrigger asChild>
                     <Button
                         id="date"
-                        variant={'outline'}
+                        variant="outline"
                         className={cn(
                             'w-[300px] justify-start text-left font-normal',
                             !date && 'text-muted-foreground'
