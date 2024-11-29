@@ -7,13 +7,13 @@ import {
     Store,
     ProductStatus,
     ProductCategory,
+    Product,
 } from '@medusajs/medusa';
 import axios from 'axios';
 import {
     CreateProductInput,
     CreateProductProductVariantPriceInput,
 } from '@medusajs/medusa/dist/types/product';
-import { Product } from '../models/product';
 import { ProductVariant } from '@medusajs/medusa';
 import { StoreRepository } from '../repositories/store';
 import { CachedExchangeRateRepository } from '../repositories/cached-exchange-rate';
@@ -77,7 +77,10 @@ class ProductService extends MedusaProductService {
         this.cacheExchangeRateRepository =
             container.cachedExchangeRateRepository;
         this.customerService_ = container.customerService;
-        this.priceConverter_ = new PriceConverter(this.logger, this.cacheExchangeRateRepository);
+        this.priceConverter_ = new PriceConverter(
+            this.logger,
+            this.cacheExchangeRateRepository
+        );
     }
 
     async updateProduct(
@@ -568,10 +571,21 @@ class ProductService extends MedusaProductService {
 
             if (filterCurrencyCode === 'eth') {
                 const factor = Math.pow(10, getCurrencyPrecision('usdc').db);
-                upperPrice = await this.priceConverter_.convertPrice(upperPrice * factor, 'usdc', 'eth');
-                lowerPrice = await this.priceConverter_.convertPrice(lowerPrice * factor, 'usdc', 'eth');
+                upperPrice = await this.priceConverter_.convertPrice(
+                    upperPrice * factor,
+                    'usdc',
+                    'eth'
+                );
+                lowerPrice = await this.priceConverter_.convertPrice(
+                    lowerPrice * factor,
+                    'usdc',
+                    'eth'
+                );
             } else {
-                const factor = Math.pow(10, getCurrencyPrecision(filterCurrencyCode).db);
+                const factor = Math.pow(
+                    10,
+                    getCurrencyPrecision(filterCurrencyCode).db
+                );
                 upperPrice = upperPrice * factor;
                 lowerPrice = lowerPrice * factor;
             }
@@ -776,15 +790,24 @@ class ProductFilterCache extends SeamlessCache {
 
         if (params.upperPrice !== 0 && params.lowerPrice >= 0) {
             products = products.filter((product) => {
-                const price = product.variants[0]?.prices.find(p => p.currency_code === params.filterCurrencyCode)?.amount ?? 0;
+                const price =
+                    product.variants[0]?.prices.find(
+                        (p) => p.currency_code === params.filterCurrencyCode
+                    )?.amount ?? 0;
                 console.log(params.lowerPrice, price, params.upperPrice);
                 return price >= params.lowerPrice && price <= params.upperPrice;
             });
 
             // Sort the products by price (assuming the price is in the first variant and the first price in each variant)
             products = products.sort((a, b) => {
-                const priceA = a.variants[0]?.prices.find(p => p.currency_code === params.filterCurrencyCode)?.amount ?? 0;
-                const priceB = b.variants[0]?.prices.find(p => p.currency_code === params.filterCurrencyCode)?.amount ?? 0;
+                const priceA =
+                    a.variants[0]?.prices.find(
+                        (p) => p.currency_code === params.filterCurrencyCode
+                    )?.amount ?? 0;
+                const priceB =
+                    b.variants[0]?.prices.find(
+                        (p) => p.currency_code === params.filterCurrencyCode
+                    )?.amount ?? 0;
                 return priceA - priceB; // Ascending order
             });
         }
