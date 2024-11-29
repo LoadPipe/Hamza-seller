@@ -102,8 +102,11 @@ export default function DatePickerFilter({
                 customRange.end
             ).toLocaleDateString()}`;
         }
-        return selectedOption ? getDateOptionLabel(selectedOption) : title;
+        return selectedOption && getDateOptionLabel(selectedOption)
+            ? getDateOptionLabel(selectedOption)
+            : title;
     };
+
     return (
         <div className="relative">
             <DropdownMenu.Root
@@ -143,12 +146,13 @@ export default function DatePickerFilter({
                                 <input
                                     type="radio"
                                     id={key}
-                                    checked={temporaryOption === value} // Compare using `value`
+                                    checked={temporaryOption === value}
                                     onChange={() =>
                                         handleSelect(value as DateOptions)
                                     }
                                     className="form-radio h-5 w-5 text-blue-500 border-gray-300 rounded"
                                 />
+
                                 <label htmlFor={key} className="cursor-pointer">
                                     {value}
                                 </label>
