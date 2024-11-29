@@ -7,7 +7,7 @@ const TopDash = () => {
         <div className="flex flex-col text-white">
             {/* Top Navigation */}
             <nav className="w-full py-4">
-                <div className="max-w-[1280px] mx-auto flex items-center justify-between px-4">
+                <div className="max-w-[1280px] flex items-center justify-between mx-4 ">
                     <SidebarTrigger className="ml-2" />
 
                     <div className="flex self-center">

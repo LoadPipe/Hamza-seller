@@ -13,7 +13,7 @@ export const formatStatus = (status: string) => {
 export const formatDate = (date: Date | string, locale = 'en-US'): string => {
     const parsedDate = typeof date === 'string' ? new Date(date) : date;
     return parsedDate.toLocaleString(locale, {
-        month: 'long',
+        month: 'numeric',
         day: 'numeric',
         year: 'numeric',
         hour: 'numeric',
