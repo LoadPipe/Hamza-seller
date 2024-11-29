@@ -8,7 +8,6 @@ import {
     getCoreRowModel,
     getFilteredRowModel,
     getPaginationRowModel,
-    getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
 import { Search } from 'lucide-react';
@@ -58,14 +57,18 @@ export function DataTable<TData, TValue>({
     setPageIndex,
     // setPageSize,
     totalRecords,
+    sorting,
+    setSorting,
 }: DataTableProps<TData, TValue> & {
     pageIndex: number;
     pageSize: number;
     setPageIndex: React.Dispatch<React.SetStateAction<number>>;
     setPageSize: React.Dispatch<React.SetStateAction<number>>;
     totalRecords: number;
+    sorting: SortingState;
+    setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
 }) {
-    const [sorting, setSorting] = React.useState<SortingState>([]);
+    // const { setSort } = useSortStore();
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
 
@@ -79,17 +82,16 @@ export function DataTable<TData, TValue>({
     const table = useReactTable({
         data,
         columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
+        manualSorting: true,
         manualPagination: true,
         pageCount,
+        onSortingChange: setSorting,
         getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        getCoreRowModel: getCoreRowModel(),
+        onColumnFiltersChange: setColumnFilters,
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-
         state: {
             sorting,
             columnFilters,
@@ -137,6 +139,13 @@ export function DataTable<TData, TValue>({
                             : clearFilter('fulfillment_status')
                     }
                 />
+                <DatePickerFilter
+                    title="Date Picker"
+                    onDateRangeChange={(range) => {
+                        console.log('Selected Date Range:', range);
+                    }}
+                />
+
 
                 <DatePickerFilter
                     title="Date Picker"
@@ -182,8 +191,7 @@ export function DataTable<TData, TValue>({
                 </div>
             </div>
 
-            {/* <div className="bg-[#121212] rounded-lg max-w-[1280px] h-[858px] p-4"> */}
-            <div className="rounded-md border mt-9">
+            <div className="rounded-md border mt-9 ">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

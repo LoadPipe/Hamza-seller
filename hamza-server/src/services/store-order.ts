@@ -134,11 +134,12 @@ export default class StoreOrderService extends TransactionBaseService {
             where,
             take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
             skip: page * ordersPerPage,
-            order: sort
-                ? {
-                      [sort.field]: sort.direction, // e.g., ASC or DESC
-                  }
-                : undefined,
+            order:
+                sort && sort.field !== 'customer'
+                    ? {
+                          [sort.field]: sort.direction, // e.g., ASC or DESC
+                      }
+                    : undefined,
             relations: ['customer'],
             // relations: ['customer', 'items.variant.product']
         };
@@ -148,6 +149,19 @@ export default class StoreOrderService extends TransactionBaseService {
 
         //get orders
         const orders = await this.orderRepository_.find(params);
+
+        if (sort?.field === 'customer') {
+            orders.sort((a, b) => {
+                const nameA = a.customer?.last_name?.toLowerCase();
+                const nameB = b.customer?.last_name?.toLowerCase();
+
+                if (sort.direction === 'ASC') {
+                    return nameA.localeCompare(nameB);
+                } else if (sort.direction === 'DESC') {
+                    return nameB.localeCompare(nameA);
+                }
+            });
+        }
 
         return {
             pageIndex: page,

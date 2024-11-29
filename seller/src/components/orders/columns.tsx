@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { MoreHorizontal } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -102,7 +102,15 @@ export const generateColumns = (
                             }
                         >
                             Order
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -118,14 +126,22 @@ export const generateColumns = (
                     header: ({ column }) => (
                         <Button
                             variant="ghost"
-                            onClick={() =>
+                            onClick={() => {
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
-                                )
-                            }
+                                );
+                            }}
                         >
                             Customer Name
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -156,7 +172,15 @@ export const generateColumns = (
                             }
                         >
                             Date
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -177,7 +201,15 @@ export const generateColumns = (
                             }
                         >
                             Payment
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -200,7 +232,15 @@ export const generateColumns = (
                             }
                         >
                             Fulfillment Status
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -245,7 +285,15 @@ export const generateColumns = (
                             }
                         >
                             Price
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -275,7 +323,15 @@ export const generateColumns = (
                             }
                         >
                             Email
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                 };
