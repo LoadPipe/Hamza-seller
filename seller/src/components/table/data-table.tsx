@@ -144,7 +144,7 @@ export function DataTable<TData, TValue>({
                 </div>
             </div>
 
-            <div className="rounded-md border mt-9 ">
+            <div className="rounded-md mt-9 ">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -186,10 +186,7 @@ export function DataTable<TData, TValue>({
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
+                                <TableCell colSpan={columns.length}>
                                     No results.
                                 </TableCell>
                             </TableRow>
