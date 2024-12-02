@@ -1,14 +1,11 @@
 import { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../../../route-handler';
-import { Config } from '../../../../../config';
 import WhiteListService from '../../../../../services/whitelist';
 import StoreService from '../../../../../services/store';
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const userService = req.scope.resolve('userService');
     const storeService: StoreService = req.scope.resolve('storeService');
-    const whitelistService: WhiteListService =
-        req.scope.resolve('whitelistService');
     const productCollectionService = req.scope.resolve(
         'productCollectionService'
     );
@@ -29,6 +26,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Vendor',
                     wallet_address:
                         '0xb794f5ea0ba39494ce839613fffba74279579268'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -39,6 +38,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Vendor',
                     wallet_address:
                         '0x6A75b412495838621e9352FE72fF5e9191DD5ab1'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -49,6 +50,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Vendor',
                     wallet_address:
                         '0x5728C7b8b448332Acda43369afa3a2c25C947D43'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -59,6 +62,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Jones',
                     wallet_address:
                         '0x56348d548852e72d8c7fB24C89c7Fb1492504738'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -69,6 +74,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Droischevnsky',
                     wallet_address:
                         '0xc0ffee254729296a45a3885639AC7E10F9d54979'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -79,6 +86,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Studios',
                     wallet_address:
                         '0xb975Bf5ca0b09E17834d0b5A526F8315F82986D4'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -90,6 +99,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Edge',
                     wallet_address:
                         '0xfB20a78fD35D20925af6F7379Ab35Fa6C41e9834'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -100,6 +111,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Laptops',
                     wallet_address:
                         '0x9315fe04f0e18AA0F8C92e98f6783177A2156D1F'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -110,6 +123,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Black',
                     wallet_address:
                         '0xcafb8Cd7d8c5574f0c412619A08EC47f2eA1e434'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -121,6 +136,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Javels',
                     wallet_address:
                         '0x8bA35513C3F5ac659907D222e3DaB38b20f8F52A'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
@@ -131,6 +148,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     last_name: 'Turdmuncher',
                     wallet_address:
                         '0x0000F49cC0f91d66Bc5bBbE931913D8709500003'.toLowerCase(),
+                    escrow_contract_address:
+                        '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
                 },
                 'password'
             ),
