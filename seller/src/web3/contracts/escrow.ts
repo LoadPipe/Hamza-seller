@@ -1,12 +1,12 @@
 import { BigNumberish, ethers } from 'ethers';
 import { escrowAbi } from '../abi/escrow-abi';
 import { erc20abi } from '../abi/erc20-abi';
-import { ISwitchMultiPaymentInput, ITransactionOutput } from '../';
+import { IMultiPaymentInput, ITransactionOutput } from '../';
 import { getCurrencyAddress } from '../../currency.config';
 
 export class EscrowClient {
     contractAddress: string;
-    client: ethers.Contract;
+    contract: ethers.Contract;
     provider: ethers.Provider;
     signer: ethers.Signer;
     tokens: { [id: string]: ethers.Contract } = {};
@@ -24,7 +24,7 @@ export class EscrowClient {
         this.signer = signer;
         this.contractAddress = address;
 
-        this.client = new ethers.Contract(
+        this.contract = new ethers.Contract(
             this.contractAddress,
             escrowAbi,
             signer
@@ -32,12 +32,12 @@ export class EscrowClient {
     }
 
     async placeMultiplePayments(
-        inputs: ISwitchMultiPaymentInput[],
+        inputs: IMultiPaymentInput[],
         immediateSweep: boolean = true
     ): Promise<ITransactionOutput> {
         //prepare the inputs
         for (let n = 0; n < inputs.length; n++) {
-            const input: ISwitchMultiPaymentInput = inputs[n];
+            const input: IMultiPaymentInput = inputs[n];
             if (!input.currency || input.currency === 'eth') {
                 input.currency = ethers.ZeroAddress;
             } else {
@@ -61,7 +61,7 @@ export class EscrowClient {
         const nativeTotal: BigNumberish = this.getNativeTotal(inputs);
         console.log('native amount:', nativeTotal);
 
-        const tx: any = await this.client.placeMultiPayments(
+        const tx: any = await this.contract.placeMultiPayments(
             inputs,
             immediateSweep,
             {
@@ -90,7 +90,7 @@ export class EscrowClient {
         paymentId: string,
         amount: BigNumberish
     ): Promise<ITransactionOutput> {
-        const tx: any = await this.client.refundPayment(paymentId, amount);
+        const tx: any = await this.contract.refundPayment(paymentId, amount);
 
         const transaction_id = tx.hash;
         const receipt = await tx.wait();
@@ -109,7 +109,7 @@ export class EscrowClient {
      * @returns
      */
     async releaseEscrow(paymentId: string): Promise<ITransactionOutput> {
-        const tx: any = await this.client.releaseEscrow(paymentId);
+        const tx: any = await this.contract.releaseEscrow(paymentId);
 
         const transaction_id = tx.hash;
         const receipt = await tx.wait();
@@ -128,7 +128,7 @@ export class EscrowClient {
      * @param inputs An array of payment inputs
      * @returns A dictionary in which the keys are token addresses, the values are amounts.
      */
-    private getTokensAndAmounts(inputs: ISwitchMultiPaymentInput[]): {
+    private getTokensAndAmounts(inputs: IMultiPaymentInput[]): {
         [id: string]: BigNumberish;
     } {
         const output: { [id: string]: BigNumberish } = {};
@@ -153,7 +153,7 @@ export class EscrowClient {
         return output;
     }
 
-    private getNativeTotal(inputs: ISwitchMultiPaymentInput[]): BigNumberish {
+    private getNativeTotal(inputs: IMultiPaymentInput[]): BigNumberish {
         //TODO: this is too similar to getTokensAndAmounts
         let output: bigint = BigInt(0);
         const sum = (arr: { amount: BigNumberish }[]) =>
@@ -200,7 +200,7 @@ export class EscrowClient {
      */
     private async approveAllTokens(
         spender: string,
-        inputs: ISwitchMultiPaymentInput[]
+        inputs: IMultiPaymentInput[]
     ): Promise<void> {
         const tokenAmounts = this.getTokensAndAmounts(inputs);
 
