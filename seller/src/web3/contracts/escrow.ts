@@ -7,7 +7,7 @@ import { getCurrencyAddress } from '../../currency.config';
 export class EscrowClient {
     contractAddress: string;
     contract: ethers.Contract;
-    provider: ethers.Provider;
+    provider: ethers.providers.Provider;
     signer: ethers.Signer;
     tokens: { [id: string]: ethers.Contract } = {};
 
@@ -16,7 +16,7 @@ export class EscrowClient {
      * @param address Address of the LiteSwitch contract
      */
     constructor(
-        provider: ethers.Provider,
+        provider: ethers.providers.Provider,
         signer: ethers.Signer,
         address: string
     ) {
@@ -39,9 +39,9 @@ export class EscrowClient {
         for (let n = 0; n < inputs.length; n++) {
             const input: IMultiPaymentInput = inputs[n];
             if (!input.currency || input.currency === 'eth') {
-                input.currency = ethers.ZeroAddress;
+                input.currency = '0x0000000000000000000000000000000000000000';
             } else {
-                if (!ethers.isAddress(input.currency)) {
+                if (!ethers.utils.isAddress(input.currency)) {
                     input.currency = getCurrencyAddress(
                         input.currency,
                         parseInt(
@@ -143,7 +143,7 @@ export class EscrowClient {
         //get the sum for each token
         inputs.forEach((i) => {
             //place a 0 if entry is null, otherwise place a sum of all payments
-            if (i.currency != ethers.ZeroAddress) {
+            if (i.currency != '0x0000000000000000000000000000000000000000') {
                 output[i.currency] = output[i.currency]
                     ? BigInt(output[i.currency]) + sum(i.payments)
                     : sum(i.payments);
@@ -164,7 +164,7 @@ export class EscrowClient {
 
         inputs.forEach((i) => {
             //place a 0 if entry is null, otherwise place a sum of all payments
-            if (i.currency == ethers.ZeroAddress) {
+            if (i.currency == '0x0000000000000000000000000000000000000000') {
                 output += sum(i.payments);
             }
         });
