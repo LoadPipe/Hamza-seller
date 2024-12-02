@@ -6,7 +6,6 @@ import {
 import ConfirmationTokenRepository from '../repositories/confirmation-token';
 import CustomerRepository from '../repositories/customer';
 import moment from 'moment';
-import { ethers } from 'ethers';
 import SmtpMailService from './smtp-mail';
 import dotenv from 'dotenv';
 import { createLogger, ILogger } from '../utils/logging/logger';
@@ -34,8 +33,7 @@ export default class ConfirmationTokenService extends TransactionBaseService {
         customer_id: string;
         email: string;
     }) {
-        if (email)
-            email = email.trim().toLowerCase();
+        if (email) email = email.trim().toLowerCase();
 
         let emailCheck = await this.customerRepository_.findOne({
             where: { email },
@@ -49,7 +47,7 @@ export default class ConfirmationTokenService extends TransactionBaseService {
             };
         }
 
-        let token = ethers.keccak256(ethers.randomBytes(32));
+        let token = '';
         this.logger.debug('token is ' + token);
 
         let confirmationToken = await this.confirmationTokenRepository_.save({
@@ -120,7 +118,10 @@ export default class ConfirmationTokenService extends TransactionBaseService {
         //update customer record
         await this.customerRepository_.update(
             { id: customerData.id },
-            { is_verified: true, email: tokenCheck?.email_address?.trim()?.toLowerCase() }
+            {
+                is_verified: true,
+                email: tokenCheck?.email_address?.trim()?.toLowerCase(),
+            }
         );
         await this.confirmationTokenRepository_.update(
             { token: tokenCheck.token },
