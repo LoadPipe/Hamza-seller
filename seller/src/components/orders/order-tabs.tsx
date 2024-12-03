@@ -4,7 +4,9 @@ import {
     setFilter,
     clearFilter,
     loadStatusCountFromStorage,
+    filterStore,
 } from '@/stores/order-filter/order-filter-store';
+import { useStore } from '@tanstack/react-store';
 
 const baseButtonStyles = `
     relative flex items-center bg-transparent after:content-[""]
@@ -57,7 +59,6 @@ const tabs = [
 ];
 
 const OrderTabs = () => {
-    const [activeTab, setActiveTab] = useState<string>('all');
     const [statusCounts, setStatusCounts] = useState<Record<string, number>>({
         all: 0,
         processing: 0,
@@ -66,13 +67,36 @@ const OrderTabs = () => {
         cancelled: 0,
         refunded: 0,
     });
+    const { filters } = useStore(filterStore); // Subscribe to filterStore
+
+    const getActiveTab = () => {
+        for (const tab of tabs) {
+            if (!tab.filters) continue; // Skip "All Orders" as it has no specific filters
+
+            const filtersMatch = Object.entries(tab.filters).every(
+                ([key, values]) =>
+                    filters[key]?.in?.length === values.length &&
+                    filters[key]?.in?.every((val: string) =>
+                        values.includes(val)
+                    )
+            );
+
+            if (filtersMatch) {
+                return tab.key;
+            }
+        }
+        return 'all'; // Default to "All Orders" if no filters match
+    };
+
+    const activeTab = getActiveTab(); // Calculate active tab dynamically
+
     useEffect(() => {
         // Load the status counts from local storage
         const loadedCounts = loadStatusCountFromStorage();
         setStatusCounts(loadedCounts);
     }, []);
+
     const handleTabChange = (tabKey: string) => {
-        setActiveTab(tabKey);
         console.log(`Selected Tab: ${tabKey}`);
 
         // Clear filters for "All Orders" or apply specific filters
