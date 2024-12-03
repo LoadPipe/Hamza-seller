@@ -2,13 +2,19 @@ import { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../../../route-handler';
 import WhiteListService from '../../../../../services/whitelist';
 import StoreService from '../../../../../services/store';
+import { ProductCollection } from '../../../../../models/product-collection';
+import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const userService = req.scope.resolve('userService');
     const storeService: StoreService = req.scope.resolve('storeService');
+    const whitelistService: WhiteListService =
+        req.scope.resolve('whitelistService');
     const productCollectionService = req.scope.resolve(
         'productCollectionService'
     );
+    const productRepository: typeof ProductRepository =
+        req.scope.resolve('productRepository');
 
     const handler: RouteHandler = new RouteHandler(
         req,
@@ -265,6 +271,45 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             store10,
         ] = stores;
 
+        const collectionIds = [
+            'pcol_01HRVF8HCVY8B00RF5S54THTPC',
+            'pcol_01HSGAM4918EX0DETKY6E662WT',
+            'pcol_01HSGAMXDJD725MR3VSW631SN2',
+            'pcol_01HSGAMXDJD725MR3VSW631DR0',
+            'pcol_01HSGAMXDJD725MR3VSW63LEG0',
+            'pcol_01HSGAMXDJD725MR3VSW63B0RD',
+            'pcol_01HSGAMXDJD725MR3VSW63W0GE',
+            'pcol_01HSGAMXDJD725MR3VSW63W0GA',
+            //'pcol_shake',
+            'pcol_lighting',
+            'pcol_01HSGAMXDJD725MR3VSW63LEG0',
+        ];
+
+        const storeIds = [
+            store0.id,
+            store1.id,
+            store2.id,
+            store3.id,
+            store4.id,
+            store5.id,
+            store6.id,
+            store7.id,
+            //store8.id,
+            store9.id,
+            store10.id,
+        ];
+
+        const promises = [];
+        for (let n = 0; n < collectionIds.length; n++) {
+            promises.push(
+                productCollectionService.update(collectionIds[n], {
+                    store_id: storeIds[n],
+                })
+            );
+        }
+
+        await Promise.all(promises);
+        /*
         await Promise.all([
             productCollectionService.update('pcol_01HRVF8HCVY8B00RF5S54THTPC', {
                 store_id: store0.id,
@@ -312,32 +357,23 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 store_id: store10.id,
             }),
         ]);
+        */
 
-        //assign users to stores
+        //sort the products into their houses of Gryffindor, Hufflepuff, etc.
+        for (let collectionId of collectionIds) {
+            const collection: ProductCollection =
+                await productCollectionService.retrieve(collectionId, {
+                    relations: ['products'],
+                });
 
-        return res.json({
-            user0,
-            user1,
-            user2,
-            user3,
-            user4,
-            user5,
-            user6,
-            user7,
-            user8,
-            user9,
-            user10,
-            store0,
-            store1,
-            store2,
-            store3,
-            store4,
-            store5,
-            store6,
-            store7,
-            store8,
-            store9,
-            store10,
-        });
+            if (collection) {
+                for (let product of collection.products) {
+                    product.store_id = collection.store_id;
+                }
+                await productRepository.save(collection.products);
+            }
+        }
+
+        return res.json({});
     });
 };
