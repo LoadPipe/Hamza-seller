@@ -84,7 +84,6 @@ export function DataTable<TData, TValue>({
         data,
         columns,
         manualSorting: true,
-        manualPagination: true,
         pageCount,
         onSortingChange: setSorting,
         getPaginationRowModel: getPaginationRowModel(),
@@ -106,7 +105,7 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex flex-col min-h-screen">
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
                 <OrderTabs />
 
