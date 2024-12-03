@@ -59,6 +59,7 @@ export interface StoreOrdersDTO {
     filtering: filterOrders;
     orders: Order[];
     totalRecords: number;
+    statusCount: {};
 }
 
 export default class StoreOrderService extends TransactionBaseService {
@@ -130,6 +131,44 @@ export default class StoreOrderService extends TransactionBaseService {
             }
         }
 
+        const totalRecords = await this.orderRepository_.count({
+            where: { store_id: storeId },
+        });
+
+        // Calculate counts for each status
+        const statusCounts = {
+            all: totalRecords,
+            processing: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    fulfillment_status: FulfillmentStatus.NOT_FULFILLED, // Correct casing
+                    status: OrderStatus.PENDING, // Correct casing
+                },
+            }),
+            shipped: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    fulfillment_status: FulfillmentStatus.SHIPPED,
+                },
+            }),
+            delivered: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    fulfillment_status: FulfillmentStatus.FULFILLED,
+                    status: OrderStatus.COMPLETED,
+                },
+            }),
+            cancelled: await this.orderRepository_.count({
+                where: { store_id: storeId, status: OrderStatus.CANCELED },
+            }),
+            refunded: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    payment_status: PaymentStatus.REFUNDED,
+                },
+            }),
+        };
+
         const params = {
             where,
             take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
@@ -145,7 +184,6 @@ export default class StoreOrderService extends TransactionBaseService {
         };
 
         // Get total count of matching record
-        const totalRecords = await this.orderRepository_.count({ where });
 
         //get orders
         const orders = await this.orderRepository_.find(params);
@@ -172,6 +210,7 @@ export default class StoreOrderService extends TransactionBaseService {
             filtering: filter,
             orders,
             totalRecords,
+            statusCount: statusCounts,
         };
     }
 
