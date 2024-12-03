@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-table';
 // import { Search } from 'lucide-react';
 
+import OrderTabs from '@/components/orders/order-tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
@@ -106,7 +107,9 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="flex min-h-screen">
-            <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-6">
+            <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
+                <OrderTabs />
+
                 <div className="flex flex-row">
                     <div className="flex pb-[40px] gap-5">
                         <DropdownMultiselectFilter

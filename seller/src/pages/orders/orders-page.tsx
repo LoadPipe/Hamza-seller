@@ -10,6 +10,7 @@ import { postSecure } from '@/utils/api-calls';
 import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 import { useStore } from '@tanstack/react-store';
 import { SortingState } from '@tanstack/react-table';
+import { saveStatusCountToStorage } from '@/stores/order-filter/order-filter-store';
 
 type Order = z.infer<typeof OrderSchema>;
 
@@ -40,6 +41,8 @@ async function getSellerOrders(
         const data: object = response.orders as object;
         // SS totalRecords: string => typecast: number...
         const totalRecords: number = response.totalRecords as number;
+        console.log(`TOTAL RECORDS: ${response.statusCount}`);
+        saveStatusCountToStorage(response.statusCount);
         return {
             orders: OrderSchema.array().parse(data), // Validate using Zod
             totalRecords,
