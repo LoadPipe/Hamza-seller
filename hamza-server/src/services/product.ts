@@ -339,13 +339,25 @@ class ProductService extends MedusaProductService {
     }
 
     async getProductsFromStore(storeId: string): Promise<Product[]> {
-        // this.logger.log('store_id: ' + storeId); // Potential source of the error
-        return (
-            await this.productRepository_.find({
-                where: { store_id: storeId, status: ProductStatus.PUBLISHED },
-                // relations: ['store'],
-            })
-        ).filter((p) => p.variants?.length);
+        // this.logger.debug('store_id: ' + storeId); // Potential source of the error
+        try {
+            const products = await this.productRepository_.find({
+                where: {
+                    store_id: storeId,
+                    status: ProductStatus.PUBLISHED,
+                },
+
+                relations: ['variants'],
+            });
+            // this.logger.debug(products);
+            const filteredProducts = products.filter((p) => p.variants?.length);
+            // const filteredProducts = products;
+            //this.logger.debug(filteredProducts);
+            return filteredProducts;
+        } catch (error) {
+            this.logger.error('Error fetching products from store:', error);
+            throw new Error('Failed to fetch products from store.');
+        }
     }
 
     async getCategoriesByStoreId(storeId: string): Promise<ProductCategory[]> {

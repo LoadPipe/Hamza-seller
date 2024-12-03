@@ -12,6 +12,7 @@ import {
 } from '@medusajs/medusa';
 import { Store } from './store';
 import { ProductReview } from './product-review';
+import { ProductVariant } from './product-variant';
 
 @Entity()
 export class Product extends MedusaProduct {
@@ -20,6 +21,9 @@ export class Product extends MedusaProduct {
 
     @OneToMany(() => ProductReview, (review) => review.product)
     reviews: ProductReview[];
+
+    @OneToMany(() => ProductVariant, (variant) => variant.product)
+    variants: ProductVariant[];
 
     @ManyToOne(() => Store)
     @JoinColumn({ name: 'store_id', referencedColumnName: 'id' })
