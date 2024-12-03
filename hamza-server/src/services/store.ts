@@ -44,7 +44,8 @@ class StoreService extends MedusaStoreService {
         collection: string,
         icon: string,
         store_followers: number,
-        store_description: string
+        store_description: string,
+        escrow_contract_address: string
     ): Promise<Store> {
         let owner_id = user.id;
 
@@ -58,6 +59,7 @@ class StoreService extends MedusaStoreService {
         newStore.store_followers = store_followers;
         newStore.store_description = store_description;
         newStore.default_currency_code = 'eth';
+        newStore.escrow_contract_address = escrow_contract_address;
         newStore = await storeRepo.save(newStore);
         this.logger.debug('New Store Saved:' + newStore);
 
