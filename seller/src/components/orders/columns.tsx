@@ -65,30 +65,36 @@ export const generateColumns = (
                 return {
                     id: 'select',
                     header: ({ table }) => (
-                        <Checkbox
-                            checked={
-                                table.getIsAllPageRowsSelected() ||
-                                (table.getIsSomePageRowsSelected() &&
-                                    'indeterminate')
-                            }
-                            onCheckedChange={(value) =>
-                                table.toggleAllPageRowsSelected(!!value)
-                            }
-                            aria-label="Select all"
-                        />
+                        <div className="flex">
+                            <Checkbox
+                                checked={
+                                    table.getIsAllPageRowsSelected() ||
+                                    (table.getIsSomePageRowsSelected() &&
+                                        'indeterminate')
+                                }
+                                onCheckedChange={(value) =>
+                                    table.toggleAllPageRowsSelected(!!value)
+                                }
+                                aria-label="Select all"
+                            />
+                        </div>
                     ),
                     cell: ({ row }) => (
-                        <Checkbox
-                            checked={row.getIsSelected()}
-                            onCheckedChange={(value) =>
-                                row.toggleSelected(!!value)
-                            }
-                            aria-label="Select row"
-                        />
+                        <div className="flex">
+                            <Checkbox
+                                checked={row.getIsSelected()}
+                                onCheckedChange={(value) =>
+                                    row.toggleSelected(!!value)
+                                }
+                                aria-label="Select row"
+                            />
+                        </div>
                     ),
                     enableSorting: false,
                     enableHiding: false,
+                    size: 40, // Fix column size
                 };
+
             case 'id':
                 return {
                     accessorKey: 'id',
