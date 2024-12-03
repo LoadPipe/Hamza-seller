@@ -726,6 +726,24 @@ class ProductService extends MedusaProductService {
 
         return variant;
     }
+
+    async getCategoryByHandle(categoryHandle: string): Promise<ProductCategory | null> {
+        const categories = await categoryCache.retrieve(this.productCategoryRepository_);
+        return categories.find(cat => cat.handle.toLowerCase() === categoryHandle.toLowerCase()) || null;
+    }
+
+    async getProductByHandle(productHandle: string): Promise<Product | null> {
+        try {
+            const product = await this.productRepository_.findOne({
+                where: { handle: productHandle }
+            });
+    
+            return product || null;
+        } catch (error) {
+            this.logger.error('Error fetching product by handle:', error);
+            throw new Error('Failed to fetch product by handle.');
+        }
+    }
 }
 
 /**

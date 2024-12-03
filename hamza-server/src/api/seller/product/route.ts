@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../route-handler';
 import ProductService from '../../../services/product';
 import StoreService from '../../../services/store';
+import { Product } from '../../../models/product';
 
 /**
  * Retrieves a list of products belonging to a store
@@ -41,7 +42,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             } else if (handler.hasParam('store_name')) {
                 const storeName = handler.inputParams.store_name;
                 const store = await storeService.getStoreByName(storeName);
-                let list_products = [];
+                let list_products: Product[] = [];
                 list_products =
                     await productService.getProductsFromStoreWithPrices(
                         store.id
