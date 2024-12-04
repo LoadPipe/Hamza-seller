@@ -114,24 +114,28 @@ export function DataTable<TData, TValue>({
                             title="Payment Status"
                             optionsEnum={PaymentStatus}
                             selectedFilters={getFilterValues('payment_status')} // Prepopulate selected filters
-                            onFilterChange={(values) =>
-                                values
-                                    ? setFilter('payment_status', {
-                                          in: values,
-                                      })
-                                    : clearFilter('payment_status')
-                            }
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setFilter('payment_status', { in: values });
+                                } else {
+                                    clearFilter('payment_status');
+                                }
+                                setPageIndex(0); // Reset to the first page
+                            }}
                         />
 
                         <DropdownMultiselectFilter
                             title="Order Status"
                             optionsEnum={OrderStatus}
                             selectedFilters={getFilterValues('status')}
-                            onFilterChange={(values) =>
-                                values
-                                    ? setFilter('status', { in: values })
-                                    : clearFilter('status')
-                            }
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setFilter('status', { in: values });
+                                } else {
+                                    clearFilter('status');
+                                }
+                                setPageIndex(0); // Reset to the first page
+                            }}
                         />
 
                         <DropdownMultiselectFilter
@@ -140,13 +144,16 @@ export function DataTable<TData, TValue>({
                             selectedFilters={getFilterValues(
                                 'fulfillment_status'
                             )}
-                            onFilterChange={(values) =>
-                                values
-                                    ? setFilter('fulfillment_status', {
-                                          in: values,
-                                      })
-                                    : clearFilter('fulfillment_status')
-                            }
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setFilter('fulfillment_status', {
+                                        in: values,
+                                    });
+                                } else {
+                                    clearFilter('fulfillment_status');
+                                }
+                                setPageIndex(0); // Reset to the first page
+                            }}
                         />
 
                         <DatePickerFilter
