@@ -2,13 +2,19 @@ import { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../../../route-handler';
 import WhiteListService from '../../../../../services/whitelist';
 import StoreService from '../../../../../services/store';
+import { ProductCollection } from '../../../../../models/product-collection';
+import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const userService = req.scope.resolve('userService');
     const storeService: StoreService = req.scope.resolve('storeService');
+    const whitelistService: WhiteListService =
+        req.scope.resolve('whitelistService');
     const productCollectionService = req.scope.resolve(
         'productCollectionService'
     );
+    const productRepository: typeof ProductRepository =
+        req.scope.resolve('productRepository');
 
     const handler: RouteHandler = new RouteHandler(
         req,
@@ -156,7 +162,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatpants-gray-front.png',
                 500,
                 'Medusa Merch Store where we sell our Medusa Sweatpants, its a nice store',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0x1fFc6ba4FcdfC3Ca72a53c2b64db3807B4A5aec8',
+                    version: 'lite',
+                }
             ),
             storeService.createStore(
                 user1,
@@ -165,7 +174,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/headphones.webp',
                 200,
                 "We Sell VR Headsets here, the best quality VR headsets you wouldn't believe it",
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0x1fFc6ba4FcdfC3Ca72a53c2b64db3807B4A5aec8',
+                    version: 'lite',
+                }
             ),
             storeService.createStore(
                 user2,
@@ -174,7 +186,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/dalle_vr.webp',
                 450,
                 'Dauntless Store - Where bold and resilient products meet exceptional quality. Perfect for those who seek adventure and durability in every purchase.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0x1fFc6ba4FcdfC3Ca72a53c2b64db3807B4A5aec8',
+                    version: 'lite',
+                }
             ),
 
             storeService.createStore(
@@ -184,7 +199,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/Drones/dji_mini_4_pro/dji_mini_pro_1.jpg',
                 720,
                 'Drones Store - Your go-to destination for cutting-edge aerial technology. Explore our wide range of high-performance drones perfect for every enthusiast.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0x1fFc6ba4FcdfC3Ca72a53c2b64db3807B4A5aec8',
+                    version: 'lite',
+                }
             ),
 
             storeService.createStore(
@@ -194,7 +212,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/Lego/corvette/corvette_1.jpg',
                 315,
                 'Legos Store - Dive into the world of creativity and building blocks. Find the latest Lego sets and build your imagination with endless possibilities.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0x1fFc6ba4FcdfC3Ca72a53c2b64db3807B4A5aec8',
+                    version: 'lite',
+                }
             ),
             storeService.createStore(
                 user5,
@@ -203,7 +224,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/Board_Games/dark_souls/souls_1.jpg',
                 860,
                 'Board Games Store - A haven for tabletop enthusiasts. Discover a wide selection of board games, from strategy to family fun, and everything in between.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
+                    version: '1.0',
+                }
             ),
             storeService.createStore(
                 user6,
@@ -212,7 +236,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/Workout/dumbbell/dumb_2.jpg',
                 580,
                 'Workout Gear Store - Equip yourself with the best in fitness gear. From weights to apparel, we have everything you need to power your workouts.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
+                    version: '1.0',
+                }
             ),
             storeService.createStore(
                 user7,
@@ -221,7 +248,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/gaming_store/6.1.png',
                 930,
                 'Gaming Gear Store - Elevate your gaming experience with top-tier gear. Find the latest peripherals, accessories, and more for the ultimate gaming setup.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
+                    version: '1.0',
+                }
             ),
             storeService.createStore(
                 user8,
@@ -230,7 +260,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/headphones.webp',
                 290,
                 'Shake Store - Blend your way to a healthier lifestyle. Our store offers a range of premium shakes and blenders for the health-conscious consumer.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
+                    version: '1.0',
+                }
             ),
             storeService.createStore(
                 user9,
@@ -239,7 +272,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/Legendary/mood/LLD_mood1.webp',
                 670,
                 'Legendary Light Design Store - Illuminate your space with style. Explore our collection of designer lighting solutions for a touch of elegance and functionality.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
+                    version: '1.0',
+                }
             ),
             storeService.createStore(
                 user10,
@@ -248,7 +284,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'https://images.hamza.market/headphones.webp',
                 410,
                 'Block Store - Specializing in building blocks and construction toys. Let your creativity soar with our range of products designed for endless fun.',
-                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
+                {
+                    address: '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b',
+                    version: '1.0',
+                }
             ),
         ]);
         const [
@@ -265,79 +304,60 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             store10,
         ] = stores;
 
-        await Promise.all([
-            productCollectionService.update('pcol_01HRVF8HCVY8B00RF5S54THTPC', {
-                store_id: store0.id,
-            }),
-            productCollectionService.update('pcol_01HSGAM4918EX0DETKY6E662WT', {
-                store_id: store1.id,
-            }),
-            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW631SN2', {
-                store_id: store2.id,
-            }),
-            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW631DR0', {
-                store_id: store3.id,
-            }),
-            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63LEG0', {
-                store_id: store4.id,
-            }),
-            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63B0RD', {
-                store_id: store5.id,
-            }),
-            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63W0GE', {
-                store_id: store6.id,
-            }),
-            productCollectionService.update('pcol_drones', {
-                store_id: store3.id,
-            }),
-            productCollectionService.update('pcol_sound', {
-                store_id: store4.id,
-            }),
-            productCollectionService.update('pcol_gamefi', {
-                store_id: store5.id,
-            }),
-            productCollectionService.update('pcol_razor', {
-                store_id: store6.id,
-            }),
-            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63W0GA', {
-                store_id: store7.id,
-            }),
-            productCollectionService.update('pcol_shake', {
-                store_id: store8.id,
-            }),
-            productCollectionService.update('pcol_lighting', {
-                store_id: store9.id,
-            }),
-            productCollectionService.update('pcol_blocks', {
-                store_id: store10.id,
-            }),
-        ]);
+        const collectionIds = [
+            'pcol_01HRVF8HCVY8B00RF5S54THTPC',
+            'pcol_01HSGAM4918EX0DETKY6E662WT',
+            'pcol_01HSGAMXDJD725MR3VSW631SN2',
+            'pcol_01HSGAMXDJD725MR3VSW631DR0',
+            'pcol_01HSGAMXDJD725MR3VSW63LEG0',
+            'pcol_01HSGAMXDJD725MR3VSW63B0RD',
+            'pcol_01HSGAMXDJD725MR3VSW63W0GE',
+            'pcol_01HSGAMXDJD725MR3VSW63W0GA',
+            //'pcol_shake',
+            'pcol_lighting',
+            'pcol_01HSGAMXDJD725MR3VSW63LEG0',
+        ];
 
-        //assign users to stores
+        const storeIds = [
+            store0.id,
+            store1.id,
+            store2.id,
+            store3.id,
+            store4.id,
+            store5.id,
+            store6.id,
+            store7.id,
+            //store8.id,
+            store9.id,
+            store10.id,
+        ];
 
-        return res.json({
-            user0,
-            user1,
-            user2,
-            user3,
-            user4,
-            user5,
-            user6,
-            user7,
-            user8,
-            user9,
-            user10,
-            store0,
-            store1,
-            store2,
-            store3,
-            store4,
-            store5,
-            store6,
-            store7,
-            store8,
-            store9,
-            store10,
-        });
+        const promises = [];
+        for (let n = 0; n < collectionIds.length; n++) {
+            promises.push(
+                productCollectionService.update(collectionIds[n], {
+                    store_id: storeIds[n],
+                })
+            );
+        }
+
+        await Promise.all(promises);
+
+        //sort the products into their houses of Gryffindor, Hufflepuff, etc.
+        for (let collectionId of collectionIds) {
+            const collection: ProductCollection =
+                await productCollectionService.retrieve(collectionId, {
+                    relations: ['products'],
+                });
+
+            if (collection) {
+                for (let product of collection.products) {
+                    product.store_id = collection.store_id;
+                }
+                await productRepository.save(collection.products);
+            }
+        }
+
+        return res.json({});
     });
 };
