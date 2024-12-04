@@ -20,22 +20,22 @@ git clone
 
 **2. Create the .env files**
 
-./hamza-server/.env
-./hamza-server/scripts/.env
-./hamza-client/.env.local
+./admin-server/.env
+./admin-server/scripts/.env
+./admin-client/.env.local
 
-See /hamza-server/.env.example
-See /hamza-server/scripts/.env.example
-See /hamza-client/scripts/.env.local.example
+See /admin-server/.env.example
+See /admin-server/scripts/.env.example
+See /admin-client/scripts/.env.local.example
 
 **3. Install Packages with yarn**
 
 ```
-cd ./hamza-server
+cd ./admin-server
 yarn install
 cd ../currency-conversion
 yarn install
-cd ../hamza-server/scripts
+cd ../admin-server/scripts
 yarn install
 ```
 
@@ -60,7 +60,7 @@ yarn start
 **7. Set up and Run the Server**
 
 ```
-cd ./hamza-server
+cd ./admin-server
 yarn setup-0
 # WAIT for the server to start listening on port 9000
 yarn setup-1
@@ -68,7 +68,7 @@ yarn setup-1
 ```
 
 ```
-cd ./hamza-server
+cd ./admin-server
 yarn start
 ```
 
@@ -125,10 +125,10 @@ Automatically created thepostgres database and the admin user through the cli
 
 ### Project Structure
 
-**Backend**: hamza-server/
+**Backend**: admin-server/
 Environment Variable: _.env_
 
-**Frontend**: /hamza-client
+**Frontend**: /admin-client
 Environments Variable: _env.local_
 
 For Postgres database we can create entities in load-pipe/src/models
