@@ -201,6 +201,74 @@ export function DataTable<TData, TValue>({
                     </div>
                 </div>
 
+                <div className="flex justify-between mt-10">
+                    <div className="flex text-sm text-muted-foreground m-2 ">
+                        <div className="flex items-center gap-4">
+                            <p className="text-sm text-muted-foreground">
+                                Showing
+                            </p>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                        {pageSize}{' '}
+                                        {/* Display current page size */}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    {[5, 10, 20, 50, 100].map((size) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={size}
+                                            checked={pageSize === size}
+                                            onCheckedChange={() => {
+                                                setPageSize(size); // Update page size
+                                                setPageIndex(0); // Reset to the first page
+                                            }}
+                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
+                                        >
+                                            {size}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                                </DropdownMenuContent>
+                                <div>
+                                    of {table.getFilteredRowModel().rows.length}{' '}
+                                    entries.
+                                </div>
+                            </DropdownMenu>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="ml-auto whitespace-nowrap"
+                                >
+                                    Columns
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) =>
+                                                column.toggleVisibility(!!value)
+                                            }
+                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
+                                        >
+                                            {column.id}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+
                 <div className="rounded-md mt-9 overflow-x-auto">
                     <Table className="min-w-full">
                         <TableHeader>
@@ -251,99 +319,71 @@ export function DataTable<TData, TValue>({
                         </TableBody>
                     </Table>
                 </div>
-                {/* </div> */}
 
                 {/* Pagination Controls */}
+            </div>
 
-                <div className="flex justify-between mt-10">
-                    <div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="ml-auto whitespace-nowrap"
-                                >
-                                    Columns
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {table
-                                    .getAllColumns()
-                                    .filter((column) => column.getCanHide())
-                                    .map((column) => (
-                                        <DropdownMenuCheckboxItem
-                                            key={column.id}
-                                            className="capitalize"
-                                            checked={column.getIsVisible()}
-                                            onCheckedChange={(value) =>
-                                                column.toggleVisibility(!!value)
-                                            }
-                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
-                                        >
-                                            {column.id}
-                                        </DropdownMenuCheckboxItem>
-                                    ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <div className="flex items-center justify-center space-x-4">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                setPageIndex((old) => Math.max(old - 1, 0))
-                            }
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            Previous
-                        </Button>
-                        <span className="flex items-center justify-center w-8 h-8">
-                            {pageIndex + 1}
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPageIndex((old) => old + 1)}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            Next
-                        </Button>
-                    </div>
+            <div className="flex justify-center mt-10 ">
+                <div className="flex items-center space-x-2">
+                    {/* Previous Button */}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                            setPageIndex((old) => Math.max(old - 1, 0))
+                        }
+                        disabled={pageIndex === 0}
+                    >
+                        Previous
+                    </Button>
 
-                    <div className="flex text-sm text-muted-foreground m-2 justify-end">
-                        <div className="flex items-center gap-4">
-                            <p className="text-sm text-muted-foreground">
-                                Showing
-                            </p>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                        {pageSize}{' '}
-                                        {/* Display current page size */}
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    {[5, 10, 20, 50, 100].map((size) => (
-                                        <DropdownMenuCheckboxItem
-                                            key={size}
-                                            checked={pageSize === size}
-                                            onCheckedChange={() => {
-                                                setPageSize(size); // Update page size
-                                                setPageIndex(0); // Reset to the first page
-                                            }}
-                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
-                                        >
-                                            {size}
-                                        </DropdownMenuCheckboxItem>
-                                    ))}
-                                </DropdownMenuContent>
-                                <div>
-                                    of {table.getFilteredRowModel().rows.length}{' '}
-                                    entries.
-                                </div>
-                            </DropdownMenu>
-                        </div>
-                    </div>
+                    {/* First 3 Pages */}
+                    {[...Array(3)].map((_, index) => (
+                        <button
+                            key={index}
+                            className={`w-8 h-8 flex items-center justify-center rounded-full text-sm ${
+                                pageIndex === index
+                                    ? 'bg-[#94D42A] text-black border-none'
+                                    : 'bg-[#121212] text-white border-none'
+                            }`}
+                            onClick={() => setPageIndex(index)}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+
+                    {/* Ellipsis */}
+                    {pageCount > 4 && pageIndex < pageCount - 2 && (
+                        <span className="mx-2 text-gray-500">...</span>
+                    )}
+
+                    {/* Last Page */}
+                    {pageCount > 3 && (
+                        <button
+                            className={`w-8 h-8 flex items-center justify-center rounded-full text-sm ${
+                                pageIndex === pageCount - 1
+                                    ? 'bg-[#94D42A] text-black border-none'
+                                    : 'bg-[#121212] text-white border-none'
+                            }`}
+                            onClick={() => setPageIndex(pageCount - 1)}
+                        >
+                            {pageCount}
+                        </button>
+                    )}
+
+                    {/* Next Button */}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                            setPageIndex((old) =>
+                                Math.min(old + 1, pageCount - 1)
+                            )
+                        }
+                        disabled={pageIndex === pageCount - 1}
+                    >
+                        Next
+                    </Button>
                 </div>
             </div>
         </div>
