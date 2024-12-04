@@ -53,7 +53,7 @@ export const OrderSchema = z.object({
 });
 
 // Generate TypeScript type from Zod schema
-type Order = z.infer<typeof OrderSchema>;
+export type Order = z.infer<typeof OrderSchema>;
 
 // Define a dynamic column generation function
 export const generateColumns = (
