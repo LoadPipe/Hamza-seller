@@ -58,7 +58,11 @@ const tabs = [
     },
 ];
 
-const OrderTabs = () => {
+const OrderTabs = ({
+    setPageIndex,
+}: {
+    setPageIndex: (pageIndex: number) => void;
+}) => {
     const [statusCounts, setStatusCounts] = useState<Record<string, number>>({
         all: 0,
         processing: 0,
@@ -99,6 +103,7 @@ const OrderTabs = () => {
     const handleTabChange = (tabKey: string) => {
         console.log(`Selected Tab: ${tabKey}`);
 
+        setPageIndex(0);
         // Clear filters for "All Orders" or apply specific filters
         if (tabKey === 'all') {
             clearFilter('status');

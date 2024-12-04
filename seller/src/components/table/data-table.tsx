@@ -69,7 +69,6 @@ export function DataTable<TData, TValue>({
     sorting: SortingState;
     setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
 }) {
-    // const { setSort } = useSortStore();
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
 
@@ -107,7 +106,7 @@ export function DataTable<TData, TValue>({
     return (
         <div className="flex flex-col min-h-screen">
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
-                <OrderTabs />
+                <OrderTabs setPageIndex={setPageIndex} />
 
                 <div className="flex flex-row">
                     <div className="flex pb-[40px] gap-5">
