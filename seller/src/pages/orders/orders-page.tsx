@@ -95,6 +95,8 @@ export default function OrdersPage() {
         return <div>{error.message}</div>;
     }
 
+    console.log('table data', data);
+
     return (
         <>
             <DataTable
@@ -104,7 +106,7 @@ export default function OrdersPage() {
                 pageSize={pageSize}
                 setPageIndex={setPageIndex}
                 setPageSize={setPageSize}
-                totalRecords={data?.totalRecords ?? 0}
+                totalRecords={data?.orders.length ?? 0}
                 sorting={sorting}
                 setSorting={setSorting}
             />
