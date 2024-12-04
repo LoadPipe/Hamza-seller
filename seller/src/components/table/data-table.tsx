@@ -322,9 +322,8 @@ export function DataTable<TData, TValue>({
 
                 {/* Pagination Controls */}
             </div>
-
-            <div className="flex justify-center mt-10 ">
-                <div className="flex items-center space-x-2">
+            <div className="flex justify-center mt-10">
+                <div className="flex items-center gap-2">
                     {/* Previous Button */}
                     <Button
                         variant="outline"
@@ -337,33 +336,59 @@ export function DataTable<TData, TValue>({
                         Previous
                     </Button>
 
-                    {/* First 3 Pages */}
-                    {[...Array(3)].map((_, index) => (
-                        <button
-                            key={index}
-                            className={`w-8 h-8 flex items-center justify-center rounded-full text-sm ${
-                                pageIndex === index
-                                    ? 'bg-[#94D42A] text-black border-none'
-                                    : 'bg-[#121212] text-white border-none'
-                            }`}
-                            onClick={() => setPageIndex(index)}
-                        >
-                            {index + 1}
-                        </button>
-                    ))}
+                    {/* First Page */}
+                    <button
+                        className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                            pageIndex === 0
+                                ? 'bg-[#94D42A] text-black'
+                                : 'bg-[#121212] text-white'
+                        }`}
+                        onClick={() => setPageIndex(0)}
+                    >
+                        1
+                    </button>
 
-                    {/* Ellipsis */}
-                    {pageCount > 4 && pageIndex < pageCount - 2 && (
-                        <span className="mx-2 text-gray-500">...</span>
+                    {/* Left Ellipsis */}
+                    {pageIndex > 2 && (
+                        <span className="text-gray-500">...</span>
+                    )}
+
+                    {/* Middle Pages */}
+                    {(() => {
+                        const pages = [];
+                        const start = Math.max(1, pageIndex - 1); // Start from one page before
+                        const end = Math.min(pageCount - 2, pageIndex + 1); // End one before the last page
+
+                        for (let i = start; i <= end; i++) {
+                            pages.push(
+                                <button
+                                    key={i}
+                                    className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                                        pageIndex === i
+                                            ? 'bg-[#94D42A] text-black'
+                                            : 'bg-[#121212] text-white'
+                                    }`}
+                                    onClick={() => setPageIndex(i)}
+                                >
+                                    {i + 1}
+                                </button>
+                            );
+                        }
+                        return pages;
+                    })()}
+
+                    {/* Right Ellipsis */}
+                    {pageIndex < pageCount - 3 && (
+                        <span className="text-gray-500">...</span>
                     )}
 
                     {/* Last Page */}
-                    {pageCount > 3 && (
+                    {pageCount > 1 && (
                         <button
-                            className={`w-8 h-8 flex items-center justify-center rounded-full text-sm ${
+                            className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
                                 pageIndex === pageCount - 1
-                                    ? 'bg-[#94D42A] text-black border-none'
-                                    : 'bg-[#121212] text-white border-none'
+                                    ? 'bg-[#94D42A] text-black'
+                                    : 'bg-[#121212] text-white'
                             }`}
                             onClick={() => setPageIndex(pageCount - 1)}
                         >
