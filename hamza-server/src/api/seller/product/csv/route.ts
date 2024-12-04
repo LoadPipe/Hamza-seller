@@ -1,13 +1,10 @@
 import { MedusaRequest, MedusaResponse, ProductStatus } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
-import ProductService from '../../../../services/product';
+import ProductService, { csvProductData } from '../../../../services/product';
 import StoreService from '../../../../services/store';
 import { Product } from '../../../../models/product';
 import { CreateProductProductVariantInput, CreateProductInput as MedusaCreateProductInput } from '@medusajs/medusa/dist/types/product';
 import multer from 'multer';
-import fs from 'fs';
-import csv from 'csv-parser';
-import * as readline from 'readline';
 
 type CreateProductInput = MedusaCreateProductInput & {
     store_id: string;
@@ -15,23 +12,6 @@ type CreateProductInput = MedusaCreateProductInput & {
 
 interface FileRequest extends MedusaRequest {
     file?: any;
-}
-
-// Define the expected structure of the data
-interface csvProductData {
-    category: string; // category handle from DB
-    images: string;
-    title: string;
-    subtitle: string;
-    handle: string; // must be unique from DB and other rows from csv
-    description: string;
-    status: ProductStatus; // 'draft' or 'published'
-    thumbnail: string;
-    weight: number;
-    discountable: string; // '0' or '1'
-    price: number;
-    category_id?: string; // optional: created when data is valid, and retrieved from DB
-    invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
 }
 
 const upload = multer({ dest: 'uploads/csvs/' });
@@ -50,140 +30,7 @@ const requiredHeaders = [
     'description',
 ];
 
-const validateCsv = async (
-    filePath: string
-): Promise<{ success: boolean; message: string }> => {
-    const validationErrors = [];
-    const fileRows = [];
 
-    const rl = readline.createInterface({
-        input: fs.createReadStream(filePath),
-        crlfDelay: Infinity,
-    });
-
-    for await (const line of rl) {
-        fileRows.push(line);
-    }
-
-    const rowCount = fileRows.length;
-
-    if (rowCount < 2) {
-        validationErrors.push({
-            error: 'CSV file must contain more than 2 rows',
-        });
-    } else {
-        const headerRow = fileRows[0].split(',');
-        const missingHeaders = requiredHeaders.filter(
-            (header) => !headerRow.includes(header)
-        );
-        if (missingHeaders.length > 0) {
-            validationErrors.push({
-                error: `Missing headers in header row: ${missingHeaders.join(', ')}`,
-            });
-        }
-    }
-
-    return {
-        success: validationErrors.length === 0,
-        message: validationErrors.map((err) => err.error).join(', '),
-    };
-};
-
-const validateCategory = async (
-    productService: ProductService,
-    categoryHandle: string
-): Promise<string | null> => {
-    const category_ = await productService.getCategoryByHandle(categoryHandle);
-    return category_ ? category_.id : null;
-};
-
-/**
- * validate data and return valid and invalid data
- * @param productService 
- * @param data 
- * @returns 
- */
-const validateData = async (
-    productService: ProductService,
-    data: csvProductData[]
-): Promise<{
-    success: boolean;
-    message: string;
-    validData: csvProductData[];
-    invalidData: csvProductData[];
-}> => {
-    const invalidData: csvProductData[] = [];
-    const validData: csvProductData[] = [];
-
-    for (const row of data) {
-        const validationError = await validateRow(productService, data, row);
-        if (validationError) {
-            row['invalid_error'] = validationError;
-            invalidData.push(row);
-        } else {
-            validData.push(row);
-        }
-    }
-
-    const success = validData.length > 0;
-    const message = invalidData.length > 0
-        ? 'Contains SOME valid data'
-        : 'Contains valid data';
-
-    return {
-        success,
-        message: success ? message : 'Contains invalid data',
-        validData,
-        invalidData,
-    };
-};
-
-const validateRow = async (
-    productService: ProductService,
-    data: csvProductData[],
-    row: csvProductData
-): Promise<string | null> => {
-    if (requiredHeaders.some((header) => !row[header])) {
-        return 'required fields missing data';
-    }
-
-    const categoryId = await validateCategory(productService, row['category']);
-    if (!categoryId) {
-        return 'category handle does not exist';
-    }
-    row['category_id'] = categoryId;
-
-    if (![ProductStatus.DRAFT, ProductStatus.PUBLISHED].includes(row['status'])) {
-        return 'status is not valid, status must be draft or published';
-    }
-
-    if (!Number.isInteger(Number(row['weight']))) {
-        return 'weight must be a number';
-    }
-
-    if (!['0', '1'].includes(row['discountable'])) {
-        return 'discountable must be a boolean';
-    }
-
-    if (!Number.isInteger(Number(row['price']))) {
-        return 'price must be a number';
-    }
-
-    const product = await productService.getProductByHandle(row['handle']);
-    if (product) {
-        return 'product handle must be unique';
-    }
-
-    // check if handle is unique from other rows
-    const handleExists = data.some(
-        (item) => item !== row && item['handle'] === row['handle']
-    );
-    if (handleExists) {
-        return 'handle must be unique from other rows';
-    }
-
-    return null;
-};
 
 /**
  * optionNames: array of option names i.e. ['color', 'size']
@@ -244,7 +91,7 @@ const mapVariants = async (productDetails: any, optionNames: string[]): Promise<
 }
 
 const convertDataToCreateDataInput = async (
-    data: Array<any>,
+    data: csvProductData,
     storeId: string,
     collectionId: string,
     salesChannelIds: string[]
@@ -306,7 +153,7 @@ const convertDataToCreateDataInput = async (
 
 const convertData = async (
     storeId: string,
-    data: Array<any>
+    data: csvProductData[]
 ): Promise<{
     success: boolean;
     message: string;
@@ -334,24 +181,6 @@ const convertData = async (
         message: 'data converted successfully',
         jsonData: productInputs,
     };
-};
-
-const parseCsvFile = (filePath: string): Promise<any[]> => {
-    return new Promise((resolve, reject) => {
-        const fileRows: any[] = [];
-        fs.createReadStream(filePath)
-            .pipe(csv())
-            .on('data', (row) => {
-                fileRows.push(row);
-            })
-            .on('end', () => {
-                fs.unlinkSync(filePath);
-                resolve(fileRows);
-            })
-            .on('error', (error) => {
-                reject(error);
-            });
-    });
 };
 
 export const POST = async (req: FileRequest, res: MedusaResponse) => {
@@ -385,7 +214,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             }
 
             const validateCsvOutput: { success: boolean; message: string } =
-                await validateCsv(file.path);
+                await productService.validateCsv(file.path, requiredHeaders);
 
             if (!validateCsvOutput.success) {
                 return handler.returnStatus(400, {
@@ -393,14 +222,14 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 });
             }
 
-            const fileData: Array<any> = await parseCsvFile(file.path);
+            const fileData: Array<any> = await productService.parseCsvFile(file.path);
 
             const validateDataOutput: {
                 success: boolean;
                 message: string;
                 validData: Array<any>;
                 invalidData: Array<any>;
-            } = await validateData(productService, fileData);
+            } = await productService.validateData(fileData, requiredHeaders);
 
             if (!validateDataOutput.success) {
                 return handler.returnStatus(400, {
@@ -427,6 +256,12 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     convertDataOutput.jsonData
                 );
 
+                if (products.length === 0) {
+                    return handler.returnStatus(400, {
+                        message: 'No products were imported',
+                    });
+                } 
+                
                 res.status(200).json({ message: 'Products imported successfully', products: products });
             } catch (error) {
                 return handler.returnStatus(400, {

@@ -26,6 +26,9 @@ import { SeamlessCache } from '../utils/cache/seamless-cache';
 import { filterDuplicatesById } from '../utils/filter-duplicates';
 import { PriceConverter } from '../utils/price-conversion';
 import { getCurrencyPrecision } from '../currency.config';
+import fs from 'fs';
+import csv from 'csv-parser';
+import * as readline from 'readline';
 
 export type BulkImportProductInput = CreateProductInput;
 
@@ -55,6 +58,23 @@ export type UpdateProductProductVariantDTO = {
         option_id: string;
     }[];
 };
+
+// Define the expected structure of the data
+export type csvProductData = {
+    category: string; // category handle from DB
+    images: string;
+    title: string;
+    subtitle: string;
+    handle: string; // must be unique from DB and other rows from csv
+    description: string;
+    status: ProductStatus; // 'draft' or 'published'
+    thumbnail: string;
+    weight: number;
+    discountable: string; // '0' or '1'
+    price: number;
+    category_id?: string; // optional: created when data is valid, and retrieved from DB
+    invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
+}
 
 type UpdateProductInput = Omit<Partial<CreateProductInput>, 'variants'> & {
     variants?: UpdateProductProductVariantDTO[];
@@ -758,6 +778,159 @@ class ProductService extends MedusaProductService {
             throw new Error('Failed to fetch product by handle.');
         }
     }
+
+    async parseCsvFile(filePath: string): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            const fileRows: any[] = [];
+            fs.createReadStream(filePath)
+                .pipe(csv())
+                .on('data', (row) => {
+                    fileRows.push(row);
+                })
+                .on('end', () => {
+                    fs.unlinkSync(filePath);
+                    resolve(fileRows);
+                })
+                .on('error', (error) => {
+                    reject(error);
+                });
+        });
+    };
+
+    async validateCsv(
+        filePath: string,
+        requiredHeaders: string[]
+    ): Promise<{ success: boolean; message: string }> {
+        const validationErrors = [];
+        const fileRows = [];
+    
+        const rl = readline.createInterface({
+            input: fs.createReadStream(filePath),
+            crlfDelay: Infinity,
+        });
+    
+        for await (const line of rl) {
+            fileRows.push(line);
+        }
+    
+        const rowCount = fileRows.length;
+    
+        if (rowCount < 2) {
+            validationErrors.push({
+                error: 'CSV file must contain more than 2 rows',
+            });
+        } else {
+            const headerRow = fileRows[0].split(',');
+            const missingHeaders = requiredHeaders.filter(
+                (header) => !headerRow.includes(header)
+            );
+            if (missingHeaders.length > 0) {
+                validationErrors.push({
+                    error: `Missing headers in header row: ${missingHeaders.join(', ')}`,
+                });
+            }
+        }
+    
+        return {
+            success: validationErrors.length === 0,
+            message: validationErrors.map((err) => err.error).join(', '),
+        };
+    };
+    
+    async validateCategory(
+        categoryHandle: string
+    ): Promise<string | null> {
+        const category_ = await this.getCategoryByHandle(categoryHandle);
+        return category_ ? category_.id : null;
+    };
+    
+    /**
+     * validate data and return valid and invalid data
+     * @param productService 
+     * @param data 
+     * @returns 
+     */
+    async validateData(
+        data: csvProductData[],
+        requiredHeaders: string[]
+    ): Promise<{
+        success: boolean;
+        message: string;
+        validData: csvProductData[];
+        invalidData: csvProductData[];
+    }> {
+        const invalidData: csvProductData[] = [];
+        const validData: csvProductData[] = [];
+    
+        for (const row of data) {
+            const validationError = await this.validateRow(data, row, requiredHeaders);
+            if (validationError) {
+                row['invalid_error'] = validationError;
+                invalidData.push(row);
+            } else {
+                validData.push(row);
+            }
+        }
+    
+        const success = validData.length > 0;
+        const message = invalidData.length > 0
+            ? 'Contains SOME valid data'
+            : 'Contains valid data';
+    
+        return {
+            success,
+            message: success ? message : 'Contains invalid data',
+            validData,
+            invalidData,
+        };
+    };
+    
+    async validateRow(
+        data: csvProductData[],
+        row: csvProductData,
+        requiredHeaders: string[]
+    ): Promise<string | null> {
+        if (requiredHeaders.some((header) => !row[header])) {
+            return 'required fields missing data';
+        }
+    
+        const categoryId = await this.validateCategory(row['category']);
+        if (!categoryId) {
+            return 'category handle does not exist';
+        }
+        row['category_id'] = categoryId;
+    
+        if (![ProductStatus.DRAFT, ProductStatus.PUBLISHED].includes(row['status'])) {
+            return 'status is not valid, status must be draft or published';
+        }
+    
+        if (!Number.isInteger(Number(row['weight']))) {
+            return 'weight must be a number';
+        }
+    
+        if (!['0', '1'].includes(row['discountable'])) {
+            return 'discountable must be a boolean';
+        }
+    
+        if (!Number.isInteger(Number(row['price']))) {
+            return 'price must be a number';
+        }
+    
+        const product = await this.getProductByHandle(row['handle']);
+        if (product) {
+            return 'product handle must be unique';
+        }
+    
+        // check if handle is unique from other rows
+        const handleExists = data.some(
+            (item) => item !== row && item['handle'] === row['handle']
+        );
+        if (handleExists) {
+            return 'handle must be unique from other rows';
+        }
+    
+        return null;
+    };
 }
 
 /**
