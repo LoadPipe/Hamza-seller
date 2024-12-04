@@ -258,12 +258,12 @@ export function DataTable<TData, TValue>({
                 <div className="flex justify-start mb-4">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline">
+                            <Button className="bg-secondary-charcoal-69 text-white">
                                 <Download />
                                 Export
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
+                        <DropdownMenuContent className="bg-secondary-charcoal-69 ">
                             <DropdownMenuItem onClick={handleDownloadCSV}>
                                 Export as CSV
                             </DropdownMenuItem>
