@@ -15,6 +15,7 @@ import {
     LessThan,
     MoreThanOrEqual,
     LessThanOrEqual,
+    Between,
 } from 'typeorm';
 import { BuckyClient } from '../buckydrop/bucky-client';
 import ProductRepository from '@medusajs/medusa/dist/repositories/product';
@@ -43,6 +44,10 @@ interface filterOrders {
         lte?: number;
         gte?: number;
     }; // range filtering
+    created_at?: {
+        gte?: string; // ISO 8601 timestamp
+        lte?: string; // ISO 8601 timestamp
+    };
 }
 
 export interface StoreOrdersDTO {
@@ -54,6 +59,7 @@ export interface StoreOrdersDTO {
     filtering: filterOrders;
     orders: Order[];
     totalRecords: number;
+    statusCount: {};
 }
 
 export default class StoreOrderService extends TransactionBaseService {
@@ -89,7 +95,9 @@ export default class StoreOrderService extends TransactionBaseService {
         //apply filter if any
         if (filter) {
             for (let prop in filter) {
-                if (filter[prop].ne) {
+                if (filter[prop].in) {
+                    where[prop] = In(filter[prop].in);
+                } else if (filter[prop].ne) {
                     where[prop] = Not(filter[prop].ne);
                 } else if (filter[prop].eq) {
                     where[prop] = filter[prop].eq;
@@ -105,26 +113,93 @@ export default class StoreOrderService extends TransactionBaseService {
                     where[prop] = filter[prop];
                 }
             }
+            if (filter.created_at) {
+                if (filter.created_at.gte && filter.created_at.lte) {
+                    where['created_at'] = Between(
+                        new Date(filter.created_at.gte),
+                        new Date(filter.created_at.lte)
+                    );
+                } else if (filter.created_at.gte) {
+                    where['created_at'] = MoreThanOrEqual(
+                        new Date(filter.created_at.gte)
+                    );
+                } else if (filter.created_at.lte) {
+                    where['created_at'] = LessThanOrEqual(
+                        new Date(filter.created_at.lte)
+                    );
+                }
+            }
         }
+
+        const totalRecords = await this.orderRepository_.count({
+            where: { store_id: storeId },
+        });
+
+        // Calculate counts for each status
+        const statusCounts = {
+            all: totalRecords,
+            processing: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    fulfillment_status: FulfillmentStatus.NOT_FULFILLED, // Correct casing
+                    status: OrderStatus.PENDING, // Correct casing
+                },
+            }),
+            shipped: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    fulfillment_status: FulfillmentStatus.SHIPPED,
+                },
+            }),
+            delivered: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    fulfillment_status: FulfillmentStatus.FULFILLED,
+                    status: OrderStatus.COMPLETED,
+                },
+            }),
+            cancelled: await this.orderRepository_.count({
+                where: { store_id: storeId, status: OrderStatus.CANCELED },
+            }),
+            refunded: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    payment_status: PaymentStatus.REFUNDED,
+                },
+            }),
+        };
 
         const params = {
             where,
             take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
             skip: page * ordersPerPage,
-            order: sort
-                ? {
-                      [sort.field]: sort.direction, // e.g., ASC or DESC
-                  }
-                : undefined,
+            order:
+                sort && sort.field !== 'customer'
+                    ? {
+                          [sort.field]: sort.direction, // e.g., ASC or DESC
+                      }
+                    : undefined,
             relations: ['customer'],
             // relations: ['customer', 'items.variant.product']
         };
 
         // Get total count of matching record
-        const totalRecords = await this.orderRepository_.count({ where });
 
         //get orders
         const orders = await this.orderRepository_.find(params);
+
+        if (sort?.field === 'customer') {
+            orders.sort((a, b) => {
+                const nameA = a.customer?.last_name?.toLowerCase();
+                const nameB = b.customer?.last_name?.toLowerCase();
+
+                if (sort.direction === 'ASC') {
+                    return nameA.localeCompare(nameB);
+                } else if (sort.direction === 'DESC') {
+                    return nameB.localeCompare(nameA);
+                }
+            });
+        }
 
         return {
             pageIndex: page,
@@ -135,6 +210,7 @@ export default class StoreOrderService extends TransactionBaseService {
             filtering: filter,
             orders,
             totalRecords,
+            statusCount: statusCounts,
         };
     }
 

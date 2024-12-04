@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { MoreHorizontal } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -65,36 +65,43 @@ export const generateColumns = (
                 return {
                     id: 'select',
                     header: ({ table }) => (
-                        <Checkbox
-                            checked={
-                                table.getIsAllPageRowsSelected() ||
-                                (table.getIsSomePageRowsSelected() &&
-                                    'indeterminate')
-                            }
-                            onCheckedChange={(value) =>
-                                table.toggleAllPageRowsSelected(!!value)
-                            }
-                            aria-label="Select all"
-                        />
+                        <div className="flex">
+                            <Checkbox
+                                checked={
+                                    table.getIsAllPageRowsSelected() ||
+                                    (table.getIsSomePageRowsSelected() &&
+                                        'indeterminate')
+                                }
+                                onCheckedChange={(value) =>
+                                    table.toggleAllPageRowsSelected(!!value)
+                                }
+                                aria-label="Select all"
+                            />
+                        </div>
                     ),
                     cell: ({ row }) => (
-                        <Checkbox
-                            checked={row.getIsSelected()}
-                            onCheckedChange={(value) =>
-                                row.toggleSelected(!!value)
-                            }
-                            aria-label="Select row"
-                        />
+                        <div className="flex">
+                            <Checkbox
+                                checked={row.getIsSelected()}
+                                onCheckedChange={(value) =>
+                                    row.toggleSelected(!!value)
+                                }
+                                aria-label="Select row"
+                            />
+                        </div>
                     ),
                     enableSorting: false,
                     enableHiding: false,
+                    size: 40, // Fix column size
                 };
+
             case 'id':
                 return {
                     accessorKey: 'id',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -102,14 +109,26 @@ export const generateColumns = (
                             }
                         >
                             Order
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
                         const orderId: string = row.getValue('id');
-                        // Remove 'order_' prefix
+                        // Truncate after 11 characters and add ellipsis
                         const cleanedId = orderId.replace(/^order_/, '#');
-                        return <div>{cleanedId}</div>;
+                        const truncatedId =
+                            cleanedId.length > 11
+                                ? `${cleanedId.slice(0, 11)}...`
+                                : cleanedId;
+                        return <div>{truncatedId}</div>;
                     },
                 };
             case 'customer':
@@ -117,15 +136,24 @@ export const generateColumns = (
                     accessorKey: 'customer', // Use accessor key as customer
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
-                            onClick={() =>
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() => {
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
-                                )
-                            }
+                                );
+                            }}
                         >
-                            Customer Name
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            Customer
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -148,7 +176,8 @@ export const generateColumns = (
                     accessorKey: 'created_at',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -156,12 +185,24 @@ export const generateColumns = (
                             }
                         >
                             Date
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
                         const date = new Date(row.getValue('created_at'));
-                        return <div>{formatDate(date)}</div>;
+                        return (
+                            <div className="flex flex-row ">
+                                {formatDate(date)}
+                            </div>
+                        );
                     },
                 };
             case 'payment_status':
@@ -169,7 +210,8 @@ export const generateColumns = (
                     accessorKey: 'payment_status',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -177,7 +219,15 @@ export const generateColumns = (
                             }
                         >
                             Payment
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -192,7 +242,8 @@ export const generateColumns = (
                     accessorKey: 'fulfillment_status',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -200,7 +251,15 @@ export const generateColumns = (
                             }
                         >
                             Fulfillment Status
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
                     cell: ({ row }) => {
@@ -232,42 +291,52 @@ export const generateColumns = (
                     },
                 };
 
-            case 'price':
-                return {
-                    accessorKey: 'price',
-                    header: ({ column }) => (
-                        <Button
-                            variant="ghost"
-                            onClick={() =>
-                                column.toggleSorting(
-                                    column.getIsSorted() === 'asc'
-                                )
-                            }
-                        >
-                            Price
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    ),
-                    cell: ({ row }) => {
-                        const price = row.getValue('price') as Order['price'];
-                        if (price === undefined) return <div>--</div>;
-                        const formatted = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(price);
-                        return (
-                            <div className="text-right font-medium">
-                                {formatted}
-                            </div>
-                        );
-                    },
-                };
+            // case 'price':
+            //     return {
+            //         accessorKey: 'price',
+            //         header: ({ column }) => (
+            //             <Button
+            //                 variant={'ghost'}
+            //                 className=" text-white hover:text-opacity-70 "
+            //                 onClick={() =>
+            //                     column.toggleSorting(
+            //                         column.getIsSorted() === 'asc'
+            //                     )
+            //                 }
+            //             >
+            //                 Price
+            //                 {column.getIsSorted() === 'asc' && (
+            //                     <ArrowUp className="ml-2 h-4 w-4" />
+            //                 )}
+            //                 {column.getIsSorted() === 'desc' && (
+            //                     <ArrowDown className="ml-2 h-4 w-4" />
+            //                 )}
+            //                 {!column.getIsSorted() && (
+            //                     <ArrowUpDown className="ml-2 h-4 w-4" />
+            //                 )}
+            //             </Button>
+            //         ),
+            //         cell: ({ row }) => {
+            //             const price = row.getValue('price') as Order['price'];
+            //             if (price === undefined) return <div>--</div>;
+            //             const formatted = new Intl.NumberFormat('en-US', {
+            //                 style: 'currency',
+            //                 currency: 'USD',
+            //             }).format(price);
+            //             return (
+            //                 <div className="text-right font-medium">
+            //                     {formatted}
+            //                 </div>
+            //             );
+            //         },
+            //     };
             case 'email':
                 return {
                     accessorKey: 'email',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
@@ -275,9 +344,25 @@ export const generateColumns = (
                             }
                         >
                             Email
-                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
                         </Button>
                     ),
+                    cell: ({ row }) => {
+                        const email = row.getValue('email') as string;
+                        // Check if email contains @evm
+                        if (email.includes('@evm')) {
+                            return <div>--</div>; // Render placeholder for undefined
+                        }
+                        return <div>{email}</div>; // Render the email otherwise
+                    },
                 };
             case 'actions':
                 return {

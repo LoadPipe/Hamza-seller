@@ -7,19 +7,33 @@ import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
 import { getJwtField } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
+import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
+import { useStore } from '@tanstack/react-store';
+import { SortingState } from '@tanstack/react-table';
+import { saveStatusCountToStorage } from '@/stores/order-filter/order-filter-store';
 
 type Order = z.infer<typeof OrderSchema>;
 
 async function getSellerOrders(
     pageIndex = 0,
-    pageSize = 10
+    pageSize = 10,
+    filters: Record<string, any>,
+    sorting: SortingState = []
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
+        const sort = sorting[0]
+            ? {
+                  field: sorting[0].id,
+                  direction: sorting[0].desc ? 'DESC' : 'ASC',
+              }
+            : { field: 'created_at', direction: 'ASC' };
+
         const response = await postSecure('/seller/order', {
             store_id: getJwtField('store_id'),
             page: pageIndex,
             count: pageSize,
-            sort: { created_at: 'ASC' },
+            filter: filters, // Add filters here
+            sort: sort,
         });
         console.log(`STORE_ID ${response.store_id}`);
 
@@ -27,6 +41,8 @@ async function getSellerOrders(
         const data: object = response.orders as object;
         // SS totalRecords: string => typecast: number...
         const totalRecords: number = response.totalRecords as number;
+        console.log(`TOTAL RECORDS: ${response.statusCount}`);
+        saveStatusCountToStorage(response.statusCount);
         return {
             orders: OrderSchema.array().parse(data), // Validate using Zod
             totalRecords,
@@ -38,12 +54,16 @@ async function getSellerOrders(
 }
 
 export default function OrdersPage() {
+    const { filters } = useStore(filterStore); // Subscribe to filter store
+
     const search = useSearch({ from: '/orders' });
 
     const { page, count } = OrderSearchSchema.parse(search);
 
+    // data table hooks
     const [pageIndex, setPageIndex] = React.useState(page);
     const [pageSize, setPageSize] = React.useState(count);
+    const [sorting, setSorting] = React.useState<SortingState>([]);
 
     const { data, isLoading, error } = useQuery<
         {
@@ -52,8 +72,8 @@ export default function OrdersPage() {
         },
         Error
     >({
-        queryKey: ['orders', pageIndex, pageSize],
-        queryFn: () => getSellerOrders(pageIndex, pageSize), // Fetch with pagination
+        queryKey: ['orders', pageIndex, pageSize, filters, sorting],
+        queryFn: () => getSellerOrders(pageIndex, pageSize, filters, sorting), // Fetch with pagination
     });
 
     if (isLoading) {
@@ -65,7 +85,7 @@ export default function OrdersPage() {
     }
 
     return (
-        <div>
+        <>
             <DataTable
                 columns={columns}
                 data={data?.orders ?? []}
@@ -74,7 +94,9 @@ export default function OrdersPage() {
                 setPageIndex={setPageIndex}
                 setPageSize={setPageSize}
                 totalRecords={data?.totalRecords ?? 0}
+                sorting={sorting}
+                setSorting={setSorting}
             />
-        </div>
+        </>
     );
 }

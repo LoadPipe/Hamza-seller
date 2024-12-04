@@ -148,6 +148,7 @@ module.exports = {
                         200: '#CACACA',
                         100: '#DEDEDE',
                         50: '#F2F2F2',
+                        69: '#242424',
                     },
                 },
                 muted: {

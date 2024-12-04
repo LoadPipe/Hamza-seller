@@ -2,19 +2,13 @@ import { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../../../route-handler';
 import WhiteListService from '../../../../../services/whitelist';
 import StoreService from '../../../../../services/store';
-import { ProductCollection } from '../../../../../models/product-collection';
-import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const userService = req.scope.resolve('userService');
     const storeService: StoreService = req.scope.resolve('storeService');
-    const whitelistService: WhiteListService =
-        req.scope.resolve('whitelistService');
     const productCollectionService = req.scope.resolve(
         'productCollectionService'
     );
-    const productRepository: typeof ProductRepository =
-        req.scope.resolve('productRepository');
 
     const handler: RouteHandler = new RouteHandler(
         req,
@@ -31,7 +25,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'medusa',
                     last_name: 'Vendor',
                     wallet_address:
-                        '0xb794f5ea0ba39494ce839613fffba74279579268',
+                        '0xb794f5ea0ba39494ce839613fffba74279579268'.toLowerCase(),
                 },
                 'password'
             ),
@@ -41,7 +35,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Quality',
                     last_name: 'Vendor',
                     wallet_address:
-                        '0x6A75b412495838621e9352FE72fF5e9191DD5ab1',
+                        '0x6A75b412495838621e9352FE72fF5e9191DD5ab1'.toLowerCase(),
                 },
                 'password'
             ),
@@ -51,7 +45,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Headphones',
                     last_name: 'Vendor',
                     wallet_address:
-                        '0x5728C7b8b448332Acda43369afa3a2c25C947D43',
+                        '0x5728C7b8b448332Acda43369afa3a2c25C947D43'.toLowerCase(),
                 },
                 'password'
             ),
@@ -61,7 +55,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Indiana',
                     last_name: 'Jones',
                     wallet_address:
-                        '0x56348d548852e72d8c7fB24C89c7Fb1492504738',
+                        '0x56348d548852e72d8c7fB24C89c7Fb1492504738'.toLowerCase(),
                 },
                 'password'
             ),
@@ -71,7 +65,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Jarl',
                     last_name: 'Droischevnsky',
                     wallet_address:
-                        '0xc0ffee254729296a45a3885639AC7E10F9d54979',
+                        '0xc0ffee254729296a45a3885639AC7E10F9d54979'.toLowerCase(),
                 },
                 'password'
             ),
@@ -81,7 +75,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'GameFi',
                     last_name: 'Studios',
                     wallet_address:
-                        '0x999999cf1046e68e36E1aA2E0E07105eDDD1f08E',
+                        '0xb975Bf5ca0b09E17834d0b5A526F8315F82986D4'.toLowerCase(),
                 },
                 'password'
             ),
@@ -92,7 +86,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Razors',
                     last_name: 'Edge',
                     wallet_address:
-                        '0xaffa87A79F532Fe0F5eB1aFD299A4199b9502663',
+                        '0xfB20a78fD35D20925af6F7379Ab35Fa6C41e9834'.toLowerCase(),
                 },
                 'password'
             ),
@@ -102,7 +96,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: '21',
                     last_name: 'Laptops',
                     wallet_address:
-                        '0xcafd5561F02624D04D55F74297dD04e53f444B92',
+                        '0x9315fe04f0e18AA0F8C92e98f6783177A2156D1F'.toLowerCase(),
                 },
                 'password'
             ),
@@ -112,7 +106,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Jack',
                     last_name: 'Black',
                     wallet_address:
-                        '0xcafb8Cd7d8c5574f0c412619A08EC47f2eA1e434',
+                        '0xcafb8Cd7d8c5574f0c412619A08EC47f2eA1e434'.toLowerCase(),
                 },
                 'password'
             ),
@@ -123,7 +117,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Jern',
                     last_name: 'Javels',
                     wallet_address:
-                        '0x4fBCF49cC0f91d66Bc5bBbE931913D8709592012',
+                        '0x8bA35513C3F5ac659907D222e3DaB38b20f8F52A'.toLowerCase(),
                 },
                 'password'
             ),
@@ -133,7 +127,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                     first_name: 'Horatio',
                     last_name: 'Turdmuncher',
                     wallet_address:
-                        '0x0000F49cC0f91d66Bc5bBbE931913D8709500003',
+                        '0x0000F49cC0f91d66Bc5bBbE931913D8709500003'.toLowerCase(),
                 },
                 'password'
             ),
@@ -161,7 +155,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_01HRVF8HCVY8B00RF5S54THTPC',
                 'https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatpants-gray-front.png',
                 500,
-                'Medusa Merch Store where we sell our Medusa Sweatpants, its a nice store'
+                'Medusa Merch Store where we sell our Medusa Sweatpants, its a nice store',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
             storeService.createStore(
                 user1,
@@ -169,7 +164,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_01HSGAM4918EX0DETKY6E662WT',
                 'https://images.hamza.market/headphones.webp',
                 200,
-                "We Sell VR Headsets here, the best quality VR headsets you wouldn't believe it"
+                "We Sell VR Headsets here, the best quality VR headsets you wouldn't believe it",
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
             storeService.createStore(
                 user2,
@@ -177,7 +173,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_01HSGAMXDJD725MR3VSW631SN2',
                 'https://images.hamza.market/dalle_vr.webp',
                 450,
-                'Dauntless Store - Where bold and resilient products meet exceptional quality. Perfect for those who seek adventure and durability in every purchase.'
+                'Dauntless Store - Where bold and resilient products meet exceptional quality. Perfect for those who seek adventure and durability in every purchase.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
 
             storeService.createStore(
@@ -186,7 +183,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_01HSGAMXDJD725MR3VSW631DR0',
                 'https://images.hamza.market/Drones/dji_mini_4_pro/dji_mini_pro_1.jpg',
                 720,
-                'Drones Store - Your go-to destination for cutting-edge aerial technology. Explore our wide range of high-performance drones perfect for every enthusiast.'
+                'Drones Store - Your go-to destination for cutting-edge aerial technology. Explore our wide range of high-performance drones perfect for every enthusiast.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
 
             storeService.createStore(
@@ -195,7 +193,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_01HSGAMXDJD725MR3VSW63LEG0',
                 'https://images.hamza.market/Lego/corvette/corvette_1.jpg',
                 315,
-                'Legos Store - Dive into the world of creativity and building blocks. Find the latest Lego sets and build your imagination with endless possibilities.'
+                'Legos Store - Dive into the world of creativity and building blocks. Find the latest Lego sets and build your imagination with endless possibilities.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
             storeService.createStore(
                 user5,
@@ -203,7 +202,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_01HSGAMXDJD725MR3VSW63B0RD',
                 'https://images.hamza.market/Board_Games/dark_souls/souls_1.jpg',
                 860,
-                'Board Games Store - A haven for tabletop enthusiasts. Discover a wide selection of board games, from strategy to family fun, and everything in between.'
+                'Board Games Store - A haven for tabletop enthusiasts. Discover a wide selection of board games, from strategy to family fun, and everything in between.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
             storeService.createStore(
                 user6,
@@ -211,7 +211,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_01HSGAMXDJD725MR3VSW63W0GE',
                 'https://images.hamza.market/Workout/dumbbell/dumb_2.jpg',
                 580,
-                'Workout Gear Store - Equip yourself with the best in fitness gear. From weights to apparel, we have everything you need to power your workouts.'
+                'Workout Gear Store - Equip yourself with the best in fitness gear. From weights to apparel, we have everything you need to power your workouts.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
             storeService.createStore(
                 user7,
@@ -219,7 +220,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_01HSGAMXDJD725MR3VSW63W0GA',
                 'https://images.hamza.market/gaming_store/6.1.png',
                 930,
-                'Gaming Gear Store - Elevate your gaming experience with top-tier gear. Find the latest peripherals, accessories, and more for the ultimate gaming setup.'
+                'Gaming Gear Store - Elevate your gaming experience with top-tier gear. Find the latest peripherals, accessories, and more for the ultimate gaming setup.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
             storeService.createStore(
                 user8,
@@ -227,7 +229,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_shake',
                 'https://images.hamza.market/headphones.webp',
                 290,
-                'Shake Store - Blend your way to a healthier lifestyle. Our store offers a range of premium shakes and blenders for the health-conscious consumer.'
+                'Shake Store - Blend your way to a healthier lifestyle. Our store offers a range of premium shakes and blenders for the health-conscious consumer.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
             storeService.createStore(
                 user9,
@@ -235,7 +238,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_lighting',
                 'https://images.hamza.market/Legendary/mood/LLD_mood1.webp',
                 670,
-                'Legendary Light Design Store - Illuminate your space with style. Explore our collection of designer lighting solutions for a touch of elegance and functionality.'
+                'Legendary Light Design Store - Illuminate your space with style. Explore our collection of designer lighting solutions for a touch of elegance and functionality.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
             storeService.createStore(
                 user10,
@@ -243,7 +247,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'pcol_blocks',
                 'https://images.hamza.market/headphones.webp',
                 410,
-                'Block Store - Specializing in building blocks and construction toys. Let your creativity soar with our range of products designed for endless fun.'
+                'Block Store - Specializing in building blocks and construction toys. Let your creativity soar with our range of products designed for endless fun.',
+                '0xFF0A7A96A5DdDD33976262728Ec62ec05AB0DF6b'
             ),
         ]);
         const [
@@ -260,60 +265,79 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             store10,
         ] = stores;
 
-        const collectionIds = [
-            'pcol_01HRVF8HCVY8B00RF5S54THTPC',
-            'pcol_01HSGAM4918EX0DETKY6E662WT',
-            'pcol_01HSGAMXDJD725MR3VSW631SN2',
-            'pcol_01HSGAMXDJD725MR3VSW631DR0',
-            'pcol_01HSGAMXDJD725MR3VSW63LEG0',
-            'pcol_01HSGAMXDJD725MR3VSW63B0RD',
-            'pcol_01HSGAMXDJD725MR3VSW63W0GE',
-            'pcol_01HSGAMXDJD725MR3VSW63W0GA',
-            //'pcol_shake',
-            'pcol_lighting',
-            'pcol_01HSGAMXDJD725MR3VSW63LEG0',
-        ];
+        await Promise.all([
+            productCollectionService.update('pcol_01HRVF8HCVY8B00RF5S54THTPC', {
+                store_id: store0.id,
+            }),
+            productCollectionService.update('pcol_01HSGAM4918EX0DETKY6E662WT', {
+                store_id: store1.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW631SN2', {
+                store_id: store2.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW631DR0', {
+                store_id: store3.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63LEG0', {
+                store_id: store4.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63B0RD', {
+                store_id: store5.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63W0GE', {
+                store_id: store6.id,
+            }),
+            productCollectionService.update('pcol_drones', {
+                store_id: store3.id,
+            }),
+            productCollectionService.update('pcol_sound', {
+                store_id: store4.id,
+            }),
+            productCollectionService.update('pcol_gamefi', {
+                store_id: store5.id,
+            }),
+            productCollectionService.update('pcol_razor', {
+                store_id: store6.id,
+            }),
+            productCollectionService.update('pcol_01HSGAMXDJD725MR3VSW63W0GA', {
+                store_id: store7.id,
+            }),
+            productCollectionService.update('pcol_shake', {
+                store_id: store8.id,
+            }),
+            productCollectionService.update('pcol_lighting', {
+                store_id: store9.id,
+            }),
+            productCollectionService.update('pcol_blocks', {
+                store_id: store10.id,
+            }),
+        ]);
 
-        const storeIds = [
-            store0.id,
-            store1.id,
-            store2.id,
-            store3.id,
-            store4.id,
-            store5.id,
-            store6.id,
-            store7.id,
-            //store8.id,
-            store9.id,
-            store10.id,
-        ];
+        //assign users to stores
 
-        const promises = [];
-        for (let n = 0; n < collectionIds.length; n++) {
-            promises.push(
-                productCollectionService.update(collectionIds[n], {
-                    store_id: storeIds[n],
-                })
-            );
-        }
-
-        await Promise.all(promises);
-
-        //sort the products into their houses of Gryffindor, Hufflepuff, etc.
-        for (let collectionId of collectionIds) {
-            const collection: ProductCollection =
-                await productCollectionService.retrieve(collectionId, {
-                    relations: ['products'],
-                });
-
-            if (collection) {
-                for (let product of collection.products) {
-                    product.store_id = collection.store_id;
-                }
-                await productRepository.save(collection.products);
-            }
-        }
-
-        return res.json({});
+        return res.json({
+            user0,
+            user1,
+            user2,
+            user3,
+            user4,
+            user5,
+            user6,
+            user7,
+            user8,
+            user9,
+            user10,
+            store0,
+            store1,
+            store2,
+            store3,
+            store4,
+            store5,
+            store6,
+            store7,
+            store8,
+            store9,
+            store10,
+        });
     });
 };

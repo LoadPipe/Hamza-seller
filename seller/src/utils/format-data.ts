@@ -13,7 +13,7 @@ export const formatStatus = (status: string) => {
 export const formatDate = (date: Date | string, locale = 'en-US'): string => {
     const parsedDate = typeof date === 'string' ? new Date(date) : date;
     return parsedDate.toLocaleString(locale, {
-        month: 'long',
+        month: 'numeric',
         day: 'numeric',
         year: 'numeric',
         hour: 'numeric',
@@ -35,4 +35,11 @@ export const formatShippingAddress = (
     postal_code: string
 ) => {
     return `${address_1} ${address_2} ${city}, ${province}, ${postal_code}`;
+};
+
+export const capitalizeWords = (str: string) => {
+    return str
+        .replace(/([A-Z])/g, ' $1') // Add space before capital letters (e.g., "inTransit" → "in Transit")
+        .replace(/^./, (char) => char.toUpperCase()) // Capitalize the first letter
+        .trim(); // Remove any extra spaces
 };
