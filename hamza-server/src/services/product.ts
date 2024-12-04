@@ -799,7 +799,7 @@ class ProductService extends MedusaProductService {
 
     async validateCsv(
         filePath: string,
-        requiredHeaders: string[]
+        requiredCsvHeaders: string[]
     ): Promise<{ success: boolean; message: string }> {
         const validationErrors = [];
         const fileRows = [];
@@ -821,7 +821,7 @@ class ProductService extends MedusaProductService {
             });
         } else {
             const headerRow = fileRows[0].split(',');
-            const missingHeaders = requiredHeaders.filter(
+            const missingHeaders = requiredCsvHeaders.filter(
                 (header) => !headerRow.includes(header)
             );
             if (missingHeaders.length > 0) {
@@ -852,7 +852,7 @@ class ProductService extends MedusaProductService {
      */
     async validateData(
         data: csvProductData[],
-        requiredHeaders: string[]
+        requiredCsvHeaders: string[]
     ): Promise<{
         success: boolean;
         message: string;
@@ -863,7 +863,7 @@ class ProductService extends MedusaProductService {
         const validData: csvProductData[] = [];
     
         for (const row of data) {
-            const validationError = await this.validateRow(data, row, requiredHeaders);
+            const validationError = await this.validateRow(data, row, requiredCsvHeaders);
             if (validationError) {
                 row['invalid_error'] = validationError;
                 invalidData.push(row);
@@ -888,39 +888,43 @@ class ProductService extends MedusaProductService {
     async validateRow(
         data: csvProductData[],
         row: csvProductData,
-        requiredHeaders: string[]
+        requiredCsvHeaders: string[]
     ): Promise<string | null> {
-        if (requiredHeaders.some((header) => !row[header])) {
+        if (requiredCsvHeaders.some((header) => !row[header])) {
             return 'required fields missing data';
         }
-    
+
         const categoryId = await this.validateCategory(row['category']);
         if (!categoryId) {
             return 'category handle does not exist';
         }
         row['category_id'] = categoryId;
-    
-        if (![ProductStatus.DRAFT, ProductStatus.PUBLISHED].includes(row['status'])) {
+
+        if (
+            ![ProductStatus.DRAFT, ProductStatus.PUBLISHED].includes(
+                row['status']
+            )
+        ) {
             return 'status is not valid, status must be draft or published';
         }
-    
+
         if (!Number.isInteger(Number(row['weight']))) {
             return 'weight must be a number';
         }
-    
+
         if (!['0', '1'].includes(row['discountable'])) {
             return 'discountable must be a boolean';
         }
-    
+
         if (!Number.isInteger(Number(row['price']))) {
             return 'price must be a number';
         }
-    
+
         const product = await this.getProductByHandle(row['handle']);
         if (product) {
             return 'product handle must be unique';
         }
-    
+
         // check if handle is unique from other rows
         const handleExists = data.some(
             (item) => item !== row && item['handle'] === row['handle']
@@ -928,7 +932,23 @@ class ProductService extends MedusaProductService {
         if (handleExists) {
             return 'handle must be unique from other rows';
         }
-    
+
+        // check if thumbnail is a valid url
+        if (!row['thumbnail'].startsWith('http')) {
+            return 'thumbnail must be a valid url';
+        }
+
+        // check if thumbnail is a valid image
+        if (
+            !row['thumbnail'].endsWith('.jpg') &&
+            !row['thumbnail'].endsWith('.png') &&
+            !row['thumbnail'].endsWith('.jpeg') &&
+            !row['thumbnail'].endsWith('.svg') &&
+            !row['thumbnail'].endsWith('.gif')
+        ) {
+            return 'thumbnail must be a valid image';
+        }
+
         return null;
     };
 }

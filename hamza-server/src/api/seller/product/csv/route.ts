@@ -16,7 +16,7 @@ interface FileRequest extends MedusaRequest {
 
 const upload = multer({ dest: 'uploads/csvs/' });
 
-const requiredHeaders = [
+const requiredCsvHeaders = [
     'category',
     'images',
     'title',
@@ -202,57 +202,58 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         );
 
         await handler.handle(async () => {
-            const { store_id } = handler.inputParams;
-            const file = req.file;
-
-            // TODO: add validation for store_id
-
-            if (!file) {
-                return handler.returnStatus(400, {
-                    message: 'No file uploaded',
-                });
-            }
-
-            const validateCsvOutput: { success: boolean; message: string } =
-                await productService.validateCsv(file.path, requiredHeaders);
-
-            if (!validateCsvOutput.success) {
-                return handler.returnStatus(400, {
-                    message: validateCsvOutput.message,
-                });
-            }
-
-            const fileData: Array<any> = await productService.parseCsvFile(file.path);
-
-            const validateDataOutput: {
-                success: boolean;
-                message: string;
-                validData: Array<any>;
-                invalidData: Array<any>;
-            } = await productService.validateData(fileData, requiredHeaders);
-
-            if (!validateDataOutput.success) {
-                return handler.returnStatus(400, {
-                    message: validateDataOutput.message,
-                    invalidData: validateDataOutput.invalidData,
-                });
-            }
-
-            const convertDataOutput: {
-                success: boolean;
-                message: string;
-                jsonData: CreateProductInput[];
-            } = await convertData(store_id, validateDataOutput.validData);
-
-            if (!convertDataOutput.success) {
-                return handler.returnStatus(400, {
-                    message: convertDataOutput.message,
-                });
-            }
-
             try {
+                const { store_id } = handler.inputParams;
+                const file = req.file;
+                if (!file) {
+                    return handler.returnStatus(400, {
+                        message: 'No file uploaded',
+                    });
+                }
+
+                // validation for store_id.  Methods throws error if store not found.
+                const store = await storeService.getStoreById(store_id);
+
+                const validateCsvOutput: { success: boolean; message: string } =
+                    await productService.validateCsv(file.path, requiredCsvHeaders);
+
+                if (!validateCsvOutput.success) {
+                    return handler.returnStatus(400, {
+                        message: validateCsvOutput.message,
+                    });
+                }
+
+                const fileData: Array<any> = await productService.parseCsvFile(file.path);
+
+                const validateDataOutput: {
+                    success: boolean;
+                    message: string;
+                    validData: Array<any>;
+                    invalidData: Array<any>;
+                } = await productService.validateData(fileData, requiredCsvHeaders);
+
+                if (!validateDataOutput.success) {
+                    return handler.returnStatus(400, {
+                        message: validateDataOutput.message,
+                        invalidData: validateDataOutput.invalidData,
+                    });
+                }
+
+                const convertDataOutput: {
+                    success: boolean;
+                    message: string;
+                    jsonData: CreateProductInput[];
+                } = await convertData(store.id, validateDataOutput.validData);
+
+                if (!convertDataOutput.success) {
+                    return handler.returnStatus(400, {
+                        message: convertDataOutput.message,
+                    });
+                }
+
+            
                 const products: Product[] = await productService.bulkImportProducts(
-                    store_id,
+                    store.id,
                     convertDataOutput.jsonData
                 );
 
@@ -261,11 +262,11 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                         message: 'No products were imported',
                     });
                 } 
-                
+
                 res.status(200).json({ message: 'Products imported successfully', products: products });
             } catch (error) {
                 return handler.returnStatus(400, {
-                    message: 'Error importing products',
+                    message: 'Error importing products: ' + error,
                 });
             }
         });
