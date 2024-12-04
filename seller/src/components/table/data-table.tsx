@@ -321,9 +321,10 @@ export function DataTable<TData, TValue>({
                                         <DropdownMenuCheckboxItem
                                             key={size}
                                             checked={pageSize === size}
-                                            onCheckedChange={() =>
-                                                setPageSize(size)
-                                            }
+                                            onCheckedChange={() => {
+                                                setPageSize(size); // Update page size
+                                                setPageIndex(0); // Reset to the first page
+                                            }}
                                             onSelect={(e) => e.preventDefault()} // Prevent menu close on select
                                         >
                                             {size}
