@@ -8,7 +8,6 @@ import multer from 'multer';
 import fs from 'fs';
 import csv from 'csv-parser';
 import * as readline from 'readline';
-import { PriceConverter } from 'src/utils/price-conversion';
 
 type CreateProductInput = MedusaCreateProductInput & {
     store_id: string;
@@ -16,6 +15,23 @@ type CreateProductInput = MedusaCreateProductInput & {
 
 interface FileRequest extends MedusaRequest {
     file?: any;
+}
+
+// Define the expected structure of the data
+interface csvProductData {
+    category: string; // category handle from DB
+    images: string;
+    title: string;
+    subtitle: string;
+    handle: string; // must be unique from DB and other rows from csv
+    description: string;
+    status: ProductStatus; // 'draft' or 'published'
+    thumbnail: string;
+    weight: number;
+    discountable: string; // '0' or '1'
+    price: number;
+    category_id?: string; // optional: created when data is valid, and retrieved from DB
+    invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
 }
 
 const upload = multer({ dest: 'uploads/csvs/' });
@@ -81,17 +97,23 @@ const validateCategory = async (
     return category_ ? category_.id : null;
 };
 
+/**
+ * validate data and return valid and invalid data
+ * @param productService 
+ * @param data 
+ * @returns 
+ */
 const validateData = async (
     productService: ProductService,
-    data: Array<any>
+    data: csvProductData[]
 ): Promise<{
     success: boolean;
     message: string;
-    validData: Array<any>;
-    invalidData: Array<any>;
+    validData: csvProductData[];
+    invalidData: csvProductData[];
 }> => {
-    const invalidData = [];
-    const validData = [];
+    const invalidData: csvProductData[] = [];
+    const validData: csvProductData[] = [];
 
     for (const row of data) {
         const validationError = await validateRow(productService, data, row);
@@ -118,8 +140,8 @@ const validateData = async (
 
 const validateRow = async (
     productService: ProductService,
-    data: Array<any>,
-    row: Array<any>
+    data: csvProductData[],
+    row: csvProductData
 ): Promise<string | null> => {
     if (requiredHeaders.some((header) => !row[header])) {
         return 'required fields missing data';
@@ -152,6 +174,7 @@ const validateRow = async (
         return 'product handle must be unique';
     }
 
+    // check if handle is unique from other rows
     const handleExists = data.some(
         (item) => item !== row && item['handle'] === row['handle']
     );
@@ -196,7 +219,7 @@ const mapVariants = async (productDetails: any, optionNames: string[]): Promise<
         const prices = [];
         for (const currency of currencies) {
             prices.push({
-                currency_code: currency,
+                currency_code: currency.code,
                 amount: baseAmount * currency.rate,
             });
         }
@@ -209,11 +232,9 @@ const mapVariants = async (productDetails: any, optionNames: string[]): Promise<
 
         variants.push({
             title: productDetails.productInfo.name,
-            inventory_quantity: variant.quantity,
+            inventory_quantity: 100,
             allow_backorder: false,
             manage_inventory: true,
-            bucky_metadata: variant,
-            metadata: { imgUrl: variant.imgUrl },
             prices,
             options: options
         });
@@ -228,7 +249,28 @@ const convertDataToCreateDataInput = async (
     collectionId: string,
     salesChannelIds: string[]
 ): Promise<CreateProductInput> => {
-    
+    // {
+    //     productInfo: {
+    //         name: 'Some product name',
+    //     },
+    //     variants: [
+    //         {name: 'L', price: 100}, 
+    //         {name: 'XL', price: 200}
+    //     ]
+    // }
+    const optionNames = ['default'];
+    const productDetails = {
+        productInfo: {
+            name: data['title'],
+        },
+        variants: [
+            {name: 'default', price: data['price']}
+        ]
+    }
+    const variants = await mapVariants(
+        productDetails,
+        optionNames
+    );
 
     const output = {
         title: data['title'],
@@ -247,8 +289,12 @@ const convertDataToCreateDataInput = async (
         sales_channels: salesChannelIds.map((sc) => {
             return { id: sc };
         }),
-        // variants,
+        options: optionNames.map(o => { return { title: o } }),
+        variants,
     } as CreateProductInput;
+
+    console.log('Converting data to CreateProductInput:', output);
+    console.log('Converting data to Variants:', JSON.stringify(variants));
 
     if (!output.variants?.length)
         throw new Error(
@@ -347,14 +393,14 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 });
             }
 
-            const fileRows = await parseCsvFile(file.path);
+            const fileData: Array<any> = await parseCsvFile(file.path);
 
             const validateDataOutput: {
                 success: boolean;
                 message: string;
                 validData: Array<any>;
                 invalidData: Array<any>;
-            } = await validateData(productService, fileRows);
+            } = await validateData(productService, fileData);
 
             if (!validateDataOutput.success) {
                 return handler.returnStatus(400, {
@@ -375,12 +421,18 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 });
             }
 
-            const products: Product[] = await productService.bulkImportProducts(
-                store_id,
-                convertDataOutput.jsonData
-            );
+            try {
+                const products: Product[] = await productService.bulkImportProducts(
+                    store_id,
+                    convertDataOutput.jsonData
+                );
 
-            res.status(200).json({ message: 'Products imported successfully' });
+                res.status(200).json({ message: 'Products imported successfully', products: products });
+            } catch (error) {
+                return handler.returnStatus(400, {
+                    message: 'Error importing products',
+                });
+            }
         });
     });
 };
