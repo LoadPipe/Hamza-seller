@@ -56,7 +56,7 @@ export function DataTable<TData, TValue>({
     pageIndex,
     pageSize,
     setPageIndex,
-    // setPageSize,
+    setPageSize,
     totalRecords,
     sorting,
     setSorting,
@@ -303,10 +303,39 @@ export function DataTable<TData, TValue>({
                             Next
                         </Button>
                     </div>
+
                     <div className="flex text-sm text-muted-foreground m-2 justify-end">
-                        {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                        {table.getFilteredRowModel().rows.length} row(s)
-                        selected.
+                        <div className="flex items-center gap-4">
+                            <p className="text-sm text-muted-foreground">
+                                Showing
+                            </p>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                        {pageSize}{' '}
+                                        {/* Display current page size */}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    {[5, 10, 20, 50, 100].map((size) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={size}
+                                            checked={pageSize === size}
+                                            onCheckedChange={() =>
+                                                setPageSize(size)
+                                            }
+                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
+                                        >
+                                            {size}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                                </DropdownMenuContent>
+                                <div>
+                                    of {table.getFilteredRowModel().rows.length}{' '}
+                                    entries.
+                                </div>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </div>
             </div>
