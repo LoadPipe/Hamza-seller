@@ -11,7 +11,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 // import { Search } from 'lucide-react';
-
+import { Download } from 'lucide-react';
 import OrderTabs from '@/components/orders/order-tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
+    DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -254,10 +255,20 @@ export function DataTable<TData, TValue>({
                     </div>
                 </div>
 
-                <div className="flex justify-end mb-4">
-                    <Button variant="outline" onClick={handleDownloadCSV}>
-                        Download CSV
-                    </Button>
+                <div className="flex justify-start mb-4">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <Download />
+                                Export
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={handleDownloadCSV}>
+                                Export as CSV
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 <div className="rounded-md mt-9 overflow-x-auto">
