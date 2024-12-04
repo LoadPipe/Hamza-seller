@@ -140,8 +140,8 @@ const convertDataToCreateDataInput = async (
         variants,
     } as CreateProductInput;
 
-    console.log('Converting data to CreateProductInput:', output);
-    console.log('Converting data to Variants:', JSON.stringify(variants));
+    // console.log('Converting data to CreateProductInput:', output);
+    // console.log('Converting data to Variants:', JSON.stringify(variants));
 
     if (!output.variants?.length)
         throw new Error(
