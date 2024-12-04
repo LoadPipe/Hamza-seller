@@ -11,6 +11,7 @@ import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 import { useStore } from '@tanstack/react-store';
 import { SortingState } from '@tanstack/react-table';
 import { saveStatusCountToStorage } from '@/stores/order-filter/order-filter-store';
+import { useNavigate } from '@tanstack/react-router';
 
 type Order = z.infer<typeof OrderSchema>;
 
@@ -29,7 +30,7 @@ async function getSellerOrders(
             : { field: 'created_at', direction: 'ASC' };
 
         const response = await postSecure('/seller/order', {
-            store_id: getJwtField('store_id'),
+            store_id: 'store_01JE6DQAQ1DK152V4ZZDNPH9YV',
             page: pageIndex,
             count: pageSize,
             filter: filters, // Add filters here
@@ -64,6 +65,16 @@ export default function OrdersPage() {
     const [pageIndex, setPageIndex] = React.useState(page);
     const [pageSize, setPageSize] = React.useState(count);
     const [sorting, setSorting] = React.useState<SortingState>([]);
+
+    // Keeps track of params in URL
+    const navigate = useNavigate();
+    React.useEffect(() => {
+        navigate({
+            to: '/orders',
+            search: { page: pageIndex, count: pageSize },
+            replace: true,
+        });
+    }, [pageIndex, pageSize, navigate]);
 
     const { data, isLoading, error } = useQuery<
         {
