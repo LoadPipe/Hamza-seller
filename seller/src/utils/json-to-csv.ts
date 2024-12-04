@@ -16,10 +16,9 @@ export const convertJSONToCSV = (data: any[], headers: string[]): string => {
 export const downloadCSV = (
     csvData: string,
     filename: string,
-    subtitle?: string
 ) => {
     // Add subtitle above the CSV table with a blank row in between
-    const finalCSV = subtitle ? `${subtitle}\n${csvData}` : csvData;
+    const finalCSV = `${csvData}` : csvData;
 
     const blob = new Blob([finalCSV], { type: 'text/csv' });
     const link = document.createElement('a');
