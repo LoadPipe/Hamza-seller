@@ -160,8 +160,7 @@ export function DataTable<TData, TValue>({
         // Convert data to CSV
         const dataCSV = convertJSONToCSV(filteredData, columnTitles);
 
-        // Trigger the download with subtitle
-        downloadCSV(`${subtitle}\n${dataCSV}`, 'orders_with_metadata.csv');
+        downloadCSV(`${dataCSV}`, 'orders.csv');
     };
 
     return (
