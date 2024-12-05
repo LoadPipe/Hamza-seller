@@ -11,7 +11,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 // import { Search } from 'lucide-react';
-
+import { Download } from 'lucide-react';
 import OrderTabs from '@/components/orders/order-tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
+    DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -44,6 +45,8 @@ import {
     setDatePickerFilter,
 } from '@/stores/order-filter/order-filter-store.ts';
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
+import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
+import { Order } from '@/components/orders/columns';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -103,6 +106,61 @@ export function DataTable<TData, TValue>({
             },
         },
     });
+
+    const handleDownloadCSV = () => {
+        if (!data || data.length === 0) {
+            console.error('No data available for download.');
+            return;
+        }
+
+        // Extend the column type to include accessorKey
+        const extendedColumns = columns as Array<{
+            id: string;
+            accessorKey?: string;
+        }>;
+
+        const headers = extendedColumns
+            .filter((col) => col.id !== 'select' && col.id !== 'actions')
+            .map((col) => col.accessorKey || col.id)
+            .filter((key): key is string => !!key); // Ensure keys are non-null strings
+
+        if (headers.length === 0) {
+            console.error('No valid columns available for CSV export.');
+            return;
+        }
+
+        const columnTitles = extendedColumns
+            .filter((col) => headers.includes(col.accessorKey || col.id))
+            .map((col) => col.accessorKey || col.id);
+
+        const typedData = data as Order[];
+
+        // Prepare data rows
+        const filteredData = typedData.map((row) => {
+            const result: Record<string, any> = {};
+            headers.forEach((header) => {
+                if (header === 'customer') {
+                    result[header] =
+                        `${row.customer?.first_name || ''} ${row.customer?.last_name || ''}`.trim();
+                } else {
+                    result[header] = row[header as keyof Order] ?? '';
+                }
+            });
+            return result;
+        });
+
+        // const subtitle =
+        //     `Filters: ${JSON.stringify(filters, null, 2)} | Page Count: ${pageSize} | Page Index: ${
+        //         pageIndex + 1
+        //     } | Total Records: ${totalRecords} | Generated At: ${new Date().toISOString()}`
+        //         .replace(/\n/g, ' ') // Replace newlines with spaces
+        //         .replace(/"/g, '""'); // Escape double quotes for CSV format
+
+        // Convert data to CSV
+        const dataCSV = convertJSONToCSV(filteredData, columnTitles);
+
+        downloadCSV(`${dataCSV}`, 'orders.csv');
+    };
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -193,6 +251,22 @@ export function DataTable<TData, TValue>({
                         {/*    size={14}*/}
                         {/*/>*/}
                     </div>
+                </div>
+
+                <div className="flex justify-start mb-4">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button className="bg-secondary-charcoal-69 text-white">
+                                <Download />
+                                Export
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-secondary-charcoal-69 ">
+                            <DropdownMenuItem onClick={handleDownloadCSV}>
+                                Export as CSV
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 <div className="rounded-md mt-9 overflow-x-auto">
