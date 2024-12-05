@@ -15,6 +15,7 @@ import LineItemRepository from '@medusajs/medusa/dist/repositories/line-item';
 import SalesChannelRepository from '@medusajs/medusa/dist/repositories/sales-channel';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
 import { ProductVariantRepository } from '../repositories/product-variant';
+import { RefundRepository } from '../repositories/refund';
 import StoreRepository from '../repositories/store';
 import CustomerRepository from '../repositories/customer';
 import { LineItemService } from '@medusajs/medusa';
@@ -58,6 +59,7 @@ export default class OrderService extends MedusaOrderService {
     static LIFE_TIME = Lifetime.SINGLETON; // default, but just to show how to change it
 
     protected lineItemService: LineItemService;
+    protected refundRepository_: typeof RefundRepository;
     protected customerRepository_: typeof CustomerRepository;
     protected orderRepository_: typeof OrderRepository;
     protected lineItemRepository_: typeof LineItemRepository;
@@ -79,6 +81,7 @@ export default class OrderService extends MedusaOrderService {
         super(container);
         this.orderRepository_ = container.orderRepository;
         this.customerRepository_ = container.customerRepository;
+        this.refundRepository_ = container.refundRepository;
         this.storeRepository_ = container.storeRepository;
         this.regionRepository_ = container.regionRepository;
         this.cartRepository_ = container.cartRepository;
@@ -858,6 +861,107 @@ export default class OrderService extends MedusaOrderService {
             });
         });
     }
+
+    async createRefund(
+        orderId: string,
+        refundAmount: number,
+        reason: string,
+        note?: string,
+    ): Promise<Order> {
+        try {
+            // Fetch order details
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+                relations: ['items'], // Ensure line items are fetched
+            });
+
+            if (!order) {
+                throw new Error(`Order with ID ${orderId} not found.`);
+            }
+
+            // Calculate total order amount
+            const totalOrderAmount = order.items.reduce(
+                (sum, item) => sum + item.unit_price * item.quantity,
+                0
+            );
+
+            // Calculate refunded amount
+            const refundedAmount = await this.manager_
+                .getRepository('Refund')
+                .createQueryBuilder('refund')
+                .where('refund.order_id = :orderId', { orderId })
+                .andWhere('CAST(refund.confirmed AS BOOLEAN) = true') // Cast to BOOLEAN
+                .select('SUM(refund.amount)', 'total')
+                .getRawOne();
+
+            const alreadyRefunded = refundedAmount?.total || 0;
+            const refundableAmount = totalOrderAmount - alreadyRefunded;
+
+            // Validate the refund amount
+            if (refundAmount <= 0 || refundAmount > refundableAmount) {
+                throw new Error(
+                    `Invalid refund amount. Must be greater than 0 and less than or equal to the refundable amount (${refundableAmount}).`
+                );
+            }
+
+            // Create a refund entity
+            const refund = this.manager_.create('Refund', {
+                order_id: orderId,
+                amount: refundAmount,
+                reason,
+                note: note,
+                confirmed: false,
+                created_at: new Date(),
+            });
+
+            await this.manager_.save(refund);
+
+            // Optionally add notes or metadata to the order
+            order.metadata = {
+                ...order.metadata,
+                refund_note: note || '',
+            };
+
+            // Update order's status if necessary
+            order.payment_status = PaymentStatus.REFUNDED;
+
+            // Save the updated order
+            const updatedOrder = await this.orderRepository_.save(order);
+
+            // Return the updated order
+            return updatedOrder;
+        } catch (error) {
+            this.logger.error(`Error creating refund: ${error.message}`);
+            throw error; // Let the caller handle errors
+        }
+    }
+
+    async confirmRefund(refundId: string) {
+        try {
+
+            // Fetch refund by ID
+            const refund = await this.refundRepository_.findOne({ where: { id: refundId } });
+
+            console.log(`WTF IS REFUND ${refund}`)
+            if (!refund) {
+                throw new Error(`Refund with ID ${refundId} not found.`);
+            }
+
+            // Update the refund entity
+            refund.confirmed = true;
+
+            // Save the updated refund
+            const updatedRefund = await this.refundRepository_.save(refund);
+
+            return updatedRefund;
+        } catch (error) {
+            this.logger.error(`Error updating refund: ${error.message}`);
+            throw error; // Let the caller handle errors
+        }
+    }
+
+
+
 
     async createMockOrders(
         count: number,
