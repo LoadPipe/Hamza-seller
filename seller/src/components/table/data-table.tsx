@@ -150,12 +150,12 @@ export function DataTable<TData, TValue>({
             return result;
         });
 
-        const subtitle =
-            `Filters: ${JSON.stringify(filters, null, 2)} | Page Count: ${pageSize} | Page Index: ${
-                pageIndex + 1
-            } | Total Records: ${totalRecords} | Generated At: ${new Date().toISOString()}`
-                .replace(/\n/g, ' ') // Replace newlines with spaces
-                .replace(/"/g, '""'); // Escape double quotes for CSV format
+        // const subtitle =
+        //     `Filters: ${JSON.stringify(filters, null, 2)} | Page Count: ${pageSize} | Page Index: ${
+        //         pageIndex + 1
+        //     } | Total Records: ${totalRecords} | Generated At: ${new Date().toISOString()}`
+        //         .replace(/\n/g, ' ') // Replace newlines with spaces
+        //         .replace(/"/g, '""'); // Escape double quotes for CSV format
 
         // Convert data to CSV
         const dataCSV = convertJSONToCSV(filteredData, columnTitles);

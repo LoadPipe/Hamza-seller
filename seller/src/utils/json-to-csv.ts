@@ -18,9 +18,8 @@ export const downloadCSV = (
     filename: string,
 ) => {
     // Add subtitle above the CSV table with a blank row in between
-    const finalCSV = `${csvData}` : csvData;
 
-    const blob = new Blob([finalCSV], { type: 'text/csv' });
+    const blob = new Blob([csvData], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = filename;
