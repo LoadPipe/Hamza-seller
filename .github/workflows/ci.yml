@@ -29,9 +29,9 @@ jobs:
       # Install dependencies
       - name: Install Dependencies
         run: yarn install
-        working-directory: seller
+        working-directory: admin-client
 
       # Build the project
       - name: Build Project
         run: yarn build
-        working-directory: seller
+        working-directory: admin-client
