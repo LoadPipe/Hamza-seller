@@ -11,6 +11,8 @@ import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 import { useStore } from '@tanstack/react-store';
 import { SortingState } from '@tanstack/react-table';
 import { saveStatusCountToStorage } from '@/stores/order-filter/order-filter-store';
+import { useNavigate } from '@tanstack/react-router';
+import { setFilter } from '@/stores/order-filter/order-filter-store.ts';
 
 type Order = z.infer<typeof OrderSchema>;
 
@@ -58,12 +60,48 @@ export default function OrdersPage() {
 
     const search = useSearch({ from: '/orders' });
 
-    const { page, count } = OrderSearchSchema.parse(search);
+    const { page, count, sort, filter } = OrderSearchSchema.parse(search);
+
+    // Parse sort into field and direction
+    const [sortField, sortDirection] = sort
+        ? sort.split(':')
+        : ['created_at', 'ASC'];
+
+    // Initialize filters from URL or store
+    React.useEffect(() => {
+        if (filter) {
+            const parsedFilters = JSON.parse(filter);
+            Object.entries(parsedFilters).forEach(([key, value]) => {
+                setFilter(key, value);
+            });
+        }
+    }, [filter]);
 
     // data table hooks
     const [pageIndex, setPageIndex] = React.useState(page);
     const [pageSize, setPageSize] = React.useState(count);
-    const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [sorting, setSorting] = React.useState<SortingState>(
+        sortField && sortDirection
+            ? [{ id: sortField, desc: sortDirection === 'DESC' }]
+            : []
+    );
+
+    // Update URL when filters, page, or sorting change
+    const navigate = useNavigate();
+    React.useEffect(() => {
+        navigate({
+            to: '/orders',
+            search: {
+                page: pageIndex,
+                count: pageSize,
+                sort: sorting[0]
+                    ? `${sorting[0].id}:${sorting[0].desc ? 'DESC' : 'ASC'}`
+                    : 'created_at:ASC',
+                filter: JSON.stringify(filters),
+            },
+            replace: true,
+        });
+    }, [pageIndex, pageSize, sorting, filters, navigate]);
 
     const { data, isLoading, error } = useQuery<
         {
@@ -93,7 +131,7 @@ export default function OrdersPage() {
                 pageSize={pageSize}
                 setPageIndex={setPageIndex}
                 setPageSize={setPageSize}
-                totalRecords={data?.totalRecords ?? 0}
+                totalRecords={data?.orders.length ?? 0}
                 sorting={sorting}
                 setSorting={setSorting}
             />
