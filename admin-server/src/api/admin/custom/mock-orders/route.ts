@@ -28,7 +28,6 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         }
 
         const order = await orderService.createMockOrders(count, date, store_id);
-        console.log(`WTF`)
         if (order === null)
             return handler.returnStatusWithMessage(
                 404,
