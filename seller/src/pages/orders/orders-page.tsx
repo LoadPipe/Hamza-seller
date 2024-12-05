@@ -31,7 +31,7 @@ async function getSellerOrders(
             : { field: 'created_at', direction: 'ASC' };
 
         const response = await postSecure('/seller/order', {
-            store_id: 'store_01JE6DQAQ1DK152V4ZZDNPH9YV',
+            store_id: getJwtField('store_id'),
             page: pageIndex,
             count: pageSize,
             filter: filters, // Add filters here
