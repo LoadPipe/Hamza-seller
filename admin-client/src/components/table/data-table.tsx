@@ -45,6 +45,7 @@ import {
     setDatePickerFilter,
 } from '@/stores/order-filter/order-filter-store.ts';
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
+import { ChevronDown } from 'lucide-react';
 import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
 import { Order } from '@/components/orders/columns';
 
@@ -59,7 +60,7 @@ export function DataTable<TData, TValue>({
     pageIndex,
     pageSize,
     setPageIndex,
-    // setPageSize,
+    setPageSize,
     totalRecords,
     sorting,
     setSorting,
@@ -165,7 +166,7 @@ export function DataTable<TData, TValue>({
     return (
         <div className="flex flex-col min-h-screen">
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
-                <OrderTabs />
+                <OrderTabs setPageIndex={setPageIndex} />
 
                 <div className="flex flex-row">
                     <div className="flex pb-[40px] gap-5">
@@ -173,24 +174,28 @@ export function DataTable<TData, TValue>({
                             title="Payment Status"
                             optionsEnum={PaymentStatus}
                             selectedFilters={getFilterValues('payment_status')} // Prepopulate selected filters
-                            onFilterChange={(values) =>
-                                values
-                                    ? setFilter('payment_status', {
-                                          in: values,
-                                      })
-                                    : clearFilter('payment_status')
-                            }
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setFilter('payment_status', { in: values });
+                                } else {
+                                    clearFilter('payment_status');
+                                }
+                                setPageIndex(0); // Reset to the first page
+                            }}
                         />
 
                         <DropdownMultiselectFilter
                             title="Order Status"
                             optionsEnum={OrderStatus}
                             selectedFilters={getFilterValues('status')}
-                            onFilterChange={(values) =>
-                                values
-                                    ? setFilter('status', { in: values })
-                                    : clearFilter('status')
-                            }
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setFilter('status', { in: values });
+                                } else {
+                                    clearFilter('status');
+                                }
+                                setPageIndex(0); // Reset to the first page
+                            }}
                         />
 
                         <DropdownMultiselectFilter
@@ -199,13 +204,16 @@ export function DataTable<TData, TValue>({
                             selectedFilters={getFilterValues(
                                 'fulfillment_status'
                             )}
-                            onFilterChange={(values) =>
-                                values
-                                    ? setFilter('fulfillment_status', {
-                                          in: values,
-                                      })
-                                    : clearFilter('fulfillment_status')
-                            }
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setFilter('fulfillment_status', {
+                                        in: values,
+                                    });
+                                } else {
+                                    clearFilter('fulfillment_status');
+                                }
+                                setPageIndex(0); // Reset to the first page
+                            }}
                         />
 
                         <DatePickerFilter
@@ -229,6 +237,87 @@ export function DataTable<TData, TValue>({
                                 }
                             }}
                         />
+                    </div>
+
+                    <div className="flex justify-between mt-10">
+                        <div className="flex text-sm text-muted-foreground m-2 ">
+                            <div className="flex items-center gap-4">
+                                <p className="text-sm text-white">Showing</p>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            className="bg-[#242424] text-white w-[72px] h-[36px] rounded-full"
+                                            size="sm"
+                                        >
+                                            {pageSize}{' '}
+                                            {/* Display current page size */}
+                                            <ChevronDown className="w-4 h-4 text-white" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="bg-[#242424]">
+                                        {[5, 10, 20, 50, 100].map((size) => (
+                                            <DropdownMenuCheckboxItem
+                                                key={size}
+                                                checked={pageSize === size}
+                                                onCheckedChange={() => {
+                                                    setPageSize(size); // Update page size
+                                                    setPageIndex(0); // Reset to the first page
+                                                }}
+                                                onSelect={(e) =>
+                                                    e.preventDefault()
+                                                } // Prevent menu close on select
+                                            >
+                                                {size}
+                                            </DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                    <div className="text-sm text-white">
+                                        of{' '}
+                                        {
+                                            table.getFilteredRowModel().rows
+                                                .length
+                                        }{' '}
+                                        entries.
+                                    </div>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="ml-auto whitespace-nowrap bg-[#242424]"
+                                    >
+                                        Columns
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="bg-[#242424]">
+                                    {table
+                                        .getAllColumns()
+                                        .filter((column) => column.getCanHide())
+                                        .map((column) => (
+                                            <DropdownMenuCheckboxItem
+                                                key={column.id}
+                                                className="capitalize"
+                                                checked={column.getIsVisible()}
+                                                onCheckedChange={(value) =>
+                                                    column.toggleVisibility(
+                                                        !!value
+                                                    )
+                                                }
+                                                onSelect={(e) =>
+                                                    e.preventDefault()
+                                                } // Prevent menu close on select
+                                            >
+                                                {column.id}
+                                            </DropdownMenuCheckboxItem>
+                                        ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
 
                     <div className="ml-auto flex flex-row relative w-[376px]">
@@ -322,6 +411,21 @@ export function DataTable<TData, TValue>({
                 {/* </div> */}
 
                 {/* Pagination Controls */}
+                </div>
+                <div className="max-w-[1280px] w-full mx-4 rounded-xl p-[24px]">
+                <div className="flex justify-center items-center gap-2">
+                    {/* Previous Button */}
+                    <Button
+                        variant="outline"
+                        className="bg-primary-black-90 mr-1"
+                        size="sm"
+                        onClick={() =>
+                            setPageIndex((old) => Math.max(old - 1, 0))
+                        }
+                        disabled={pageIndex === 0}
+                    >
+                        Previous
+                    </Button>
 
                 <div className="flex justify-between mt-10">
                     <div>
