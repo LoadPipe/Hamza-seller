@@ -97,6 +97,15 @@ class StoreService extends MedusaStoreService {
         }
         return store;
     }
+
+    async getStoreById(store_id: string): Promise<Store> {
+        const storeRepo = this.manager_.withRepository(this.storeRepository_);
+        const store = await storeRepo.findOneBy({ id: store_id });
+        if (!store) {
+            throw new Error(`Store with name ${store_id} not found`);
+        }
+        return store;
+    }
 }
 
 export default StoreService;
