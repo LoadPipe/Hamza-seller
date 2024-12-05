@@ -411,8 +411,8 @@ export function DataTable<TData, TValue>({
                 {/* </div> */}
 
                 {/* Pagination Controls */}
-                </div>
-                <div className="max-w-[1280px] w-full mx-4 rounded-xl p-[24px]">
+            </div>
+            <div className="max-w-[1280px] w-full mx-4 rounded-xl p-[24px]">
                 <div className="flex justify-center items-center gap-2">
                     {/* Previous Button */}
                     <Button
@@ -427,65 +427,80 @@ export function DataTable<TData, TValue>({
                         Previous
                     </Button>
 
-                <div className="flex justify-between mt-10">
-                    <div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="ml-auto whitespace-nowrap"
+                    {/* First Page */}
+                    <button
+                        className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                            pageIndex === 0
+                                ? 'bg-[#94D42A] text-black'
+                                : 'bg-[#121212] text-white'
+                        }`}
+                        onClick={() => setPageIndex(0)}
+                    >
+                        1
+                    </button>
+
+                    {/* Left Ellipsis */}
+                    {pageIndex > 2 && (
+                        <span className="text-gray-500">...</span>
+                    )}
+
+                    {/* Middle Pages */}
+                    {(() => {
+                        const pages = [];
+                        const start = Math.max(1, pageIndex - 1); // Start from one page before
+                        const end = Math.min(pageCount - 2, pageIndex + 1); // End one before the last page
+
+                        for (let i = start; i <= end; i++) {
+                            pages.push(
+                                <button
+                                    key={i}
+                                    className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                                        pageIndex === i
+                                            ? 'bg-[#94D42A] text-black'
+                                            : 'bg-[#121212] text-white'
+                                    }`}
+                                    onClick={() => setPageIndex(i)}
                                 >
-                                    Columns
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {table
-                                    .getAllColumns()
-                                    .filter((column) => column.getCanHide())
-                                    .map((column) => (
-                                        <DropdownMenuCheckboxItem
-                                            key={column.id}
-                                            className="capitalize"
-                                            checked={column.getIsVisible()}
-                                            onCheckedChange={(value) =>
-                                                column.toggleVisibility(!!value)
-                                            }
-                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
-                                        >
-                                            {column.id}
-                                        </DropdownMenuCheckboxItem>
-                                    ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <div className="flex items-center justify-center space-x-4">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                setPageIndex((old) => Math.max(old - 1, 0))
-                            }
-                            disabled={!table.getCanPreviousPage()}
+                                    {i + 1}
+                                </button>
+                            );
+                        }
+                        return pages;
+                    })()}
+
+                    {/* Right Ellipsis */}
+                    {pageIndex < pageCount - 3 && (
+                        <span className="text-gray-500">...</span>
+                    )}
+
+                    {/* Last Page */}
+                    {pageCount > 1 && (
+                        <button
+                            className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                                pageIndex === pageCount - 1
+                                    ? 'bg-[#94D42A] text-black'
+                                    : 'bg-[#121212] text-white'
+                            }`}
+                            onClick={() => setPageIndex(pageCount - 1)}
                         >
-                            Previous
-                        </Button>
-                        <span className="flex items-center justify-center w-8 h-8">
-                            {pageIndex + 1}
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPageIndex((old) => old + 1)}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            Next
-                        </Button>
-                    </div>
-                    <div className="flex text-sm text-muted-foreground m-2 justify-end">
-                        {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                        {table.getFilteredRowModel().rows.length} row(s)
-                        selected.
-                    </div>
+                            {pageCount}
+                        </button>
+                    )}
+
+                    {/* Next Button */}
+                    <Button
+                        variant="outline"
+                        className="bg-primary-black-90 ml-1"
+                        size="sm"
+                        onClick={() =>
+                            setPageIndex((old) =>
+                                Math.min(old + 1, pageCount - 1)
+                            )
+                        }
+                        disabled={pageIndex === pageCount - 1}
+                    >
+                        Next
+                    </Button>
                 </div>
             </div>
         </div>
