@@ -10,6 +10,27 @@ Content-Type: application/json
     "wallet_address": "0x4fBCF49cC0f91d66Bc5bBbE931913D8709592012"
 }
 
+#### Login Admin User
+POST http://localhost:9000/admin/auth
+Content-Type: application/json
+
+{
+  "email": "admin@medusa-test.com",
+  "password": "supersecret"
+}
+
+### MOCK ORDERS
+POST http://localhost:9000/admin/custom/mock-orders
+Content-Type: application/json
+
+{
+  "count": 2,
+  "date": "2024-12-04T10:00:00Z",
+  "store_id": "store_01JE8YHDQ95G6ASYEH66N7CAKX"
+}
+
+
+
 ###
 // Get Seller Orders
 POST http://localhost:9000/seller/order
