@@ -209,6 +209,7 @@ export function DataTable<TData, TValue>({
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
+                                        variant="ghost"
                                         className="bg-[#242424] text-white w-[72px] h-[36px] rounded-full"
                                         size="sm"
                                     >
@@ -245,12 +246,12 @@ export function DataTable<TData, TValue>({
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className="ml-auto whitespace-nowrap"
+                                    className="ml-auto whitespace-nowrap bg-[#242424]"
                                 >
                                     Columns
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+                            <DropdownMenuContent className="bg-[#242424]">
                                 {table
                                     .getAllColumns()
                                     .filter((column) => column.getCanHide())
@@ -330,6 +331,7 @@ export function DataTable<TData, TValue>({
                     {/* Previous Button */}
                     <Button
                         variant="outline"
+                        className="bg-primary-black-90 mr-1"
                         size="sm"
                         onClick={() =>
                             setPageIndex((old) => Math.max(old - 1, 0))
@@ -402,6 +404,7 @@ export function DataTable<TData, TValue>({
                     {/* Next Button */}
                     <Button
                         variant="outline"
+                        className="bg-primary-black-90 ml-1"
                         size="sm"
                         onClick={() =>
                             setPageIndex((old) =>
