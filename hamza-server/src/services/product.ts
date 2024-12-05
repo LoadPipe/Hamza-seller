@@ -76,6 +76,11 @@ export type csvProductData = {
     invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
 }
 
+export type Price = {
+    currency_code: string;
+    amount: number;
+}
+
 type UpdateProductInput = Omit<Partial<CreateProductInput>, 'variants'> & {
     variants?: UpdateProductProductVariantDTO[];
 };
@@ -939,18 +944,43 @@ class ProductService extends MedusaProductService {
         }
 
         // check if thumbnail is a valid image
-        if (
-            !row['thumbnail'].endsWith('.jpg') &&
-            !row['thumbnail'].endsWith('.png') &&
-            !row['thumbnail'].endsWith('.jpeg') &&
-            !row['thumbnail'].endsWith('.svg') &&
-            !row['thumbnail'].endsWith('.gif')
-        ) {
-            return 'thumbnail must be a valid image';
-        }
+        // if (
+        //     !row['thumbnail'].endsWith('.jpg') &&
+        //     !row['thumbnail'].endsWith('.png') &&
+        //     !row['thumbnail'].endsWith('.jpeg') &&
+        //     !row['thumbnail'].endsWith('.svg') &&
+        //     !row['thumbnail'].endsWith('.gif')
+        // ) {
+        //     return 'thumbnail must be a valid image';
+        // }
 
         return null;
     };
+
+    async getPricesForVariant(baseAmount: number, baseCurrency: string): Promise<Price[]> {
+        //TODO: get from someplace global
+        const currencies = ['eth', 'usdc', 'usdt'];
+        const prices = [];
+
+        // console.log("baseCurrency: " + baseCurrency);
+        // console.log("baseAmount: " + baseAmount);
+
+        for (const currency of currencies) {
+            const price = await this.priceConverter_.getPrice({
+                baseAmount,
+                baseCurrency: baseCurrency,
+                toCurrency: currency,
+            });
+            // console.log("price: " + price);
+            prices.push({
+                currency_code: currency,
+                amount: price
+            });
+        }
+        //console.log(prices);
+        //this.logger.debug(prices);
+        return prices;
+    }
 }
 
 /**
