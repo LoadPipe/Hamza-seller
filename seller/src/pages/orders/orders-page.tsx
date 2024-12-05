@@ -59,22 +59,36 @@ export default function OrdersPage() {
 
     const search = useSearch({ from: '/orders' });
 
-    const { page, count } = OrderSearchSchema.parse(search);
+    const { page, count, sort } = OrderSearchSchema.parse(search);
+
+    const [sortField, sortDirection] = sort
+        ? sort.split(':')
+        : ['created_at', 'ASC'];
 
     // data table hooks
     const [pageIndex, setPageIndex] = React.useState(page);
     const [pageSize, setPageSize] = React.useState(count);
-    const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [sorting, setSorting] = React.useState<SortingState>(
+        sortField && sortDirection
+            ? [{ id: sortField, desc: sortDirection === 'DESC' }]
+            : []
+    );
 
     // Keeps track of params in URL
     const navigate = useNavigate();
     React.useEffect(() => {
         navigate({
             to: '/orders',
-            search: { page: pageIndex, count: pageSize },
+            search: {
+                page: pageIndex,
+                count: pageSize,
+                sort: sorting[0]
+                    ? `${sorting[0].id}:${sorting[0].desc ? 'DESC' : 'ASC'}`
+                    : 'created_at:ASC',
+            },
             replace: true,
         });
-    }, [pageIndex, pageSize, navigate]);
+    }, [pageIndex, pageSize, sorting, navigate]);
 
     const { data, isLoading, error } = useQuery<
         {
@@ -94,8 +108,6 @@ export default function OrdersPage() {
     if (error instanceof Error) {
         return <div>{error.message}</div>;
     }
-
-    console.log('table data', data);
 
     return (
         <>
