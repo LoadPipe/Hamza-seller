@@ -942,7 +942,6 @@ export default class OrderService extends MedusaOrderService {
             // Fetch refund by ID
             const refund = await this.refundRepository_.findOne({ where: { id: refundId } });
 
-            console.log(`WTF IS REFUND ${refund}`)
             if (!refund) {
                 throw new Error(`Refund with ID ${refundId} not found.`);
             }
