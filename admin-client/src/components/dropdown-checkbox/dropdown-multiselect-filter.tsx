@@ -32,6 +32,10 @@ export default function DropdownMultiselectFilter({
         if (temporarySelection.length > 0) {
             onFilterChange(temporarySelection);
             setIsOpen(false);
+        } else {
+            onFilterChange(null);
+            setTemporarySelection([]);
+            setIsOpen(false);
         }
     };
 
