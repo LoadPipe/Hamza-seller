@@ -31,7 +31,7 @@ async function getSellerOrders(
             : { field: 'created_at', direction: 'ASC' };
 
         const response = await postSecure('/seller/order', {
-            store_id: getJwtField('store_id'),
+            store_id: 'store_01JEB9QTTBKJ0JJ8WCTXJCYGN4',
             page: pageIndex,
             count: pageSize,
             filter: filters, // Add filters here
@@ -122,6 +122,7 @@ export default function OrdersPage() {
         return <div>{error.message}</div>;
     }
 
+    console.log('dataa table', data);
     return (
         <>
             <DataTable

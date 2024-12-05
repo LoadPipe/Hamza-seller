@@ -179,7 +179,7 @@ export default class StoreOrderService extends TransactionBaseService {
                           [sort.field]: sort.direction, // e.g., ASC or DESC
                       }
                     : undefined,
-            relations: ['customer'],
+            relations: ['customer', 'items.variant'],
             // relations: ['customer', 'items.variant.product']
         };
 
@@ -187,6 +187,8 @@ export default class StoreOrderService extends TransactionBaseService {
 
         //get orders
         const orders = await this.orderRepository_.find(params);
+
+        console.log('ORDERRRRS', orders[0])
 
         if (sort?.field === 'customer') {
             orders.sort((a, b) => {
