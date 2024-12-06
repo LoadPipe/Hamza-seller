@@ -886,33 +886,54 @@ export default class OrderService extends MedusaOrderService {
             );
 
             // Calculate refunded amount
-            const refundedAmount = await this.manager_
+            const refundedResult = await this.manager_
                 .getRepository('Refund')
                 .createQueryBuilder('refund')
                 .where('refund.order_id = :orderId', { orderId })
-                .andWhere('CAST(refund.confirmed AS BOOLEAN) = true') // Cast to BOOLEAN
-                .select('SUM(refund.amount)', 'total')
-                .getRawOne();
+                .getOne();
 
-            const alreadyRefunded = refundedAmount?.total || 0;
+            const alreadyRefunded = refundedResult?.amount;
             const refundableAmount = totalOrderAmount - alreadyRefunded;
 
+            // console.log(`$$$$$$$$ ALREADY ${alreadyRefunded} REFUNDABLE ${refundableAmount} $$$$$$$$$`);
+
             // Validate the refund amount
-            if (refundAmount <= 0 || refundAmount > refundableAmount) {
+            if (refundAmount <= 0) {
+                throw new Error(`Refund amount must be greater than 0.`);
+            }
+
+            if (refundAmount > refundableAmount) {
                 throw new Error(
-                    `Invalid refund amount. Must be greater than 0 and less than or equal to the refundable amount (${refundableAmount}).`
+                    `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`
                 );
             }
 
+            // Check for an existing unconfirmed refund
+            let refund = await this.manager_
+                .getRepository('Refund')
+                .findOne({
+                    where: { order_id: orderId, confirmed: false },
+                });
+
             // Create a refund entity
-            const refund = this.manager_.create('Refund', {
-                order_id: orderId,
-                amount: refundAmount,
-                reason,
-                note: note,
-                confirmed: false,
-                created_at: new Date(),
-            });
+            if (refund) {
+                // Update the existing refund
+                console.log(`Updating existing unconfirmed refund for Order ID: ${orderId}`);
+                refund.amount = refundAmount;
+                refund.reason = reason;
+                refund.note = note || refund.note;
+            } else {
+                // Create a new refund entity
+                console.log(`Creating a new refund for Order ID: ${orderId}`);
+                refund = this.manager_.create('Refund', {
+                    order_id: orderId,
+                    amount: refundAmount,
+                    reason,
+                    note: note,
+                    confirmed: false,
+                    created_at: new Date(),
+                });
+            }
 
             await this.manager_.save(refund);
 
@@ -922,8 +943,11 @@ export default class OrderService extends MedusaOrderService {
                 refund_note: note || '',
             };
 
-            // Update order's status if necessary
-            order.payment_status = PaymentStatus.REFUNDED;
+            // Update order's payment status if all refundable amount is refunded
+            const isFullyRefunded = refundableAmount === refundAmount;
+            if (isFullyRefunded) {
+                order.payment_status = PaymentStatus.REFUNDED;
+            }
 
             // Save the updated order
             const updatedOrder = await this.orderRepository_.save(order);
@@ -939,17 +963,14 @@ export default class OrderService extends MedusaOrderService {
     async confirmRefund(refundId: string) {
         try {
 
-            // Fetch refund by ID
             const refund = await this.refundRepository_.findOne({ where: { id: refundId } });
 
             if (!refund) {
                 throw new Error(`Refund with ID ${refundId} not found.`);
             }
 
-            // Update the refund entity
             refund.confirmed = true;
 
-            // Save the updated refund
             const updatedRefund = await this.refundRepository_.save(refund);
 
             return updatedRefund;

@@ -36,7 +36,7 @@ Content-Type: application/json
 
 {
   "order_id": "order_01JEAJBW1CNTQ562G1ENX8H38F",
-  "amount": 6979,
+  "amount": 69796,
   "reason": "return",
   "note": "this shit sucks, I hate it, give ma money back fool"
 }
