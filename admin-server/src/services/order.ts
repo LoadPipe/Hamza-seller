@@ -882,17 +882,16 @@ export default class OrderService extends MedusaOrderService {
             // Calculate total order amount
             const totalOrderAmount = order.items.reduce(
                 (sum, item) => sum + item.unit_price * item.quantity,
-                0
+                0,
             );
 
             // Calculate refunded amount
-            const refundedResult = await this.manager_
-                .getRepository('Refund')
-                .createQueryBuilder('refund')
-                .where('refund.order_id = :orderId', { orderId })
-                .getOne();
+            const refundedResult = await this.refundRepository_.find({
+                where: { order_id: orderId },
+            });
 
-            const alreadyRefunded = refundedResult?.amount;
+            const alreadyRefunded = refundedResult.reduce((sum, refund) => sum + refund.amount, 0);
+
             const refundableAmount = totalOrderAmount - alreadyRefunded;
 
             // console.log(`$$$$$$$$ ALREADY ${alreadyRefunded} REFUNDABLE ${refundableAmount} $$$$$$$$$`);
@@ -904,16 +903,14 @@ export default class OrderService extends MedusaOrderService {
 
             if (refundAmount > refundableAmount) {
                 throw new Error(
-                    `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`
+                    `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`,
                 );
             }
 
             // Check for an existing unconfirmed refund
-            let refund = await this.manager_
-                .getRepository('Refund')
-                .findOne({
-                    where: { order_id: orderId, confirmed: false },
-                });
+            let refund = await this.refundRepository_.findOne({
+                where: { order_id: orderId, confirmed: false },
+            });
 
             // Create a refund entity
             if (refund) {
@@ -925,17 +922,18 @@ export default class OrderService extends MedusaOrderService {
             } else {
                 // Create a new refund entity
                 console.log(`Creating a new refund for Order ID: ${orderId}`);
-                refund = this.manager_.create('Refund', {
+                refund = this.refundRepository_.create({
                     order_id: orderId,
                     amount: refundAmount,
                     reason,
-                    note: note,
+                    note,
                     confirmed: false,
                     created_at: new Date(),
                 });
+
             }
 
-            await this.manager_.save(refund);
+            await this.refundRepository_.save(refund);
 
             // Optionally add notes or metadata to the order
             order.metadata = {
@@ -979,8 +977,6 @@ export default class OrderService extends MedusaOrderService {
             throw error; // Let the caller handle errors
         }
     }
-
-
 
 
     async createMockOrders(
