@@ -33,7 +33,7 @@ import { stringify } from 'querystring';
 
 const DEFAULT_PAGE_COUNT = 10;
 
-interface filterOrders {
+interface FilterOrders {
     orderStatus?: OrderStatus;
     fulfillmentStatus?: FulfillmentStatus;
     paymentStatus?: PaymentStatus;
@@ -57,7 +57,7 @@ export interface StoreOrdersDTO {
     rowsPerPage: number;
     sortedBy: any;
     sortDirection: string;
-    filtering: filterOrders;
+    filtering: FilterOrders;
     orders: {
         payments: Payment[];
     }[];
@@ -87,7 +87,7 @@ export default class StoreOrderService extends TransactionBaseService {
 
     async getOrdersForStore(
         storeId: string,
-        filter: filterOrders,
+        filter: FilterOrders,
         sort: any,
         page: number,
         ordersPerPage: number

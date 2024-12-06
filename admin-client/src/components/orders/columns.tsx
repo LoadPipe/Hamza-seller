@@ -61,6 +61,7 @@ export const OrderSchema = z.object({
         )
         .optional(), // Add payments as an optional array
 });
+import { formatCryptoPrice } from '@/utils/get-product-price';
 
 // Generate TypeScript type from Zod schema
 export type Order = z.infer<typeof OrderSchema>;
@@ -330,17 +331,18 @@ export const generateColumns = (
                         const payments = row.getValue('payments') as
                             | {
                                   amount: number;
+                                  currency_code: string;
                               }[]
                             | undefined;
 
                         if (!payments || payments.length === 0) {
                             return <div>--</div>; // No payments available
                         }
+                        const formatted = formatCryptoPrice(
+                            payments[0].amount,
+                            payments[0].currency_code
+                        );
 
-                        const formatted = new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                        }).format(payments[0].amount);
                         return <div className="font-medium">{formatted}</div>;
                     },
                 };
