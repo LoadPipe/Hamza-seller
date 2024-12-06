@@ -35,7 +35,7 @@ POST http://localhost:9000/seller/order/refund
 Content-Type: application/json
 
 {
-  "order_id": "order_01JEAJBW1CNTQ562G1ENX8H38F",
+  "order_id": "order_01JEAMPWRH6Y8ZND8B15NWSJAE",
   "amount": 69796,
   "reason": "return",
   "note": "this shit sucks, I hate it, give ma money back fool"

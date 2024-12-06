@@ -25,7 +25,7 @@ a {
 }
 
 a:hover {
-    color: @apply text-primary-green-900;
+    @apply text-primary-green-900;
 }
 
 body {

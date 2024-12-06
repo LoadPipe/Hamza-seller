@@ -886,11 +886,9 @@ export default class OrderService extends MedusaOrderService {
             );
 
             // Calculate refunded amount
-            const refundedResult = await this.manager_
-                .getRepository('Refund')
-                .createQueryBuilder('refund')
-                .where('refund.order_id = :orderId', { orderId })
-                .getOne();
+            const refundedResult = await this.refundRepository_.find({
+                where: { order_id: orderId, confirmed: true },
+            });
 
             const alreadyRefunded = refundedResult?.amount;
             const refundableAmount = totalOrderAmount - alreadyRefunded;
@@ -909,11 +907,9 @@ export default class OrderService extends MedusaOrderService {
             }
 
             // Check for an existing unconfirmed refund
-            let refund = await this.manager_
-                .getRepository('Refund')
-                .findOne({
-                    where: { order_id: orderId, confirmed: false },
-                });
+            let refund = await this.refundRepository_.findOne({
+                where: { order_id: orderId, confirmed: false },
+            });
 
             // Create a refund entity
             if (refund) {
@@ -925,17 +921,18 @@ export default class OrderService extends MedusaOrderService {
             } else {
                 // Create a new refund entity
                 console.log(`Creating a new refund for Order ID: ${orderId}`);
-                refund = this.manager_.create('Refund', {
+                refund = this.refundRepository_.create({
                     order_id: orderId,
                     amount: refundAmount,
                     reason,
-                    note: note,
+                    note,
                     confirmed: false,
                     created_at: new Date(),
                 });
+
             }
 
-            await this.manager_.save(refund);
+            await this.refundRepository_.save(refund);
 
             // Optionally add notes or metadata to the order
             order.metadata = {
