@@ -1,7 +1,15 @@
-import { Entity, OneToOne, JoinColumn, Column } from 'typeorm';
+import {
+    Entity,
+    OneToOne,
+    JoinColumn,
+    Column,
+    OneToMany,
+    Relation,
+} from 'typeorm';
 import { Order as MedusaOrder } from '@medusajs/medusa';
 import { Payment as MedusaPayment } from '@medusajs/medusa';
 import { Store } from './store';
+import { Payment } from './payment';
 
 @Entity()
 export class Order extends MedusaOrder {
@@ -11,6 +19,9 @@ export class Order extends MedusaOrder {
 
     @Column('store_id')
     store_id?: string;
+
+    @OneToMany(() => Payment, (payment) => payment.order)
+    payments: Relation<Payment>[];
 
     @Column()
     massmarket_order_id?: string;

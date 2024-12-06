@@ -1,4 +1,4 @@
-import { TransactionBaseService } from '@medusajs/medusa';
+import { Payment, Store, TransactionBaseService } from '@medusajs/medusa';
 import { BuckyLogRepository } from '../repositories/bucky-log';
 import LineItemRepository from '@medusajs/medusa/dist/repositories/line-item';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
@@ -50,6 +50,10 @@ interface filterOrders {
     };
 }
 
+interface ordersWithPayments extends Order {
+    amount: string;
+}
+
 export interface StoreOrdersDTO {
     pageIndex: number;
     pageCount: number;
@@ -57,7 +61,9 @@ export interface StoreOrdersDTO {
     sortedBy: any;
     sortDirection: string;
     filtering: filterOrders;
-    orders: Order[];
+    orders: {
+        payments: Payment[];
+    }[];
     totalRecords: number;
     statusCount: {};
 }
@@ -179,14 +185,21 @@ export default class StoreOrderService extends TransactionBaseService {
                           [sort.field]: sort.direction, // e.g., ASC or DESC
                       }
                     : undefined,
-            relations: ['customer'],
-            // relations: ['customer', 'items.variant.product']
+            relations: ['customer', 'payments'],
         };
 
-        // Get total count of matching record
+        const allOrders = await this.orderRepository_.find(params);
 
-        //get orders
-        const orders = await this.orderRepository_.find(params);
+        const orders = await Promise.all(
+            allOrders.map(async (order) => {
+                const payments = await this.orderRepository_.findOne({
+                    where: { id: order.id },
+                    relations: ['payments'],
+                });
+                return { ...order, payments: payments?.payments || [] };
+            })
+        );
+        // console.log('Order with Payments:', payments);
 
         if (sort?.field === 'customer') {
             orders.sort((a, b) => {

@@ -50,6 +50,16 @@ export const OrderSchema = z.object({
             last_name: z.string(),
         })
         .optional(), // Make it optional in case of any missing data
+    payments: z
+        .array(
+            z.object({
+                id: z.string(),
+                amount: z.number(),
+                provider_id: z.string(),
+                created_at: z.string(),
+            })
+        )
+        .optional(), // Add payments as an optional array
 });
 
 // Generate TypeScript type from Zod schema
@@ -293,7 +303,7 @@ export const generateColumns = (
 
             case 'price':
                 return {
-                    accessorKey: 'price',
+                    accessorKey: 'payments',
                     header: ({ column }) => (
                         <Button
                             variant={'ghost'}
@@ -317,17 +327,21 @@ export const generateColumns = (
                         </Button>
                     ),
                     cell: ({ row }) => {
-                        const price = row.getValue('price') as Order['price'];
-                        if (price === undefined) return <div>--</div>;
+                        const payments = row.getValue('payments') as
+                            | {
+                                  amount: number;
+                              }[]
+                            | undefined;
+
+                        if (!payments || payments.length === 0) {
+                            return <div>--</div>; // No payments available
+                        }
+
                         const formatted = new Intl.NumberFormat('en-US', {
                             style: 'currency',
                             currency: 'USD',
-                        }).format(price);
-                        return (
-                            <div className="text-right font-medium">
-                                {formatted}
-                            </div>
-                        );
+                        }).format(payments[0].amount);
+                        return <div className="font-medium">{formatted}</div>;
                     },
                 };
             case 'email':
