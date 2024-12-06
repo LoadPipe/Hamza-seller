@@ -11,6 +11,7 @@ import {
 import Timeline from '@/components/orders/timeline';
 import Item from '@/components/orders/item';
 import Payment from '@/components/orders/payment';
+import Refund from '@/components/orders/refund';
 import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -233,6 +234,9 @@ export function OrderDetailsSidebar() {
                             <Timeline orderDetails={statusDetails} />
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
+
+                            <Refund date={formatDate(orderDetails?.created_at)} firstName={orderDetails?.customer
+                                ?.first_name} lastName={orderDetails?.customer?.last_name} email={orderDetails?.email} orderId={orderDetails?.id} customerId={orderDetails?.customer_id}/>
 
                             {/* Items */}
                             <div className="flex flex-col">
