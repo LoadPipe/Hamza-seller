@@ -30,6 +30,28 @@ Content-Type: application/json
 }
 
 
+#### REFUND ORDER
+POST http://localhost:9000/seller/order/refund
+Content-Type: application/json
+
+{
+  "order_id": "order_01JEAJBW1CNTQ562G1ENX8H38F",
+  "amount": 69796,
+  "reason": "return",
+  "note": "this shit sucks, I hate it, give ma money back fool"
+}
+
+
+### Confirm REFUND ORDER
+PUT http://localhost:9000/seller/order/refund
+Content-Type: application/json
+
+{
+  "id": "ref_01JEBFA7QJQ5W9DYZH31Z5VFZQ"
+}
+
+
+
 
 ###
 // Get Seller Orders
