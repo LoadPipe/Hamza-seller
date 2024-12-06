@@ -20,9 +20,6 @@ export class Order extends MedusaOrder {
     @Column('store_id')
     store_id?: string;
 
-    @OneToMany(() => Payment, (payment) => payment.order)
-    payments: Relation<Payment>[];
-
     @Column()
     massmarket_order_id?: string;
 

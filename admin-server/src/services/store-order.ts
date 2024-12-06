@@ -51,10 +51,6 @@ interface filterOrders {
     };
 }
 
-interface ordersWithPayments extends Order {
-    amount: string;
-}
-
 export interface StoreOrdersDTO {
     pageIndex: number;
     pageCount: number;
@@ -230,8 +226,6 @@ export default class StoreOrderService extends TransactionBaseService {
                 return 0;
             });
         }
-
-        console.log('orders with payment', JSON.stringify(orders));
 
         return {
             pageIndex: page,
