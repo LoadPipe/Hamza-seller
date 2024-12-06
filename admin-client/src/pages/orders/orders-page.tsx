@@ -122,7 +122,7 @@ export default function OrdersPage() {
         return <div>{error.message}</div>;
     }
 
-    console.log('dataa table', data);
+    console.log('SORTING table', sorting);
     return (
         <>
             <DataTable

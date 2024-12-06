@@ -29,6 +29,7 @@ import {
     FulfillmentStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
+import { stringify } from 'querystring';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -180,12 +181,14 @@ export default class StoreOrderService extends TransactionBaseService {
             take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
             skip: page * ordersPerPage,
             order:
-                sort && sort.field !== 'customer'
+                sort?.field &&
+                sort.field !== 'customer' &&
+                sort.field !== 'payments'
                     ? {
-                          [sort.field]: sort.direction, // e.g., ASC or DESC
+                          [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
                     : undefined,
-            relations: ['customer', 'payments'],
+            relations: ['customer'], // Fetch related payments and customers
         };
 
         const allOrders = await this.orderRepository_.find(params);
@@ -199,7 +202,6 @@ export default class StoreOrderService extends TransactionBaseService {
                 return { ...order, payments: payments?.payments || [] };
             })
         );
-        // console.log('Order with Payments:', payments);
 
         if (sort?.field === 'customer') {
             orders.sort((a, b) => {
@@ -213,6 +215,23 @@ export default class StoreOrderService extends TransactionBaseService {
                 }
             });
         }
+
+        if (sort?.field === 'payments') {
+            orders.sort((a, b) => {
+                const amountA = a.payments?.[0]?.amount || 0; // Fallback to 0 if no payment
+                const amountB = b.payments?.[0]?.amount || 0;
+
+                if (sort.direction === 'ASC') {
+                    return amountA - amountB;
+                } else if (sort.direction === 'DESC') {
+                    return amountB - amountA;
+                }
+
+                return 0;
+            });
+        }
+
+        console.log('orders with payment', JSON.stringify(orders));
 
         return {
             pageIndex: page,
