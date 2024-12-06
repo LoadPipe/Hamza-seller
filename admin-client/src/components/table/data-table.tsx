@@ -239,52 +239,87 @@ export function DataTable<TData, TValue>({
                         />
                     </div>
 
-                    <div className="flex justify-between mt-10">
-                        <div className="flex text-sm text-muted-foreground m-2 ">
-                            <div className="flex items-center gap-4">
-                                <p className="text-sm text-white">Showing</p>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            className="bg-[#242424] text-white w-[72px] h-[36px] rounded-full"
-                                            size="sm"
+                    <div className="ml-auto flex flex-row relative w-[376px]">
+                        <Input
+                            placeholder="Search Order"
+                            value={
+                                (table
+                                    .getColumn('id')
+                                    ?.getFilterValue() as string) ?? ''
+                            }
+                            onChange={(event) =>
+                                table
+                                    .getColumn('id')
+                                    ?.setFilterValue(event.target.value)
+                            }
+                            className="w-full h-[34px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
+                        />
+                        {/*<Search*/}
+                        {/*    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"*/}
+                        {/*    size={14}*/}
+                        {/*/>*/}
+                    </div>
+                </div>
+
+                <div className="flex items-center">
+                    <div className="flex text-sm text-muted-foreground m-2 ">
+                        <div className="flex items-center gap-4">
+                            <p className="text-sm text-white">Showing</p>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        className="bg-[#242424] text-white w-[72px] h-[36px] rounded-full"
+                                        size="sm"
+                                    >
+                                        {pageSize}{' '}
+                                        {/* Display current page size */}
+                                        <ChevronDown className="w-4 h-4 text-white" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="bg-[#242424]">
+                                    {[5, 10, 20, 50, 100].map((size) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={size}
+                                            checked={pageSize === size}
+                                            onCheckedChange={() => {
+                                                setPageSize(size); // Update page size
+                                                setPageIndex(0); // Reset to the first page
+                                            }}
+                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
                                         >
-                                            {pageSize}{' '}
-                                            {/* Display current page size */}
-                                            <ChevronDown className="w-4 h-4 text-white" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="bg-[#242424]">
-                                        {[5, 10, 20, 50, 100].map((size) => (
-                                            <DropdownMenuCheckboxItem
-                                                key={size}
-                                                checked={pageSize === size}
-                                                onCheckedChange={() => {
-                                                    setPageSize(size); // Update page size
-                                                    setPageIndex(0); // Reset to the first page
-                                                }}
-                                                onSelect={(e) =>
-                                                    e.preventDefault()
-                                                } // Prevent menu close on select
-                                            >
-                                                {size}
-                                            </DropdownMenuCheckboxItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                    <div className="text-sm text-white">
-                                        of{' '}
-                                        {
-                                            table.getFilteredRowModel().rows
-                                                .length
-                                        }{' '}
-                                        entries.
-                                    </div>
-                                </DropdownMenu>
-                            </div>
+                                            {size}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                                </DropdownMenuContent>
+                                <div className="text-sm text-white">
+                                    of {table.getFilteredRowModel().rows.length}{' '}
+                                    entries.
+                                </div>
+                            </DropdownMenu>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-row gap-4 ml-auto">
+                        <div className="flex justify-end">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button className="bg-secondary-charcoal-69 text-white">
+                                        <Download />
+                                        Export
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="bg-secondary-charcoal-69 ">
+                                    <DropdownMenuItem
+                                        onClick={handleDownloadCSV}
+                                    >
+                                        Export as CSV
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
 
-                        <div className="flex justify-end">
+                        <div className="flex">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
@@ -319,43 +354,6 @@ export function DataTable<TData, TValue>({
                             </DropdownMenu>
                         </div>
                     </div>
-
-                    <div className="ml-auto flex flex-row relative w-[376px]">
-                        <Input
-                            placeholder="Search Order"
-                            value={
-                                (table
-                                    .getColumn('id')
-                                    ?.getFilterValue() as string) ?? ''
-                            }
-                            onChange={(event) =>
-                                table
-                                    .getColumn('id')
-                                    ?.setFilterValue(event.target.value)
-                            }
-                            className="w-full h-[34px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
-                        />
-                        {/*<Search*/}
-                        {/*    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"*/}
-                        {/*    size={14}*/}
-                        {/*/>*/}
-                    </div>
-                </div>
-
-                <div className="flex justify-start mb-4">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button className="bg-secondary-charcoal-69 text-white">
-                                <Download />
-                                Export
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-secondary-charcoal-69 ">
-                            <DropdownMenuItem onClick={handleDownloadCSV}>
-                                Export as CSV
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
 
                 <div className="rounded-md mt-9 overflow-x-auto">

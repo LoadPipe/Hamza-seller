@@ -23,6 +23,7 @@ async function getSellerOrders(
     sorting: SortingState = []
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
+        console.log('sorting inside call', sorting);
         const sort = sorting[0]
             ? {
                   field: sorting[0].id,
