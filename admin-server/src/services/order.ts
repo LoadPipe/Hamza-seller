@@ -882,15 +882,16 @@ export default class OrderService extends MedusaOrderService {
             // Calculate total order amount
             const totalOrderAmount = order.items.reduce(
                 (sum, item) => sum + item.unit_price * item.quantity,
-                0
+                0,
             );
 
             // Calculate refunded amount
             const refundedResult = await this.refundRepository_.find({
-                where: { order_id: orderId, confirmed: true },
+                where: { order_id: orderId },
             });
 
-            const alreadyRefunded = refundedResult?.amount;
+            const alreadyRefunded = refundedResult.reduce((sum, refund) => sum + refund.amount, 0);
+
             const refundableAmount = totalOrderAmount - alreadyRefunded;
 
             // console.log(`$$$$$$$$ ALREADY ${alreadyRefunded} REFUNDABLE ${refundableAmount} $$$$$$$$$`);
@@ -902,7 +903,7 @@ export default class OrderService extends MedusaOrderService {
 
             if (refundAmount > refundableAmount) {
                 throw new Error(
-                    `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`
+                    `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`,
                 );
             }
 
@@ -976,8 +977,6 @@ export default class OrderService extends MedusaOrderService {
             throw error; // Let the caller handle errors
         }
     }
-
-
 
 
     async createMockOrders(
