@@ -9,9 +9,12 @@ import StoreOrderService from '../../../../services/store-order';
  * order_id: string
  */
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-    const orderService: StoreOrderService = req.scope.resolve('storeOrderService');
+    const orderService: StoreOrderService =
+        req.scope.resolve('storeOrderService');
 
-    const handler = new RouteHandler(req, res, 'GET', '/seller/order/details', ['order_id']);
+    const handler = new RouteHandler(req, res, 'GET', '/seller/order/details', [
+        'order_id',
+    ]);
 
     await handler.handle(async () => {
         // Ensure order_id is provided
@@ -23,6 +26,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         const orderDetails = await orderService.getOrderDetails(orderId);
 
         // Return the order details in the response
-        return handler.returnStatus(200, orderDetails);
+        return handler.returnStatus(200, orderDetails, 50);
     });
 };
