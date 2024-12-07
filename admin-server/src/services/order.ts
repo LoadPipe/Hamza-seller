@@ -992,28 +992,27 @@ export default class OrderService extends MedusaOrderService {
             `Parameters - count: ${count}, date: ${date}, store_id: ${store_id}`
         );
         if (!count || count <= 0) {
-            throw new Error('Invalid count value. Must be greater than 0.');
+            count = 1;
         }
-        if (!store_id) {
-            throw new Error('Invalid store_id.');
-        }
-
         const orders: Order[] = []; // To store all created orders
 
         //if no specified store, do random stores
         let allStores = [];
         const randomStores = !store_id;
         if (randomStores) {
-            const allStores = await this.storeRepository_.find({});
+            console.log('doing random stores');
+            allStores = await this.storeRepository_.find({});
+            console.log('got', allStores.length, 'stores');
         }
 
         //get all customers
         const allCustomers = await this.customerRepository_.find({});
+
         //create a customer if none exists
         if (!allCustomers.length) {
             const customer = this.customerRepository_.create({
-                first_name: `Customer ${i + 1}`, // Unique for each order
-                last_name: `Mock`,
+                first_name: `Reynaldo`, // Unique for each order
+                last_name: `Mocktavish`,
                 email: `customer${randomUUID()}@example.com`,
                 created_at: new Date(),
             });
@@ -1026,6 +1025,7 @@ export default class OrderService extends MedusaOrderService {
         try {
             console.log('Starting mock order creation...');
 
+            let actualOrderCount = 0;
             for (let i = 0; i < count; i++) {
                 console.log(`Creating mock order ${i + 1} of ${count}...`);
 
@@ -1050,16 +1050,23 @@ export default class OrderService extends MedusaOrderService {
 
                 //get random store if necessary
                 if (randomStores) {
+                    console.log(
+                        'getting random store from',
+                        allStores.length,
+                        'stores'
+                    );
                     store_id = allStores[randomInt(allStores.length)].id;
                 }
+                console.log('store_id is', store_id);
 
                 // Step 3: Get random products
-                const randomCount = Math.floor(Math.random() * 10) + 1; // Random between 1 and 10
+                const randomCount = randomInt(10) + 1; // Random between 1 and 10
 
+                console.log('getting products');
                 const products = await this.productRepository_.query(
                     `SELECT *
                      FROM product
-                     WHERE store_id=${store_id}
+                     WHERE store_id='${store_id}'
                      ORDER BY RANDOM()
                      LIMIT ${randomCount}`
                 );
@@ -1069,126 +1076,127 @@ export default class OrderService extends MedusaOrderService {
                     products
                 );
 
-                if (!products.length) {
-                    throw new Error('No products found.');
-                }
-                console.log('Products found:', products);
+                if (products.length) {
+                    console.log('Products found:', products);
 
-                const variants = await Promise.all(
-                    products.map((product) =>
-                        this.productVariantRepository_.findOne({
-                            where: { product_id: product.id },
-                            order: { created_at: 'ASC' }, // Choose the first variant if multiple exist
-                        })
-                    )
-                );
+                    const variants = await Promise.all(
+                        products.map((product) =>
+                            this.productVariantRepository_.findOne({
+                                where: { product_id: product.id },
+                                order: { created_at: 'ASC' }, // Choose the first variant if multiple exist
+                            })
+                        )
+                    );
 
-                // Validate that each product has at least one variant
-                variants.forEach((variant, index) => {
-                    if (!variant) {
-                        throw new Error(
-                            `No variant found for product ${products[index].id}`
-                        );
+                    // Validate that each product has at least one variant
+                    variants.forEach((variant, index) => {
+                        if (!variant) {
+                            throw new Error(
+                                `No variant found for product ${products[index].id}`
+                            );
+                        }
+                    });
+
+                    console.log('Variants found:', variants);
+
+                    // Step 4: Store Id from params
+                    const storeId = store_id;
+
+                    // Grab the default sales channel... the first one
+                    const salesChannel =
+                        await this.salesChannelRepository_.findOne({
+                            where: {}, // Empty where clause to find any sales channel
+                            order: { created_at: 'ASC' }, // Sort by creation time, oldest first
+                        });
+
+                    if (!salesChannel) {
+                        throw new Error('No sales channels found.');
                     }
-                });
 
-                console.log('Variants found:', variants);
+                    const sales_channel_id = salesChannel.id;
+                    console.log('Sales Channel ID:', sales_channel_id);
 
-                // Step 4: Store Id from params
-                const storeId = store_id;
-
-                // Grab the default sales channel... the first one
-                const salesChannel = await this.salesChannelRepository_.findOne(
-                    {
-                        where: {}, // Empty where clause to find any sales channel
-                        order: { created_at: 'ASC' }, // Sort by creation time, oldest first
-                    }
-                );
-
-                if (!salesChannel) {
-                    throw new Error('No sales channels found.');
-                }
-
-                const sales_channel_id = salesChannel.id;
-                console.log('Sales Channel ID:', sales_channel_id);
-
-                console.log('Creating cart with:', {
-                    customer_id: customer.id,
-                    email: customer.email,
-                    region_id: region.id,
-                });
-                // Step 5: Create a cart for the customer
-                const cart = await this.cartRepository_.save(
-                    this.cartRepository_.create({
+                    console.log('Creating cart with:', {
                         customer_id: customer.id,
                         email: customer.email,
                         region_id: region.id,
-                        sales_channel_id: sales_channel_id,
-                        created_at: new Date(),
-                        updated_at: new Date(),
-                    })
-                );
-                console.log('Cart created:', cart);
-
-                // Step 6: Add line items to the cart
-                const lineItems = [];
-                for (let i = 0; i < products.length; i++) {
-                    const product = products[i];
-                    const variant = variants[i];
-
-                    const lineItem = this.lineItemRepository_.create({
-                        cart_id: cart.id,
-                        title: product.title,
-                        description: product.description,
-                        thumbnail: product.thumbnail,
-                        unit_price: variant.prices?.[0]?.amount || 1000,
-                        quantity: Math.floor(Math.random() * 5) + 1,
-                        currency_code: region.currency_code,
-                        variant_id: variant.id, // Add variant_id here
-                        created_at: new Date(),
-                        updated_at: new Date(),
                     });
-                    const savedLineItem =
-                        await this.lineItemRepository_.save(lineItem);
-                    lineItems.push(savedLineItem);
+                    // Step 5: Create a cart for the customer
+                    const cart = await this.cartRepository_.save(
+                        this.cartRepository_.create({
+                            customer_id: customer.id,
+                            email: customer.email,
+                            region_id: region.id,
+                            sales_channel_id: sales_channel_id,
+                            created_at: new Date(),
+                            updated_at: new Date(),
+                        })
+                    );
+                    console.log('Cart created:', cart);
+
+                    // Step 6: Add line items to the cart
+                    const lineItems = [];
+                    for (let i = 0; i < products.length; i++) {
+                        const product = products[i];
+                        const variant = variants[i];
+
+                        const lineItem = this.lineItemRepository_.create({
+                            cart_id: cart.id,
+                            title: product.title,
+                            description: product.description,
+                            thumbnail: product.thumbnail,
+                            unit_price: variant.prices?.[0]?.amount || 1000,
+                            quantity: Math.floor(Math.random() * 5) + 1,
+                            currency_code: region.currency_code,
+                            variant_id: variant.id, // Add variant_id here
+                            created_at: new Date(),
+                            updated_at: new Date(),
+                        });
+                        const savedLineItem =
+                            await this.lineItemRepository_.save(lineItem);
+                        lineItems.push(savedLineItem);
+                    }
+                    cart.items = lineItems;
+                    console.log('Line items added to cart:', cart.items);
+
+                    // Step 7: Create an order using the cart and product's store_id
+                    let order: Order = new Order();
+                    order.status = OrderStatus.PENDING;
+                    order.store_id = storeId; // Use store_id directly from the product
+                    order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
+                    order.payment_status = PaymentStatus.AWAITING;
+                    order.sales_channel_id = sales_channel_id;
+                    order.customer_id = customer.id;
+                    order.email = customer.email;
+                    order.cart_id = cart.id;
+                    order.region_id = cart.region_id;
+                    order.currency_code = 'usdt';
+                    order.created_at = new Date(date);
+
+                    order = await this.orderRepository_.save(order);
+                    console.log('Order created successfully:', order);
+
+                    // Step 8: Link line items to the order
+                    order.items = cart.items;
+                    const lineItemPromises = cart.items.map((item) => {
+                        item.order_id = order.id;
+                        return this.lineItemRepository_.save(item);
+                    });
+
+                    await Promise.all(lineItemPromises);
+                    actualOrderCount++;
+
+                    console.log('Line items linked to order:', order.items);
+
+                    orders.push(order); // Add the order to the array
+
+                    console.log(`Order ${i + 1} created successfully:`, order);
                 }
-                cart.items = lineItems;
-                console.log('Line items added to cart:', cart.items);
-
-                // Step 7: Create an order using the cart and product's store_id
-                let order: Order = new Order();
-                order.status = OrderStatus.PENDING;
-                order.store_id = storeId; // Use store_id directly from the product
-                order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
-                order.payment_status = PaymentStatus.AWAITING;
-                order.sales_channel_id = sales_channel_id;
-                order.customer_id = customer.id;
-                order.email = customer.email;
-                order.cart_id = cart.id;
-                order.region_id = cart.region_id;
-                order.currency_code = 'usdt';
-                order.created_at = new Date(date);
-
-                order = await this.orderRepository_.save(order);
-                console.log('Order created successfully:', order);
-
-                // Step 8: Link line items to the order
-                order.items = cart.items;
-                const lineItemPromises = cart.items.map((item) => {
-                    item.order_id = order.id;
-                    return this.lineItemRepository_.save(item);
-                });
-
-                await Promise.all(lineItemPromises);
-
-                console.log('Line items linked to order:', order.items);
-
-                orders.push(order); // Add the order to the array
-
-                console.log(`Order ${i + 1} created successfully:`, order);
             }
 
-            console.log(`${count} mock orders created successfully.`);
+            console.log(
+                `${actualOrderCount} mock orders created successfully.`
+            );
             return orders; // Return all created orders
         } catch (error) {
             console.error('Error during mock order creation:', error.message);
