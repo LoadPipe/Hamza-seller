@@ -34,7 +34,7 @@ import OrderHistoryService from './order-history';
 import { OrderHistory } from 'src/models/order-history';
 import CartRepository from '@medusajs/medusa/dist/repositories/cart';
 import RegionRepository from '@medusajs/medusa/dist/repositories/region';
-import { randomUUID } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 
 // Since {TO_PAY, TO_SHIP} are under the umbrella name {Processing} in FE, not sure if we should modify atm
 // In medusa we have these 5 DEFAULT order.STATUS's {PENDING, COMPLETED, ARCHIVED, CANCELED, REQUIRES_ACTION}
@@ -101,10 +101,10 @@ export default class OrderService extends MedusaOrderService {
     async createFromPayment(
         cart: Cart,
         payment: Payment,
-        storeId: string,
+        storeId: string
     ): Promise<Order> {
         this.logger.info(
-            `creating Order with input ${JSON.stringify(payment)}`,
+            `creating Order with input ${JSON.stringify(payment)}`
         );
         try {
             //create the order
@@ -175,34 +175,34 @@ export default class OrderService extends MedusaOrderService {
 
     async updateInventory(
         variantOrVariantId: string,
-        quantityToDeduct: number,
+        quantityToDeduct: number
     ) {
         try {
             const productVariant = await this.productVariantRepository_.findOne(
                 {
                     where: { id: variantOrVariantId },
-                },
+                }
             );
 
             if (productVariant.inventory_quantity >= quantityToDeduct) {
                 productVariant.inventory_quantity -= quantityToDeduct;
                 await this.productVariantRepository_.save(productVariant);
                 this.logger.debug(
-                    `Inventory updated for variant ${productVariant.id}, new inventory count: ${productVariant.inventory_quantity}`,
+                    `Inventory updated for variant ${productVariant.id}, new inventory count: ${productVariant.inventory_quantity}`
                 );
                 return productVariant;
             } else if (productVariant.allow_backorder) {
                 this.logger.debug(
-                    'Inventory below requested deduction but backorders are allowed.',
+                    'Inventory below requested deduction but backorders are allowed.'
                 );
             } else {
                 this.logger.debug(
-                    'Not enough inventory to deduct the requested quantity.',
+                    'Not enough inventory to deduct the requested quantity.'
                 );
             }
         } catch (e) {
             this.logger.error(
-                `Error updating inventory for variant ${variantOrVariantId}: ${e}`,
+                `Error updating inventory for variant ${variantOrVariantId}: ${e}`
             );
         }
     }
@@ -213,7 +213,7 @@ export default class OrderService extends MedusaOrderService {
         payerAddress: string,
         receiverAddress: string,
         escrowContractAddress: string,
-        chainId: number,
+        chainId: number
     ): Promise<Order[]> {
         //get orders & order ids
         const orders: Order[] = await this.orderRepository_.find({
@@ -247,7 +247,7 @@ export default class OrderService extends MedusaOrderService {
             payerAddress,
             receiverAddress,
             escrowContractAddress,
-            chainId,
+            chainId
         );
 
         //calls to update orders
@@ -307,7 +307,7 @@ export default class OrderService extends MedusaOrderService {
     async cancelOrderFromCart(cart_id: string) {
         await this.orderRepository_.update(
             { status: OrderStatus.REQUIRES_ACTION, cart: { id: cart_id } },
-            { status: OrderStatus.ARCHIVED },
+            { status: OrderStatus.ARCHIVED }
         );
     }
 
@@ -319,7 +319,7 @@ export default class OrderService extends MedusaOrderService {
             })) as Order;
             const store_id = order.store_id;
             const storeRepo = this.manager_.withRepository(
-                this.storeRepository_,
+                this.storeRepository_
             );
             const store = await storeRepo.findOneBy({ id: store_id });
             return store.name;
@@ -333,7 +333,7 @@ export default class OrderService extends MedusaOrderService {
             where: {
                 customer_id: customerId,
                 status: Not(
-                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION]),
+                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
                 ),
             },
             relations: ['cart.items', 'cart', 'cart.items.variant.product'],
@@ -341,7 +341,7 @@ export default class OrderService extends MedusaOrderService {
     }
 
     async getCustomerOrderBuckets(
-        customerId: string,
+        customerId: string
     ): Promise<OrderBucketList> {
         const buckets = await Promise.all([
             this.getCustomerOrderBucket(customerId, OrderBucketType.PROCESSING),
@@ -378,7 +378,7 @@ export default class OrderService extends MedusaOrderService {
 
     async getCustomerOrderBucket(
         customerId: string,
-        bucketType: OrderBucketType,
+        bucketType: OrderBucketType
     ): Promise<Order[]> {
         switch (bucketType) {
             case OrderBucketType.PROCESSING:
@@ -417,7 +417,7 @@ export default class OrderService extends MedusaOrderService {
             where: {
                 cart_id: cartId,
                 status: Not(
-                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION]),
+                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
                 ),
             },
             relations: ['cart.items.variant.product', 'store.owner'],
@@ -466,7 +466,7 @@ export default class OrderService extends MedusaOrderService {
                 'order.reviews',
                 'review',
                 'review.customer_id = :customer_id',
-                { customer_id },
+                { customer_id }
             )
             .select([
                 'order.id',
@@ -492,13 +492,13 @@ export default class OrderService extends MedusaOrderService {
     }
 
     async listCustomerOrders(
-        customerId: string,
+        customerId: string
     ): Promise<{ orders: any[]; cartCount: number }> {
         const orders = await this.orderRepository_.find({
             where: {
                 customer_id: customerId,
                 status: Not(
-                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION]),
+                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
                 ),
             },
             select: ['id', 'cart_id'], // Select id and cart_id
@@ -518,7 +518,7 @@ export default class OrderService extends MedusaOrderService {
             where: {
                 cart_id: cartId,
                 status: Not(
-                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION]),
+                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
                 ),
             },
             relations: ['cart.items', 'cart.items.variant.product', 'cart'],
@@ -559,18 +559,18 @@ export default class OrderService extends MedusaOrderService {
     }
 
     async getBuckyProductVariantsFromOrder(
-        order: Order,
+        order: Order
     ): Promise<{ variants: ProductVariant[]; quantities: number[] }> {
         const orders: Order[] = await this.getOrdersWithItems([order]);
         const relevantItems: LineItem[] = orders[0].cart.items.filter(
-            (i) => i.variant.product.bucky_metadata,
+            (i) => i.variant.product.bucky_metadata
         );
 
         return relevantItems?.length
             ? {
-                variants: relevantItems.map((i) => i.variant),
-                quantities: relevantItems.map((i) => i.quantity),
-            }
+                  variants: relevantItems.map((i) => i.variant),
+                  quantities: relevantItems.map((i) => i.quantity),
+              }
             : { variants: [], quantities: [] };
     }
 
@@ -583,7 +583,7 @@ export default class OrderService extends MedusaOrderService {
                         OrderStatus.REQUIRES_ACTION,
                         OrderStatus.CANCELED,
                         OrderStatus.COMPLETED,
-                    ]),
+                    ])
                 ),
                 payment_status: PaymentStatus.AWAITING,
             },
@@ -596,7 +596,7 @@ export default class OrderService extends MedusaOrderService {
             order,
             'orderShipped',
             'order-shipped',
-            'shipped',
+            'shipped'
         );
     }
 
@@ -605,7 +605,7 @@ export default class OrderService extends MedusaOrderService {
             order,
             'orderStatusChanged',
             'order-delivered',
-            'delivered',
+            'delivered'
         );
     }
 
@@ -614,7 +614,7 @@ export default class OrderService extends MedusaOrderService {
             order,
             'orderStatusChanged',
             'order-cancelled',
-            'cancelled',
+            'cancelled'
         );
     }
 
@@ -623,7 +623,7 @@ export default class OrderService extends MedusaOrderService {
         status?: OrderStatus,
         fulfillmentStatus?: FulfillmentStatus,
         paymentStatus?: PaymentStatus,
-        metadata?: Record<string, unknown>,
+        metadata?: Record<string, unknown>
     ): Promise<Order> {
         if (
             (status && order.status != status) ||
@@ -687,13 +687,13 @@ export default class OrderService extends MedusaOrderService {
         order: Order,
         requiredNotification: string,
         templateName: string,
-        emailType: string,
+        emailType: string
     ): Promise<void> {
         try {
             const hasNotification =
                 await this.customerNotificationService_.hasNotification(
                     order.customer_id,
-                    requiredNotification,
+                    requiredNotification
                 );
 
             if (hasNotification) {
@@ -703,7 +703,7 @@ export default class OrderService extends MedusaOrderService {
                         where: { id: order.customer_id },
                     });
                 const cart: Cart = await this.cartService_.retrieve(
-                    order.cart_id,
+                    order.cart_id
                 );
 
                 //send the mail
@@ -715,7 +715,7 @@ export default class OrderService extends MedusaOrderService {
                         orderId: order.id,
                         orderAmount: formatCryptoPrice(
                             order.total,
-                            order.currency_code,
+                            order.currency_code
                         ),
                         orderDate: order.created_at,
                         items: order.items.map((i) => {
@@ -723,7 +723,7 @@ export default class OrderService extends MedusaOrderService {
                                 title: i.title,
                                 unit_price: formatCryptoPrice(
                                     i.unit_price,
-                                    i.currency_code,
+                                    i.currency_code
                                 ),
                                 quantity: i.quantity,
                                 thumbnail: i.thumbnail,
@@ -737,14 +737,14 @@ export default class OrderService extends MedusaOrderService {
             }
         } catch (e: any) {
             this.logger.error(
-                `Error sending ${emailType} email for order ${order.id}`,
+                `Error sending ${emailType} email for order ${order.id}`
             );
         }
     }
 
     private async updatePaymentAfterTransaction(
         paymentId: string,
-        update: Partial<Payment>,
+        update: Partial<Payment>
     ): Promise<Payment> {
         const result = await this.paymentRepository_.save({
             id: paymentId,
@@ -755,7 +755,7 @@ export default class OrderService extends MedusaOrderService {
 
     private async processBuckydropOrders(
         cartId: string,
-        orders: Order[],
+        orders: Order[]
     ): Promise<void> {
         try {
             for (const order of orders) {
@@ -779,7 +779,7 @@ export default class OrderService extends MedusaOrderService {
             orderStatus?: OrderStatus;
             paymentStatus?: PaymentStatus;
             fulfillmentStatus?: FulfillmentStatus;
-        },
+        }
     ): Promise<Order[]> {
         const where: {
             customer_id: string;
@@ -789,7 +789,7 @@ export default class OrderService extends MedusaOrderService {
         } = {
             customer_id: customerId,
             status: Not(
-                In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION]),
+                In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
             ),
         };
 
@@ -828,7 +828,7 @@ export default class OrderService extends MedusaOrderService {
         payerAddress: string,
         receiverAddress: string,
         escrowAddress: string,
-        chainId: number,
+        chainId: number
     ): Promise<Order | Payment>[] {
         const promises: Promise<Order | Payment>[] = [];
 
@@ -843,7 +843,7 @@ export default class OrderService extends MedusaOrderService {
                         receiver_address: receiverAddress,
                         chain_id: chainId,
                     },
-                }),
+                })
             );
         });
 
@@ -851,7 +851,7 @@ export default class OrderService extends MedusaOrderService {
     }
 
     private getPostCheckoutUpdateOrderPromises(
-        orders: Order[],
+        orders: Order[]
     ): Promise<Order>[] {
         return orders.map((o) => {
             return this.orderRepository_.save({
@@ -866,7 +866,7 @@ export default class OrderService extends MedusaOrderService {
         orderId: string,
         refundAmount: number,
         reason: string,
-        note?: string,
+        note?: string
     ): Promise<Order> {
         try {
             // Fetch order details
@@ -882,7 +882,7 @@ export default class OrderService extends MedusaOrderService {
             // Calculate total order amount
             const totalOrderAmount = order.items.reduce(
                 (sum, item) => sum + item.unit_price * item.quantity,
-                0,
+                0
             );
 
             // Calculate refunded amount
@@ -890,7 +890,10 @@ export default class OrderService extends MedusaOrderService {
                 where: { order_id: orderId },
             });
 
-            const alreadyRefunded = refundedResult.reduce((sum, refund) => sum + refund.amount, 0);
+            const alreadyRefunded = refundedResult.reduce(
+                (sum, refund) => sum + refund.amount,
+                0
+            );
 
             const refundableAmount = totalOrderAmount - alreadyRefunded;
 
@@ -903,7 +906,7 @@ export default class OrderService extends MedusaOrderService {
 
             if (refundAmount > refundableAmount) {
                 throw new Error(
-                    `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`,
+                    `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`
                 );
             }
 
@@ -915,7 +918,9 @@ export default class OrderService extends MedusaOrderService {
             // Create a refund entity
             if (refund) {
                 // Update the existing refund
-                console.log(`Updating existing unconfirmed refund for Order ID: ${orderId}`);
+                console.log(
+                    `Updating existing unconfirmed refund for Order ID: ${orderId}`
+                );
                 refund.amount = refundAmount;
                 refund.reason = reason;
                 refund.note = note || refund.note;
@@ -930,7 +935,6 @@ export default class OrderService extends MedusaOrderService {
                     confirmed: false,
                     created_at: new Date(),
                 });
-
             }
 
             await this.refundRepository_.save(refund);
@@ -960,8 +964,9 @@ export default class OrderService extends MedusaOrderService {
 
     async confirmRefund(refundId: string) {
         try {
-
-            const refund = await this.refundRepository_.findOne({ where: { id: refundId } });
+            const refund = await this.refundRepository_.findOne({
+                where: { id: refundId },
+            });
 
             if (!refund) {
                 throw new Error(`Refund with ID ${refundId} not found.`);
@@ -978,39 +983,54 @@ export default class OrderService extends MedusaOrderService {
         }
     }
 
-
     async createMockOrders(
         count: number,
-        date: string,
-        store_id: string,
+        date: string = new Date().toDateString(),
+        store_id: string = null
     ): Promise<Order[]> {
-        console.log(`Parameters - count: ${count}, date: ${date}, store_id: ${store_id}`);
+        console.log(
+            `Parameters - count: ${count}, date: ${date}, store_id: ${store_id}`
+        );
         if (!count || count <= 0) {
-            throw new Error('Invalid count value. Must be greater than 0.');
+            count = 1;
         }
-        if (!store_id) {
-            throw new Error('Invalid store_id.');
-        }
-
-
         const orders: Order[] = []; // To store all created orders
+
+        //if no specified store, do random stores
+        let allStores = [];
+        const randomStores = !store_id;
+        if (randomStores) {
+            console.log('doing random stores');
+            allStores = await this.storeRepository_.find({});
+            console.log('got', allStores.length, 'stores');
+        }
+
+        //get all customers
+        const allCustomers = await this.customerRepository_.find({});
+
+        //create a customer if none exists
+        if (!allCustomers.length) {
+            const customer = this.customerRepository_.create({
+                first_name: `Reynaldo`, // Unique for each order
+                last_name: `Mocktavish`,
+                email: `customer${randomUUID()}@example.com`,
+                created_at: new Date(),
+            });
+
+            await this.customerRepository_.save(customer);
+            allCustomers.push(customer);
+            console.log('New customer created:', customer);
+        }
 
         try {
             console.log('Starting mock order creation...');
 
+            let actualOrderCount = 0;
             for (let i = 0; i < count; i++) {
                 console.log(`Creating mock order ${i + 1} of ${count}...`);
 
                 // Step 1: Get the first customer
-                const customer = this.customerRepository_.create({
-                    first_name: `Customer ${i + 1}`, // Unique for each order
-                    last_name: `Mock`,
-                    email: `customer${randomUUID()}@example.com`,
-                    created_at: new Date(),
-                });
-
-                await this.customerRepository_.save(customer);
-                console.log('New customer created:', customer);
+                const customer = allCustomers[randomInt(allCustomers.length)];
 
                 if (!customer) {
                     throw new Error('No customers found.');
@@ -1028,139 +1048,155 @@ export default class OrderService extends MedusaOrderService {
                 }
                 console.log('Region found:', region);
 
-                // Step 3: Get random products
-                const randomCount = Math.floor(Math.random() * 10) + 1; // Random between 1 and 10
+                //get random store if necessary
+                if (randomStores) {
+                    console.log(
+                        'getting random store from',
+                        allStores.length,
+                        'stores'
+                    );
+                    store_id = allStores[randomInt(allStores.length)].id;
+                }
+                console.log('store_id is', store_id);
 
+                // Step 3: Get random products
+                const randomCount = randomInt(10) + 1; // Random between 1 and 10
+
+                console.log('getting products');
                 const products = await this.productRepository_.query(
                     `SELECT *
                      FROM product
+                     WHERE store_id='${store_id}'
                      ORDER BY RANDOM()
-                     LIMIT ${randomCount}`,
+                     LIMIT ${randomCount}`
                 );
 
                 console.log(
                     `Retrieved ${products.length} random products`,
-                    products,
+                    products
                 );
 
-                if (!products.length) {
-                    throw new Error('No products found.');
-                }
-                console.log('Products found:', products);
+                if (products.length) {
+                    console.log('Products found:', products);
 
-                const variants = await Promise.all(
-                    products.map((product) =>
-                        this.productVariantRepository_.findOne({
-                            where: { product_id: product.id },
-                            order: { created_at: 'ASC' }, // Choose the first variant if multiple exist
-                        }),
-                    ),
-                );
+                    const variants = await Promise.all(
+                        products.map((product) =>
+                            this.productVariantRepository_.findOne({
+                                where: { product_id: product.id },
+                                order: { created_at: 'ASC' }, // Choose the first variant if multiple exist
+                            })
+                        )
+                    );
 
-                // Validate that each product has at least one variant
-                variants.forEach((variant, index) => {
-                    if (!variant) {
-                        throw new Error(
-                            `No variant found for product ${products[index].id}`,
-                        );
+                    // Validate that each product has at least one variant
+                    variants.forEach((variant, index) => {
+                        if (!variant) {
+                            throw new Error(
+                                `No variant found for product ${products[index].id}`
+                            );
+                        }
+                    });
+
+                    console.log('Variants found:', variants);
+
+                    // Step 4: Store Id from params
+                    const storeId = store_id;
+
+                    // Grab the default sales channel... the first one
+                    const salesChannel =
+                        await this.salesChannelRepository_.findOne({
+                            where: {}, // Empty where clause to find any sales channel
+                            order: { created_at: 'ASC' }, // Sort by creation time, oldest first
+                        });
+
+                    if (!salesChannel) {
+                        throw new Error('No sales channels found.');
                     }
-                });
 
-                console.log('Variants found:', variants);
+                    const sales_channel_id = salesChannel.id;
+                    console.log('Sales Channel ID:', sales_channel_id);
 
-                // Step 4: Store Id from params
-                const storeId = store_id;
-
-                // Grab the default sales channel... the first one
-                const salesChannel = await this.salesChannelRepository_.findOne({
-                    where: {}, // Empty where clause to find any sales channel
-                    order: { created_at: 'ASC' }, // Sort by creation time, oldest first
-                });
-
-                if (!salesChannel) {
-                    throw new Error('No sales channels found.');
-                }
-
-                const sales_channel_id = salesChannel.id;
-                console.log('Sales Channel ID:', sales_channel_id);
-
-                console.log('Creating cart with:', {
-                    customer_id: customer.id,
-                    email: customer.email,
-                    region_id: region.id,
-                });
-                // Step 5: Create a cart for the customer
-                const cart = await this.cartRepository_.save(
-                    this.cartRepository_.create({
+                    console.log('Creating cart with:', {
                         customer_id: customer.id,
                         email: customer.email,
                         region_id: region.id,
-                        sales_channel_id: sales_channel_id,
-                        created_at: new Date(),
-                        updated_at: new Date(),
-                    }),
-                );
-                console.log('Cart created:', cart);
-
-                // Step 6: Add line items to the cart
-                const lineItems = [];
-                for (let i = 0; i < products.length; i++) {
-                    const product = products[i];
-                    const variant = variants[i];
-
-                    const lineItem = this.lineItemRepository_.create({
-                        cart_id: cart.id,
-                        title: product.title,
-                        description: product.description,
-                        thumbnail: product.thumbnail,
-                        unit_price: variant.prices?.[0]?.amount || 1000,
-                        quantity: Math.floor(Math.random() * 5) + 1,
-                        currency_code: region.currency_code,
-                        variant_id: variant.id, // Add variant_id here
-                        created_at: new Date(),
-                        updated_at: new Date(),
                     });
-                    const savedLineItem =
-                        await this.lineItemRepository_.save(lineItem);
-                    lineItems.push(savedLineItem);
+                    // Step 5: Create a cart for the customer
+                    const cart = await this.cartRepository_.save(
+                        this.cartRepository_.create({
+                            customer_id: customer.id,
+                            email: customer.email,
+                            region_id: region.id,
+                            sales_channel_id: sales_channel_id,
+                            created_at: new Date(),
+                            updated_at: new Date(),
+                        })
+                    );
+                    console.log('Cart created:', cart);
+
+                    // Step 6: Add line items to the cart
+                    const lineItems = [];
+                    for (let i = 0; i < products.length; i++) {
+                        const product = products[i];
+                        const variant = variants[i];
+
+                        const lineItem = this.lineItemRepository_.create({
+                            cart_id: cart.id,
+                            title: product.title,
+                            description: product.description,
+                            thumbnail: product.thumbnail,
+                            unit_price: variant.prices?.[0]?.amount || 1000,
+                            quantity: Math.floor(Math.random() * 5) + 1,
+                            currency_code: region.currency_code,
+                            variant_id: variant.id, // Add variant_id here
+                            created_at: new Date(),
+                            updated_at: new Date(),
+                        });
+                        const savedLineItem =
+                            await this.lineItemRepository_.save(lineItem);
+                        lineItems.push(savedLineItem);
+                    }
+                    cart.items = lineItems;
+                    console.log('Line items added to cart:', cart.items);
+
+                    // Step 7: Create an order using the cart and product's store_id
+                    let order: Order = new Order();
+                    order.status = OrderStatus.PENDING;
+                    order.store_id = storeId; // Use store_id directly from the product
+                    order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
+                    order.payment_status = PaymentStatus.AWAITING;
+                    order.sales_channel_id = sales_channel_id;
+                    order.customer_id = customer.id;
+                    order.email = customer.email;
+                    order.cart_id = cart.id;
+                    order.region_id = cart.region_id;
+                    order.currency_code = 'usdt';
+                    order.created_at = new Date(date);
+
+                    order = await this.orderRepository_.save(order);
+                    console.log('Order created successfully:', order);
+
+                    // Step 8: Link line items to the order
+                    order.items = cart.items;
+                    const lineItemPromises = cart.items.map((item) => {
+                        item.order_id = order.id;
+                        return this.lineItemRepository_.save(item);
+                    });
+
+                    await Promise.all(lineItemPromises);
+                    actualOrderCount++;
+
+                    console.log('Line items linked to order:', order.items);
+
+                    orders.push(order); // Add the order to the array
+
+                    console.log(`Order ${i + 1} created successfully:`, order);
                 }
-                cart.items = lineItems;
-                console.log('Line items added to cart:', cart.items);
-
-                // Step 7: Create an order using the cart and product's store_id
-                let order: Order = new Order();
-                order.status = OrderStatus.PENDING;
-                order.store_id = storeId; // Use store_id directly from the product
-                order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
-                order.payment_status = PaymentStatus.AWAITING;
-                order.sales_channel_id = sales_channel_id;
-                order.customer_id = customer.id;
-                order.email = customer.email;
-                order.cart_id = cart.id;
-                order.region_id = cart.region_id;
-                order.currency_code = 'usdt';
-                order.created_at = new Date(date);
-
-                order = await this.orderRepository_.save(order);
-                console.log('Order created successfully:', order);
-
-                // Step 8: Link line items to the order
-                order.items = cart.items;
-                const lineItemPromises = cart.items.map((item) => {
-                    item.order_id = order.id;
-                    return this.lineItemRepository_.save(item);
-                });
-
-                await Promise.all(lineItemPromises);
-
-                console.log('Line items linked to order:', order.items);
-
-                orders.push(order); // Add the order to the array
-
-                console.log(`Order ${i + 1} created successfully:`, order);
             }
 
-            console.log(`${count} mock orders created successfully.`);
+            console.log(
+                `${actualOrderCount} mock orders created successfully.`
+            );
             return orders; // Return all created orders
         } catch (error) {
             console.error('Error during mock order creation:', error.message);

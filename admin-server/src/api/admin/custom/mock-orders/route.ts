@@ -9,25 +9,25 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         req,
         res,
         'POST',
-        '/admin/custom/mock-orders', ['count', 'date', 'store_id']
+        '/admin/custom/mock-orders',
+        ['count', 'date', 'store_id']
     );
 
-
     await handler.handle(async () => {
-        const { count, date, store_id } = handler.inputParams;
+        let { count, date, store_id } = handler.inputParams;
+
+        if (!count) count = 1;
 
         // Validate input parameters
-        if (!count || isNaN(parseInt(count, 10)) || parseInt(count, 10) <= 0) {
+        if (isNaN(parseInt(count, 10)) || parseInt(count, 10) <= 0) {
             return handler.returnStatusWithMessage(400, 'Invalid count');
         }
-        if (!date || isNaN(Date.parse(date))) {
-            return handler.returnStatusWithMessage(400, 'Invalid date');
-        }
-        if (!store_id) {
-            return handler.returnStatusWithMessage(400, 'Invalid store_id');
-        }
 
-        const order = await orderService.createMockOrders(count, date, store_id);
+        const order = await orderService.createMockOrders(
+            count,
+            date,
+            store_id
+        );
         if (order === null)
             return handler.returnStatusWithMessage(
                 404,
