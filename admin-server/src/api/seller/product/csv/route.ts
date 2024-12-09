@@ -39,7 +39,6 @@ const requiredCsvHeadersForProduct = [
     'subtitle',
     'status',
     'thumbnail',
-    'weight',
     'discountable',
     'description',
     'handle',
@@ -133,8 +132,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             variants.push({
                 title: options.map(option => option.value).join(' | '),
                 inventory_quantity: variant.variant_inventory_quantity,
-                allow_backorder: variant.variant_allow_backorder === '1' ? 1 : 0,
-                manage_inventory: variant.variant_manage_inventory === '1' ? 1 : 0,
+                allow_backorder: variant.variant_allow_backorder === '1' ? true : false,
+                manage_inventory: variant.variant_manage_inventory === '1' ? true : false,
                 sku: variant.variant_sku || null,
                 barcode: variant.variant_barcode || null,
                 ean: variant.variant_ean || null,
@@ -428,7 +427,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     requiredCsvHeadersForProduct,
                     requiredCsvHeadersForVariant
                 );
-                console.log('convertCsvDataOutput: ' + JSON.stringify(convertCsvDataOutput));
+                // console.log('convertCsvDataOutput: ' + JSON.stringify(convertCsvDataOutput));
 
                 if (!convertCsvDataOutput.success) {
                     return handler.returnStatus(400, {

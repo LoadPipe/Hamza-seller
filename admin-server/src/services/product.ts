@@ -68,7 +68,6 @@ export type csvProductData = {
     description: string;
     status: ProductStatus; // 'draft' or 'published'
     thumbnail: string;
-    weight: number;
     discountable: string; // '0' or '1'
     handle: string; // must be unique from DB and other rows from csv
     variant: string; // Size[XL] | Color[White] | Gender[Male]
