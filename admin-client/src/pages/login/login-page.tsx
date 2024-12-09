@@ -13,16 +13,18 @@ export default function LoginPage() {
             </nav>
 
             {/* Main Content */}
-            <div className="flex flex-col flex-1 items-center justify-center px-4">
-                <div className="max-w-[1280px] mx-auto text-center space-y-4">
-                    <h1 className="text-5xl font-bold">
+
+            <div className="flex flex-col max-w-[1280px] w-[100%] mx-auto ">
+                <div className="flex flex-col max-w-[553px]  gap-4 mt-40 ">
+                    <h1 className="text-7xl font-bold text-left">
                         Sell Your Products{' '}
                         <span className="text-green-500">with Ease</span> on
                         Hamza
                     </h1>
-                    <p className="text-lg text-gray-300">
+                    <p className="text-2xl text-gray-300 text-left pr-20">
                         Reach more customers and grow your business today.
                     </p>
+                    <WalletConnect />
                 </div>
             </div>
         </div>
