@@ -13,9 +13,11 @@ import { ShieldQuestion } from 'lucide-react';
 import { releaseOrderEscrow } from '@/utils/order-escrow.ts';
 
 export function ReleaseEscrow() {
-    const { isOpen, orderId } = useStore(orderEscrowStore);
+    const { isOpen, order } = useStore(orderEscrowStore);
 
-    if (!isOpen || !orderId) return null;
+    if (!isOpen || !order) return null;
+
+    console.log(`WTF DOES ORDER HAVE PAYMNET??? ${JSON.stringify(order)}`)
 
     return (
         <Dialog open={isOpen} onOpenChange={closeOrderEscrowDialog} >
@@ -27,7 +29,7 @@ export function ReleaseEscrow() {
                     <DialogTitle className='text-center pb-[32px]'>Confirm Refund Request</DialogTitle>
                     <DialogDescription className='text-center text-white'>
                         Are you sure you want to request a refund for order{' '}
-                        <strong>{orderId}</strong>? Refund requests will be reviewed based
+                        <strong>{order.id}</strong>? Refund requests will be reviewed based
                         on our refund policy.
                     </DialogDescription>
                 </DialogHeader>
@@ -40,8 +42,8 @@ export function ReleaseEscrow() {
                     <Button
                         className="bg-primary-purple-90 rounded-[53px] w-[200px] h-[52px] hover:bg-primary-green-900"
                         onClick={() => {
-                            console.log(`Refund requested for order ID: ${orderId}`);
-                            releaseOrderEscrow(orderId);
+                            console.log(`Refund requested for order ID: ${order}`);
+                            releaseOrderEscrow(order);
                             closeOrderEscrowDialog();
                         }}
                     >

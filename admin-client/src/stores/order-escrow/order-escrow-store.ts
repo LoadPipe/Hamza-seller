@@ -3,15 +3,15 @@ import { Store } from '@tanstack/store';
 // Initialize the store with the default state
 export const orderEscrowStore = new Store({
     isOpen: false,
-    orderId: null as string | null,
+    order: null as any | null,
 });
 
 // Open the escrow dialog and set the orderId
-export const openOrderEscrowDialog = (orderId: string) => {
+export const openOrderEscrowDialog = (order: any) => {
     orderEscrowStore.setState((state) => ({
         ...state,
         isOpen: true,
-        orderId,
+        order,
     }));
 };
 
@@ -20,15 +20,15 @@ export const closeOrderEscrowDialog = () => {
     orderEscrowStore.setState((state) => ({
         ...state,
         isOpen: false,
-        orderId: null,
+        order: null,
     }));
 };
 
 // Toggle the escrow dialog's open/closed state
-export const toggleOrderEscrowDialog = (orderId: string | null = null) => {
+export const toggleOrderEscrowDialog = (order: any | null = null) => {
     orderEscrowStore.setState((state) => ({
         ...state,
         isOpen: !state.isOpen,
-        orderId: state.isOpen ? null : orderId, // Maintain orderId when toggling open
+        order: state.isOpen ? null : order, // Maintain order when toggling open
     }));
 };

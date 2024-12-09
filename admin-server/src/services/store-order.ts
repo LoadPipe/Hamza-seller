@@ -90,7 +90,7 @@ export default class StoreOrderService extends TransactionBaseService {
         filter: FilterOrders,
         sort: any,
         page: number,
-        ordersPerPage: number
+        ordersPerPage: number,
     ): Promise<StoreOrdersDTO> {
         //basic query is store id
         const where = { store_id: storeId };
@@ -120,15 +120,15 @@ export default class StoreOrderService extends TransactionBaseService {
                 if (filter.created_at.gte && filter.created_at.lte) {
                     where['created_at'] = Between(
                         new Date(filter.created_at.gte),
-                        new Date(filter.created_at.lte)
+                        new Date(filter.created_at.lte),
                     );
                 } else if (filter.created_at.gte) {
                     where['created_at'] = MoreThanOrEqual(
-                        new Date(filter.created_at.gte)
+                        new Date(filter.created_at.gte),
                     );
                 } else if (filter.created_at.lte) {
                     where['created_at'] = LessThanOrEqual(
-                        new Date(filter.created_at.lte)
+                        new Date(filter.created_at.lte),
                     );
                 }
             }
@@ -181,8 +181,8 @@ export default class StoreOrderService extends TransactionBaseService {
                 sort.field !== 'customer' &&
                 sort.field !== 'payments'
                     ? {
-                          [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
-                      }
+                        [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
+                    }
                     : undefined,
             relations: ['customer'], // Fetch related payments and customers
         };
@@ -196,7 +196,7 @@ export default class StoreOrderService extends TransactionBaseService {
                     relations: ['payments'],
                 });
                 return { ...order, payments: payments?.payments || [] };
-            })
+            }),
         );
 
         if (sort?.field === 'customer') {
@@ -243,7 +243,7 @@ export default class StoreOrderService extends TransactionBaseService {
     async changeOrderStatus(
         orderId: string,
         newStatus: string,
-        note?: Record<string, any>
+        note?: Record<string, any>,
     ) {
         try {
             const order = await this.orderRepository_.findOne({
@@ -255,7 +255,7 @@ export default class StoreOrderService extends TransactionBaseService {
             }
 
             const mappedStatus = Object.values(OrderStatus).find(
-                (status) => status === newStatus
+                (status) => status === newStatus,
             );
 
             if (!mappedStatus) {
@@ -274,7 +274,7 @@ export default class StoreOrderService extends TransactionBaseService {
             return order;
         } catch (error) {
             this.logger.error(
-                `Failed to update order status for order ${orderId}: ${error.message}`
+                `Failed to update order status for order ${orderId}: ${error.message}`,
             );
             throw error;
         }
@@ -302,7 +302,7 @@ export default class StoreOrderService extends TransactionBaseService {
             return order;
         } catch (error) {
             this.logger.error(
-                `Failed to fetch order details for order ${orderId}: ${error.message}`
+                `Failed to fetch order details for order ${orderId}: ${error.message}`,
             );
             throw error;
         }

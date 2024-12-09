@@ -57,6 +57,12 @@ export const OrderSchema = z.object({
                 amount: z.number(),
                 provider_id: z.string(),
                 created_at: z.string(),
+                blockchain_data: z.object({
+                    chain_id: z.number(),
+                    payer_address: z.string(),
+                    escrow_address: z.string(),
+                    transaction_id: z.string(),
+                }),
             }),
         )
         .optional(), // Add payments as an optional array
@@ -389,7 +395,6 @@ export const generateColumns = (
                         const order = row.original;
 
                         return (
-                            <>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
@@ -425,17 +430,12 @@ export const generateColumns = (
                                             View order details
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                            onClick={() => openOrderEscrowDialog(order.id)}
+                                            onClick={() => openOrderEscrowDialog(order)}
                                         >
                                             Release Escrow
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
-                                {/*<ReleaseEscrow*/}
-                                {/*    isOpen={isDialogOpen}*/}
-                                {/*    onClose={() => setDialogOpen(false)}*/}
-                                {/*    orderId={order.id}/>*/}
-                            </>
                         );
                     },
                 };
