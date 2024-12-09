@@ -13,7 +13,7 @@ import { SortingState } from '@tanstack/react-table';
 import { saveStatusCountToStorage } from '@/stores/order-filter/order-filter-store';
 import { useNavigate } from '@tanstack/react-router';
 import { setFilter } from '@/stores/order-filter/order-filter-store.ts';
-
+import { ReleaseEscrow } from '@/components/orders/release-escrow.tsx';
 type Order = z.infer<typeof OrderSchema>;
 
 async function getSellerOrders(
@@ -136,6 +136,7 @@ export default function OrdersPage() {
                 sorting={sorting}
                 setSorting={setSorting}
             />
+            <ReleaseEscrow/>
         </>
     );
 }
