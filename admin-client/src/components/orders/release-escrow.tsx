@@ -10,6 +10,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ShieldQuestion } from 'lucide-react';
+import { releaseOrderEscrow } from '@/utils/order-escrow.ts';
 
 export function ReleaseEscrow() {
     const { isOpen, orderId } = useStore(orderEscrowStore);
@@ -40,6 +41,7 @@ export function ReleaseEscrow() {
                         className="bg-primary-purple-90 rounded-[53px] w-[200px] h-[52px] hover:bg-primary-green-900"
                         onClick={() => {
                             console.log(`Refund requested for order ID: ${orderId}`);
+                            releaseOrderEscrow(orderId);
                             closeOrderEscrowDialog();
                         }}
                     >
