@@ -15,8 +15,7 @@ import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import LoginPage from '@/pages/login/login-page.tsx';
 
 export function RainbowWrapper({ children }: { children: React.ReactNode }) {
-    const { authData, setCustomerAuthData, setWalletAddress, walletAddress } =
-        useCustomerAuthStore();
+    const { authData, setCustomerAuthData } = useCustomerAuthStore();
 
     const walletSignature = createAuthenticationAdapter({
         getNonce: async () => {

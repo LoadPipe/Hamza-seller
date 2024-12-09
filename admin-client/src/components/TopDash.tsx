@@ -1,7 +1,6 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { BellRing } from 'lucide-react';
 import { WalletConnect } from './wallet-connect/WalletConnect';
-import { useEffect, useState } from 'react';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
@@ -9,12 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 const TopDash = () => {
     const { authData } = useCustomerAuthStore();
 
-    const {
-        data: storeName,
-        isLoading,
-        isError,
-        error,
-    } = useQuery({
+    const { data: storeName } = useQuery({
         queryKey: ['store', authData],
         queryFn: async () => {
             const url = `http://localhost:9000/seller/store/name?wallet_address=${authData.wallet_address}`;
