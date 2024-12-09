@@ -10,9 +10,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     ]);
 
     await handler.handle(async () => {
-        if (!handler.inputParams.owner_id) {
+        if (!handler.inputParams.wallet_address) {
             return handler.returnStatus(400, {
-                error: "Missing 'owner_id' parameter",
+                error: "Missing 'wallet_address' parameter",
             });
         }
 
