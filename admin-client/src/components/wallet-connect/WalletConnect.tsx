@@ -37,6 +37,8 @@ export const WalletConnect = () => {
                             if (!connected) {
                                 return (
                                     <button
+                                        style={{ height: '45px' }}
+                                        className="bg-[#94D42A] text-black font-semibold rounded-full"
                                         onClick={openConnectModal}
                                         type="button"
                                     >
