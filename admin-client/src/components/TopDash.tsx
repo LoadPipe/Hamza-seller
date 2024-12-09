@@ -1,8 +1,17 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { BellRing } from 'lucide-react';
 import { WalletConnect } from './wallet-connect/WalletConnect';
+import { useEffect } from 'react';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 
 const TopDash = () => {
+    const { authData } = useCustomerAuthStore();
+    useEffect(() => {
+        if (authData.status === 'authenticated') {
+        }
+        return () => {};
+    }, [authData.status]);
+
     return (
         <div className="flex flex-col text-white">
             {/* Top Navigation */}

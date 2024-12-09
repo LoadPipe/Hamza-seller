@@ -11,7 +11,7 @@ import { UpdateStoreInput as MedusaUpdateStoreInput } from '@medusajs/medusa/dis
 import { UpdateProductInput as MedusaUpdateProductInput } from '@medusajs/medusa/dist/types/product';
 import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 import { createLogger, ILogger } from '../utils/logging/logger';
-import { IsNull, Not } from 'typeorm';
+import { Equal, IsNull, Not } from 'typeorm';
 import UserRepository from 'src/repositories/user';
 
 type UpdateStoreInput = MedusaUpdateStoreInput & {
@@ -22,6 +22,11 @@ type UpdateStoreInput = MedusaUpdateStoreInput & {
 type UpdateProductInput = MedusaUpdateProductInput & {
     store_id?: string;
 };
+
+export enum UserRoles {
+    ADMIN = 'admin',
+    MEMBER = 'member',
+}
 
 class StoreService extends MedusaStoreService {
     static LIFE_TIME = Lifetime.SCOPED;
@@ -81,6 +86,22 @@ class StoreService extends MedusaStoreService {
         const stores = await this.storeRepository_.find({
             select: ['name'],
             where: { owner_id: Not(IsNull()) },
+        });
+        return stores.map((store) => store.name);
+    }
+
+    async getStoreNamesByOwnerId(wallet_address: string) {
+        const userId = await this.userRepository_.find({
+            select: ['id'],
+            where: {
+                wallet_address: wallet_address,
+                role: Equal(UserRoles.ADMIN),
+            },
+        });
+
+        const stores = await this.storeRepository_.find({
+            select: ['name'],
+            where: { owner_id: userId[0].id },
         });
         return stores.map((store) => store.name);
     }
