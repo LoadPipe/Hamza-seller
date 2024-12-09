@@ -1,3 +1,8 @@
+import {
+    deleteJwtCookie,
+    getJwtStoreId,
+    getJwtWalletAddress,
+} from '@/utils/authentication';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export const WalletConnect = () => {
@@ -34,6 +39,27 @@ export const WalletConnect = () => {
                         })}
                     >
                         {(() => {
+                            //check whether or not wallet is connected
+                            if (ready && !connected) {
+                                //deleteJwtCookie();
+                            } else {
+                                if (ready) {
+                                    //if wallet connected, check whether jwt cookie matches wallet address
+                                    const cookieAddress = getJwtWalletAddress();
+                                    if (
+                                        !cookieAddress?.trim()?.length ||
+                                        account?.address
+                                            ?.trim()
+                                            ?.toLowerCase() !=
+                                            cookieAddress?.trim()?.toLowerCase()
+                                    ) {
+                                        console.log(getJwtStoreId());
+                                        //disconnect wallet
+                                        console.log('DISCONNECT WALLET');
+                                    }
+                                }
+                            }
+
                             if (!connected) {
                                 return (
                                     <button
@@ -54,6 +80,7 @@ export const WalletConnect = () => {
                                     </button>
                                 );
                             }
+
                             return (
                                 <div style={{ display: 'flex', gap: 12 }}>
                                     <button

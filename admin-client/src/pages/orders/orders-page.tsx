@@ -5,7 +5,7 @@ import { z } from 'zod';
 import React from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
-import { getJwtField } from '@/utils/authentication';
+import { getJwtField, getJwtStoreId } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
 import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 import { useStore } from '@tanstack/react-store';
@@ -32,13 +32,12 @@ async function getSellerOrders(
             : { field: 'created_at', direction: 'ASC' };
 
         const response = await postSecure('/seller/order', {
-            store_id: getJwtField('store_id'),
+            store_id: getJwtStoreId(),
             page: pageIndex,
             count: pageSize,
             filter: filters, // Add filters here
             sort: sort,
         });
-        console.log(`STORE_ID ${response.store_id}`);
 
         // SS orders: object => typecast: object ...
         const data: object = response.orders as object;
