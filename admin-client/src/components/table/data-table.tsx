@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton"
 import * as React from 'react';
 import {
     ColumnDef,
@@ -64,6 +65,7 @@ export function DataTable<TData, TValue>({
     totalRecords,
     sorting,
     setSorting,
+    isLoading,
 }: DataTableProps<TData, TValue> & {
     pageIndex: number;
     pageSize: number;
@@ -72,6 +74,7 @@ export function DataTable<TData, TValue>({
     totalRecords: number;
     sorting: SortingState;
     setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
+    isLoading: boolean;
 }) {
     // const { setSort } = useSortStore();
     const [columnFilters, setColumnFilters] =
@@ -378,7 +381,19 @@ export function DataTable<TData, TValue>({
                             ))}
                         </TableHeader>
                         <TableBody>
-                            {table.getRowModel().rows?.length ? (
+                            {isLoading ? (
+                                    // Render Skeleton Rows
+                                    [...Array(pageSize)].map((_, idx) => (
+                                        <TableRow key={idx}>
+                                            {columns.map((col) => (
+                                                <TableCell key={col.id}>
+                                                    <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))
+                                ) :
+                                table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
                                     <TableRow
                                         key={row.id}
