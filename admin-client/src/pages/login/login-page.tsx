@@ -15,7 +15,7 @@ export default function LoginPage() {
             {/* Main Content */}
 
             <div className="flex flex-col max-w-[1280px] w-[100%] mx-auto ">
-                <div className="flex flex-col max-w-[553px]  gap-8 mt-40 ">
+                <div className="flex flex-col max-w-[553px] gap-8 mt-40 ">
                     <h1 className="text-7xl font-bold text-left leading-[80px]">
                         Sell Your Products{' '}
                         <span className="text-green-500">with Ease</span> on
