@@ -1,4 +1,3 @@
-import { Skeleton } from "@/components/ui/skeleton"
 import * as React from 'react';
 import {
     ColumnDef,
@@ -382,7 +381,6 @@ export function DataTable<TData, TValue>({
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
-                                    // Render Skeleton Rows
                                     [...Array(pageSize)].map((_, idx) => (
                                         <TableRow key={idx}>
                                             {columns.map((col) => (
