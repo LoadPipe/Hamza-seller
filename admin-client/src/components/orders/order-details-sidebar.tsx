@@ -83,9 +83,6 @@ export function OrderDetailsSidebar() {
                 description:
                     error?.response?.data?.message ||
                     'Failed to update status.',
-                action: (
-                    <ToastAction altText="Try again">Try again</ToastAction>
-                ),
             });
         },
     });
