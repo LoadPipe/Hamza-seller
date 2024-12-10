@@ -13,7 +13,7 @@ import Item from '@/components/orders/item';
 import Payment from '@/components/orders/payment';
 import Refund from '@/components/orders/refund';
 import { X } from 'lucide-react';
-import { useQuery, useMutation, QueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     formatStatus,
     formatDate,
@@ -30,7 +30,7 @@ export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
     const { toast } = useToast();
-    const queryClient = new QueryClient();
+    const queryClient = useQueryClient();
     const {
         data: orderDetails,
         isLoading,
@@ -84,7 +84,12 @@ export function OrderDetailsSidebar() {
             }),
         onSuccess: () => {
             console.log(`WOW SUCCESS?`);
-            queryClient.invalidateQueries(['orderDetails', orderId]);
+            // invalidate papa
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+
+            // queryClient.invalidateQueries({
+            //     queryKey: ['orderDetails', orderId],
+            // });
             toast({
                 variant: 'default',
                 title: 'Success!',
