@@ -39,11 +39,11 @@ export const WalletConnect = () => {
                         })}
                     >
                         {(() => {
-                            //check whether or not wallet is connected
-                            if (ready && !connected) {
-                                //deleteJwtCookie();
-                            } else {
-                                if (ready) {
+                            if (ready) {
+                                //check whether or not wallet is connected
+                                if (!connected) {
+                                    //openConnectModal();
+                                } else {
                                     //if wallet connected, check whether jwt cookie matches wallet address
                                     const cookieAddress = getJwtWalletAddress();
                                     if (
@@ -53,9 +53,8 @@ export const WalletConnect = () => {
                                             ?.toLowerCase() !=
                                             cookieAddress?.trim()?.toLowerCase()
                                     ) {
-                                        console.log(getJwtStoreId());
+                                        deleteJwtCookie();
                                         //disconnect wallet
-                                        console.log('DISCONNECT WALLET');
                                     }
                                 }
                             }
