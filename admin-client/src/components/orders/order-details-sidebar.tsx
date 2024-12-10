@@ -83,13 +83,11 @@ export function OrderDetailsSidebar() {
                 status: newStatus,
             }),
         onSuccess: () => {
-            console.log(`WOW SUCCESS?`);
-            // invalidate papa
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
-
             queryClient.invalidateQueries({
                 queryKey: ['orderDetails', orderId],
             });
+            // invalidate papa
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
             toast({
                 variant: 'default',
                 title: 'Success!',

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     clearAllFilters,
     setFilter,
@@ -67,18 +67,10 @@ const OrderTabs = ({
 }: {
     setPageIndex: (pageIndex: number) => void;
 }) => {
-    const [statusCounts, setStatusCounts] = useState<Record<string, number>>({
-        all: 0,
-        processing: 0,
-        shipped: 0,
-        delivered: 0,
-        cancelled: 0,
-        refunded: 0,
-    });
     const { filters } = useStore(filterStore); // Subscribe to filterStore
 
-    console.log(`$$$ WHY ARE YOU GAY`);
     const { statusCounts: storeStatusCounts } = useStore(orderCountStore);
+
     const getActiveTab = () => {
         for (const tab of tabs) {
             if (!tab.filters) continue; // Skip "All Orders" as it has no specific filters
@@ -98,13 +90,7 @@ const OrderTabs = ({
         return 'all'; // Default to "All Orders" if no filters match
     };
 
-    const activeTab = getActiveTab(); // Calculate active tab dynamically
-
-    useEffect(() => {
-        // Load the status counts from local storage
-        const loadedCounts = loadStatusCountFromStorage();
-        setStatusCounts(loadedCounts);
-    }, [storeStatusCounts]);
+    const activeTab = useMemo(() => getActiveTab(), [filters]);
 
     const handleTabChange = (tabKey: string) => {
         console.log(`Selected Tab: ${tabKey}`);
@@ -151,7 +137,7 @@ const OrderTabs = ({
                                     : 'bg-primary-black-70 text-white'
                             }`}
                         >
-                            {statusCounts[tab.key] ?? 0}
+                            {storeStatusCounts[tab.key] ?? 0}
                         </span>
                     </button>
                 ))}
