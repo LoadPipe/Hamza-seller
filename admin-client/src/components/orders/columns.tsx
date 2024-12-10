@@ -55,6 +55,7 @@ export const OrderSchema = z.object({
             z.object({
                 id: z.string(),
                 amount: z.number(),
+                currency_code: z.string(),
                 provider_id: z.string(),
                 created_at: z.string(),
             })
@@ -338,10 +339,10 @@ export const generateColumns = (
                         if (!payments || payments.length === 0) {
                             return <div>--</div>; // No payments available
                         }
-                        const formatted = formatCryptoPrice(
-                            payments[0].amount,
-                            payments[0].currency_code
-                        );
+                        const formatted = `${formatCryptoPrice(
+                            payments[0]?.amount,
+                            payments[0]?.currency_code
+                        )} ${payments[0]?.currency_code?.toUpperCase()}`;
 
                         return <div className="font-medium">{formatted}</div>;
                     },
