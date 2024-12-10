@@ -58,7 +58,6 @@ const tabs = [
         filters: {
             payment_status: ['refunded'],
             fulfillment_status: ['canceled'],
-            x,
         },
     },
 ];
