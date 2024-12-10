@@ -1,12 +1,15 @@
 import { Store } from '@tanstack/store';
-type StatusCount = {
+
+export type StatusCount = {
     all: number;
     processing: number;
     shipped: number;
     delivered: number;
     cancelled: number;
     refunded: number;
+    [key: string]: number;
 };
+
 // Local storage key for persisting filters
 const LOCAL_STORAGE_KEY = 'filter_store';
 const STATUS_COUNT_KEY = 'status_count_store';
@@ -46,6 +49,18 @@ export const saveStatusCountToStorage = (statusCount: StatusCount) => {
 export const filterStore = new Store({
     filters: loadFiltersFromStorage(), // Initialize filters from local storage
 });
+
+export const orderCountStore = new Store({
+    statusCounts: loadStatusCountFromStorage(),
+});
+
+// Update `statusCounts` in the store && localStorage
+export const updateStatusCount = (newStatusCounts: StatusCount) => {
+    orderCountStore.setState((state) => {
+        saveStatusCountToStorage(newStatusCounts);
+        return { ...state, statusCounts: newStatusCounts };
+    });
+};
 
 // Function to set or update a filter
 export const setFilter = (key: string, value: any) => {
