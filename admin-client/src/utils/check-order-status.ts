@@ -1,6 +1,29 @@
-type FulfillmentStatusType = 'not_fulfilled' | 'shipped' | 'fulfilled';
-type OrderStatusType = 'pending' | 'completed' | 'canceled';
-type PaymentStatusType = 'refunded';
+type FulfillmentStatusType =
+    | 'not_fulfilled'
+    | 'partially_fulfilled'
+    | 'fulfilled'
+    | 'partially_shipped'
+    | 'shipped'
+    | 'partially_returned'
+    | 'returned'
+    | 'canceled'
+    | 'requires_action';
+
+type PaymentStatusType =
+    | 'not_paid'
+    | 'awaiting'
+    | 'captured'
+    | 'partially_refunded'
+    | 'refunded'
+    | 'canceled'
+    | 'requires_action';
+
+type OrderStatusType =
+    | 'pending'
+    | 'completed'
+    | 'archived'
+    | 'canceled'
+    | 'requires_action';
 
 export function getOrderStatusName(
     fulfillmentStatus: FulfillmentStatusType,
@@ -15,12 +38,12 @@ export function getOrderStatusName(
         return 'Shipped';
     }
 
-    if (fulfillmentStatus === 'fulfilled' && orderStatus === 'completed') {
-        return 'Delivered';
+    if (orderStatus === 'canceled' && fulfillmentStatus === 'canceled') {
+        return 'Cancelled';
     }
 
-    if (orderStatus === 'canceled') {
-        return 'Cancelled';
+    if (fulfillmentStatus === 'fulfilled' && orderStatus === 'completed') {
+        return 'Delivered';
     }
 
     if (paymentStatus === 'refunded') {

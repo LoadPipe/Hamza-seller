@@ -13,7 +13,7 @@ import Item from '@/components/orders/item';
 import Payment from '@/components/orders/payment';
 import Refund from '@/components/orders/refund';
 import { X } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, QueryClient } from '@tanstack/react-query';
 import {
     formatStatus,
     formatDate,
@@ -24,13 +24,13 @@ import { getSecure, putSecure } from '@/utils/api-calls';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { getOrderStatusName } from '@/utils/check-order-status.ts';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
     const { toast } = useToast();
-
+    const queryClient = new QueryClient();
     const {
         data: orderDetails,
         isLoading,
@@ -58,6 +58,23 @@ export function OrderDetailsSidebar() {
             orderDetails?.payment_status
         )
     );
+    useEffect(() => {
+        if (
+            orderDetails?.fulfillment_status &&
+            orderDetails?.status &&
+            orderDetails?.payment_status
+        ) {
+            setSelectedStatus(
+                getOrderStatusName(
+                    orderDetails.fulfillment_status,
+                    orderDetails.status,
+                    orderDetails.payment_status
+                )
+            );
+        }
+    }, [orderDetails]);
+
+    console.log(`STATUS IS ${selectedStatus}`);
 
     const mutation = useMutation({
         mutationFn: async (newStatus: string) =>
@@ -67,7 +84,7 @@ export function OrderDetailsSidebar() {
             }),
         onSuccess: () => {
             console.log(`WOW SUCCESS?`);
-            // queryClient.invalidateQueries(['orderDetails', orderId]);
+            queryClient.invalidateQueries(['orderDetails', orderId]);
             toast({
                 variant: 'default',
                 title: 'Success!',
@@ -172,25 +189,31 @@ export function OrderDetailsSidebar() {
                                     <span className="text-primary-black-60 text-sm leading-relaxed">
                                         STATUS
                                     </span>
-                                    <select
-                                        className="text-white bg-primary-black-85 rounded-md p-2"
-                                        value={selectedStatus}
-                                        onChange={handleStatusChange}
-                                    >
-                                        <option value="processing">
-                                            Processing
-                                        </option>
-                                        <option value="shipped">Shipped</option>
-                                        <option value="delivered">
-                                            Delivered
-                                        </option>
-                                        <option value="cancelled">
-                                            Cancelled
-                                        </option>
-                                        <option value="refunded">
-                                            Refunded
-                                        </option>
-                                    </select>
+                                    {selectedStatus ? (
+                                        <select
+                                            className="text-white bg-primary-black-85 rounded-md p-2"
+                                            value={selectedStatus}
+                                            onChange={handleStatusChange}
+                                        >
+                                            <option value="Processing">
+                                                Processing
+                                            </option>
+                                            <option value="Shipped">
+                                                Shipped
+                                            </option>
+                                            <option value="Delivered">
+                                                Delivered
+                                            </option>
+                                            <option value="Cancelled">
+                                                Cancelled
+                                            </option>
+                                            <option value="Refunded">
+                                                Refunded
+                                            </option>
+                                        </select>
+                                    ) : (
+                                        <div>Loading status...</div>
+                                    )}
                                 </div>
                             </div>
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />

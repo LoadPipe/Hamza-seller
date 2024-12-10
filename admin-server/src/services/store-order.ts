@@ -152,6 +152,7 @@ export default class StoreOrderService extends TransactionBaseService {
                 where: {
                     store_id: storeId,
                     fulfillment_status: FulfillmentStatus.SHIPPED,
+                    payment_status: PaymentStatus.CAPTURED,
                 },
             }),
             delivered: await this.orderRepository_.count({
@@ -162,12 +163,17 @@ export default class StoreOrderService extends TransactionBaseService {
                 },
             }),
             cancelled: await this.orderRepository_.count({
-                where: { store_id: storeId, status: OrderStatus.CANCELED },
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.CANCELED,
+                    fulfillment_status: FulfillmentStatus.CANCELED,
+                },
             }),
             refunded: await this.orderRepository_.count({
                 where: {
                     store_id: storeId,
                     payment_status: PaymentStatus.REFUNDED,
+                    fulfillment_status: FulfillmentStatus.CANCELED,
                 },
             }),
         };
@@ -274,6 +280,7 @@ export default class StoreOrderService extends TransactionBaseService {
 
                 case 'shipped':
                     order.fulfillment_status = FulfillmentStatus.SHIPPED;
+                    order.payment_status = PaymentStatus.CAPTURED;
                     break;
 
                 case 'delivered':
@@ -283,10 +290,14 @@ export default class StoreOrderService extends TransactionBaseService {
 
                 case 'cancelled':
                     order.status = OrderStatus.CANCELED;
+                    order.fulfillment_status = FulfillmentStatus.CANCELED;
                     break;
 
                 case 'refunded':
                     order.payment_status = PaymentStatus.REFUNDED;
+                    // either canceled or returned...
+                    order.fulfillment_status = FulfillmentStatus.CANCELED;
+                    // order.status = OrderStatus.RETURNED;
                     break;
 
                 default:
