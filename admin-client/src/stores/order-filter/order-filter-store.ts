@@ -1,12 +1,13 @@
 import { Store } from '@tanstack/store';
 
-type StatusCount = {
+export type StatusCount = {
     all: number;
     processing: number;
     shipped: number;
     delivered: number;
     cancelled: number;
     refunded: number;
+    [key: string]: number;
 };
 
 // Local storage key for persisting filters

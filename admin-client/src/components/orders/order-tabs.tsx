@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
     clearAllFilters,
     setFilter,
     clearFilter,
-    loadStatusCountFromStorage,
     filterStore,
     orderCountStore,
+    StatusCount,
 } from '@/stores/order-filter/order-filter-store';
 import { useStore } from '@tanstack/react-store';
 
@@ -69,7 +69,9 @@ const OrderTabs = ({
 }) => {
     const { filters } = useStore(filterStore); // Subscribe to filterStore
 
-    const { statusCounts: storeStatusCounts } = useStore(orderCountStore);
+    const { statusCounts: storeStatusCounts } = useStore<{
+        statusCounts: StatusCount;
+    }>(orderCountStore);
 
     const getActiveTab = () => {
         for (const tab of tabs) {
