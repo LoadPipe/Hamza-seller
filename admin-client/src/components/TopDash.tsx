@@ -4,6 +4,7 @@ import { WalletConnect } from './wallet-connect/WalletConnect';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
+import { getSecure } from '@/utils/api-calls';
 
 const TopDash = () => {
     const { authData } = useCustomerAuthStore();
@@ -11,12 +12,11 @@ const TopDash = () => {
     const { data: storeName } = useQuery({
         queryKey: ['store', authData],
         queryFn: async () => {
-            const url = `http://localhost:9000/seller/store/name?wallet_address=${authData.wallet_address}`;
-            const response = await axios.get(url);
-            console.log(response);
-            return response.data;
+            return await getSecure('/seller/store/name', {
+                wallet_address: authData.wallet_address,
+            });
         },
-        enabled: !!authData.wallet_address, // Query only runs if wallet_address is truthy
+        enabled: !!authData.wallet_address,
     });
 
     console.log('store name', authData.wallet_address);
