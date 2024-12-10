@@ -1,9 +1,6 @@
-import {
-    deleteJwtCookie,
-    getJwtStoreId,
-    getJwtWalletAddress,
-} from '@/utils/authentication';
+import { deleteJwtCookie, getJwtWalletAddress } from '@/utils/authentication';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useDisconnect } from 'wagmi';
 
 export const WalletConnect = () => {
     return (
@@ -54,7 +51,7 @@ export const WalletConnect = () => {
                                             cookieAddress?.trim()?.toLowerCase()
                                     ) {
                                         deleteJwtCookie();
-                                        //disconnect wallet
+                                        openAccountModal();
                                     }
                                 }
                             }
