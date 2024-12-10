@@ -24,8 +24,6 @@ import { getSecure, putSecure } from '@/utils/api-calls';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { getOrderStatusName } from '@/utils/check-order-status.ts';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { ToastAction } from '@/components/ui/toast';
 import { useState } from 'react';
 
 export function OrderDetailsSidebar() {
@@ -69,12 +67,13 @@ export function OrderDetailsSidebar() {
                 status: newStatus,
             }),
         onSuccess: () => {
+            console.log(`WOW SUCCESS?`);
+            // queryClient.invalidateQueries(['orderDetails', orderId]);
             toast({
                 variant: 'default',
                 title: 'Success!',
                 description: 'Order status updated successfully.',
             });
-            queryClient.invalidateQueries(['orderDetails', orderId]);
         },
         onError: (error: any) => {
             toast({
