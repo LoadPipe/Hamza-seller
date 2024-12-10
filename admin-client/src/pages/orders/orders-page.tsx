@@ -23,7 +23,6 @@ async function getSellerOrders(
     sorting: SortingState = []
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
-        console.log('sorting inside call', sorting);
         const sort = sorting[0]
             ? {
                   field: sorting[0].id,
@@ -38,13 +37,11 @@ async function getSellerOrders(
             filter: filters, // Add filters here
             sort: sort,
         });
-        console.log(`STORE_ID ${response.store_id}`);
 
         // SS orders: object => typecast: object ...
         const data: object = response.orders as object;
         // SS totalRecords: string => typecast: number...
         const totalRecords: number = response.totalRecords as number;
-        console.log(`TOTAL RECORDS: ${response.statusCount}`);
         saveStatusCountToStorage(response.statusCount);
         return {
             orders: OrderSchema.array().parse(data), // Validate using Zod

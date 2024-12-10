@@ -17,7 +17,6 @@ export function ReleaseEscrow() {
 
     if (!isOpen || !order) return null;
 
-    console.log(`WTF DOES ORDER HAVE PAYMNET??? ${JSON.stringify(order)}`)
 
     return (
         <Dialog open={isOpen} onOpenChange={closeOrderEscrowDialog} >
@@ -42,7 +41,7 @@ export function ReleaseEscrow() {
                     <Button
                         className="bg-primary-purple-90 rounded-[53px] w-[200px] h-[52px] hover:bg-primary-green-900"
                         onClick={() => {
-                            console.log(`Refund requested for order ID: ${order}`);
+                            // console.log(`Refund requested for order ID: ${order}`);
                             releaseOrderEscrow(order);
                             closeOrderEscrowDialog();
                         }}
