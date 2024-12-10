@@ -13,19 +13,27 @@ import Item from '@/components/orders/item';
 import Payment from '@/components/orders/payment';
 import Refund from '@/components/orders/refund';
 import { X } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     formatStatus,
     formatDate,
     customerName,
     formatShippingAddress,
 } from '@/utils/format-data.ts';
-import { getSecure } from '@/utils/api-calls';
+import { getSecure, putSecure } from '@/utils/api-calls';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
+import { getOrderStatusName } from '@/utils/check-order-status.ts';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { ToastAction } from '@/components/ui/toast';
+import { useState } from 'react';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+
     const {
         data: orderDetails,
         isLoading,
@@ -45,8 +53,53 @@ export function OrderDetailsSidebar() {
         retry: 1, // Optional: Limit retries to avoid overloading the API
         staleTime: 5 * 60 * 1000, // Optional: Cache data for 5 minutes
     });
+
+    const [selectedStatus, setSelectedStatus] = useState(() =>
+        getOrderStatusName(
+            orderDetails?.fulfillment_status,
+            orderDetails?.status,
+            orderDetails?.payment_status
+        )
+    );
+
+    const mutation = useMutation({
+        mutationFn: async (newStatus: string) =>
+            await putSecure('/seller/order/status', {
+                order_id: orderId,
+                status: newStatus,
+            }),
+        onSuccess: () => {
+            toast({
+                variant: 'default',
+                title: 'Success!',
+                description: 'Order status updated successfully.',
+            });
+            queryClient.invalidateQueries(['orderDetails', orderId]);
+        },
+        onError: (error: any) => {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description:
+                    error?.response?.data?.message ||
+                    'Failed to update status.',
+                action: (
+                    <ToastAction altText="Try again">Try again</ToastAction>
+                ),
+            });
+        },
+    });
+
     // Conditionally render the sidebar only when it's open
     if (!isSidebarOpen) return null;
+
+    const handleStatusChange = (
+        event: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+        const newStatus = event.target.value;
+        setSelectedStatus(newStatus);
+        mutation.mutate(newStatus);
+    };
 
     const statusDetails = orderDetails && {
         status: orderDetails.status,
@@ -63,7 +116,6 @@ export function OrderDetailsSidebar() {
         },
         0 // Initial accumulator value
     );
-    console.log(`WTF ${totalPrice}`);
     return (
         <div>
             <Sidebar
@@ -125,11 +177,25 @@ export function OrderDetailsSidebar() {
                                     <span className="text-primary-black-60 text-sm leading-relaxed">
                                         STATUS
                                     </span>
-                                    <span className="text-white text-md">
-                                        {formatStatus(
-                                            orderDetails?.fulfillment_status
-                                        )}
-                                    </span>
+                                    <select
+                                        className="text-white bg-primary-black-85 rounded-md p-2"
+                                        value={selectedStatus}
+                                        onChange={handleStatusChange}
+                                    >
+                                        <option value="processing">
+                                            Processing
+                                        </option>
+                                        <option value="shipped">Shipped</option>
+                                        <option value="delivered">
+                                            Delivered
+                                        </option>
+                                        <option value="cancelled">
+                                            Cancelled
+                                        </option>
+                                        <option value="refunded">
+                                            Refunded
+                                        </option>
+                                    </select>
                                 </div>
                             </div>
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
@@ -235,8 +301,14 @@ export function OrderDetailsSidebar() {
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
-                            <Refund date={formatDate(orderDetails?.created_at)} firstName={orderDetails?.customer
-                                ?.first_name} lastName={orderDetails?.customer?.last_name} email={orderDetails?.email} orderId={orderDetails?.id} customerId={orderDetails?.customer_id}/>
+                            <Refund
+                                date={formatDate(orderDetails?.created_at)}
+                                firstName={orderDetails?.customer?.first_name}
+                                lastName={orderDetails?.customer?.last_name}
+                                email={orderDetails?.email}
+                                orderId={orderDetails?.id}
+                                customerId={orderDetails?.customer_id}
+                            />
 
                             {/* Items */}
                             <div className="flex flex-col">
