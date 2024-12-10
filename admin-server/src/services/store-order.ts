@@ -58,9 +58,7 @@ export interface StoreOrdersDTO {
     sortedBy: any;
     sortDirection: string;
     filtering: FilterOrders;
-    orders: {
-        payments: Payment[];
-    }[];
+    orders: Order[];
     totalRecords: number;
     statusCount: {};
 }
