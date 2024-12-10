@@ -58,9 +58,7 @@ export interface StoreOrdersDTO {
     sortedBy: any;
     sortDirection: string;
     filtering: FilterOrders;
-    orders: {
-        payments: Payment[];
-    }[];
+    orders: Order[];
     totalRecords: number;
     statusCount: {};
 }
@@ -184,20 +182,10 @@ export default class StoreOrderService extends TransactionBaseService {
                           [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
                     : undefined,
-            relations: ['customer'], // Fetch related payments and customers
+            relations: ['customer', 'payments'], // Fetch related payments and customers
         };
 
-        const allOrders = await this.orderRepository_.find(params);
-
-        const orders = await Promise.all(
-            allOrders.map(async (order) => {
-                const payments = await this.orderRepository_.findOne({
-                    where: { id: order.id },
-                    relations: ['payments'],
-                });
-                return { ...order, payments: payments?.payments || [] };
-            })
-        );
+        const orders = await this.orderRepository_.find(params);
 
         if (sort?.field === 'customer') {
             orders.sort((a, b) => {
