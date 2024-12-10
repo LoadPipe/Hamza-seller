@@ -97,8 +97,8 @@ PUT http://localhost:9000/seller/order/status
 Content-Type: application/json
 
 {
-  "order_id": "order_01JCHZ33D14HBQ298MAQ6JC1D2",
-  "status": "canceled",
+  "order_id": "order_01JEQHZ1Z8SKW7V5732HQSYD7R",
+  "status": "cancelled",
   "note": "this guy just wasted our time, just return his money so he shuts up"
 
 }
