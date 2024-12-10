@@ -19,7 +19,7 @@ export async function releaseOrderEscrow(order: any): Promise<void> {
     if (window.ethereum?.providers) {
         const escrow: EscrowClient = await createEscrowContract(order);
         await escrow.releaseEscrow(
-            ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
+            ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id)),
         );
     }
 }
@@ -40,7 +40,7 @@ export async function releaseOrderEscrow(order: any): Promise<void> {
  */
 export async function refundOrderEscrow(
     order: any,
-    amount: BigNumberish
+    amount: BigNumberish,
 ): Promise<boolean> {
     //TODO: get provider, chain id & signer from window.ethereum
     if (window.ethereum?.providers) {
@@ -48,7 +48,7 @@ export async function refundOrderEscrow(
         if (escrow) {
             await escrow.refundPayment(
                 ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id)),
-                amount
+                amount,
             );
             return true;
         }
@@ -76,7 +76,7 @@ function findEscrowAddress(order: any): string {
  */
 async function createEscrowContract(order: any): Promise<EscrowClient> {
     const provider: providers.Web3Provider = new providers.Web3Provider(
-        window.ethereum?.providers[0]
+        window.ethereum?.providers[0],
     );
     const signer: Signer = await provider.getSigner();
 
