@@ -115,10 +115,6 @@ export default function OrdersPage() {
         queryFn: () => getSellerOrders(pageIndex, pageSize, filters, sorting), // Fetch with pagination
     });
 
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-
     if (error instanceof Error) {
         return <div>{error.message}</div>;
     }
@@ -135,6 +131,7 @@ export default function OrdersPage() {
                 totalRecords={data?.orders.length ?? 0}
                 sorting={sorting}
                 setSorting={setSorting}
+                isLoading={isLoading}
             />
             <ReleaseEscrow/>
         </>
