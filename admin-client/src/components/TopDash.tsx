@@ -2,7 +2,6 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { BellRing } from 'lucide-react';
 import { WalletConnect } from './wallet-connect/WalletConnect';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
-import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import { getSecure } from '@/utils/api-calls';
 
