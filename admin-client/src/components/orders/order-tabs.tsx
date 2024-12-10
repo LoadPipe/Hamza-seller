@@ -5,6 +5,7 @@ import {
     clearFilter,
     loadStatusCountFromStorage,
     filterStore,
+    orderCountStore,
 } from '@/stores/order-filter/order-filter-store';
 import { useStore } from '@tanstack/react-store';
 
@@ -32,6 +33,7 @@ const tabs = [
         label: 'Shipped',
         filters: {
             fulfillment_status: ['shipped'],
+            payment_status: ['captured'],
         },
     },
     {
@@ -47,6 +49,7 @@ const tabs = [
         label: 'Cancelled',
         filters: {
             status: ['canceled'],
+            fulfillment_status: ['canceled'],
         },
     },
     {
@@ -54,6 +57,8 @@ const tabs = [
         label: 'Refunded',
         filters: {
             payment_status: ['refunded'],
+            fulfillment_status: ['canceled'],
+            x,
         },
     },
 ];
@@ -73,6 +78,8 @@ const OrderTabs = ({
     });
     const { filters } = useStore(filterStore); // Subscribe to filterStore
 
+    console.log(`$$$ WHY ARE YOU GAY`);
+    const { statusCounts: storeStatusCounts } = useStore(orderCountStore);
     const getActiveTab = () => {
         for (const tab of tabs) {
             if (!tab.filters) continue; // Skip "All Orders" as it has no specific filters
@@ -98,7 +105,7 @@ const OrderTabs = ({
         // Load the status counts from local storage
         const loadedCounts = loadStatusCountFromStorage();
         setStatusCounts(loadedCounts);
-    }, []);
+    }, [storeStatusCounts]);
 
     const handleTabChange = (tabKey: string) => {
         console.log(`Selected Tab: ${tabKey}`);

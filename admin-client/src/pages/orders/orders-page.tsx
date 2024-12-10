@@ -44,7 +44,7 @@ async function getSellerOrders(
         const data: object = response.orders as object;
         // SS totalRecords: string => typecast: number...
         const totalRecords: number = response.totalRecords as number;
-        console.log(`TOTAL RECORDS: ${response.statusCount}`);
+        console.log(`TOTAL RECORDS: ${JSON.stringify(response.statusCount)}`);
         saveStatusCountToStorage(response.statusCount);
         return {
             orders: OrderSchema.array().parse(data), // Validate using Zod

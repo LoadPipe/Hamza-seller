@@ -87,9 +87,9 @@ export function OrderDetailsSidebar() {
             // invalidate papa
             queryClient.invalidateQueries({ queryKey: ['orders'] });
 
-            // queryClient.invalidateQueries({
-            //     queryKey: ['orderDetails', orderId],
-            // });
+            queryClient.invalidateQueries({
+                queryKey: ['orderDetails', orderId],
+            });
             toast({
                 variant: 'default',
                 title: 'Success!',
