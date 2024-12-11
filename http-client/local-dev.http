@@ -6,8 +6,8 @@ POST http://localhost:9000/seller/order
 Content-Type: application/json
 
 {
-    "store_id": "store_01JCK8MX8DZCHXDMMR8SNKN7E3",
-    "wallet_address": "0x4fBCF49cC0f91d66Bc5bBbE931913D8709592012"
+    "store_id": "store_01JE8YPNX7QFSQF4T0RHR6V2BE",
+    "wallet_address": "0xb975Bf5ca0b09E17834d0b5A526F8315F82986D4"
 }
 
 #### Login Admin User
@@ -88,7 +88,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6I
 }
 
 ### Get Seller Order Details
-GET http://localhost:9000/seller/order/detail?order_id=order_01JDVVT4B2E566R32NM77P09WC
+GET http://localhost:9000/seller/order/detail?order_id=order_01JEQHZ1Z8SKW7V5732HQSYD7R
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
@@ -97,8 +97,8 @@ PUT http://localhost:9000/seller/order/status
 Content-Type: application/json
 
 {
-  "order_id": "order_01JCHZ33D14HBQ298MAQ6JC1D2",
-  "status": "canceled",
+  "order_id": "order_01JEQHZ1Z8SKW7V5732HQSYD7R",
+  "status": "cancelled",
   "note": "this guy just wasted our time, just return his money so he shuts up"
 
 }

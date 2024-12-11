@@ -58,9 +58,7 @@ export interface StoreOrdersDTO {
     sortedBy: any;
     sortDirection: string;
     filtering: FilterOrders;
-    orders: {
-        payments: Payment[];
-    }[];
+    orders: Order[];
     totalRecords: number;
     statusCount: {};
 }
@@ -152,6 +150,7 @@ export default class StoreOrderService extends TransactionBaseService {
                 where: {
                     store_id: storeId,
                     fulfillment_status: FulfillmentStatus.SHIPPED,
+                    payment_status: PaymentStatus.CAPTURED,
                 },
             }),
             delivered: await this.orderRepository_.count({
@@ -162,12 +161,17 @@ export default class StoreOrderService extends TransactionBaseService {
                 },
             }),
             cancelled: await this.orderRepository_.count({
-                where: { store_id: storeId, status: OrderStatus.CANCELED },
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.CANCELED,
+                    fulfillment_status: FulfillmentStatus.CANCELED,
+                },
             }),
             refunded: await this.orderRepository_.count({
                 where: {
                     store_id: storeId,
                     payment_status: PaymentStatus.REFUNDED,
+                    fulfillment_status: FulfillmentStatus.CANCELED,
                 },
             }),
         };
@@ -184,20 +188,10 @@ export default class StoreOrderService extends TransactionBaseService {
                           [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
                     : undefined,
-            relations: ['customer'], // Fetch related payments and customers
+            relations: ['customer', 'payments'], // Fetch related payments and customers
         };
 
-        const allOrders = await this.orderRepository_.find(params);
-
-        const orders = await Promise.all(
-            allOrders.map(async (order) => {
-                const payments = await this.orderRepository_.findOne({
-                    where: { id: order.id },
-                    relations: ['payments'],
-                });
-                return { ...order, payments: payments?.payments || [] };
-            })
-        );
+        const orders = await this.orderRepository_.find(params);
 
         if (sort?.field === 'customer') {
             orders.sort((a, b) => {
@@ -246,6 +240,18 @@ export default class StoreOrderService extends TransactionBaseService {
         note?: Record<string, any>
     ) {
         try {
+            const validStatuses = [
+                'processing',
+                'shipped',
+                'delivered',
+                'cancelled',
+                'refunded',
+            ];
+
+            if (!validStatuses.includes(newStatus)) {
+                throw new Error(`Invalid order status: ${newStatus}`);
+            }
+
             const order = await this.orderRepository_.findOne({
                 where: { id: orderId },
             });
@@ -254,16 +260,39 @@ export default class StoreOrderService extends TransactionBaseService {
                 throw new Error(`Order with id ${orderId} not found`);
             }
 
-            const mappedStatus = Object.values(OrderStatus).find(
-                (status) => status === newStatus
-            );
+            switch (newStatus) {
+                case 'processing':
+                    order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
+                    order.status = OrderStatus.PENDING;
+                    break;
 
-            if (!mappedStatus) {
-                throw new Error(`Invalid order status: ${newStatus}`);
+                case 'shipped':
+                    order.fulfillment_status = FulfillmentStatus.SHIPPED;
+                    order.payment_status = PaymentStatus.CAPTURED;
+                    break;
+
+                case 'delivered':
+                    order.fulfillment_status = FulfillmentStatus.FULFILLED;
+                    order.status = OrderStatus.COMPLETED;
+                    break;
+
+                case 'cancelled':
+                    order.status = OrderStatus.CANCELED;
+                    order.fulfillment_status = FulfillmentStatus.CANCELED;
+                    break;
+
+                case 'refunded':
+                    order.payment_status = PaymentStatus.REFUNDED;
+                    // either canceled or returned...
+                    order.fulfillment_status = FulfillmentStatus.CANCELED;
+                    // order.status = OrderStatus.RETURNED;
+                    break;
+
+                default:
+                    throw new Error(`Unsupported status: ${newStatus}`);
             }
 
-            order.status = mappedStatus;
-
+            // Update metadata if a note is provided
             if (note) {
                 order.metadata = note;
             }
