@@ -1,20 +1,15 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { BellRing } from 'lucide-react';
 import { WalletConnect } from './wallet-connect/WalletConnect';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 import { useQuery } from '@tanstack/react-query';
 import { getSecure } from '@/utils/api-calls';
 import { getJwtStoreId } from '@/utils/authentication';
 
 const TopDash = () => {
-    const { authData } = useCustomerAuthStore();
-
     const store_id = getJwtStoreId();
 
-    console.log('STOREEEEEEE ID', store_id);
-
     const { data: storeName } = useQuery({
-        queryKey: ['store', authData],
+        queryKey: ['store', store_id],
         queryFn: async () => {
             return await getSecure('/seller/store/name', {
                 store_id: store_id,
@@ -22,8 +17,6 @@ const TopDash = () => {
         },
         enabled: !!store_id,
     });
-
-    console.log('store name', authData.wallet_address);
 
     return (
         <div className="flex flex-col text-white">
