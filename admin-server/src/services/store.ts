@@ -90,7 +90,7 @@ class StoreService extends MedusaStoreService {
         return stores.map((store) => store.name);
     }
 
-    async getStoreNameByID(store_id: string) {
+    async getStoreNameById(store_id: string) {
         const store = await this.storeRepository_.findOne({
             where: { id: store_id },
             select: ['name'],
