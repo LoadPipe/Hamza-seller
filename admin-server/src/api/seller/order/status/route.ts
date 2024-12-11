@@ -22,6 +22,14 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
         'note',
     ]);
 
+    const validStatuses = [
+        'Processing',
+        'Shipped',
+        'Delivered',
+        'Cancelled',
+        'Refunded',
+    ];
+
     await handler.handle(async () => {
         // Ensure required parameters are provided
         if (
@@ -33,10 +41,19 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
 
         const { order_id, status, note } = handler.inputParams;
 
+        // Validate the status parameter
+        if (!validStatuses.includes(status)) {
+            return handler.returnStatus(400, {
+                error: `Invalid status provided. Valid statuses are: ${validStatuses.join(
+                    ', '
+                )}.`,
+            });
+        }
+
         // Call the service to update the order statuses
         const updatedOrder = await orderService.changeOrderStatus(
             order_id,
-            status,
+            status.toLowerCase(),
             note
         );
 
