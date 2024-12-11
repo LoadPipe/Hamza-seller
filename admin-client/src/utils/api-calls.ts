@@ -72,6 +72,7 @@ export async function axiosCall(
             `${verb.toUpperCase()} ${path} ${JSON.stringify(payload) ?? ''} error: `,
             error
         );
+        throw error;
         //return returnRaw ? error : error.data;
     }
 }

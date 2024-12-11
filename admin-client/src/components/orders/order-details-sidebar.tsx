@@ -24,16 +24,13 @@ import { getSecure, putSecure } from '@/utils/api-calls';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { getOrderStatusName } from '@/utils/check-order-status.ts';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { ToastAction } from '@/components/ui/toast';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
     const { toast } = useToast();
     const queryClient = useQueryClient();
-
     const {
         data: orderDetails,
         isLoading,
@@ -61,6 +58,23 @@ export function OrderDetailsSidebar() {
             orderDetails?.payment_status
         )
     );
+    useEffect(() => {
+        if (
+            orderDetails?.fulfillment_status &&
+            orderDetails?.status &&
+            orderDetails?.payment_status
+        ) {
+            setSelectedStatus(
+                getOrderStatusName(
+                    orderDetails.fulfillment_status,
+                    orderDetails.status,
+                    orderDetails.payment_status
+                )
+            );
+        }
+    }, [orderDetails]);
+
+    console.log(`STATUS IS ${selectedStatus}`);
 
     const mutation = useMutation({
         mutationFn: async (newStatus: string) =>
@@ -69,12 +83,16 @@ export function OrderDetailsSidebar() {
                 status: newStatus,
             }),
         onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['orderDetails', orderId],
+            });
+            // invalidate papa
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
             toast({
                 variant: 'default',
                 title: 'Success!',
                 description: 'Order status updated successfully.',
             });
-            queryClient.invalidateQueries(['orderDetails', orderId]);
         },
         onError: (error: any) => {
             toast({
@@ -83,9 +101,6 @@ export function OrderDetailsSidebar() {
                 description:
                     error?.response?.data?.message ||
                     'Failed to update status.',
-                action: (
-                    <ToastAction altText="Try again">Try again</ToastAction>
-                ),
             });
         },
     });
@@ -177,25 +192,31 @@ export function OrderDetailsSidebar() {
                                     <span className="text-primary-black-60 text-sm leading-relaxed">
                                         STATUS
                                     </span>
-                                    <select
-                                        className="text-white bg-primary-black-85 rounded-md p-2"
-                                        value={selectedStatus}
-                                        onChange={handleStatusChange}
-                                    >
-                                        <option value="processing">
-                                            Processing
-                                        </option>
-                                        <option value="shipped">Shipped</option>
-                                        <option value="delivered">
-                                            Delivered
-                                        </option>
-                                        <option value="cancelled">
-                                            Cancelled
-                                        </option>
-                                        <option value="refunded">
-                                            Refunded
-                                        </option>
-                                    </select>
+                                    {selectedStatus ? (
+                                        <select
+                                            className="text-white bg-primary-black-85 rounded-md p-2"
+                                            value={selectedStatus}
+                                            onChange={handleStatusChange}
+                                        >
+                                            <option value="Processing">
+                                                Processing
+                                            </option>
+                                            <option value="Shipped">
+                                                Shipped
+                                            </option>
+                                            <option value="Delivered">
+                                                Delivered
+                                            </option>
+                                            <option value="Cancelled">
+                                                Cancelled
+                                            </option>
+                                            <option value="Refunded">
+                                                Refunded
+                                            </option>
+                                        </select>
+                                    ) : (
+                                        <div>Loading status...</div>
+                                    )}
                                 </div>
                             </div>
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />

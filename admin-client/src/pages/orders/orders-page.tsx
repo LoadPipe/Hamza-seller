@@ -10,7 +10,10 @@ import { postSecure } from '@/utils/api-calls';
 import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 import { useStore } from '@tanstack/react-store';
 import { SortingState } from '@tanstack/react-table';
-import { saveStatusCountToStorage } from '@/stores/order-filter/order-filter-store';
+import {
+    saveStatusCountToStorage,
+    updateStatusCount,
+} from '@/stores/order-filter/order-filter-store';
 import { useNavigate } from '@tanstack/react-router';
 import { setFilter } from '@/stores/order-filter/order-filter-store.ts';
 import { ReleaseEscrow } from '@/components/orders/release-escrow.tsx';
@@ -42,7 +45,9 @@ async function getSellerOrders(
         const data: object = response.orders as object;
         // SS totalRecords: string => typecast: number...
         const totalRecords: number = response.totalRecords as number;
+        // console.log(`TOTAL RECORDS: ${JSON.stringify(response.statusCount)}`);
         saveStatusCountToStorage(response.statusCount);
+        updateStatusCount(response.statusCount);
         return {
             orders: OrderSchema.array().parse(data), // Validate using Zod
             totalRecords,

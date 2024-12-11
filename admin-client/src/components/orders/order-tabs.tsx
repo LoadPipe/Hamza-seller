@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import {
     clearAllFilters,
     setFilter,
     clearFilter,
-    loadStatusCountFromStorage,
     filterStore,
+    orderCountStore,
+    StatusCount,
 } from '@/stores/order-filter/order-filter-store';
 import { useStore } from '@tanstack/react-store';
 
@@ -32,6 +33,7 @@ const tabs = [
         label: 'Shipped',
         filters: {
             fulfillment_status: ['shipped'],
+            payment_status: ['captured'],
         },
     },
     {
@@ -47,6 +49,7 @@ const tabs = [
         label: 'Cancelled',
         filters: {
             status: ['canceled'],
+            fulfillment_status: ['canceled'],
         },
     },
     {
@@ -54,6 +57,7 @@ const tabs = [
         label: 'Refunded',
         filters: {
             payment_status: ['refunded'],
+            fulfillment_status: ['canceled'],
         },
     },
 ];
@@ -63,15 +67,11 @@ const OrderTabs = ({
 }: {
     setPageIndex: (pageIndex: number) => void;
 }) => {
-    const [statusCounts, setStatusCounts] = useState<Record<string, number>>({
-        all: 0,
-        processing: 0,
-        shipped: 0,
-        delivered: 0,
-        cancelled: 0,
-        refunded: 0,
-    });
     const { filters } = useStore(filterStore); // Subscribe to filterStore
+
+    const { statusCounts: storeStatusCounts } = useStore<{
+        statusCounts: StatusCount;
+    }>(orderCountStore);
 
     const getActiveTab = () => {
         for (const tab of tabs) {
@@ -92,13 +92,7 @@ const OrderTabs = ({
         return 'all'; // Default to "All Orders" if no filters match
     };
 
-    const activeTab = getActiveTab(); // Calculate active tab dynamically
-
-    useEffect(() => {
-        // Load the status counts from local storage
-        const loadedCounts = loadStatusCountFromStorage();
-        setStatusCounts(loadedCounts);
-    }, []);
+    const activeTab = useMemo(() => getActiveTab(), [filters]);
 
     const handleTabChange = (tabKey: string) => {
         console.log(`Selected Tab: ${tabKey}`);
@@ -145,7 +139,7 @@ const OrderTabs = ({
                                     : 'bg-primary-black-70 text-white'
                             }`}
                         >
-                            {statusCounts[tab.key] ?? 0}
+                            {storeStatusCounts[tab.key] ?? 0}
                         </span>
                     </button>
                 ))}

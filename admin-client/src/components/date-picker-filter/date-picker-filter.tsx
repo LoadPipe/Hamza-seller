@@ -109,7 +109,6 @@ export default function DatePickerFilter({
         return selectedOption || title;
     };
 
-
     return (
         <div className="relative">
             <DropdownMenu.Root

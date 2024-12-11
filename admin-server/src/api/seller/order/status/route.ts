@@ -23,11 +23,11 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
     ]);
 
     const validStatuses = [
-        'processing',
-        'shipped',
-        'delivered',
-        'cancelled',
-        'refunded',
+        'Processing',
+        'Shipped',
+        'Delivered',
+        'Cancelled',
+        'Refunded',
     ];
 
     await handler.handle(async () => {
@@ -53,7 +53,7 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
         // Call the service to update the order statuses
         const updatedOrder = await orderService.changeOrderStatus(
             order_id,
-            status,
+            status.toLowerCase(),
             note
         );
 

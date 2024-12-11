@@ -6,8 +6,8 @@ POST http://localhost:9000/seller/order
 Content-Type: application/json
 
 {
-    "store_id": "store_01JCK8MX8DZCHXDMMR8SNKN7E3",
-    "wallet_address": "0x4fBCF49cC0f91d66Bc5bBbE931913D8709592012"
+    "store_id": "store_01JE8YPNX7QFSQF4T0RHR6V2BE",
+    "wallet_address": "0xb975Bf5ca0b09E17834d0b5A526F8315F82986D4"
 }
 
 #### Login Admin User
