@@ -90,20 +90,13 @@ class StoreService extends MedusaStoreService {
         return stores.map((store) => store.name);
     }
 
-    async getStoreNamesByOwnerId(wallet_address: string) {
-        const userId = await this.userRepository_.find({
-            select: ['id'],
-            where: {
-                wallet_address: wallet_address,
-                role: Equal(UserRoles.ADMIN),
-            },
+    async getStoreNameByID(store_id: string) {
+        const store = await this.storeRepository_.findOne({
+            where: { id: store_id },
+            select: ['name'],
         });
 
-        const stores = await this.storeRepository_.find({
-            select: ['name'],
-            where: { owner_id: userId[0].id },
-        });
-        return stores.map((store) => store.name);
+        return store.name;
     }
 
     async update(data: UpdateStoreInput) {

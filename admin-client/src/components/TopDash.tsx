@@ -4,18 +4,23 @@ import { WalletConnect } from './wallet-connect/WalletConnect';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 import { useQuery } from '@tanstack/react-query';
 import { getSecure } from '@/utils/api-calls';
+import { getJwtStoreId } from '@/utils/authentication';
 
 const TopDash = () => {
     const { authData } = useCustomerAuthStore();
+
+    const store_id = getJwtStoreId();
+
+    console.log('STOREEEEEEE ID', store_id);
 
     const { data: storeName } = useQuery({
         queryKey: ['store', authData],
         queryFn: async () => {
             return await getSecure('/seller/store/name', {
-                wallet_address: authData.wallet_address,
+                store_id: store_id,
             });
         },
-        enabled: !!authData.wallet_address,
+        enabled: !!store_id,
     });
 
     console.log('store name', authData.wallet_address);

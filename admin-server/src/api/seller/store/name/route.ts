@@ -6,18 +6,18 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const storeService: StoreService = req.scope.resolve('storeService');
 
     const handler = new RouteHandler(req, res, 'GET', '/seller/store/name', [
-        'wallet_address',
+        'store_id',
     ]);
 
     await handler.handle(async () => {
-        if (!handler.inputParams.wallet_address) {
+        if (!handler.inputParams.store_id) {
             return handler.returnStatus(400, {
-                error: "Missing 'wallet_address' parameter",
+                error: "Missing 'store_id' parameter",
             });
         }
 
-        const stores = await storeService.getStoreNamesByOwnerId(
-            handler.inputParams.wallet_address
+        const stores = await storeService.getStoreNameByID(
+            handler.inputParams.store_id
         );
         handler.returnStatus(200, stores);
     });
