@@ -943,6 +943,7 @@ export default class OrderService extends MedusaOrderService {
             order.metadata = {
                 ...order.metadata,
                 refund_note: note || '',
+                refund_id: refund?.id,
             };
 
             // Update order's payment status if all refundable amount is refunded

@@ -36,7 +36,7 @@ Content-Type: application/json
 
 {
   "order_id": "order_01JEAMPWRH6Y8ZND8B15NWSJAE",
-  "amount": 69796,
+  "amount": 6796,
   "reason": "return",
   "note": "this shit sucks, I hate it, give ma money back fool"
 }
@@ -88,7 +88,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6I
 }
 
 ### Get Seller Order Details
-GET http://localhost:9000/seller/order/detail?order_id=order_01JEQHZ1Z8SKW7V5732HQSYD7R
+GET http://localhost:9000/seller/order/detail?order_id=order_01JENAC36CBQHPE271DQCKT7SD
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
