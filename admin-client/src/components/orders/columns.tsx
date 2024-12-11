@@ -50,10 +50,21 @@ export const OrderSchema = z.object({
             last_name: z.string(),
         })
         .optional(), // Make it optional in case of any missing data
+    payments: z
+        .array(
+            z.object({
+                id: z.string(),
+                amount: z.number(),
+                provider_id: z.string(),
+                created_at: z.string(),
+            })
+        )
+        .optional(), // Add payments as an optional array
 });
+import { formatCryptoPrice } from '@/utils/get-product-price';
 
 // Generate TypeScript type from Zod schema
-type Order = z.infer<typeof OrderSchema>;
+export type Order = z.infer<typeof OrderSchema>;
 
 // Define a dynamic column generation function
 export const generateColumns = (
@@ -291,45 +302,50 @@ export const generateColumns = (
                     },
                 };
 
-            // case 'price':
-            //     return {
-            //         accessorKey: 'price',
-            //         header: ({ column }) => (
-            //             <Button
-            //                 variant={'ghost'}
-            //                 className=" text-white hover:text-opacity-70 "
-            //                 onClick={() =>
-            //                     column.toggleSorting(
-            //                         column.getIsSorted() === 'asc'
-            //                     )
-            //                 }
-            //             >
-            //                 Price
-            //                 {column.getIsSorted() === 'asc' && (
-            //                     <ArrowUp className="ml-2 h-4 w-4" />
-            //                 )}
-            //                 {column.getIsSorted() === 'desc' && (
-            //                     <ArrowDown className="ml-2 h-4 w-4" />
-            //                 )}
-            //                 {!column.getIsSorted() && (
-            //                     <ArrowUpDown className="ml-2 h-4 w-4" />
-            //                 )}
-            //             </Button>
-            //         ),
-            //         cell: ({ row }) => {
-            //             const price = row.getValue('price') as Order['price'];
-            //             if (price === undefined) return <div>--</div>;
-            //             const formatted = new Intl.NumberFormat('en-US', {
-            //                 style: 'currency',
-            //                 currency: 'USD',
-            //             }).format(price);
-            //             return (
-            //                 <div className="text-right font-medium">
-            //                     {formatted}
-            //                 </div>
-            //             );
-            //         },
-            //     };
+            case 'price':
+                return {
+                    accessorKey: 'payments',
+                    header: ({ column }) => (
+                        <Button
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Price
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                        </Button>
+                    ),
+                    cell: ({ row }) => {
+                        const payments = row.getValue('payments') as
+                            | {
+                                  amount: number;
+                                  currency_code: string;
+                              }[]
+                            | undefined;
+
+                        if (!payments || payments.length === 0) {
+                            return <div>--</div>; // No payments available
+                        }
+                        const formatted = formatCryptoPrice(
+                            payments[0].amount,
+                            payments[0].currency_code
+                        );
+
+                        return <div className="font-medium">{formatted}</div>;
+                    },
+                };
             case 'email':
                 return {
                     accessorKey: 'email',

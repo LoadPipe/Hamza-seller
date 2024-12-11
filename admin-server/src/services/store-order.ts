@@ -1,4 +1,4 @@
-import { TransactionBaseService } from '@medusajs/medusa';
+import { Payment, Store, TransactionBaseService } from '@medusajs/medusa';
 import { BuckyLogRepository } from '../repositories/bucky-log';
 import LineItemRepository from '@medusajs/medusa/dist/repositories/line-item';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
@@ -29,10 +29,11 @@ import {
     FulfillmentStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
+import { stringify } from 'querystring';
 
 const DEFAULT_PAGE_COUNT = 10;
 
-interface filterOrders {
+interface FilterOrders {
     orderStatus?: OrderStatus;
     fulfillmentStatus?: FulfillmentStatus;
     paymentStatus?: PaymentStatus;
@@ -56,7 +57,7 @@ export interface StoreOrdersDTO {
     rowsPerPage: number;
     sortedBy: any;
     sortDirection: string;
-    filtering: filterOrders;
+    filtering: FilterOrders;
     orders: Order[];
     totalRecords: number;
     statusCount: {};
@@ -84,7 +85,7 @@ export default class StoreOrderService extends TransactionBaseService {
 
     async getOrdersForStore(
         storeId: string,
-        filter: filterOrders,
+        filter: FilterOrders,
         sort: any,
         page: number,
         ordersPerPage: number
@@ -149,6 +150,7 @@ export default class StoreOrderService extends TransactionBaseService {
                 where: {
                     store_id: storeId,
                     fulfillment_status: FulfillmentStatus.SHIPPED,
+                    payment_status: PaymentStatus.CAPTURED,
                 },
             }),
             delivered: await this.orderRepository_.count({
@@ -159,12 +161,17 @@ export default class StoreOrderService extends TransactionBaseService {
                 },
             }),
             cancelled: await this.orderRepository_.count({
-                where: { store_id: storeId, status: OrderStatus.CANCELED },
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.CANCELED,
+                    fulfillment_status: FulfillmentStatus.CANCELED,
+                },
             }),
             refunded: await this.orderRepository_.count({
                 where: {
                     store_id: storeId,
                     payment_status: PaymentStatus.REFUNDED,
+                    fulfillment_status: FulfillmentStatus.CANCELED,
                 },
             }),
         };
@@ -174,18 +181,16 @@ export default class StoreOrderService extends TransactionBaseService {
             take: ordersPerPage ?? DEFAULT_PAGE_COUNT,
             skip: page * ordersPerPage,
             order:
-                sort && sort.field !== 'customer'
+                sort?.field &&
+                sort.field !== 'customer' &&
+                sort.field !== 'payments'
                     ? {
-                          [sort.field]: sort.direction, // e.g., ASC or DESC
+                          [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
                     : undefined,
-            relations: ['customer'],
-            // relations: ['customer', 'items.variant.product']
+            relations: ['customer', 'payments'], // Fetch related payments and customers
         };
 
-        // Get total count of matching record
-
-        //get orders
         const orders = await this.orderRepository_.find(params);
 
         if (sort?.field === 'customer') {
@@ -198,6 +203,21 @@ export default class StoreOrderService extends TransactionBaseService {
                 } else if (sort.direction === 'DESC') {
                     return nameB.localeCompare(nameA);
                 }
+            });
+        }
+
+        if (sort?.field === 'payments') {
+            orders.sort((a, b) => {
+                const amountA = a.payments?.[0]?.amount || 0; // Fallback to 0 if no payment
+                const amountB = b.payments?.[0]?.amount || 0;
+
+                if (sort.direction === 'ASC') {
+                    return amountA - amountB;
+                } else if (sort.direction === 'DESC') {
+                    return amountB - amountA;
+                }
+
+                return 0;
             });
         }
 
@@ -220,6 +240,18 @@ export default class StoreOrderService extends TransactionBaseService {
         note?: Record<string, any>
     ) {
         try {
+            const validStatuses = [
+                'processing',
+                'shipped',
+                'delivered',
+                'cancelled',
+                'refunded',
+            ];
+
+            if (!validStatuses.includes(newStatus)) {
+                throw new Error(`Invalid order status: ${newStatus}`);
+            }
+
             const order = await this.orderRepository_.findOne({
                 where: { id: orderId },
             });
@@ -228,16 +260,39 @@ export default class StoreOrderService extends TransactionBaseService {
                 throw new Error(`Order with id ${orderId} not found`);
             }
 
-            const mappedStatus = Object.values(OrderStatus).find(
-                (status) => status === newStatus
-            );
+            switch (newStatus) {
+                case 'processing':
+                    order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
+                    order.status = OrderStatus.PENDING;
+                    break;
 
-            if (!mappedStatus) {
-                throw new Error(`Invalid order status: ${newStatus}`);
+                case 'shipped':
+                    order.fulfillment_status = FulfillmentStatus.SHIPPED;
+                    order.payment_status = PaymentStatus.CAPTURED;
+                    break;
+
+                case 'delivered':
+                    order.fulfillment_status = FulfillmentStatus.FULFILLED;
+                    order.status = OrderStatus.COMPLETED;
+                    break;
+
+                case 'cancelled':
+                    order.status = OrderStatus.CANCELED;
+                    order.fulfillment_status = FulfillmentStatus.CANCELED;
+                    break;
+
+                case 'refunded':
+                    order.payment_status = PaymentStatus.REFUNDED;
+                    // either canceled or returned...
+                    order.fulfillment_status = FulfillmentStatus.CANCELED;
+                    // order.status = OrderStatus.RETURNED;
+                    break;
+
+                default:
+                    throw new Error(`Unsupported status: ${newStatus}`);
             }
 
-            order.status = mappedStatus;
-
+            // Update metadata if a note is provided
             if (note) {
                 order.metadata = note;
             }
@@ -265,6 +320,7 @@ export default class StoreOrderService extends TransactionBaseService {
                     'items.variant.product',
                     'customer.walletAddresses',
                     'shipping_address',
+                    'payments',
                 ],
             });
 

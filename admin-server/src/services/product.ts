@@ -852,7 +852,6 @@ class ProductService extends MedusaProductService {
                 });
             }
         }
-
         return {
             success: validationErrors.length === 0,
             message: validationErrors.map((err) => err.error).join(', '),
