@@ -45,7 +45,7 @@ export function getJwtField(fieldName: string): string | undefined {
     const tokenString = getJwtToken();
     if (tokenString) {
         try {
-            const jwtToken: any = jwtDecode(tokenString);
+            const jwtToken: any = jwtDecode(tokenString, { header: false });
             if (jwtToken) {
                 return jwtToken[fieldName];
             }
@@ -55,4 +55,22 @@ export function getJwtField(fieldName: string): string | undefined {
     }
 
     return undefined;
+}
+
+export function getJwtWalletAddress(): string | undefined {
+    return getJwtField('wallet_address');
+}
+
+export function getJwtStoreId(): string | undefined {
+    return getJwtField('store_id');
+}
+
+export function deleteJwtCookie(): void {
+    document.cookie = `jwt=; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+    console.log(document.cookie);
+}
+
+export function setJwtCookie(token: string): void {
+    //TODO: set expiration
+    document.cookie = `jwt=${token}; path=/;`; // secure; HttpOnly`;
 }
