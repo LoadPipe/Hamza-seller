@@ -26,31 +26,8 @@ Content-Type: application/json
 {
   "count": 2,
   "date": "2024-12-04T10:00:00Z",
-  "store_id": "store_01JE8YHDQ95G6ASYEH66N7CAKX"
+  "store_id": "store_01JEB9QTTBKJ0JJ8WCTXJCYGN4"
 }
-
-
-#### REFUND ORDER
-POST http://localhost:9000/seller/order/refund
-Content-Type: application/json
-
-{
-  "order_id": "order_01JEAMPWRH6Y8ZND8B15NWSJAE",
-  "amount": 69796,
-  "reason": "return",
-  "note": "this shit sucks, I hate it, give ma money back fool"
-}
-
-
-### Confirm REFUND ORDER
-PUT http://localhost:9000/seller/order/refund
-Content-Type: application/json
-
-{
-  "id": "ref_01JEBFA7QJQ5W9DYZH31Z5VFZQ"
-}
-
-
 
 
 ###
@@ -99,3 +76,10 @@ Content-Type: application/json
 
 }
 
+### Store Name
+GET  http://localhost:9000/seller/store/name
+Content-Type: application/json
+
+{
+  "wallet_address": "0xfb20a78fd35d20925af6f7379ab35fa6c41e9834"
+}
