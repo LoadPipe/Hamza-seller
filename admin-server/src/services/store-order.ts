@@ -238,7 +238,7 @@ export default class StoreOrderService extends TransactionBaseService {
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
-            orders,
+            orders: orders as Order[],
             totalRecords,
             statusCount: statusCounts,
         };
