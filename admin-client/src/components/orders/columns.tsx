@@ -60,7 +60,9 @@ export const OrderSchema = z.object({
                     created_at: z.string(),
                     blockchain_data: z
                         .object({
-                            chain_id: z.number().optional(),
+                            chain_id: z
+                                .union([z.number(), z.string()])
+                                .optional(),
                             payer_address: z.string().optional(),
                             escrow_address: z.string().optional(),
                             transaction_id: z.string().optional(),
@@ -69,6 +71,7 @@ export const OrderSchema = z.object({
                         .optional(),
                 })
                 .optional()
+                .nullable()
         )
         .optional(), // Add payments as an optional array
 });
