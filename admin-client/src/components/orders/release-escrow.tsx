@@ -34,6 +34,7 @@ export function ReleaseEscrow() {
         },
         onError: (error: any) => {
             console.log(`this shit FAILS BRO`);
+            closeOrderEscrowDialog();
             toast({
                 variant: 'destructive',
                 title: 'Error',

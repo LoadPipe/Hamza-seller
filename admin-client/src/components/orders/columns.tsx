@@ -52,21 +52,23 @@ export const OrderSchema = z.object({
         .optional(), // Make it optional in case of any missing data
     payments: z
         .array(
-            z.object({
-                id: z.string(),
-                amount: z.number(),
-                provider_id: z.string(),
-                created_at: z.string(),
-                blockchain_data: z
-                    .object({
-                        chain_id: z.number(),
-                        payer_address: z.string(),
-                        escrow_address: z.string(),
-                        transaction_id: z.string(),
-                    })
-                    .nullable()
-                    .optional(),
-            }).optional(),
+            z
+                .object({
+                    id: z.string(),
+                    amount: z.number(),
+                    provider_id: z.string(),
+                    created_at: z.string(),
+                    blockchain_data: z
+                        .object({
+                            chain_id: z.number().optional(),
+                            payer_address: z.string().optional(),
+                            escrow_address: z.string().optional(),
+                            transaction_id: z.string().optional(),
+                        })
+                        .nullable()
+                        .optional(),
+                })
+                .optional()
         )
         .optional(), // Add payments as an optional array
 });
@@ -77,10 +79,8 @@ export type Order = z.infer<typeof OrderSchema>;
 
 // Pure Function; We aren't using sideEffects here, the purpose of this function is to generate columns
 export const generateColumns = (
-    includeColumns: Array<keyof Order | 'select' | 'actions'>,
+    includeColumns: Array<keyof Order | 'select' | 'actions'>
 ): ColumnDef<Order>[] => {
-
-
     const baseColumns: ColumnDef<Order>[] = includeColumns.map((column) => {
         switch (column) {
             case 'select':
@@ -126,7 +126,7 @@ export const generateColumns = (
                             className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
-                                    column.getIsSorted() === 'asc',
+                                    column.getIsSorted() === 'asc'
                                 )
                             }
                         >
@@ -162,7 +162,7 @@ export const generateColumns = (
                             className=" text-white hover:text-opacity-70 "
                             onClick={() => {
                                 column.toggleSorting(
-                                    column.getIsSorted() === 'asc',
+                                    column.getIsSorted() === 'asc'
                                 );
                             }}
                         >
@@ -180,14 +180,14 @@ export const generateColumns = (
                     ),
                     cell: ({ row }) => {
                         const customer = row.getValue(
-                            'customer',
+                            'customer'
                         ) as Order['customer'];
                         if (!customer) return <div>Unknown Customer</div>;
                         return (
                             <div>
                                 {customerName(
                                     customer.first_name,
-                                    customer.last_name,
+                                    customer.last_name
                                 )}
                             </div>
                         );
@@ -202,7 +202,7 @@ export const generateColumns = (
                             className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
-                                    column.getIsSorted() === 'asc',
+                                    column.getIsSorted() === 'asc'
                                 )
                             }
                         >
@@ -236,7 +236,7 @@ export const generateColumns = (
                             className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
-                                    column.getIsSorted() === 'asc',
+                                    column.getIsSorted() === 'asc'
                                 )
                             }
                         >
@@ -254,7 +254,7 @@ export const generateColumns = (
                     ),
                     cell: ({ row }) => {
                         const paymentStatus = row.getValue(
-                            'payment_status',
+                            'payment_status'
                         ) as Order['payment_status'];
                         return <div>{formatStatus(paymentStatus)}</div>;
                     },
@@ -268,7 +268,7 @@ export const generateColumns = (
                             className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
-                                    column.getIsSorted() === 'asc',
+                                    column.getIsSorted() === 'asc'
                                 )
                             }
                         >
@@ -286,7 +286,7 @@ export const generateColumns = (
                     ),
                     cell: ({ row }) => {
                         const orderStatus = row.getValue(
-                            'fulfillment_status',
+                            'fulfillment_status'
                         ) as Order['fulfillment_status'];
 
                         // Determine the class based on the fulfillment status
@@ -322,7 +322,7 @@ export const generateColumns = (
                             className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
-                                    column.getIsSorted() === 'asc',
+                                    column.getIsSorted() === 'asc'
                                 )
                             }
                         >
@@ -341,9 +341,9 @@ export const generateColumns = (
                     cell: ({ row }) => {
                         const payments = row.getValue('payments') as
                             | {
-                            amount: number;
-                            currency_code: string;
-                        }[]
+                                  amount: number;
+                                  currency_code: string;
+                              }[]
                             | undefined;
 
                         if (!payments || payments.length === 0) {
@@ -351,7 +351,7 @@ export const generateColumns = (
                         }
                         const formatted = formatCryptoPrice(
                             payments[0].amount,
-                            payments[0].currency_code,
+                            payments[0].currency_code
                         );
 
                         return <div className="font-medium">{formatted}</div>;
@@ -366,7 +366,7 @@ export const generateColumns = (
                             className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
-                                    column.getIsSorted() === 'asc',
+                                    column.getIsSorted() === 'asc'
                                 )
                             }
                         >
@@ -398,47 +398,49 @@ export const generateColumns = (
                         const order = row.original;
 
                         return (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            className="h-8 w-8 p-0"
-                                        >
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                    >
                                         <span className="sr-only">
                                             Open menu
                                         </span>
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>
-                                            Actions
-                                        </DropdownMenuLabel>
-                                        <DropdownMenuItem
-                                            onClick={() =>
-                                                navigator.clipboard.writeText(
-                                                    order.id,
-                                                )
-                                            }
-                                        >
-                                            Copy order ID
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>
+                                        Actions
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            navigator.clipboard.writeText(
+                                                order.id
+                                            )
+                                        }
+                                    >
+                                        Copy order ID
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
 
-                                        <DropdownMenuItem
-                                            onClick={() =>
-                                                openOrderSidebar(order.id)
-                                            }
-                                        >
-                                            View order details
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => openOrderEscrowDialog(order)}
-                                        >
-                                            Release Escrow
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            openOrderSidebar(order.id)
+                                        }
+                                    >
+                                        View order details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            openOrderEscrowDialog(order)
+                                        }
+                                    >
+                                        Release Escrow
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         );
                     },
                 };
