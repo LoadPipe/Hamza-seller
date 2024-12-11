@@ -90,7 +90,7 @@ export default class StoreOrderService extends TransactionBaseService {
         filter: FilterOrders,
         sort: any,
         page: number,
-        ordersPerPage: number,
+        ordersPerPage: number
     ): Promise<StoreOrdersDTO> {
         //basic query is store id
         const where = { store_id: storeId };
@@ -243,9 +243,21 @@ export default class StoreOrderService extends TransactionBaseService {
     async changeOrderStatus(
         orderId: string,
         newStatus: string,
-        note?: Record<string, any>,
+        note?: Record<string, any>
     ) {
         try {
+            const validStatuses = [
+                'processing',
+                'shipped',
+                'delivered',
+                'cancelled',
+                'refunded',
+            ];
+
+            if (!validStatuses.includes(newStatus)) {
+                throw new Error(`Invalid order status: ${newStatus}`);
+            }
+
             const order = await this.orderRepository_.findOne({
                 where: { id: orderId },
             });
@@ -254,16 +266,34 @@ export default class StoreOrderService extends TransactionBaseService {
                 throw new Error(`Order with id ${orderId} not found`);
             }
 
-            const mappedStatus = Object.values(OrderStatus).find(
-                (status) => status === newStatus,
-            );
+            switch (newStatus) {
+                case 'processing':
+                    order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
+                    order.status = OrderStatus.PENDING;
+                    break;
 
-            if (!mappedStatus) {
-                throw new Error(`Invalid order status: ${newStatus}`);
+                case 'shipped':
+                    order.fulfillment_status = FulfillmentStatus.SHIPPED;
+                    break;
+
+                case 'delivered':
+                    order.fulfillment_status = FulfillmentStatus.FULFILLED;
+                    order.status = OrderStatus.COMPLETED;
+                    break;
+
+                case 'cancelled':
+                    order.status = OrderStatus.CANCELED;
+                    break;
+
+                case 'refunded':
+                    order.payment_status = PaymentStatus.REFUNDED;
+                    break;
+
+                default:
+                    throw new Error(`Unsupported status: ${newStatus}`);
             }
 
-            order.status = mappedStatus;
-
+            // Update metadata if a note is provided
             if (note) {
                 order.metadata = note;
             }
@@ -274,7 +304,7 @@ export default class StoreOrderService extends TransactionBaseService {
             return order;
         } catch (error) {
             this.logger.error(
-                `Failed to update order status for order ${orderId}: ${error.message}`,
+                `Failed to update order status for order ${orderId}: ${error.message}`
             );
             throw error;
         }
@@ -302,7 +332,7 @@ export default class StoreOrderService extends TransactionBaseService {
             return order;
         } catch (error) {
             this.logger.error(
-                `Failed to fetch order details for order ${orderId}: ${error.message}`,
+                `Failed to fetch order details for order ${orderId}: ${error.message}`
             );
             throw error;
         }
