@@ -19,6 +19,7 @@ import { StoreRepository } from '../repositories/store';
 import { CachedExchangeRateRepository } from '../repositories/cached-exchange-rate';
 import PriceSelectionStrategy from '../strategies/price-selection';
 import CustomerService from './customer';
+import ProductVariantService from './product-variant';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import { In, IsNull, Not } from 'typeorm';
 import { createLogger, ILogger } from '../utils/logging/logger';
@@ -69,6 +70,7 @@ export type csvProductData = {
     status: ProductStatus; // 'draft' or 'published'
     thumbnail: string;
     discountable: string; // '0' or '1'
+    weight: number;
     handle: string; // must be unique from DB and other rows from csv
     variant: string; // Size[XL] | Color[White] | Gender[Male]
     variant_price: number;
@@ -107,6 +109,7 @@ class ProductService extends MedusaProductService {
     protected readonly productVariantRepository_: typeof ProductVariantRepository;
     protected readonly cacheExchangeRateRepository: typeof CachedExchangeRateRepository;
     protected readonly customerService_: CustomerService;
+    protected readonly productVariantService_: ProductVariantService;
     protected readonly priceConverter_: PriceConverter;
 
     constructor(container) {
@@ -117,6 +120,7 @@ class ProductService extends MedusaProductService {
         this.cacheExchangeRateRepository =
             container.cachedExchangeRateRepository;
         this.customerService_ = container.customerService;
+        this.productVariantService_ = container.productVariantService;
         this.priceConverter_ = new PriceConverter(
             this.logger,
             this.cacheExchangeRateRepository
@@ -959,26 +963,29 @@ class ProductService extends MedusaProductService {
             if (requiredCsvHeadersForVariant.some((header) => !row[header])) {
                 return 'required variant fields missing data';
             }
-            return await this.validateCsvVariantRow(row);
+            return await this.validateCsvVariantRow(row, data);
         } else {
             if (requiredCsvHeadersForProduct.some((header) => !row[header])) {
                 return 'required product fields missing data';
             }
-            const productRows = await this.filterCsvProductRows(
-                data,
-                requiredCsvHeadersForProduct,
-                requiredCsvHeadersForVariant
-            );
-            // console.log('productRows: ' + JSON.stringify(productRows));
 
-            return await this.validateCsvProductRow(row, productRows);
+            return await this.validateCsvProductRow(row, data, requiredCsvHeadersForProduct, requiredCsvHeadersForVariant);
         }
     }
 
     async validateCsvProductRow(
         row: csvProductData,
-        productRows: csvProductData[]
+        data: csvProductData[],
+        requiredCsvHeadersForProduct: string[],
+        requiredCsvHeadersForVariant: string[]
     ): Promise<string | null> {
+        const productRows = await this.filterCsvProductRows(
+            data,
+            requiredCsvHeadersForProduct,
+            requiredCsvHeadersForVariant
+        );
+        // console.log('productRows: ' + JSON.stringify(productRows));
+
         const categoryId = await this.validateCategory(row['category']);
         if (!categoryId) {
             return 'category handle does not exist';
@@ -1046,10 +1053,77 @@ class ProductService extends MedusaProductService {
         //     return 'thumbnail must be a valid image';
         // }
 
+        await this.validateCsvVariantRow(row, data);
+
         return null;
     }
 
-    async validateCsvVariantRow(row: csvProductData): Promise<string | null> {
+    async validateCsvVariantRow(row: csvProductData, data: csvProductData[]): Promise<string | null> {
+        console.log('row: ' + JSON.stringify(row));
+        // START: check if barcode is unique
+        if (row['variant_barcode'] && row['variant_barcode'].trim() !== '') {
+            const productVariantBarcode = await this.productVariantService_.getVariantByBarcode(row['variant_barcode']);
+            if (productVariantBarcode) {
+                return 'barcode must be unique';
+            }
+
+            const barcodeExistsInVariants = data.some(
+                (item) => item !== row && item['variant_barcode'] === row['variant_barcode']
+            );
+            if (barcodeExistsInVariants) {
+                return 'barcode must be unique from other rows';
+            }
+        }
+        // END: check if barcode is unique
+
+        // START: check if sku is unique
+        if (row['variant_sku'] && row['variant_sku'].trim() !== '') {
+            const productVariantSku = await this.productVariantService_.getVariantBySku(row['variant_sku']);
+            if (productVariantSku) {
+                return 'sku must be unique';
+            }
+
+            const skuExistsInVariants = data.some(
+                (item) => item !== row && item['variant_sku'] === row['variant_sku']
+            );
+            if (skuExistsInVariants) {
+                return 'sku must be unique from other rows';
+            }
+        }
+        // END: check if sku is unique
+
+        // START: check if upc is unique
+        if (row['variant_upc'] && row['variant_upc'].trim() !== '') {
+            const productVariantUpc = await this.productVariantService_.getVariantByUpc(row['variant_upc']);
+            if (productVariantUpc) {
+                return 'upc must be unique';
+            }
+
+            const upcExistsInVariants = data.some(
+                (item) => item !== row && item['variant_upc'] === row['variant_upc']
+            );
+            if (upcExistsInVariants) {
+                return 'upc must be unique from other rows';
+            }
+        }
+        // END: check if upc is unique
+
+        // START: check if ean is unique
+        if (row['variant_ean'] && row['variant_ean'].trim() !== '') {
+            const productVariantEan = await this.productVariantService_.getVariantByEan(row['variant_ean']);
+            if (productVariantEan) {
+                return 'ean must be unique';
+            }
+
+            const eanExistsInVariants = data.some(
+                (item) => item !== row && item['variant_ean'] === row['variant_ean']
+            );
+            if (eanExistsInVariants) {
+                return 'ean must be unique from other rows';
+            }
+        }
+        // END: check if ean is unique
+
         if (!Number.isInteger(Number(row['variant_price']))) {
             return 'variant price must be a whole number';
         }

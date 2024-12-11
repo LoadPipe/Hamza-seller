@@ -39,6 +39,7 @@ const requiredCsvHeadersForProduct = [
     'subtitle',
     'status',
     'thumbnail',
+    'weight',
     'discountable',
     'description',
     'handle',
