@@ -30,10 +30,8 @@ export function ReleaseEscrow() {
                 description: 'The escrow has been successfully released.',
             });
             closeOrderEscrowDialog();
-            console.log(`WTF ITS WORKING!????`);
         },
         onError: (error: any) => {
-            console.log(`this shit FAILS BRO`);
             closeOrderEscrowDialog();
             toast({
                 variant: 'destructive',

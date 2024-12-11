@@ -22,7 +22,6 @@ export async function releaseOrderEscrow(order: any): Promise<void> {
                 ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
             );
         } catch (error) {
-            console.error('Blockchain operation failed:', error);
             throw error; // Ensure the error is propagated
         }
     } else {
@@ -88,8 +87,6 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
 
     const address: string = findEscrowAddress(order);
     if (!address) {
-        console.log(`WTF IS THIS SHIT`);
-        // lets return a throw error?
         throw new Error('No escrow address found in order');
     }
     const escrow: EscrowClient = new EscrowClient(provider, signer, address);
