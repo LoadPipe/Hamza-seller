@@ -296,7 +296,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
     ): Promise<{
         success: boolean;
         message: string;
-        jsonData: CreateProductInput[];
+        jsonData?: CreateProductInput[];
     }> => {
         let productInputs: CreateProductInput[] = [];
 
@@ -310,6 +310,13 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             requiredCsvHeadersForProduct,
             requiredCsvHeadersForVariant
         );
+
+        if (productRows.length === 0) {
+            return {
+                success: false,
+                message: 'No product rows were detected'
+            };
+        }
 
         // convert row to CreateDataInput
         for (let p of productRows) {
@@ -419,7 +426,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 const convertCsvDataOutput: {
                     success: boolean;
                     message: string;
-                    jsonData: CreateProductInput[];
+                    jsonData?: CreateProductInput[];
                 } = await convertCsvData(
                     store.id,
                     collection_id,

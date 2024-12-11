@@ -1059,7 +1059,6 @@ class ProductService extends MedusaProductService {
     }
 
     async validateCsvVariantRow(row: csvProductData, data: csvProductData[]): Promise<string | null> {
-        console.log('row: ' + JSON.stringify(row));
         // START: check if barcode is unique
         if (row['variant_barcode'] && row['variant_barcode'].trim() !== '') {
             const productVariantBarcode = await this.productVariantService_.getVariantByBarcode(row['variant_barcode']);
