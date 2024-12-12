@@ -1,11 +1,7 @@
 import { Payment, Store, TransactionBaseService } from '@medusajs/medusa';
-import { BuckyLogRepository } from '../repositories/bucky-log';
-import LineItemRepository from '@medusajs/medusa/dist/repositories/line-item';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import StoreRepository from '../repositories/store';
-import CustomerRepository from '../repositories/customer';
-import { LineItemService } from '@medusajs/medusa';
 import { Order } from '../models/order';
 import { Lifetime } from 'awilix';
 import {
@@ -17,11 +13,7 @@ import {
     LessThanOrEqual,
     Between,
 } from 'typeorm';
-import { BuckyClient } from '../buckydrop/bucky-client';
-import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 import { createLogger, ILogger } from '../utils/logging/logger';
-import SmtpMailService from './smtp-mail';
-import CustomerNotificationService from './customer-notification';
 import OrderHistoryService from './order-history';
 import StoreOrderRepository from '../repositories/order';
 import {
@@ -29,7 +21,6 @@ import {
     FulfillmentStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
-import { stringify } from 'querystring';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -58,7 +49,7 @@ export interface StoreOrdersDTO {
     sortedBy: any;
     sortDirection: string;
     filtering: FilterOrders;
-    orders: Order[];
+    orders: any[]; //TODO: actually should be type Order[]
     totalRecords: number;
     statusCount: {};
 }
