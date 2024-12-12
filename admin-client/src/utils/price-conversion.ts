@@ -1,4 +1,5 @@
 import { get } from './api-calls';
+import { SeamlessCache } from './seamless-cache';
 
 /**
  * Converts actual display prices in one currency to an equivalent amount in another currency.
@@ -20,7 +21,7 @@ export async function convertPrice(
     from = from.trim().toLowerCase();
     to = to.trim().toLowerCase();
     const key = `${from}-${to}`;
-    const output = await get('seller/exchange-rate');
+    const output = await exchangeRateCache.retrieve();
 
     if (!output[key])
         throw new Error(
@@ -30,3 +31,11 @@ export async function convertPrice(
     const rate = output[key];
     return amount * rate;
 }
+
+class ExchangeRateCache extends SeamlessCache {
+    protected async getData(): Promise<any> {
+        return await get('seller/exchange-rate');
+    }
+}
+
+const exchangeRateCache = new ExchangeRateCache(60 * 15);
