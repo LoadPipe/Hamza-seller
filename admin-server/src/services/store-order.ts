@@ -184,18 +184,8 @@ export default class StoreOrderService extends TransactionBaseService {
 
         const allOrders = await this.orderRepository_.find(params);
 
-        const orders = await Promise.all(
-            allOrders.map(async (order) => {
-                const payments = await this.orderRepository_.findOne({
-                    where: { id: order.id },
-                    relations: ['payments'],
-                });
-                return { ...order, payments: payments?.payments || [] };
-            })
-        );
-
         if (sort?.field === 'customer') {
-            orders.sort((a, b) => {
+            allOrders.sort((a, b) => {
                 const nameA = a.customer?.last_name?.toLowerCase();
                 const nameB = b.customer?.last_name?.toLowerCase();
 
@@ -208,7 +198,7 @@ export default class StoreOrderService extends TransactionBaseService {
         }
 
         if (sort?.field === 'payments') {
-            orders.sort((a, b) => {
+            allOrders.sort((a, b) => {
                 const amountA = a.payments?.[0]?.amount || 0; // Fallback to 0 if no payment
                 const amountB = b.payments?.[0]?.amount || 0;
 
@@ -229,7 +219,7 @@ export default class StoreOrderService extends TransactionBaseService {
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
-            orders,
+            orders: allOrders,
             totalRecords,
             statusCount: statusCounts,
         };
