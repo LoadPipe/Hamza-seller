@@ -21,18 +21,12 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             });
         }
 
-        const allOrdersByStore = await orderService.getAllOrdersByStore(
+        const allOrdersByStore = await orderService.getAllOrderIdsByStore(
             handler.inputParams.store_id
         );
 
-        const orderIds = allOrdersByStore.map((order) => order.id);
-
         const cancelledOrders =
-            await orderService.getAllCancelledOrders(orderIds);
-
-        console.log('All orders by sore', orderIds);
-        console.log('All orders by sore', allOrdersByStore);
-        console.log('All cancelledOrders by sore', cancelledOrders);
+            await orderService.getAllCancelledOrders(allOrdersByStore);
 
         handler.returnStatus(200, cancelledOrders);
     });

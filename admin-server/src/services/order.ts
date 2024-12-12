@@ -170,18 +170,18 @@ export default class OrderService extends MedusaOrderService {
         });
     }
 
-    async getAllOrdersByStore(storeId: string): Promise<Order[]> {
-        return this.orderRepository_
+    async getAllOrderIdsByStore(storeId: string): Promise<string[]> {
+        const rawOrders = await this.orderRepository_
             .createQueryBuilder('order')
             .leftJoin('order.store', 'store') // Join the store table
-            .select([
-                'order.id', // Select all fields from the `order` table
-            ])
+            .select(['order.id']) // Select only the `id` field
             .where('store.id = :storeId', { storeId }) // Filter by `store.id`
-            .getMany();
+            .getRawMany(); // Get raw results
+
+        return rawOrders.map((order) => order.order_id);
     }
 
-    async getAllCancelledOrders(orders: any) {
+    async getAllCancelledOrders(orders: string[]) {
         return this.cancellationRequestRepository_.find({
             where: { order_id: In(orders) },
         });
