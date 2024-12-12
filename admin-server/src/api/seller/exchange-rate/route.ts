@@ -1,29 +1,41 @@
 import type { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../route-handler';
-import StoreOrderService from '../../../services/store-order';
-import { PriceConverter } from 'src/utils/price-conversion';
-import { CachedExchangeRateRepository } from 'src/repositories/cached-exchange-rate';
-import { Price } from 'src/services/product';
+import PriceConversionService from '../../../services/price-conversion';
 
-export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
-    const orderService: StoreOrderService =
-        req.scope.resolve('storeOrderService');
-
+export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const handler = new RouteHandler(req, res, 'POST', '/seller/order', []);
+    const priceConversionService: PriceConversionService = req.scope.resolve(
+        'priceConversionService'
+    );
 
     await handler.handle(async () => {
-        const cachedExchangeRateRepository: typeof CachedExchangeRateRepository =
-            req.scope.resolve('cachedExchangeRateRepository');
-
         const rates = {
-            'usdc-eth': 0,
-            'eth-usdc': 0,
-            'usdt-eth': 0,
-            'eth-usdt': 0,
-            'usdc-usdt': 0,
-            'usdt-usdc': 0,
+            'usdc-eth': await priceConversionService.getExchangeRate(
+                'usdc',
+                'eth'
+            ),
+            'eth-usdc': await priceConversionService.getExchangeRate(
+                'eth',
+                'usdc'
+            ),
+            'usdt-eth': await priceConversionService.getExchangeRate(
+                'usdt',
+                'eth'
+            ),
+            'eth-usdt': await priceConversionService.getExchangeRate(
+                'eth',
+                'usdt'
+            ),
+            'usdc-usdt': await priceConversionService.getExchangeRate(
+                'usdc',
+                'usdt'
+            ),
+            'usdt-usdc': await priceConversionService.getExchangeRate(
+                'usdt',
+                'usdc'
+            ),
         };
 
-        return rates;
+        return handler.returnStatus(200, rates);
     });
 };
