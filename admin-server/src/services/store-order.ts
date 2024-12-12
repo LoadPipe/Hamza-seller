@@ -118,15 +118,15 @@ export default class StoreOrderService extends TransactionBaseService {
                 if (filter.created_at.gte && filter.created_at.lte) {
                     where['created_at'] = Between(
                         new Date(filter.created_at.gte),
-                        new Date(filter.created_at.lte),
+                        new Date(filter.created_at.lte)
                     );
                 } else if (filter.created_at.gte) {
                     where['created_at'] = MoreThanOrEqual(
-                        new Date(filter.created_at.gte),
+                        new Date(filter.created_at.gte)
                     );
                 } else if (filter.created_at.lte) {
                     where['created_at'] = LessThanOrEqual(
-                        new Date(filter.created_at.lte),
+                        new Date(filter.created_at.lte)
                     );
                 }
             }
@@ -185,8 +185,8 @@ export default class StoreOrderService extends TransactionBaseService {
                 sort.field !== 'customer' &&
                 sort.field !== 'payments'
                     ? {
-                        [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
-                    }
+                          [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
+                      }
                     : undefined,
             relations: ['customer', 'payments'], // Fetch related payments and customers
         };
@@ -200,7 +200,7 @@ export default class StoreOrderService extends TransactionBaseService {
                     relations: ['payments'],
                 });
                 return { ...order, payments: payments?.payments || [] };
-            }),
+            })
         );
 
         if (sort?.field === 'customer') {
@@ -238,7 +238,7 @@ export default class StoreOrderService extends TransactionBaseService {
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
-            orders,
+            orders: allOrders,
             totalRecords,
             statusCount: statusCounts,
         };

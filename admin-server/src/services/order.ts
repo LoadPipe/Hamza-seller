@@ -14,6 +14,7 @@ import OrderRepository from '@medusajs/medusa/dist/repositories/order';
 import LineItemRepository from '@medusajs/medusa/dist/repositories/line-item';
 import SalesChannelRepository from '@medusajs/medusa/dist/repositories/sales-channel';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
+import { CancellationRequestRepository } from 'src/repositories/cancellation-request';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import { RefundRepository } from '../repositories/refund';
 import StoreRepository from '../repositories/store';
@@ -63,6 +64,7 @@ export default class OrderService extends MedusaOrderService {
     protected customerRepository_: typeof CustomerRepository;
     protected orderRepository_: typeof OrderRepository;
     protected lineItemRepository_: typeof LineItemRepository;
+    protected cancellationRequestRepository_: typeof CancellationRequestRepository;
     protected productRepository_: typeof ProductRepository;
     protected paymentRepository_: typeof PaymentRepository;
     protected cartRepository_: typeof CartRepository;
@@ -79,6 +81,8 @@ export default class OrderService extends MedusaOrderService {
 
     constructor(container) {
         super(container);
+        this.cancellationRequestRepository_ =
+            container.cancellationRequestRepository;
         this.orderRepository_ = container.orderRepository;
         this.customerRepository_ = container.customerRepository;
         this.refundRepository_ = container.refundRepository;
@@ -163,6 +167,23 @@ export default class OrderService extends MedusaOrderService {
         return this.orderRepository_.findOne({
             where: { id: orderId },
             relations: ['store.owner'],
+        });
+    }
+
+    async getAllOrdersByStore(storeId: string): Promise<Order[]> {
+        return this.orderRepository_
+            .createQueryBuilder('order')
+            .leftJoin('order.store', 'store') // Join the store table
+            .select([
+                'order.id', // Select all fields from the `order` table
+            ])
+            .where('store.id = :storeId', { storeId }) // Filter by `store.id`
+            .getMany();
+    }
+
+    async getAllCancelledOrders(orders: any) {
+        return this.cancellationRequestRepository_.find({
+            where: { order_id: In(orders) },
         });
     }
 
