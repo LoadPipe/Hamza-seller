@@ -173,10 +173,10 @@ export default class OrderService extends MedusaOrderService {
     async getAllOrderIdsByStore(storeId: string): Promise<string[]> {
         const rawOrders = await this.orderRepository_
             .createQueryBuilder('order')
-            .leftJoin('order.store', 'store') // Join the store table
-            .select(['order.id']) // Select only the `id` field
-            .where('store.id = :storeId', { storeId }) // Filter by `store.id`
-            .getRawMany(); // Get raw results
+            .leftJoin('order.store', 'store')
+            .select(['order.id'])
+            .where('store.id = :storeId', { storeId })
+            .getRawMany();
 
         return rawOrders.map((order) => order.order_id);
     }
