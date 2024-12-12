@@ -59,6 +59,53 @@ const requiredCsvHeadersForVariant = [
     'variant_manage_inventory'
 ];
 
+/**
+ * @swagger
+ * /seller/product/csv/import:
+ *   post:
+ *     summary: Import products from CSV
+ *     description: Imports products to a specific store from a CSV file.
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The CSV file to be uploaded.
+ *     responses:
+ *       200:
+ *         description: Products imported successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Products imported successfully
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 invalidProducts:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Error importing products.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error importing products: [error message]
+ */
+
 export const POST = async (req: FileRequest, res: MedusaResponse) => {
     const productService: ProductService = req.scope.resolve('productService');
     const storeService: StoreService = req.scope.resolve('storeService');
