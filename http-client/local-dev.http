@@ -83,3 +83,11 @@ Content-Type: application/json
 {
   "wallet_address": "0xfb20a78fd35d20925af6f7379ab35fa6c41e9834"
 }
+
+### Get cancelled orders
+GET  http://localhost:9000/seller/order/cancel-request
+Content-Type: application/json
+
+{
+  "store_id": "store_01JEWRFN08KNC6S9M6NAYGDPBZ"
+}
