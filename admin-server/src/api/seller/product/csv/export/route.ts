@@ -3,6 +3,8 @@ import { RouteHandler } from '../../../../route-handler';
 import ProductService from '../../../../../services/product';
 import StoreService from '../../../../../services/store';
 
+type SimplifiedCategory = { name: string; handle: string };
+
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const productService: ProductService = req.scope.resolve('productService');
     const storeService: StoreService = req.scope.resolve('storeService');
@@ -20,13 +22,19 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             const storeId = handler.inputParams.store_id;
             const store = await storeService.getStoreById(storeId);
             const products = await productService.getProductsFromStore(store.id);
+            for (const product of products) {
+                const categories = await productService.getCategoriesByStoreId(store.id);
+                (product as any).categories = categories
+                    .filter(category => category.products.some(p => p.id === product.id))
+                    .map((category: SimplifiedCategory) => ({ name: category.name, handle: category.handle }));
+            }
 
             if (products.length === 0) {
                 return handler.returnStatus(400, {
                     message: 'No products found for the given store',
                 });
             }
-            console.log('products: ' + JSON.stringify(products));
+            console.log('products: ' + JSON.stringify(products[0]));
             const headers = 'category,images,title,subtitle,description,status,thumbnail,weight,discountable,handle,variant,variant_price,variant_inventory_quantity,variant_allow_backorder,variant_manage_inventory,variant_sku,variant_barcode,variant_ean,variant_upc,variant_hs_code,variant_origin_country,variant_mid_code,variant_material,variant_weight,variant_length,variant_height,variant_width\n'; 
             let csvContent = headers; 
 
@@ -37,9 +45,14 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                 return field;
             };
 
+            // TODO: how to handle: multiple categories, variant price, true/false to 0 and 1, null to empty fields
             products.forEach((product) => {
-                product.variants.forEach((variant) => {
-                    csvContent += `,,${product.title},${product.subtitle},${handleCommas(product.description)},${product.status},${product.thumbnail},${product.weight},${product.discountable},${product.handle},${variant.title},,${variant.inventory_quantity},${variant.allow_backorder},${variant.manage_inventory},${variant.sku},${variant.barcode},${variant.ean},${variant.upc},${variant.hs_code},${variant.origin_country},${variant.mid_code},${variant.material},${variant.weight},${variant.length},${variant.height},${variant.width}\n`;
+                product.variants.forEach((variant, index) => {
+                    if (index === 0) {
+                        csvContent += `${product.categories[0].handle},,${product.title},${product.subtitle},${handleCommas(product.description)},${product.status},${product.thumbnail},${product.weight},${product.discountable},${product.handle},${variant.title},,${variant.inventory_quantity},${variant.allow_backorder},${variant.manage_inventory},${variant.sku},${variant.barcode},${variant.ean},${variant.upc},${variant.hs_code},${variant.origin_country},${variant.mid_code},${variant.material},${variant.weight},${variant.length},${variant.height},${variant.width}\n`;
+                    } else {
+                        csvContent += `,,,,,,,,,${product.handle},${variant.title},,${variant.inventory_quantity},${variant.allow_backorder},${variant.manage_inventory},${variant.sku},${variant.barcode},${variant.ean},${variant.upc},${variant.hs_code},${variant.origin_country},${variant.mid_code},${variant.material},${variant.weight},${variant.length},${variant.height},${variant.width}\n`;
+                    }
                 });
             }); 
             res.setHeader('Content-disposition', 'attachment; filename=products.csv');
