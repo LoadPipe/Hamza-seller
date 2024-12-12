@@ -56,6 +56,7 @@ export const OrderSchema = z.object({
                 .object({
                     id: z.string(),
                     amount: z.number(),
+                    currency_code: z.string(),
                     provider_id: z.string(),
                     created_at: z.string(),
                     blockchain_data: z
