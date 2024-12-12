@@ -135,7 +135,7 @@ export default function OrdersPage() {
                 setSorting={setSorting}
                 isLoading={isLoading}
             />
-            <ReleaseEscrow/>
+            <ReleaseEscrow />
         </>
     );
 }
