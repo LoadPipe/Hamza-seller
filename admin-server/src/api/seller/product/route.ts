@@ -17,6 +17,21 @@ import { Product } from '../../../models/product';
  * page: number
  * recordsPerPage: number
  */
+
+/**
+ * @swagger
+ * /seller/product:
+ *   get:
+ *     summary: Get products
+ *     description: Retrieves a list of products belonging to a store
+ *     parameters:
+ *       - in: query
+ *         name: store_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the store to get products from
+ */
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const productService: ProductService = req.scope.resolve('productService');
     const storeService: StoreService = req.scope.resolve('storeService');

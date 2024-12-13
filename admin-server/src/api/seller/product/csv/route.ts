@@ -4,6 +4,7 @@ import ProductService, { csvProductData } from '../../../../services/product';
 import StoreService from '../../../../services/store';
 import { Product } from '../../../../models/product';
 import {
+    CreateProductProductOption,
     CreateProductProductVariantInput,
     CreateProductInput as MedusaCreateProductInput,
 } from '@medusajs/medusa/dist/types/product';
@@ -13,37 +14,115 @@ type CreateProductInput = MedusaCreateProductInput & {
     store_id: string;
 };
 
+type CreateProductProductOption_ = CreateProductProductOption & {
+    values: string[];
+};
+
+type ProductDetails = {
+    productInfo: {
+        name: string;
+        baseCurrency: string;
+    };
+    variants: csvProductData[];
+}
+
 interface FileRequest extends MedusaRequest {
     file?: any;
 }
 
 const upload = multer({ dest: 'uploads/csvs/' });
 
-const requiredCsvHeaders = [
+const requiredCsvHeadersForProduct = [
     'category',
     'images',
     'title',
     'subtitle',
-    'handle',
     'status',
     'thumbnail',
     'weight',
     'discountable',
-    'price',
     'description',
+    'handle',
+    'variant',
+    'variant_price',
+    'variant_inventory_quantity',
+    'variant_allow_backorder',
+    'variant_manage_inventory'
 ];
+
+const requiredCsvHeadersForVariant = [
+    'handle',
+    'variant',
+    'variant_price',
+    'variant_inventory_quantity',
+    'variant_allow_backorder',
+    'variant_manage_inventory'
+];
+
+/**
+ * @swagger
+ * /seller/product/csv/import:
+ *   post:
+ *     summary: Import products from CSV
+ *     description: Imports products to a specific store from a CSV file.
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The CSV file to be uploaded.
+ *     responses:
+ *       200:
+ *         description: Products imported successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Products imported successfully
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 invalidProducts:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Error importing products.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error importing products: [error message]
+ */
 
 export const POST = async (req: FileRequest, res: MedusaResponse) => {
     const productService: ProductService = req.scope.resolve('productService');
     const storeService: StoreService = req.scope.resolve('storeService');
 
     /**
-     * optionNames: array of option names i.e. ['color', 'size']
+     * optionNames: array of option names i.e. 
+     [
+        { title: 'color', values: ['Black', 'White'] },
+        { title: 'size', values: ['L', 'XL'] },
+     ]
+     
      * productDetails: array of product items variant with name, price i.e. 
      [
         {
             productInfo: {
                 name: 'Some product name',
+                baseCurrency: 'cny',
             },
             variants: [
                 {name: 'L', price: 100}, 
@@ -56,107 +135,195 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
     * @returns 
     */
     const mapVariants = async (
-        productDetails: any,
-        optionNames: string[]
+        productDetails: ProductDetails
     ): Promise<CreateProductProductVariantInput[]> => {
         const variants = [];
         const currencies = [
-            { code: 'eth', symbol: 'ETH', rate: 1 },
-            { code: 'usdc', symbol: 'USDC', rate: 3445 },
-            { code: 'usdt', symbol: 'USDT', rate: 1 },
+            { code: 'eth', symbol: 'ETH' },
+            { code: 'usdc', symbol: 'USDC' },
+            { code: 'usdt', symbol: 'USDT' },
         ];
 
+        //extracts option values from variantData
+        //const option = [ { "value":"L" }, { "value":"Black" }, { "value":"Female" } ]
+        const extractOptions = (variantString: string): { value: string }[] => {
+            return variantString.split('|').map(option => {
+                const value = option.trim().split('[')[1].replace(']', '');
+                return { value };
+            });
+        }
+        
         for (const variant of productDetails.variants) {
             //get price
-            const baseAmount = variant.price;
+            const baseAmount = variant.variant_price;
             const convertedPrices = await productService.getPricesForVariant(
                 baseAmount,
                 productDetails.productInfo.baseCurrency
             );
-            console.log('convertedPrices: ' + JSON.stringify(convertedPrices));
+            // console.log('convertedPrices: ' + JSON.stringify(convertedPrices));
             //TODO: get from someplace global
             const prices = [];
-
             for (const currency of currencies) {
                 const price = convertedPrices.find(
                     (p) => p.currency_code === currency.code
                 );
-                console.log('price: ' + JSON.stringify(price));
+                // console.log('price: ' + JSON.stringify(price));
                 prices.push({
                     currency_code: currency.code,
                     amount: price.amount,
                 });
             }
 
-            //get option names/values
-            const options = [];
-            for (const opt of optionNames) {
-                options.push({ value: opt });
-            }
+            const options = extractOptions(variant.variant);
+            // console.log('options: ' + JSON.stringify(options));
 
             variants.push({
-                title: productDetails.productInfo.name,
-                inventory_quantity: 100,
-                allow_backorder: false,
-                manage_inventory: true,
+                title: options.map(option => option.value).join(' | '),
+                inventory_quantity: variant.variant_inventory_quantity,
+                allow_backorder: variant.variant_allow_backorder === '1' ? true : false,
+                manage_inventory: variant.variant_manage_inventory === '1' ? true : false,
+                sku: variant.variant_sku || null,
+                barcode: variant.variant_barcode || null,
+                ean: variant.variant_ean || null,
+                upc: variant.variant_upc || null,
+                hs_code: variant.variant_hs_code || null,
+                origin_country: variant.variant_origin_country || null,
+                mid_code: variant.variant_mid_code || null,
+                material: variant.variant_material || null,
+                weight: variant.variant_weight || null,
+                length: variant.variant_length || null,
+                width: variant.variant_width || null,
+                height: variant.variant_height || null,
                 prices,
                 options: options,
             });
         }
-
+        // console.log('variants: ' + JSON.stringify(variants));
         return variants;
     };
 
-    const convertDataToCreateDataInput = async (
-        data: csvProductData,
+    /**
+     * 
+     * @param rowData - product row data 
+     * @param csvData - all csv data
+     * @param requiredCsvHeadersForProduct - product headers
+     * @param requiredCsvHeadersForVariant - variant headers
+     * @returns 
+     */
+    const convertRowDataToProductDetails = async (
+        rowData: csvProductData,
+        csvData: csvProductData[]
+    ): Promise<ProductDetails> => {
+        //get all variant rows with same handle
+        let variants = [];
+        variants.push(rowData);
+        variants.push(...csvData.filter((row) => rowData !== row &&row.handle === rowData.handle));
+        // console.log('variants: ' + JSON.stringify(variants));
+
+        const productDetails: ProductDetails = {
+            productInfo: {
+                name: rowData['title'],
+                baseCurrency: 'cny',
+            },
+            variants: variants,
+        };
+        return productDetails;
+    };
+
+    const convertCsvDataToCreateDataInput = async (
+        rowData: csvProductData,
+        csvData: csvProductData[],
         storeId: string,
         collectionId: string,
         salesChannelIds: string[]
     ): Promise<CreateProductInput> => {
-        // {
+        // const productDetails: {
         //     productInfo: {
-        //         name: 'Some product name',
+        //         name: string;
+        //         baseCurrency: string;
+        //     };
+        //     variants: { variantData: string; price: number }[];
+        // } = {
+        //     productInfo: {
+        //         name: rowData['title'],
+        //         baseCurrency: 'cny',
         //     },
         //     variants: [
-        //         {name: 'L', price: 100},
-        //         {name: 'XL', price: 200}
-        //     ]
-        // }
-        const optionNames = ['default'];
-        const productDetails = {
-            productInfo: {
-                name: data['title'],
-                baseCurrency: 'cny',
-            },
-            variants: [{ name: 'default', price: data['price'] }],
+        //         { variantData: 'Size[L]|Color[Black] | Gender[Female]', price: rowData['variant_price'] },
+        //         { variantData: 'Size[L] | Color[Black]|Gender[Male]', price: rowData['variant_price'] },
+        //         { variantData: 'Size[L] | Color[White] | Gender[Female]', price: rowData['variant_price'] },
+        //         { variantData: 'Size[L] | Color[White] | Gender[Male]', price: rowData['variant_price'] },
+        //         { variantData: 'Size[XL] | Color[Black] | Gender[Female]', price: rowData['variant_price'] },
+        //         { variantData: 'Size[XL] | Color[Black] | Gender[Male]', price: rowData['variant_price'] },
+        //         { variantData: 'Size[XL] | Color[White] | Gender[Female]', price: rowData['variant_price'] },
+        //         { variantData: 'Size[XL] | Color[White] | Gender[Male]', price: rowData['variant_price'] },
+        //     ],
+        // };
+        const productDetails: ProductDetails =
+            await convertRowDataToProductDetails(
+                rowData,
+                csvData
+            );        
+        
+        // generate option names from variantData
+        // const optionNames: extractOptionNames[] = [
+        //     { title: 'color', values: ['Black', 'White'] },
+        //     { title: 'size', values: ['L', 'XL'] },
+        //     { title: 'gender', values: ['Male', 'Female'] },
+        // ];        
+        const extractOptionNames = async (
+            variants: csvProductData[]
+        ): Promise<CreateProductProductOption_[]> => {
+            const optionMap: { [key: string]: Set<string> } = {};
+
+            variants.forEach((variant) => {
+                const options = variant.variant.split('|').map(option => option.trim());
+                options.forEach((option) => {
+                    const [key, value] = option.split('[');
+                    const cleanValue = value.replace(']', '');
+                    if (!optionMap[key]) {
+                        optionMap[key] = new Set();
+                    }
+                    optionMap[key].add(cleanValue);
+                });
+            });
+
+            return Object.entries(optionMap).map(([title, values]) => ({
+                title,
+                values: Array.from(values),
+            }));
         };
-        const variants = await mapVariants(productDetails, optionNames);
+        
+        const optionNames = await extractOptionNames(productDetails.variants);
+        // console.log('optionNames: ' + JSON.stringify(optionNames));
+        
+        const variants = await mapVariants(productDetails);
+        // console.log('variants: ' + JSON.stringify(variants));
 
         const output = {
-            title: data['title'],
-            subtitle: data['subtitle'],
-            handle: data['handle'],
-            description: data['description'],
+            title: rowData['title'],
+            subtitle: rowData['subtitle'],
+            handle: rowData['handle'],
+            description: rowData['description'],
             is_giftcard: false,
-            status: data['status'] as ProductStatus,
-            thumbnail: data['thumbnail'],
-            // images: data['images'],
+            status: rowData['status'] as ProductStatus,
+            thumbnail: rowData['thumbnail'],
+            // images: rowData['images'],
             collection_id: collectionId,
-            weight: Math.round(Number(data['weight']) ?? 100),
-            discountable: data['discountable'] === '1' ? true : false,
+            weight: Math.round(Number(rowData['weight']) ?? 100),
+            discountable: rowData['discountable'] === '1' ? true : false,
             store_id: storeId,
-            categories: [{ id: data['category_id'] }],
+            categories: [{ id: rowData['category_id'] }],
             sales_channels: salesChannelIds.map((sc) => {
                 return { id: sc };
             }),
-            options: optionNames.map((o) => {
-                return { title: o };
-            }),
+            options: optionNames,
             variants,
         } as CreateProductInput;
 
-        // console.log('Converting data to CreateProductInput:', output);
+        // console.log('Converting data to CreateProductInput:', JSON.stringify(output));
         // console.log('Converting data to Variants:', JSON.stringify(variants));
+        // console.log('Converting data to optionNames:', JSON.stringify(optionNames));
 
         if (!output.variants?.length)
             throw new Error(
@@ -166,15 +333,17 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         return output;
     };
 
-    const convertData = async (
+    const convertCsvData = async (
         storeId: string,
         collectionId: string,
         salesChannelId: string,
-        data: csvProductData[]
+        data: csvProductData[],
+        requiredCsvHeadersForProduct: string[],
+        requiredCsvHeadersForVariant: string[]
     ): Promise<{
         success: boolean;
         message: string;
-        jsonData: CreateProductInput[];
+        jsonData?: CreateProductInput[];
     }> => {
         let productInputs: CreateProductInput[] = [];
 
@@ -182,11 +351,31 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         // const collectionId = 'pcol_01HRVF8HCVY8B00RF5S54THTPC';
         // const salesChannelId = 'sc_01JE2GP93F1P0621E4ZCKK1AYR';
 
-        for (let p of data) {
+        //get all product rows to loop through
+        const productRows = await productService.filterCsvProductRows(
+            data,
+            requiredCsvHeadersForProduct,
+            requiredCsvHeadersForVariant
+        );
+
+        if (productRows.length === 0) {
+            return {
+                success: false,
+                message: 'No product rows were detected'
+            };
+        }
+
+        // convert row to CreateDataInput
+        for (let p of productRows) {
+            // console.log('p: ' + JSON.stringify(p));
             productInputs.push(
-                await convertDataToCreateDataInput(p, storeId, collectionId, [
-                    salesChannelId,
-                ])
+                await convertCsvDataToCreateDataInput(
+                    p,
+                    data,
+                    storeId,
+                    collectionId,
+                    [salesChannelId]
+                )
             );
         }
 
@@ -243,10 +432,13 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 // validation for store_id.  Methods throws error if store not found.
                 const store = await storeService.getStoreById(store_id);
 
+                // TODO: validate collection_id
+                // TODO: validate sales_channel_id
+
                 const validateCsvOutput: { success: boolean; message: string } =
                     await productService.validateCsv(
                         file.path,
-                        requiredCsvHeaders
+                        requiredCsvHeadersForProduct
                     );
 
                 if (!validateCsvOutput.success) {
@@ -259,44 +451,49 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     file.path
                 );
 
-                const validateDataOutput: {
+                const validateCsvDataOutput: {
                     success: boolean;
                     message: string;
-                    validData: Array<any>;
-                    invalidData: Array<any>;
-                } = await productService.validateData(
+                    validData: csvProductData[];
+                    invalidData: csvProductData[];
+                } = await productService.validateCsvData(
                     fileData,
-                    requiredCsvHeaders
+                    requiredCsvHeadersForProduct,
+                    requiredCsvHeadersForVariant
                 );
 
-                if (!validateDataOutput.success) {
+                if (!validateCsvDataOutput.success) {
                     return handler.returnStatus(400, {
-                        message: validateDataOutput.message,
-                        invalidData: validateDataOutput.invalidData,
+                        message: validateCsvDataOutput.message,
+                        invalidData: validateCsvDataOutput.invalidData,
                     });
                 }
+                // console.log('validateCsvDataOutput: ' + JSON.stringify(validateCsvDataOutput));
 
-                const convertDataOutput: {
+                const convertCsvDataOutput: {
                     success: boolean;
                     message: string;
-                    jsonData: CreateProductInput[];
-                } = await convertData(
+                    jsonData?: CreateProductInput[];
+                } = await convertCsvData(
                     store.id,
                     collection_id,
                     sales_channel_id,
-                    validateDataOutput.validData
+                    validateCsvDataOutput.validData,
+                    requiredCsvHeadersForProduct,
+                    requiredCsvHeadersForVariant
                 );
+                // console.log('convertCsvDataOutput: ' + JSON.stringify(convertCsvDataOutput));
 
-                if (!convertDataOutput.success) {
+                if (!convertCsvDataOutput.success) {
                     return handler.returnStatus(400, {
-                        message: convertDataOutput.message,
+                        message: convertCsvDataOutput.message,
                     });
                 }
 
                 const products: Product[] =
                     await productService.bulkImportProducts(
                         store.id,
-                        convertDataOutput.jsonData
+                        convertCsvDataOutput.jsonData
                     );
 
                 if (products.length === 0) {
@@ -308,7 +505,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 res.status(200).json({
                     message: 'Products imported successfully',
                     products: products,
-                    invalidProducts: validateDataOutput.invalidData,
+                    invalidProducts: validateCsvDataOutput.invalidData,
                 });
             } catch (error) {
                 return handler.returnStatus(400, {

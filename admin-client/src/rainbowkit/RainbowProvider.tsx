@@ -20,7 +20,6 @@ import LoginPage from '@/pages/login/login-page.tsx';
 
 export function RainbowWrapper({ children }: { children: React.ReactNode }) {
     const { authData, setCustomerAuthData } = useCustomerAuthStore();
-    const [walletAddress, setWalletAddress] = useState<string>('');
 
     const walletSignature = createAuthenticationAdapter({
         getNonce: async () => {
@@ -34,7 +33,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 address,
                 chainId,
             });
-            setWalletAddress(address);
+
             return createSiweMessage({
                 domain: window.location.host,
                 address,
@@ -47,7 +46,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
         },
 
         verify: async ({ message, signature }) => {
-            console.log('message', message);
+            console.log('SIEW MESSAGE', message);
             console.log('signature', signature);
             try {
                 const response = await sendVerifyRequest(message, signature);
@@ -61,10 +60,13 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 // Set the JWT as a secure cookie
                 setJwtCookie(token);
 
+                const lines = message.split('\n');
+                const walletAddress = lines[1]?.trim();
+
                 if (response.status === 200) {
                     setCustomerAuthData({
                         token: token,
-                        wallet_address: walletAddress,
+                        wallet_address: walletAddress.toLowerCase(),
                         is_verified: true,
                         status: 'authenticated',
                     });
