@@ -49,7 +49,7 @@ export async function refundOrderEscrow(
     amount: BigNumberish
 ): Promise<boolean> {
     //TODO: get provider, chain id & signer from window.ethereum
-    if (window.ethereum?.providers) {
+    if (window.ethereum) {
         const escrow: EscrowClient = await createEscrowContract(order);
         if (escrow) {
             await escrow.refundPayment(
