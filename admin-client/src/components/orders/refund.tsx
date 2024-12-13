@@ -75,6 +75,8 @@ const Refund: React.FC<RefundProps> = ({
                 if (escrowRefundResult) {
                     await putSecure('/seller/order/refund', {
                         id: metadata?.refund_id,
+                        order_id: orderId,
+                        amount: formData.refundAmount,
                     });
                     toast({
                         variant: 'default',

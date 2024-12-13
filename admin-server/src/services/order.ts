@@ -993,7 +993,11 @@ export default class OrderService extends MedusaOrderService {
         }
     }
 
-    async confirmRefund(refundId: string) {
+    async confirmRefund(
+        refundId: string,
+        order_id: string,
+        refundAmount: number
+    ) {
         try {
             const refund = await this.refundRepository_.findOne({
                 where: { id: refundId },
