@@ -19,6 +19,7 @@ import { StoreRepository } from '../repositories/store';
 import { CachedExchangeRateRepository } from '../repositories/cached-exchange-rate';
 import PriceSelectionStrategy from '../strategies/price-selection';
 import CustomerService from './customer';
+import ProductVariantService from './product-variant';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import { In, IsNull, Not } from 'typeorm';
 import { createLogger, ILogger } from '../utils/logging/logger';
@@ -65,13 +66,29 @@ export type csvProductData = {
     images: string;
     title: string;
     subtitle: string;
-    handle: string; // must be unique from DB and other rows from csv
     description: string;
     status: ProductStatus; // 'draft' or 'published'
     thumbnail: string;
-    weight: number;
     discountable: string; // '0' or '1'
-    price: number;
+    weight: number;
+    handle: string; // must be unique from DB and other rows from csv
+    variant: string; // Size[XL] | Color[White] | Gender[Male]
+    variant_price: number;
+    variant_inventory_quantity: number;
+    variant_allow_backorder: string; // '0' or '1'
+    variant_manage_inventory: string; // '0' or '1'
+    variant_sku?: string;
+    variant_barcode?: string;
+    variant_ean?: string;
+    variant_upc?: string;
+    variant_hs_code?: string;
+    variant_origin_country?: string;
+    variant_mid_code?: string;
+    variant_material?: string;
+    variant_weight?: number;
+    variant_length?: number;
+    variant_height?: number;
+    variant_width?: number;
     category_id?: string; // optional: created when data is valid, and retrieved from DB
     invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
 }
@@ -92,6 +109,7 @@ class ProductService extends MedusaProductService {
     protected readonly productVariantRepository_: typeof ProductVariantRepository;
     protected readonly cacheExchangeRateRepository: typeof CachedExchangeRateRepository;
     protected readonly customerService_: CustomerService;
+    protected readonly productVariantService_: ProductVariantService;
     protected readonly priceConverter_: PriceConverter;
 
     constructor(container) {
@@ -102,6 +120,7 @@ class ProductService extends MedusaProductService {
         this.cacheExchangeRateRepository =
             container.cachedExchangeRateRepository;
         this.customerService_ = container.customerService;
+        this.productVariantService_ = container.productVariantService;
         this.priceConverter_ = new PriceConverter(
             this.logger,
             this.cacheExchangeRateRepository
@@ -372,7 +391,7 @@ class ProductService extends MedusaProductService {
             await this.productRepository_.find({
                 where: { store_id: storeId, status: ProductStatus.PUBLISHED },
                 // relations: ['store'],
-		relations: ['variants']
+                relations: ['variants'],
             })
         ).filter((p) => p.variants?.length);
     }
@@ -755,17 +774,26 @@ class ProductService extends MedusaProductService {
         return variant;
     }
 
-    async getCategoryByHandle(categoryHandle: string): Promise<ProductCategory | null> {
-        const categories = await categoryCache.retrieve(this.productCategoryRepository_);
-        return categories.find(cat => cat.handle.toLowerCase() === categoryHandle.toLowerCase()) || null;
+    async getCategoryByHandle(
+        categoryHandle: string
+    ): Promise<ProductCategory | null> {
+        const categories = await categoryCache.retrieve(
+            this.productCategoryRepository_
+        );
+        return (
+            categories.find(
+                (cat) =>
+                    cat.handle.toLowerCase() === categoryHandle.toLowerCase()
+            ) || null
+        );
     }
 
     async getProductByHandle(productHandle: string): Promise<Product | null> {
         try {
             const product = await this.productRepository_.findOne({
-                where: { handle: productHandle }
+                where: { handle: productHandle },
             });
-    
+
             return product || null;
         } catch (error) {
             this.logger.error('Error fetching product by handle:', error);
@@ -789,33 +817,33 @@ class ProductService extends MedusaProductService {
                     reject(error);
                 });
         });
-    };
+    }
 
     async validateCsv(
         filePath: string,
-        requiredCsvHeaders: string[]
+        requiredCsvHeadersForProduct: string[]
     ): Promise<{ success: boolean; message: string }> {
         const validationErrors = [];
         const fileRows = [];
-    
+
         const rl = readline.createInterface({
             input: fs.createReadStream(filePath),
             crlfDelay: Infinity,
         });
-    
+
         for await (const line of rl) {
             fileRows.push(line);
         }
-    
+
         const rowCount = fileRows.length;
-    
+
         if (rowCount < 2) {
             validationErrors.push({
                 error: 'CSV file must contain more than 2 rows',
             });
         } else {
             const headerRow = fileRows[0].split(',');
-            const missingHeaders = requiredCsvHeaders.filter(
+            const missingHeaders = requiredCsvHeadersForProduct.filter(
                 (header) => !headerRow.includes(header)
             );
             if (missingHeaders.length > 0) {
@@ -824,29 +852,27 @@ class ProductService extends MedusaProductService {
                 });
             }
         }
-    
         return {
             success: validationErrors.length === 0,
             message: validationErrors.map((err) => err.error).join(', '),
         };
-    };
-    
-    async validateCategory(
-        categoryHandle: string
-    ): Promise<string | null> {
+    }
+
+    async validateCategory(categoryHandle: string): Promise<string | null> {
         const category_ = await this.getCategoryByHandle(categoryHandle);
         return category_ ? category_.id : null;
-    };
-    
+    }
+
     /**
      * validate data and return valid and invalid data
-     * @param productService 
-     * @param data 
-     * @returns 
+     * @param productService
+     * @param data
+     * @returns
      */
-    async validateData(
+    async validateCsvData(
         data: csvProductData[],
-        requiredCsvHeaders: string[]
+        requiredCsvHeadersForProduct: string[],
+        requiredCsvHeadersForVariant: string[]
     ): Promise<{
         success: boolean;
         message: string;
@@ -855,9 +881,15 @@ class ProductService extends MedusaProductService {
     }> {
         const invalidData: csvProductData[] = [];
         const validData: csvProductData[] = [];
-    
+
+        // validates each row, and returns invalid data if any
         for (const row of data) {
-            const validationError = await this.validateRow(data, row, requiredCsvHeaders);
+            const validationError = await this.validateCsvRow(
+                data,
+                row,
+                requiredCsvHeadersForProduct,
+                requiredCsvHeadersForVariant
+            );
             if (validationError) {
                 row['invalid_error'] = validationError;
                 invalidData.push(row);
@@ -865,28 +897,93 @@ class ProductService extends MedusaProductService {
                 validData.push(row);
             }
         }
-    
+
         const success = validData.length > 0;
-        const message = invalidData.length > 0
-            ? 'Contains SOME valid data'
-            : 'Contains valid data';
-    
+        const message =
+            invalidData.length > 0
+                ? 'Contains SOME valid data'
+                : 'Contains valid data';
+
         return {
             success,
             message: success ? message : 'Contains invalid data',
             validData,
             invalidData,
         };
-    };
-    
-    async validateRow(
+    }
+
+    async csvRowIsVariant(
+        row: csvProductData,
+        requiredCsvHeadersForVariant: string[],
+        requiredCsvHeadersForProduct: string[]
+    ): Promise<boolean> {
+        const isVariant =
+            requiredCsvHeadersForVariant.every((header) => row[header]) &&
+            requiredCsvHeadersForProduct.every(
+                (header) =>
+                    !row[header] ||
+                    requiredCsvHeadersForVariant.includes(header)
+            );
+        return isVariant;
+    }
+
+    async filterCsvProductRows(
+        data: csvProductData[],
+        requiredCsvHeadersForProduct: string[],
+        requiredCsvHeadersForVariant: string[]
+    ): Promise<csvProductData[]> {
+        return data.filter(
+            (item) =>
+                requiredCsvHeadersForProduct.every((header) => item[header]) &&
+                requiredCsvHeadersForVariant.every(
+                    (header) =>
+                        !item[header] ||
+                        requiredCsvHeadersForProduct.includes(header)
+                )
+        );
+    }
+
+    async validateCsvRow(
         data: csvProductData[],
         row: csvProductData,
-        requiredCsvHeaders: string[]
+        requiredCsvHeadersForProduct: string[],
+        requiredCsvHeadersForVariant: string[]
     ): Promise<string | null> {
-        if (requiredCsvHeaders.some((header) => !row[header])) {
-            return 'required fields missing data';
+        // determine if this is a product row or variant
+        // then, validate accordingly.
+        const isVariant = await this.csvRowIsVariant(
+            row,
+            requiredCsvHeadersForVariant,
+            requiredCsvHeadersForProduct
+        );
+        // console.log('isVariant: ' + isVariant);
+
+        if (isVariant) {
+            if (requiredCsvHeadersForVariant.some((header) => !row[header])) {
+                return 'required variant fields missing data';
+            }
+            return await this.validateCsvVariantRow(row, data);
+        } else {
+            if (requiredCsvHeadersForProduct.some((header) => !row[header])) {
+                return 'required product fields missing data';
+            }
+
+            return await this.validateCsvProductRow(row, data, requiredCsvHeadersForProduct, requiredCsvHeadersForVariant);
         }
+    }
+
+    async validateCsvProductRow(
+        row: csvProductData,
+        data: csvProductData[],
+        requiredCsvHeadersForProduct: string[],
+        requiredCsvHeadersForVariant: string[]
+    ): Promise<string | null> {
+        const productRows = await this.filterCsvProductRows(
+            data,
+            requiredCsvHeadersForProduct,
+            requiredCsvHeadersForVariant
+        );
+        // console.log('productRows: ' + JSON.stringify(productRows));
 
         const categoryId = await this.validateCategory(row['category']);
         if (!categoryId) {
@@ -903,15 +1000,27 @@ class ProductService extends MedusaProductService {
         }
 
         if (!Number.isInteger(Number(row['weight']))) {
-            return 'weight must be a number';
+            return 'weight must be a whole number';
         }
 
         if (!['0', '1'].includes(row['discountable'])) {
-            return 'discountable must be a boolean';
+            return 'discountable must be a 0 or 1';
         }
 
-        if (!Number.isInteger(Number(row['price']))) {
-            return 'price must be a number';
+        if (!Number.isInteger(Number(row['variant_price']))) {
+            return 'variant price must be a whole number';
+        }
+
+        if (!Number.isInteger(Number(row['variant_inventory_quantity']))) {
+            return 'variant inventory quantity must be a whole number';
+        }
+
+        if (!['0', '1'].includes(row['variant_allow_backorder'])) {
+            return 'variant allow backorder must be a 0 or 1';
+        }
+
+        if (!['0', '1'].includes(row['variant_manage_inventory'])) {
+            return 'variant manage inventory must be a 0 or 1';
         }
 
         const product = await this.getProductByHandle(row['handle']);
@@ -919,12 +1028,12 @@ class ProductService extends MedusaProductService {
             return 'product handle must be unique';
         }
 
-        // check if handle is unique from other rows
-        const handleExists = data.some(
+        // check if handle is unique from other product rows
+        const handleExistsInProducts = productRows.some(
             (item) => item !== row && item['handle'] === row['handle']
         );
-        if (handleExists) {
-            return 'handle must be unique from other rows';
+        if (handleExistsInProducts) {
+            return 'handle must be unique from other product rows';
         }
 
         // check if thumbnail is a valid url
@@ -943,10 +1052,99 @@ class ProductService extends MedusaProductService {
         //     return 'thumbnail must be a valid image';
         // }
 
-        return null;
-    };
+        await this.validateCsvVariantRow(row, data);
 
-    async getPricesForVariant(baseAmount: number, baseCurrency: string): Promise<Price[]> {
+        return null;
+    }
+
+    async validateCsvVariantRow(row: csvProductData, data: csvProductData[]): Promise<string | null> {
+        // START: check if barcode is unique
+        if (row['variant_barcode'] && row['variant_barcode'].trim() !== '') {
+            const productVariantBarcode = await this.productVariantService_.getVariantByBarcode(row['variant_barcode']);
+            if (productVariantBarcode) {
+                return 'barcode must be unique';
+            }
+
+            const barcodeExistsInVariants = data.some(
+                (item) => item !== row && item['variant_barcode'] === row['variant_barcode']
+            );
+            if (barcodeExistsInVariants) {
+                return 'barcode must be unique from other rows';
+            }
+        }
+        // END: check if barcode is unique
+
+        // START: check if sku is unique
+        if (row['variant_sku'] && row['variant_sku'].trim() !== '') {
+            const productVariantSku = await this.productVariantService_.getVariantBySku(row['variant_sku']);
+            if (productVariantSku) {
+                return 'sku must be unique';
+            }
+
+            const skuExistsInVariants = data.some(
+                (item) => item !== row && item['variant_sku'] === row['variant_sku']
+            );
+            if (skuExistsInVariants) {
+                return 'sku must be unique from other rows';
+            }
+        }
+        // END: check if sku is unique
+
+        // START: check if upc is unique
+        if (row['variant_upc'] && row['variant_upc'].trim() !== '') {
+            const productVariantUpc = await this.productVariantService_.getVariantByUpc(row['variant_upc']);
+            if (productVariantUpc) {
+                return 'upc must be unique';
+            }
+
+            const upcExistsInVariants = data.some(
+                (item) => item !== row && item['variant_upc'] === row['variant_upc']
+            );
+            if (upcExistsInVariants) {
+                return 'upc must be unique from other rows';
+            }
+        }
+        // END: check if upc is unique
+
+        // START: check if ean is unique
+        if (row['variant_ean'] && row['variant_ean'].trim() !== '') {
+            const productVariantEan = await this.productVariantService_.getVariantByEan(row['variant_ean']);
+            if (productVariantEan) {
+                return 'ean must be unique';
+            }
+
+            const eanExistsInVariants = data.some(
+                (item) => item !== row && item['variant_ean'] === row['variant_ean']
+            );
+            if (eanExistsInVariants) {
+                return 'ean must be unique from other rows';
+            }
+        }
+        // END: check if ean is unique
+
+        if (!Number.isInteger(Number(row['variant_price']))) {
+            return 'variant price must be a whole number';
+        }
+
+        if (!Number.isInteger(Number(row['variant_inventory_quantity']))) {
+            return 'variant inventory quantity must be a whole number';
+        }
+
+        if (!['0', '1'].includes(row['variant_allow_backorder'])) {
+            return 'variant allow backorder must be a 0 or 1';
+        }
+
+        if (!['0', '1'].includes(row['variant_manage_inventory'])) {
+            return 'variant manage inventory must be a 0 or 1';
+        }
+
+        return null;
+    }
+
+    async getPricesForVariant(
+        baseAmount: number,
+        baseCurrency: string
+    ): Promise<Price[]> {
         //TODO: get from someplace global
         const currencies = ['eth', 'usdc', 'usdt'];
         const prices = [];
@@ -963,7 +1161,7 @@ class ProductService extends MedusaProductService {
             // console.log("price: " + price);
             prices.push({
                 currency_code: currency,
-                amount: price
+                amount: price,
             });
         }
         //console.log(prices);

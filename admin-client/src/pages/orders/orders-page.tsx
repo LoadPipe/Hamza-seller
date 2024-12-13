@@ -16,7 +16,7 @@ import {
 } from '@/stores/order-filter/order-filter-store';
 import { useNavigate } from '@tanstack/react-router';
 import { setFilter } from '@/stores/order-filter/order-filter-store.ts';
-
+import { ReleaseEscrow } from '@/components/orders/release-escrow.tsx';
 type Order = z.infer<typeof OrderSchema>;
 
 async function getSellerOrders(
@@ -26,7 +26,6 @@ async function getSellerOrders(
     sorting: SortingState = []
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
-        console.log('sorting inside call', sorting);
         const sort = sorting[0]
             ? {
                   field: sorting[0].id,
@@ -136,6 +135,7 @@ export default function OrdersPage() {
                 setSorting={setSorting}
                 isLoading={isLoading}
             />
+            <ReleaseEscrow />
         </>
     );
 }

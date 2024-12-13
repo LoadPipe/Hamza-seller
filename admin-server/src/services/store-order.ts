@@ -1,11 +1,7 @@
 import { Payment, Store, TransactionBaseService } from '@medusajs/medusa';
-import { BuckyLogRepository } from '../repositories/bucky-log';
-import LineItemRepository from '@medusajs/medusa/dist/repositories/line-item';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import StoreRepository from '../repositories/store';
-import CustomerRepository from '../repositories/customer';
-import { LineItemService } from '@medusajs/medusa';
 import { Order } from '../models/order';
 import { Lifetime } from 'awilix';
 import {
@@ -17,11 +13,7 @@ import {
     LessThanOrEqual,
     Between,
 } from 'typeorm';
-import { BuckyClient } from '../buckydrop/bucky-client';
-import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 import { createLogger, ILogger } from '../utils/logging/logger';
-import SmtpMailService from './smtp-mail';
-import CustomerNotificationService from './customer-notification';
 import OrderHistoryService from './order-history';
 import StoreOrderRepository from '../repositories/order';
 import {
@@ -29,7 +21,6 @@ import {
     FulfillmentStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
-import { stringify } from 'querystring';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -58,7 +49,7 @@ export interface StoreOrdersDTO {
     sortedBy: any;
     sortDirection: string;
     filtering: FilterOrders;
-    orders: Order[];
+    orders: any[]; //TODO: actually should be type Order[]
     totalRecords: number;
     statusCount: {};
 }
@@ -191,10 +182,10 @@ export default class StoreOrderService extends TransactionBaseService {
             relations: ['customer', 'payments'], // Fetch related payments and customers
         };
 
-        const orders = await this.orderRepository_.find(params);
+        const allOrders = await this.orderRepository_.find(params);
 
         if (sort?.field === 'customer') {
-            orders.sort((a, b) => {
+            allOrders.sort((a, b) => {
                 const nameA = a.customer?.last_name?.toLowerCase();
                 const nameB = b.customer?.last_name?.toLowerCase();
 
@@ -207,7 +198,7 @@ export default class StoreOrderService extends TransactionBaseService {
         }
 
         if (sort?.field === 'payments') {
-            orders.sort((a, b) => {
+            allOrders.sort((a, b) => {
                 const amountA = a.payments?.[0]?.amount || 0; // Fallback to 0 if no payment
                 const amountB = b.payments?.[0]?.amount || 0;
 
@@ -228,7 +219,7 @@ export default class StoreOrderService extends TransactionBaseService {
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
-            orders,
+            orders: allOrders,
             totalRecords,
             statusCount: statusCounts,
         };

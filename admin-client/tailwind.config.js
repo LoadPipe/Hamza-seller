@@ -109,6 +109,9 @@ module.exports = {
                         65: '#676767',
                         60: '#C2C2C2',
                     },
+                    purple: {
+                        90: '#7B61FF'
+                    },
                 },
                 secondary: {
                     DEFAULT: 'hsl(var(--secondary))',
