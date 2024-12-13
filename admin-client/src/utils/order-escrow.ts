@@ -15,7 +15,6 @@ import { BigNumberish, ethers, providers, Signer } from 'ethers';
  * @returns True if it was possible to make the contract call.
  */
 export async function releaseOrderEscrow(order: any): Promise<void> {
-    console.log('ORDERRRS', order);
     if (window.ethereum) {
         const escrow: EscrowClient = await createEscrowContract(order);
         try {
