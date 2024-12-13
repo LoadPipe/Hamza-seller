@@ -1,4 +1,5 @@
 import { getCurrencyPrecision } from '@/currency.config.ts';
+import { convertPrice } from './price-conversion';
 
 export function formatCryptoPrice(
     amount: number,
@@ -28,6 +29,14 @@ export function formatCryptoPrice(
         console.error(e);
         return '0.00';
     }
+}
+
+export async function convertCryptoPrice(
+    amount: number,
+    from: string,
+    to: string
+): Promise<number> {
+    return await convertPrice(amount, from, to);
 }
 
 function limitPrecision(value: number, maxDigits: number): string {
