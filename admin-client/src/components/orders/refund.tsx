@@ -10,8 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundOrderEscrow, getEscrowPayment } from '@/utils/order-escrow.ts';
-import { convertAmountToSmallestUnit } from '@/utils/convert-amount-to-smallest-unit.ts';
+import { refundOrderEscrow } from '@/utils/order-escrow.ts';
 
 type RefundProps = {
     firstName: string;
@@ -48,7 +47,7 @@ const Refund: React.FC<RefundProps> = ({
     });
     const { toast } = useToast();
 
-    const currency_code = order?.items[0]?.currency_code;
+    // const currency_code = order?.items[0]?.currency_code;
 
     const refundMutation = useMutation({
         mutationFn: async () => {
@@ -70,12 +69,6 @@ const Refund: React.FC<RefundProps> = ({
 
                 // const checkEscrowPayment = await getEscrowPayment(order.id);
                 // console.log(`CHECKING ESCROW PAYMENT ${checkEscrowPayment}`);
-
-                // Convert refund amount to smallest unit
-                // let refundAmountInSmallestUnit: number = convertAmountToSmallestUnit(
-                //     formData.refundAmount,
-                //     6
-                // );
 
                 // lets make it the smallest amount?
                 let refundAmountInSmallestUnit = 1;
