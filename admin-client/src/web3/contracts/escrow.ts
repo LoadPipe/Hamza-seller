@@ -52,22 +52,13 @@ export class EscrowClient {
         paymentId: string,
         amount: BigNumberish
     ): Promise<ITransactionOutput> {
-        console.log(`[EscrowClient] Initiating refundPayment...`);
-        console.log(`Payment ID: ${paymentId}`);
-        console.log(`Amount: ${amount}`);
-
         try {
             const tx: any = await this.contract.refundPayment(
                 paymentId,
                 amount
             );
-            console.log(`[EscrowClient] Transaction submitted: ${tx.hash}`);
-
             const transaction_id = tx.hash;
             const receipt = await tx.wait();
-            console.log(
-                `[EscrowClient] Transaction confirmed: ${receipt.transactionHash}`
-            );
 
             return {
                 transaction_id,
@@ -75,13 +66,11 @@ export class EscrowClient {
                 receipt,
             };
         } catch (error) {
-            console.log(`[EscrowClient] Error: ${error}`);
             throw error;
         }
     }
 
     async getEscrowPayment(paymentId: string): Promise<PaymentDefinition> {
-        console.log(`$$$$$$$ GETTING ESCROW PAYMENT $$$$$$$`);
         const output = await this.contract.getPayment(
             ethers.utils.keccak256(ethers.utils.toUtf8Bytes(paymentId))
         );
@@ -106,17 +95,10 @@ export class EscrowClient {
      * @returns
      */
     async releaseEscrow(paymentId: string): Promise<ITransactionOutput> {
-        console.log(`[EscrowClient] Initiating releaseEscrow...`);
-        console.log(`Payment ID: ${paymentId}`);
         try {
             const tx: any = await this.contract.releaseEscrow(paymentId);
-            console.log(`[EscrowClient] Transaction submitted: ${tx.hash}`);
-
             const transaction_id = tx.hash;
             const receipt = await tx.wait();
-            console.log(
-                `[EscrowClient] Transaction confirmed: ${receipt.transactionHash}`
-            );
 
             return {
                 transaction_id,
@@ -124,7 +106,6 @@ export class EscrowClient {
                 receipt,
             };
         } catch (error) {
-            console.log(`[EscrowClient] Error: ${error}`);
             throw error;
         }
     }

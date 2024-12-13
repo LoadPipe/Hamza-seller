@@ -62,21 +62,14 @@ const Refund: React.FC<RefundProps> = ({
         },
         onSuccess: async (data) => {
             try {
-                // console.log('Refund successful:', data);
                 setShowSuccessMessage(true);
-                // what is order.id for 500$
                 const { metadata } = data;
 
-                // const checkEscrowPayment = await getEscrowPayment(order.id);
-                // console.log(`CHECKING ESCROW PAYMENT ${checkEscrowPayment}`);
-
-                // lets make it the smallest amount?
                 let refundAmountInSmallestUnit = 1;
 
-                // Call refundOrderEscrow and wait for it to complete
                 const escrowRefundResult = await refundOrderEscrow(
-                    order, // Pass the order object with the required `id`
-                    refundAmountInSmallestUnit // Pass the refund amount
+                    order,
+                    refundAmountInSmallestUnit
                 );
 
                 if (escrowRefundResult) {
@@ -90,7 +83,6 @@ const Refund: React.FC<RefundProps> = ({
                     });
                     // console.log('Escrow refund successful');
                 } else {
-                    // Trigger a toast for explicit failures
                     toast({
                         variant: 'destructive',
                         title: 'Escrow Refund Failed',
@@ -100,7 +92,6 @@ const Refund: React.FC<RefundProps> = ({
                     console.error('Escrow refund failed');
                 }
             } catch (error) {
-                // Trigger a toast for errors
                 toast({
                     variant: 'destructive',
                     title: 'Escrow Refund Error',
@@ -108,7 +99,6 @@ const Refund: React.FC<RefundProps> = ({
                 });
                 console.error('Error in escrow refund:', error);
             } finally {
-                // Hide success message after 5 seconds
                 setTimeout(() => setShowSuccessMessage(false), 5000);
             }
         },
@@ -119,8 +109,6 @@ const Refund: React.FC<RefundProps> = ({
                 description: `Refund amount exceeds the refundable amount.
                 ${error}`,
             });
-
-            // console.error('Error submitting refund:', error.message);
         },
     });
 
