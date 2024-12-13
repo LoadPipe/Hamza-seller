@@ -68,8 +68,8 @@ const Refund: React.FC<RefundProps> = ({
                 // what is order.id for 500$
                 const { metadata } = data;
 
-                const checkEscrowPayment = await getEscrowPayment(order.id);
-                console.log(`CHECKING ESCROW PAYMENT ${checkEscrowPayment}`);
+                // const checkEscrowPayment = await getEscrowPayment(order.id);
+                // console.log(`CHECKING ESCROW PAYMENT ${checkEscrowPayment}`);
 
                 // Convert refund amount to smallest unit
                 // let refundAmountInSmallestUnit: number = convertAmountToSmallestUnit(
