@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundOrderEscrow } from '@/utils/order-escrow.ts';
+import { refundOrderEscrow, getEscrowPayment } from '@/utils/order-escrow.ts';
+import { convertAmountToSmallestUnit } from '@/utils/convert-amount-to-smallest-unit.ts';
 
 type RefundProps = {
     firstName: string;
@@ -47,6 +48,8 @@ const Refund: React.FC<RefundProps> = ({
     });
     const { toast } = useToast();
 
+    const currency_code = order?.items[0]?.currency_code;
+
     const refundMutation = useMutation({
         mutationFn: async () => {
             const payload = {
@@ -62,13 +65,29 @@ const Refund: React.FC<RefundProps> = ({
             try {
                 // console.log('Refund successful:', data);
                 setShowSuccessMessage(true);
-
+                // what is order.id for 500$
                 const { metadata } = data;
+
+                const checkEscrowPayment = await getEscrowPayment(order.id);
+                console.log(`CHECKING ESCROW PAYMENT ${checkEscrowPayment}`);
+
+                // Convert refund amount to smallest unit
+                // let refundAmountInSmallestUnit: number = convertAmountToSmallestUnit(
+                //     formData.refundAmount,
+                //     6
+                // );
+
+                // lets make it the smallest amount?
+                let refundAmountInSmallestUnit = 1;
+
+                console.log(
+                    `Refund amount in smallest unit: ${refundAmountInSmallestUnit}`
+                );
                 // console.log(`METADATA ${metadata}`);
                 // Call refundOrderEscrow and wait for it to complete
                 const escrowRefundResult = await refundOrderEscrow(
                     order, // Pass the order object with the required `id`
-                    formData.refundAmount // Pass the refund amount
+                    refundAmountInSmallestUnit // Pass the refund amount
                 );
 
                 if (escrowRefundResult) {
@@ -105,7 +124,14 @@ const Refund: React.FC<RefundProps> = ({
             }
         },
         onError: (error: any) => {
-            console.error('Error submitting refund:', error.message);
+            toast({
+                variant: 'destructive',
+                title: 'Refund Error',
+                description: `Refund amount exceeds the refundable amount.
+                ${error}`,
+            });
+
+            // console.error('Error submitting refund:', error.message);
         },
     });
 
@@ -305,7 +331,7 @@ const Refund: React.FC<RefundProps> = ({
                             </div>
                             {showSuccessMessage && (
                                 <p className="text-green-600 font-medium mt-2">
-                                    Refund submitted successfully!
+                                    Sent transaction to Escrow!
                                 </p>
                             )}
                         </div>

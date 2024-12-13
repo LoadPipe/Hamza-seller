@@ -17,6 +17,7 @@ import { BigNumberish, ethers, providers, Signer } from 'ethers';
 export async function releaseOrderEscrow(order: any): Promise<void> {
     //TODO: get provider, chain id & signer from window.ethereum
     if (window.ethereum?.providers) {
+        console.log(`PASSING ESCROW ORDER HERE... `);
         const escrow: EscrowClient = await createEscrowContract(order);
         await escrow.releaseEscrow(
             ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
@@ -42,9 +43,11 @@ export async function refundOrderEscrow(
     order: any,
     amount: BigNumberish
 ): Promise<boolean | undefined> {
+    // console.log(`$$$$ Refunding ${amount} escrowed funds $$$$`);
     if (window.ethereum?.providers) {
         try {
             const escrow: EscrowClient = await createEscrowContract(order);
+            console.log(`$$$$$ ${escrow}`);
             if (escrow) {
                 await escrow.refundPayment(
                     ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id)),
@@ -52,11 +55,11 @@ export async function refundOrderEscrow(
                 );
                 return true;
             } else {
-                // console.log('Escrow contract creation failed.');
+                console.log('Escrow contract creation failed.');
                 return false;
             }
         } catch (error) {
-            // console.log('Escrow contract creation failed 2.');
+            console.log('Escrow contract creation failed 2.');
             throw error; // Ensure the error propagates to the caller
         }
     } else {
@@ -64,6 +67,35 @@ export async function refundOrderEscrow(
         throw new Error('No web3 provider available');
     }
 }
+
+export async function getEscrowPayment(
+    paymentId: string
+): Promise<PaymentDefinition> {
+    console.log(`$$$$$$$ GETTING ESCROW PAYMENT $$$$$$$`);
+    const output = await this.contract.getPayment(paymentId);
+
+    console.log(`OUTPUT ${output}`);
+    return output;
+
+    // return {
+    //     id: output[0],
+    //     payer: output[1],
+    //     receiver: output[2],
+    //     //... rest of properties
+    // };
+}
+
+type PaymentDefinition = {
+    id: string;
+    payer: string;
+    receiver: string;
+    amount: number;
+    amountRefunded: number;
+    payerReleased: boolean;
+    receiverReleased: boolean;
+    released: boolean;
+    currency: string; //token address, or 0x0 for native
+};
 
 /**
  * Searches the order data for an escrow contract address.
@@ -73,6 +105,9 @@ export async function refundOrderEscrow(
  */
 function findEscrowAddress(order: any): string {
     order?.payments?.sort((a: any, b: any) => a.created_at < b.created_at);
+    console.log(
+        `ESCROW ADDRESS ${order?.payments[0]?.blockchain_data?.escrow_address}`
+    );
     return order?.payments[0]?.blockchain_data?.escrow_address;
 }
 
@@ -92,6 +127,9 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
     if (!address) {
         throw new Error('No escrow address found in order');
     }
+    console.log(`createEscrowContractcreateEscrowContractcreateEscrowContract`);
+    console.log(`ADDRESS: ${address}`);
     const escrow: EscrowClient = new EscrowClient(provider, signer, address);
+
     return escrow;
 }

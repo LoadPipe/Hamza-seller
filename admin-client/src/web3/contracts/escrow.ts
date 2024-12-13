@@ -40,16 +40,32 @@ export class EscrowClient {
         paymentId: string,
         amount: BigNumberish
     ): Promise<ITransactionOutput> {
-        const tx: any = await this.contract.refundPayment(paymentId, amount);
+        console.log(`[EscrowClient] Initiating refundPayment...`);
+        console.log(`Payment ID: ${paymentId}`);
+        console.log(`Amount: ${amount}`);
 
-        const transaction_id = tx.hash;
-        const receipt = await tx.wait();
+        try {
+            const tx: any = await this.contract.refundPayment(
+                paymentId,
+                amount
+            );
+            console.log(`[EscrowClient] Transaction submitted: ${tx.hash}`);
 
-        return {
-            transaction_id,
-            tx,
-            receipt,
-        };
+            const transaction_id = tx.hash;
+            const receipt = await tx.wait();
+            console.log(
+                `[EscrowClient] Transaction confirmed: ${receipt.transactionHash}`
+            );
+
+            return {
+                transaction_id,
+                tx,
+                receipt,
+            };
+        } catch (error) {
+            console.log(`[EscrowClient] Error: ${error}`);
+            throw error;
+        }
     }
 
     /**
@@ -59,15 +75,26 @@ export class EscrowClient {
      * @returns
      */
     async releaseEscrow(paymentId: string): Promise<ITransactionOutput> {
-        const tx: any = await this.contract.releaseEscrow(paymentId);
+        console.log(`[EscrowClient] Initiating releaseEscrow...`);
+        console.log(`Payment ID: ${paymentId}`);
+        try {
+            const tx: any = await this.contract.releaseEscrow(paymentId);
+            console.log(`[EscrowClient] Transaction submitted: ${tx.hash}`);
 
-        const transaction_id = tx.hash;
-        const receipt = await tx.wait();
+            const transaction_id = tx.hash;
+            const receipt = await tx.wait();
+            console.log(
+                `[EscrowClient] Transaction confirmed: ${receipt.transactionHash}`
+            );
 
-        return {
-            transaction_id,
-            tx,
-            receipt,
-        };
+            return {
+                transaction_id,
+                tx,
+                receipt,
+            };
+        } catch (error) {
+            console.log(`[EscrowClient] Error: ${error}`);
+            throw error;
+        }
     }
 }
