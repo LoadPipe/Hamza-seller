@@ -47,9 +47,9 @@ export async function refundOrderEscrow(
     if (window.ethereum?.providers) {
         try {
             const escrow: EscrowClient = await createEscrowContract(order);
-            console.log(`$$$$$ ${escrow}`);
-            const hi = await escrow.getEscrowPayment(order.id);
-            console.log(`hi: ${JSON.stringify(hi)}`);
+            await escrow.getEscrowPayment(order.id);
+            // const getEscrowLogs = await escrow.getEscrowPayment(order.id);
+            // console.log(`getEscrowLogs: ${JSON.stringify(getEscrowLogs)}`);
             if (escrow) {
                 await escrow.refundPayment(
                     ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id)),
@@ -57,11 +57,11 @@ export async function refundOrderEscrow(
                 );
                 return true;
             } else {
-                console.log('Escrow contract creation failed.');
+                // console.log('Escrow contract creation failed.');
                 return false;
             }
         } catch (error) {
-            console.log('Escrow contract creation failed 2.');
+            // console.log('Escrow contract creation failed 2.');
             throw error; // Ensure the error propagates to the caller
         }
     } else {
@@ -78,9 +78,6 @@ export async function refundOrderEscrow(
  */
 function findEscrowAddress(order: any): string {
     order?.payments?.sort((a: any, b: any) => a.created_at < b.created_at);
-    console.log(
-        `ESCROW ADDRESS ${order?.payments[0]?.blockchain_data?.escrow_address}`
-    );
     return order?.payments[0]?.blockchain_data?.escrow_address;
 }
 
@@ -100,8 +97,6 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
     if (!address) {
         throw new Error('No escrow address found in order');
     }
-    console.log(`createEscrowContractcreateEscrowContractcreateEscrowContract`);
-    console.log(`ADDRESS: ${address}`);
     const escrow: EscrowClient = new EscrowClient(provider, signer, address);
 
     return escrow;

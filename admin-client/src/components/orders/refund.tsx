@@ -80,10 +80,6 @@ const Refund: React.FC<RefundProps> = ({
                 // lets make it the smallest amount?
                 let refundAmountInSmallestUnit = 1;
 
-                console.log(
-                    `Refund amount in smallest unit: ${refundAmountInSmallestUnit}`
-                );
-                // console.log(`METADATA ${metadata}`);
                 // Call refundOrderEscrow and wait for it to complete
                 const escrowRefundResult = await refundOrderEscrow(
                     order, // Pass the order object with the required `id`
