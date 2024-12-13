@@ -918,8 +918,6 @@ export default class OrderService extends MedusaOrderService {
 
             const refundableAmount = totalOrderAmount - alreadyRefunded;
 
-            // console.log(`$$$$$$$$ ALREADY ${alreadyRefunded} REFUNDABLE ${refundableAmount} $$$$$$$$$`);
-
             // Validate the refund amount
             if (refundAmount <= 0) {
                 throw new Error(`Refund amount must be greater than 0.`);
@@ -929,6 +927,10 @@ export default class OrderService extends MedusaOrderService {
                 throw new Error(
                     `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`
                 );
+            }
+
+            if (refundableAmount === totalOrderAmount - refundAmount) {
+                order.payment_status = PaymentStatus.REFUNDED;
             }
 
             // Check for an existing unconfirmed refund
@@ -942,6 +944,11 @@ export default class OrderService extends MedusaOrderService {
                 console.log(
                     `Updating existing unconfirmed refund for Order ID: ${orderId}`
                 );
+                if (refundAmount === totalOrderAmount) {
+                    order.payment_status = PaymentStatus.REFUNDED;
+                } else {
+                    order.payment_status = PaymentStatus.PARTIALLY_REFUNDED;
+                }
                 refund.amount = refundAmount;
                 refund.reason = reason;
                 refund.note = note || refund.note;
@@ -960,10 +967,13 @@ export default class OrderService extends MedusaOrderService {
 
             await this.refundRepository_.save(refund);
 
+            await this.orderRepository_.save(order);
+
             // Optionally add notes or metadata to the order
             order.metadata = {
                 ...order.metadata,
                 refund_note: note || '',
+                refund_id: refund?.id,
             };
 
             // Update order's payment status if all refundable amount is refunded
@@ -983,7 +993,11 @@ export default class OrderService extends MedusaOrderService {
         }
     }
 
-    async confirmRefund(refundId: string) {
+    async confirmRefund(
+        refundId: string,
+        order_id: string,
+        refundAmount: number
+    ) {
         try {
             const refund = await this.refundRepository_.findOne({
                 where: { id: refundId },

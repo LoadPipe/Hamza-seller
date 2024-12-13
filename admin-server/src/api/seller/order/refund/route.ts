@@ -1,39 +1,56 @@
 import type { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
-import OrderService from '../../../../services/order'
+import OrderService from '../../../../services/order';
 
 export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
-    const orderService: OrderService =
-        req.scope.resolve('orderService');
+    const orderService: OrderService = req.scope.resolve('orderService');
 
     const handler = new RouteHandler(req, res, 'PUT', '/seller/order/refund', [
-        'id'
+        'id',
+        'order_id',
+        'amount',
     ]);
 
     await handler.handle(async () => {
-        const { id } = handler.inputParams;
+        const { id, order_id, amount } = handler.inputParams;
 
         // Validate `id`
         if (!id || typeof id !== 'string') {
-            return handler.returnStatusWithMessage(400, 'Invalid or missing "id".');
+            return handler.returnStatusWithMessage(
+                400,
+                'Invalid or missing "id".'
+            );
         }
 
-        const refund = await orderService.confirmRefund(id);
+        if (!order_id || typeof order_id !== 'string') {
+            return handler.returnStatusWithMessage(
+                400,
+                'Invalid or missing "order_id".'
+            );
+        }
+
+        // Validate `amount`
+        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+            return handler.returnStatusWithMessage(
+                400,
+                '"amount" must be a valid positive number.'
+            );
+        }
+
+        const refund = await orderService.confirmRefund(id, order_id, amount);
 
         return handler.returnStatus(200, refund);
     });
-
-}
+};
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
-    const orderService: OrderService =
-        req.scope.resolve('orderService');
+    const orderService: OrderService = req.scope.resolve('orderService');
 
     const handler = new RouteHandler(req, res, 'POST', '/seller/order/refund', [
         'order_id',
         'amount',
         'reason',
-        'note'
+        'note',
     ]);
 
     await handler.handle(async () => {
@@ -41,7 +58,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
 
         // Validate `order_id`
         if (!order_id || typeof order_id !== 'string') {
-            return handler.returnStatusWithMessage(400, 'Invalid or missing "order_id".');
+            return handler.returnStatusWithMessage(
+                400,
+                'Invalid or missing "order_id".'
+            );
         }
 
         // Validate `amount`
@@ -53,10 +73,14 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         }
 
         // Validate `reason`
-        if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+        if (
+            !reason ||
+            typeof reason !== 'string' ||
+            reason.trim().length === 0
+        ) {
             return handler.returnStatusWithMessage(
                 400,
-                'Invalid or missing "reason" enum. Reason must be one of the following; \'discount\', \'return\', \'swap\', \'claim\', \'other\'.'
+                "Invalid or missing \"reason\" enum. Reason must be one of the following; 'discount', 'return', 'swap', 'claim', 'other'."
             );
         }
 
@@ -68,7 +92,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         }
 
         const orders = await orderService.createRefund(
-           order_id, amount, reason, note
+            order_id,
+            amount,
+            reason,
+            note
         );
 
         return handler.returnStatus(200, orders);
