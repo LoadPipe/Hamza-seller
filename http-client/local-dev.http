@@ -91,3 +91,11 @@ Content-Type: application/json
 {
   "store_id": "store_01JEVAP3K1YZV7HFRHZ6SFFR12"
 }
+
+### Get cancelled orders
+GET  http://localhost:9000/seller/order/cancel-request
+Content-Type: application/json
+
+{
+  "store_id": "store_01JEWRFN08KNC6S9M6NAYGDPBZ"
+}
