@@ -15,20 +15,22 @@ import { BigNumberish, ethers, providers, Signer } from 'ethers';
  * @returns True if it was possible to make the contract call.
  */
 export async function releaseOrderEscrow(order: any): Promise<void> {
-    if (window.ethereum?.providers) {
+    console.log('ORDERRRS', order);
+    if (window.ethereum) {
         const escrow: EscrowClient = await createEscrowContract(order);
         try {
             await escrow.releaseEscrow(
                 ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
             );
         } catch (error) {
+            console.error('Error during escrow release:', error); // Log the error
             throw error; // Ensure the error is propagated
         }
     } else {
+        console.error('No web3 provider available.'); // Log the missing provider error
         throw new Error('No web3 provider available.');
     }
 }
-
 /**
  *
  * @param order An Order object with payments attached
@@ -81,8 +83,9 @@ function findEscrowAddress(order: any): string {
  */
 async function createEscrowContract(order: any): Promise<EscrowClient> {
     const provider: providers.Web3Provider = new providers.Web3Provider(
-        window.ethereum?.providers[0]
+        window.ethereum
     );
+
     const signer: Signer = await provider.getSigner();
 
     const address: string = findEscrowAddress(order);
