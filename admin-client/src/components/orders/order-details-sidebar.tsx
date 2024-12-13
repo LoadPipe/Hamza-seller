@@ -51,6 +51,22 @@ export function OrderDetailsSidebar() {
         staleTime: 5 * 60 * 1000, // Optional: Cache data for 5 minutes
     });
 
+    const { data: shippingCost } = useQuery({
+        queryKey: ['shippingCost', orderId],
+        queryFn: async () => {
+            if (!orderId) {
+                throw new Error('Order ID is required');
+            }
+            return await getSecure('/seller/cart/shipping', {
+                cart_id: orderDetails?.cart_id,
+            });
+        },
+        enabled: !!orderId && isSidebarOpen, // Fetch only when these conditions are met
+        refetchOnWindowFocus: false, // Prevent refetching on focus
+        retry: 1, // Optional: Limit retries to avoid overloading the API
+        staleTime: 5 * 60 * 1000, // Optional: Cache data for 5 minutes
+    });
+
     const [selectedStatus, setSelectedStatus] = useState(() =>
         getOrderStatusName(
             orderDetails?.fulfillment_status,
@@ -75,6 +91,7 @@ export function OrderDetailsSidebar() {
     }, [orderDetails]);
 
     console.log(`STATUS IS ${selectedStatus}`);
+    console.log('Details', orderDetails);
 
     const mutation = useMutation({
         mutationFn: async (newStatus: string) =>
@@ -369,7 +386,10 @@ export function OrderDetailsSidebar() {
                             <Payment
                                 subtotal={`${formatCryptoPrice(totalPrice, orderDetails?.items[0]?.currency_code || 'usdc')}`}
                                 discount={0} // Adjust as needed
-                                shippingFee="0.00" // Adjust as needed
+                                shippingFee={formatCryptoPrice(
+                                    shippingCost?.amount,
+                                    orderDetails?.items[0]?.currency_code
+                                ).toString()} // Adjust as needed
                                 currencyCode={
                                     orderDetails?.items[0]?.currency_code ||
                                     'usdc'
