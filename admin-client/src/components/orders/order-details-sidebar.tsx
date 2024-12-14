@@ -354,10 +354,7 @@ export function OrderDetailsSidebar() {
                                                 quantity={item.quantity.toString()}
                                                 unitPrice={item.unit_price}
                                                 discount={0} // Adjust as needed
-                                                currencyCode={
-                                                    orderDetails.payments[0]
-                                                        .currency_code
-                                                }
+                                                currencyCode={currencyCode}
                                                 image={item.thumbnail}
                                             />
                                             {index !==
@@ -379,7 +376,7 @@ export function OrderDetailsSidebar() {
                                 shippingFee="0.00" // Adjust as needed
                                 currencyCode={currencyCode}
                                 total={formatCryptoPrice(
-                                    orderDetails.payments[0].amount,
+                                    orderDetails?.payments[0]?.amount ?? 0,
                                     currencyCode
                                 )}
                             />
