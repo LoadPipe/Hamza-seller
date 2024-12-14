@@ -149,7 +149,7 @@ export default class CartService extends MedusaCartService {
         //get last cart
         const carts = await this.cartRepository_.find({
             where: {
-                customer_id: customerId
+                customer_id: customerId,
             },
             order: { updated_at: 'DESC' },
             take: 1,
@@ -163,27 +163,23 @@ export default class CartService extends MedusaCartService {
                 previousCart = null;
         }
 
-        //is there also a non-logged-in cart from cookies? 
+        //is there also a non-logged-in cart from cookies?
         let anonCart = null;
         if (cartId?.length && cartId != previousCart?.id) {
-            anonCart = await this.cartRepository_.findOne(
-                {
-                    where: {
-                        id: cartId,
-                        completed_at: IsNull(),
-                        deleted_at: IsNull()
-                    }
-                }
-            );
+            anonCart = await this.cartRepository_.findOne({
+                where: {
+                    id: cartId,
+                    completed_at: IsNull(),
+                    deleted_at: IsNull(),
+                },
+            });
         }
 
-
-        //if only anon cart, use that 
+        //if only anon cart, use that
         let cart = null;
         if (!previousCart && anonCart) {
             cart = anonCart;
-        }
-        else {
+        } else {
             //use previous user cart by default
             cart = previousCart;
 
@@ -197,7 +193,10 @@ export default class CartService extends MedusaCartService {
         }
     }
 
-    async addDefaultShippingMethod(cartId: string, force: boolean = false): Promise<void> {
+    async addDefaultShippingMethod(
+        cartId: string,
+        force: boolean = false
+    ): Promise<void> {
         const cart = await super.retrieve(cartId, {
             relations: ['shipping_methods'],
         });
@@ -207,7 +206,7 @@ export default class CartService extends MedusaCartService {
                 `Auto-adding shipping method for cart ${cart.id}`
             );
             const option = await this.shippingOptionRepository_.findOne({
-                where: { provider_id: 'bucky-fulfillment' },
+                where: { provider_id: 'store-fulfillment' },
             });
             await this.addShippingMethod(cart.id, option.id);
         }
@@ -280,27 +279,28 @@ export default class CartService extends MedusaCartService {
 
     private async mergeCarts(cart1: Cart, cart2: Cart): Promise<Cart> {
         try {
-            //make sure both carts contain items 
+            //make sure both carts contain items
             if (!cart2?.items) {
-                cart2 = await this.cartRepository_.findOne(
-                    { where: { id: cart2.id }, relations: ['items'] }
-                );
+                cart2 = await this.cartRepository_.findOne({
+                    where: { id: cart2.id },
+                    relations: ['items'],
+                });
             }
 
             if (cart2?.items.length) {
                 if (!cart1.items) {
-                    cart1 = await this.cartRepository_.findOne(
-                        { where: { id: cart1.id }, relations: ['items'] }
-                    );
+                    cart1 = await this.cartRepository_.findOne({
+                        where: { id: cart1.id },
+                        relations: ['items'],
+                    });
                 }
 
                 //move cart 2's line items to cart 1
-                await this.addOrUpdateLineItems(
-                    cart1.id, cart2.items, { validateSalesChannels: false }
-                );
+                await this.addOrUpdateLineItems(cart1.id, cart2.items, {
+                    validateSalesChannels: false,
+                });
             }
-        }
-        catch (e) {
+        } catch (e) {
             this.logger.error('Error merging carts', e);
         }
 
