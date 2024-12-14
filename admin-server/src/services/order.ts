@@ -36,6 +36,7 @@ import { OrderHistory } from 'src/models/order-history';
 import CartRepository from '@medusajs/medusa/dist/repositories/cart';
 import RegionRepository from '@medusajs/medusa/dist/repositories/region';
 import { randomInt, randomUUID } from 'crypto';
+import { Refund } from 'src/models/refund';
 
 // Since {TO_PAY, TO_SHIP} are under the umbrella name {Processing} in FE, not sure if we should modify atm
 // In medusa we have these 5 DEFAULT order.STATUS's {PENDING, COMPLETED, ARCHIVED, CANCELED, REQUIRES_ACTION}
@@ -944,11 +945,6 @@ export default class OrderService extends MedusaOrderService {
                 console.log(
                     `Updating existing unconfirmed refund for Order ID: ${orderId}`
                 );
-                if (refundAmount === totalOrderAmount) {
-                    order.payment_status = PaymentStatus.REFUNDED;
-                } else {
-                    order.payment_status = PaymentStatus.PARTIALLY_REFUNDED;
-                }
                 refund.amount = refundAmount;
                 refund.reason = reason;
                 refund.note = note || refund.note;
@@ -976,12 +972,6 @@ export default class OrderService extends MedusaOrderService {
                 refund_id: refund?.id,
             };
 
-            // Update order's payment status if all refundable amount is refunded
-            const isFullyRefunded = refundableAmount === refundAmount;
-            if (isFullyRefunded) {
-                order.payment_status = PaymentStatus.REFUNDED;
-            }
-
             // Save the updated order
             const updatedOrder = await this.orderRepository_.save(order);
 
@@ -995,11 +985,11 @@ export default class OrderService extends MedusaOrderService {
 
     async confirmRefund(
         refundId: string,
-        order_id: string,
+        orderId: string,
         refundAmount: number
     ) {
         try {
-            const refund = await this.refundRepository_.findOne({
+            const refund: Refund = await this.refundRepository_.findOne({
                 where: { id: refundId },
             });
 
@@ -1007,9 +997,26 @@ export default class OrderService extends MedusaOrderService {
                 throw new Error(`Refund with ID ${refundId} not found.`);
             }
 
+            //get the order
+            const order: Order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+            });
+
+            // Update order's payment status if all refundable amount is refunded
+            if (
+                refundAmount >=
+                order.refundable_amount - order.refunded_total
+            ) {
+                order.payment_status = PaymentStatus.REFUNDED;
+            } else {
+                order.payment_status = PaymentStatus.PARTIALLY_REFUNDED;
+            }
+
             refund.confirmed = true;
 
+            //update the refund and the order
             const updatedRefund = await this.refundRepository_.save(refund);
+            await this.orderRepository_.save(order);
 
             return updatedRefund;
         } catch (error) {
