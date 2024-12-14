@@ -307,11 +307,6 @@ const Refund: React.FC<RefundProps> = ({
                                     Submit Refund
                                 </Button>
                             </div>
-                            {showSuccessMessage && (
-                                <p className="text-green-600 font-medium mt-2">
-                                    Sent transaction to Escrow!
-                                </p>
-                            )}
                         </div>
                     </AccordionContent>
                 </AccordionItem>

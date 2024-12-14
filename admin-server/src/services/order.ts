@@ -733,11 +733,13 @@ export default class OrderService extends MedusaOrderService {
                 where: { order_id: orderId },
             });
 
+            //TODO: this can be done using the new methods
             const alreadyRefunded = refundedResult.reduce(
                 (sum, refund) => sum + refund.amount,
                 0
             );
 
+            //get amount left to refund
             const refundableAmount = totalOrderAmount - alreadyRefunded;
 
             // Validate the refund amount
