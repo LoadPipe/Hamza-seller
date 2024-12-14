@@ -12,7 +12,7 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
     ]);
 
     await handler.handle(async () => {
-        const { id, order_id, amount } = handler.inputParams;
+        const { id, order_id } = handler.inputParams;
 
         // Validate `id`
         if (!id || typeof id !== 'string') {
@@ -29,15 +29,7 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
             );
         }
 
-        // Validate `amount`
-        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-            return handler.returnStatusWithMessage(
-                400,
-                '"amount" must be a valid positive number.'
-            );
-        }
-
-        const refund = await orderService.confirmRefund(id, order_id, amount);
+        const refund = await orderService.confirmRefund(id, order_id);
 
         return handler.returnStatus(200, refund);
     });

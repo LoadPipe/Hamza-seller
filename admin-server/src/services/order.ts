@@ -705,185 +705,6 @@ export default class OrderService extends MedusaOrderService {
         return this.orderHistoryService_.retrieve(orderId);
     }
 
-    private async sendOrderEmail(
-        order: Order,
-        requiredNotification: string,
-        templateName: string,
-        emailType: string
-    ): Promise<void> {
-        try {
-            const hasNotification =
-                await this.customerNotificationService_.hasNotification(
-                    order.customer_id,
-                    requiredNotification
-                );
-
-            if (hasNotification) {
-                //get customer & cart
-                const customer: Customer =
-                    await this.customerRepository_.findOne({
-                        where: { id: order.customer_id },
-                    });
-                const cart: Cart = await this.cartService_.retrieve(
-                    order.cart_id
-                );
-
-                //send the mail
-                this.smtpMailService_.sendMail({
-                    from:
-                        process.env.SMTP_HAMZA_FROM ??
-                        'support@hamzamarket.com',
-                    mailData: {
-                        orderId: order.id,
-                        orderAmount: formatCryptoPrice(
-                            order.total,
-                            order.currency_code
-                        ),
-                        orderDate: order.created_at,
-                        items: order.items.map((i) => {
-                            return {
-                                title: i.title,
-                                unit_price: formatCryptoPrice(
-                                    i.unit_price,
-                                    i.currency_code
-                                ),
-                                quantity: i.quantity,
-                                thumbnail: i.thumbnail,
-                            };
-                        }),
-                    },
-                    to: customer.is_verified ? customer.email : cart.email,
-                    templateName,
-                    subject: `Your order has been from Hamza.market ${emailType}`,
-                });
-            }
-        } catch (e: any) {
-            this.logger.error(
-                `Error sending ${emailType} email for order ${order.id}`
-            );
-        }
-    }
-
-    private async updatePaymentAfterTransaction(
-        paymentId: string,
-        update: Partial<Payment>
-    ): Promise<Payment> {
-        const result = await this.paymentRepository_.save({
-            id: paymentId,
-            ...update,
-        });
-        return result;
-    }
-
-    private async processBuckydropOrders(
-        cartId: string,
-        orders: Order[]
-    ): Promise<void> {
-        try {
-            for (const order of orders) {
-                const { variants, quantities } =
-                    await this.getBuckyProductVariantsFromOrder(order);
-                if (variants?.length) {
-                    order.bucky_metadata = { status: 'pending' };
-                    await this.orderRepository_.save(order);
-
-                    this.logger.debug('BUCKY CREATED ORDER');
-                }
-            }
-        } catch (e) {
-            this.logger.error(`Failed to create buckydrop order for ${cartId}`);
-        }
-    }
-
-    private async getCustomerOrdersByStatus(
-        customerId: string,
-        statusParams: {
-            orderStatus?: OrderStatus;
-            paymentStatus?: PaymentStatus;
-            fulfillmentStatus?: FulfillmentStatus;
-        }
-    ): Promise<Order[]> {
-        const where: {
-            customer_id: string;
-            status?: any;
-            payment_status?: any;
-            fulfillment_status?: any;
-        } = {
-            customer_id: customerId,
-            status: Not(
-                In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
-            ),
-        };
-
-        if (statusParams.orderStatus) {
-            where.status = statusParams.orderStatus;
-        }
-
-        if (statusParams.paymentStatus) {
-            where.payment_status = statusParams.paymentStatus;
-        }
-
-        if (statusParams.fulfillmentStatus) {
-            where.fulfillment_status = statusParams.fulfillmentStatus;
-        }
-
-        let orders = await this.orderRepository_.find({
-            where,
-            relations: [
-                'items',
-                'store',
-                'shipping_address',
-                'customer',
-                'items.variant.product',
-            ],
-            order: { created_at: 'DESC' },
-        });
-
-        if (orders) orders = orders.filter((o) => o.items?.length > 0);
-
-        return orders;
-    }
-
-    private getPostCheckoutUpdatePaymentPromises(
-        payments: Payment[],
-        transactionId: string,
-        payerAddress: string,
-        receiverAddress: string,
-        escrowAddress: string,
-        chainId: number
-    ): Promise<Order | Payment>[] {
-        const promises: Promise<Order | Payment>[] = [];
-
-        //update payments with transaction info
-        payments.forEach((p, i) => {
-            promises.push(
-                this.updatePaymentAfterTransaction(p.id, {
-                    blockchain_data: {
-                        transaction_id: transactionId,
-                        payer_address: payerAddress,
-                        escrow_address: escrowAddress,
-                        receiver_address: receiverAddress,
-                        chain_id: chainId,
-                    },
-                })
-            );
-        });
-
-        return promises;
-    }
-
-    private getPostCheckoutUpdateOrderPromises(
-        orders: Order[]
-    ): Promise<Order>[] {
-        return orders.map((o) => {
-            return this.orderRepository_.save({
-                id: o.id,
-                status: OrderStatus.PENDING,
-                payment_status: PaymentStatus.AWAITING,
-            });
-        });
-    }
-
     async createRefund(
         orderId: string,
         refundAmount: number,
@@ -983,13 +804,9 @@ export default class OrderService extends MedusaOrderService {
         }
     }
 
-    async confirmRefund(
-        refundId: string,
-        orderId: string,
-        refundAmount: number
-    ) {
+    async confirmRefund(refundId: string, orderId: string) {
         try {
-            const refund: Refund = await this.refundRepository_.findOne({
+            let refund: Refund = await this.refundRepository_.findOne({
                 where: { id: refundId },
             });
 
@@ -1000,25 +817,33 @@ export default class OrderService extends MedusaOrderService {
             //get the order
             const order: Order = await this.orderRepository_.findOne({
                 where: { id: orderId },
+                relations: ['refunds', 'payments'],
             });
 
-            // Update order's payment status if all refundable amount is refunded
-            if (
-                refundAmount >=
-                order.refundable_amount - order.refunded_total
-            ) {
-                order.payment_status = PaymentStatus.REFUNDED;
-            } else {
-                order.payment_status = PaymentStatus.PARTIALLY_REFUNDED;
+            //refundable amount is amount paid - amount refunded so far
+            const refundableAmount = this.getRefundableAmount(order);
+
+            //if it exceeds, bring it down
+            if (refund.amount > refundableAmount) {
+                refund.amount = refundableAmount;
             }
 
-            refund.confirmed = true;
+            if (refund.amount > 0) {
+                // Update order's payment status if all refundable amount is refunded
+                if (refund.amount === refundableAmount) {
+                    order.payment_status = PaymentStatus.REFUNDED;
+                } else {
+                    order.payment_status = PaymentStatus.PARTIALLY_REFUNDED;
+                }
 
-            //update the refund and the order
-            const updatedRefund = await this.refundRepository_.save(refund);
-            await this.orderRepository_.save(order);
+                refund.confirmed = true;
 
-            return updatedRefund;
+                //update the refund and the order
+                refund = await this.refundRepository_.save(refund);
+                await this.orderRepository_.save(order);
+            }
+
+            return refund;
         } catch (error) {
             this.logger.error(`Error updating refund: ${error.message}`);
             throw error; // Let the caller handle errors
@@ -1245,5 +1070,204 @@ export default class OrderService extends MedusaOrderService {
             this.logger.error(`Error creating mock order: ${error.message}`);
             throw error;
         }
+    }
+
+    private getTotalRefunded(order: Order): number {
+        let output: number = 0;
+        for (let refund of order.refunds) {
+            if ((refund as Refund).confirmed) output += refund.amount;
+        }
+        return output;
+    }
+
+    private getTotalPaid(order: Order): number {
+        let output: number = 0;
+        for (let payment of order.payments) {
+            output += payment.amount;
+        }
+        return output;
+    }
+
+    private getRefundableAmount(order: Order): number {
+        return this.getTotalPaid(order) - this.getTotalRefunded(order);
+    }
+
+    private async sendOrderEmail(
+        order: Order,
+        requiredNotification: string,
+        templateName: string,
+        emailType: string
+    ): Promise<void> {
+        try {
+            const hasNotification =
+                await this.customerNotificationService_.hasNotification(
+                    order.customer_id,
+                    requiredNotification
+                );
+
+            if (hasNotification) {
+                //get customer & cart
+                const customer: Customer =
+                    await this.customerRepository_.findOne({
+                        where: { id: order.customer_id },
+                    });
+                const cart: Cart = await this.cartService_.retrieve(
+                    order.cart_id
+                );
+
+                //send the mail
+                this.smtpMailService_.sendMail({
+                    from:
+                        process.env.SMTP_HAMZA_FROM ??
+                        'support@hamzamarket.com',
+                    mailData: {
+                        orderId: order.id,
+                        orderAmount: formatCryptoPrice(
+                            order.total,
+                            order.currency_code
+                        ),
+                        orderDate: order.created_at,
+                        items: order.items.map((i) => {
+                            return {
+                                title: i.title,
+                                unit_price: formatCryptoPrice(
+                                    i.unit_price,
+                                    i.currency_code
+                                ),
+                                quantity: i.quantity,
+                                thumbnail: i.thumbnail,
+                            };
+                        }),
+                    },
+                    to: customer.is_verified ? customer.email : cart.email,
+                    templateName,
+                    subject: `Your order has been from Hamza.market ${emailType}`,
+                });
+            }
+        } catch (e: any) {
+            this.logger.error(
+                `Error sending ${emailType} email for order ${order.id}`
+            );
+        }
+    }
+
+    private async updatePaymentAfterTransaction(
+        paymentId: string,
+        update: Partial<Payment>
+    ): Promise<Payment> {
+        const result = await this.paymentRepository_.save({
+            id: paymentId,
+            ...update,
+        });
+        return result;
+    }
+
+    private async processBuckydropOrders(
+        cartId: string,
+        orders: Order[]
+    ): Promise<void> {
+        try {
+            for (const order of orders) {
+                const { variants, quantities } =
+                    await this.getBuckyProductVariantsFromOrder(order);
+                if (variants?.length) {
+                    order.bucky_metadata = { status: 'pending' };
+                    await this.orderRepository_.save(order);
+
+                    this.logger.debug('BUCKY CREATED ORDER');
+                }
+            }
+        } catch (e) {
+            this.logger.error(`Failed to create buckydrop order for ${cartId}`);
+        }
+    }
+
+    private async getCustomerOrdersByStatus(
+        customerId: string,
+        statusParams: {
+            orderStatus?: OrderStatus;
+            paymentStatus?: PaymentStatus;
+            fulfillmentStatus?: FulfillmentStatus;
+        }
+    ): Promise<Order[]> {
+        const where: {
+            customer_id: string;
+            status?: any;
+            payment_status?: any;
+            fulfillment_status?: any;
+        } = {
+            customer_id: customerId,
+            status: Not(
+                In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
+            ),
+        };
+
+        if (statusParams.orderStatus) {
+            where.status = statusParams.orderStatus;
+        }
+
+        if (statusParams.paymentStatus) {
+            where.payment_status = statusParams.paymentStatus;
+        }
+
+        if (statusParams.fulfillmentStatus) {
+            where.fulfillment_status = statusParams.fulfillmentStatus;
+        }
+
+        let orders = await this.orderRepository_.find({
+            where,
+            relations: [
+                'items',
+                'store',
+                'shipping_address',
+                'customer',
+                'items.variant.product',
+            ],
+            order: { created_at: 'DESC' },
+        });
+
+        if (orders) orders = orders.filter((o) => o.items?.length > 0);
+
+        return orders;
+    }
+
+    private getPostCheckoutUpdatePaymentPromises(
+        payments: Payment[],
+        transactionId: string,
+        payerAddress: string,
+        receiverAddress: string,
+        escrowAddress: string,
+        chainId: number
+    ): Promise<Order | Payment>[] {
+        const promises: Promise<Order | Payment>[] = [];
+
+        //update payments with transaction info
+        payments.forEach((p, i) => {
+            promises.push(
+                this.updatePaymentAfterTransaction(p.id, {
+                    blockchain_data: {
+                        transaction_id: transactionId,
+                        payer_address: payerAddress,
+                        escrow_address: escrowAddress,
+                        receiver_address: receiverAddress,
+                        chain_id: chainId,
+                    },
+                })
+            );
+        });
+
+        return promises;
+    }
+
+    private getPostCheckoutUpdateOrderPromises(
+        orders: Order[]
+    ): Promise<Order>[] {
+        return orders.map((o) => {
+            return this.orderRepository_.save({
+                id: o.id,
+                status: OrderStatus.PENDING,
+                payment_status: PaymentStatus.AWAITING,
+            });
+        });
     }
 }

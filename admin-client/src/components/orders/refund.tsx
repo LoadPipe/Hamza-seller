@@ -65,7 +65,7 @@ const Refund: React.FC<RefundProps> = ({
                 setShowSuccessMessage(true);
                 const { metadata } = data;
 
-                let refundAmountInSmallestUnit = 1;
+                let refundAmountInSmallestUnit = formData.refundAmount;
 
                 const escrowRefundResult = await refundOrderEscrow(
                     order,
@@ -76,7 +76,6 @@ const Refund: React.FC<RefundProps> = ({
                     await putSecure('/seller/order/refund', {
                         id: metadata?.refund_id,
                         order_id: orderId,
-                        amount: formData.refundAmount,
                     });
                     toast({
                         variant: 'default',
