@@ -62,7 +62,6 @@ const Refund: React.FC<RefundProps> = ({
         },
         onSuccess: async (data) => {
             try {
-                setShowSuccessMessage(true);
                 const { metadata } = data;
 
                 let refundAmountInSmallestUnit = formData.refundAmount;
@@ -307,6 +306,11 @@ const Refund: React.FC<RefundProps> = ({
                                     Submit Refund
                                 </Button>
                             </div>
+                            {showSuccessMessage && (
+                                <p className="text-green-600 font-medium mt-2">
+                                    Refund completed in escrow
+                                </p>
+                            )}
                         </div>
                     </AccordionContent>
                 </AccordionItem>
