@@ -4,6 +4,8 @@ import WhiteListService from '../../../../../services/whitelist';
 import StoreService from '../../../../../services/store';
 import { ProductCollection } from '../../../../../models/product-collection';
 import ProductRepository from '@medusajs/medusa/dist/repositories/product';
+import { StoreShippingSpecRepository } from 'src/repositories/store-shipping-spec';
+import { randomInt } from 'crypto';
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const userService = req.scope.resolve('userService');
@@ -15,6 +17,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     );
     const productRepository: typeof ProductRepository =
         req.scope.resolve('productRepository');
+    const shippingSpecRepository: typeof StoreShippingSpecRepository =
+        req.scope.resolve('storeShippingSpecRepository');
 
     const handler: RouteHandler = new RouteHandler(
         req,
@@ -164,7 +168,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'Medusa Merch Store where we sell our Medusa Sweatpants, its a nice store',
                 {
                     address: '0x77930414Ba3E8f8799A9e503d2E6A9CBC95F42B6',
-                    version: 'lite',
+                    version: '1.0',
                 }
             ),
             storeService.createStore(
@@ -176,7 +180,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 "We Sell VR Headsets here, the best quality VR headsets you wouldn't believe it",
                 {
                     address: '0x77930414Ba3E8f8799A9e503d2E6A9CBC95F42B6',
-                    version: 'lite',
+                    version: '1.0',
                 }
             ),
             storeService.createStore(
@@ -188,7 +192,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'Dauntless Store - Where bold and resilient products meet exceptional quality. Perfect for those who seek adventure and durability in every purchase.',
                 {
                     address: '0x77930414Ba3E8f8799A9e503d2E6A9CBC95F42B6',
-                    version: 'lite',
+                    version: '1.0',
                 }
             ),
 
@@ -201,7 +205,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'Drones Store - Your go-to destination for cutting-edge aerial technology. Explore our wide range of high-performance drones perfect for every enthusiast.',
                 {
                     address: '0x77930414Ba3E8f8799A9e503d2E6A9CBC95F42B6',
-                    version: 'lite',
+                    version: '1.0',
                 }
             ),
 
@@ -214,7 +218,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 'Legos Store - Dive into the world of creativity and building blocks. Find the latest Lego sets and build your imagination with endless possibilities.',
                 {
                     address: '0x77930414Ba3E8f8799A9e503d2E6A9CBC95F42B6',
-                    version: 'lite',
+                    version: '1.0',
                 }
             ),
             storeService.createStore(
@@ -356,6 +360,16 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
                 }
                 await productRepository.save(collection.products);
             }
+        }
+
+        //add shipping spec for each store
+        for (let store of stores) {
+            const randomPrice = randomInt(2) + 1;
+            await shippingSpecRepository.save({
+                id: 'shipspec_' + store.id.replace('store_', ''),
+                store_id: store.id,
+                spec: { fixed_price_usd: randomPrice * 100 },
+            });
         }
 
         return res.json({});

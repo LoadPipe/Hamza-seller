@@ -330,6 +330,7 @@ export function OrderDetailsSidebar() {
                                 email={orderDetails?.email}
                                 orderId={orderDetails?.id}
                                 customerId={orderDetails?.customer_id}
+                                order={orderDetails}
                             />
 
                             {/* Items */}
