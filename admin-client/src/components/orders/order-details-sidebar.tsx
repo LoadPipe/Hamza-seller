@@ -58,7 +58,11 @@ export function OrderDetailsSidebar() {
             orderDetails?.payment_status
         )
     );
+
+    let currencyCode = orderDetails?.payments[0]?.currency_code;
+
     useEffect(() => {
+        currencyCode = orderDetails?.payments[0]?.currency_code;
         if (
             orderDetails?.fulfillment_status &&
             orderDetails?.status &&
@@ -370,15 +374,13 @@ export function OrderDetailsSidebar() {
 
                             {/* Payment */}
                             <Payment
-                                subtotal={`${formatCryptoPrice(totalPrice, orderDetails.payments[0].currency_code)}`}
+                                subtotal={`${formatCryptoPrice(totalPrice, currencyCode)}`}
                                 discount={0} // Adjust as needed
                                 shippingFee="0.00" // Adjust as needed
-                                currencyCode={
-                                    orderDetails.payments[0].currency_code
-                                }
+                                currencyCode={currencyCode}
                                 total={formatCryptoPrice(
                                     orderDetails.payments[0].amount,
-                                    orderDetails.payments[0].currency_code
+                                    currencyCode
                                 )}
                             />
 
