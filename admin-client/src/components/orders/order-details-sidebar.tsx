@@ -58,7 +58,11 @@ export function OrderDetailsSidebar() {
             orderDetails?.payment_status
         )
     );
+
+    let currencyCode = orderDetails?.payments[0]?.currency_code;
+
     useEffect(() => {
+        currencyCode = orderDetails?.payments[0]?.currency_code;
         if (
             orderDetails?.fulfillment_status &&
             orderDetails?.status &&
@@ -75,6 +79,7 @@ export function OrderDetailsSidebar() {
     }, [orderDetails]);
 
     console.log(`STATUS IS ${selectedStatus}`);
+    console.log('Details', orderDetails);
 
     const mutation = useMutation({
         mutationFn: async (newStatus: string) =>
@@ -349,9 +354,7 @@ export function OrderDetailsSidebar() {
                                                 quantity={item.quantity.toString()}
                                                 unitPrice={item.unit_price}
                                                 discount={0} // Adjust as needed
-                                                currencyCode={
-                                                    item.currency_code || 'USDC'
-                                                }
+                                                currencyCode={currencyCode}
                                                 image={item.thumbnail}
                                             />
                                             {index !==
@@ -368,17 +371,13 @@ export function OrderDetailsSidebar() {
 
                             {/* Payment */}
                             <Payment
-                                subtotal={`${formatCryptoPrice(totalPrice, orderDetails?.items[0]?.currency_code || 'usdc')}`}
+                                subtotal={`${formatCryptoPrice(totalPrice, currencyCode)}`}
                                 discount={0} // Adjust as needed
                                 shippingFee="0.00" // Adjust as needed
-                                currencyCode={
-                                    orderDetails?.items[0]?.currency_code ||
-                                    'usdc'
-                                }
+                                currencyCode={currencyCode}
                                 total={formatCryptoPrice(
-                                    totalPrice,
-                                    orderDetails?.items[0]?.currency_code ||
-                                        'usdc'
+                                    orderDetails?.payments[0]?.amount ?? 0,
+                                    currencyCode
                                 )}
                             />
 
