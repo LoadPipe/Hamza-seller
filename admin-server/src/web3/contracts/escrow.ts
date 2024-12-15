@@ -1,7 +1,7 @@
-import { BigNumberish, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { escrowAbi } from '../abi/escrow-abi';
 
-type PaymentDefinition = {
+export type PaymentDefinition = {
     id: string;
     payer: string;
     receiver: string;
@@ -24,19 +24,16 @@ export class EscrowClient {
      * Constructor.
      * @param address Address of the LiteSwitch contract
      */
-    constructor(
-        provider: ethers.Provider,
-        signer: ethers.Signer,
-        address: string
-    ) {
-        this.provider = provider;
-        this.signer = signer;
+    constructor(address: string) {
+        this.provider = new ethers.JsonRpcProvider(
+            process.env.ETHERS_RPC_PROVIDER_URL
+        );
         this.contractAddress = address;
 
         this.contract = new ethers.Contract(
             this.contractAddress,
             escrowAbi,
-            signer
+            this.provider
         );
     }
 
