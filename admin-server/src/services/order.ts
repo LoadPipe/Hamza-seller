@@ -1004,6 +1004,7 @@ export default class OrderService extends MedusaOrderService {
                     console.log('Cart created:', cart);
 
                     // Step 6: Add line items to the cart
+                    let orderTotal = 0;
                     const lineItems = [];
                     for (let i = 0; i < products.length; i++) {
                         const product = products[i];
@@ -1021,6 +1022,7 @@ export default class OrderService extends MedusaOrderService {
                             created_at: new Date(),
                             updated_at: new Date(),
                         });
+                        orderTotal += lineItem.unit_price * lineItem.quantity;
                         const savedLineItem =
                             await this.lineItemRepository_.save(lineItem);
                         lineItems.push(savedLineItem);
@@ -1044,6 +1046,23 @@ export default class OrderService extends MedusaOrderService {
 
                     order = await this.orderRepository_.save(order);
                     console.log('Order created successfully:', order);
+
+                    //create a payment
+                    await this.paymentRepository_.save({
+                        id: order.id.replace('order_', 'payment_'),
+                        order_id: order.id,
+                        cart_id: cart.id,
+                        amount: orderTotal,
+                        currency_code: order.currency_code,
+                        provider_id: 'crypto',
+                        data: {},
+                        blockchain_data: {
+                            receiver_address: '',
+                            transaction_id: '',
+                            escrow_address:
+                                '0x77930414Ba3E8f8799A9e503d2E6A9CBC95F42B6',
+                        },
+                    });
 
                     // Step 8: Link line items to the order
                     order.items = cart.items;
