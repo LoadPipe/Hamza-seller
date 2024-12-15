@@ -1,4 +1,5 @@
-import { EscrowClient } from '@/web3/contracts/escrow';
+import { EscrowClient, PaymentDefinition } from '@/web3/contracts/escrow';
+import { create } from 'domain';
 import { BigNumberish, ethers, providers, Signer } from 'ethers';
 
 /**
@@ -81,7 +82,7 @@ export async function refundOrderEscrow(
  * @param order Any Order object with payments.
  * @returns Address of escrow contract.
  */
-function findEscrowAddress(order: any): string {
+export function findEscrowAddressFromOrder(order: any): string {
     order?.payments?.sort((a: any, b: any) => a.created_at < b.created_at);
     return order?.payments[0]?.blockchain_data?.escrow_address;
 }
@@ -99,11 +100,36 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
 
     const signer: Signer = await provider.getSigner();
 
-    const address: string = findEscrowAddress(order);
+    const address: string = findEscrowAddressFromOrder(order);
     if (!address) {
         throw new Error('No escrow address found in order');
     }
     const escrow: EscrowClient = new EscrowClient(provider, signer, address);
 
     return escrow;
+}
+
+/**
+ * Gets a payment definition for the given order, from the escrow if it exists.
+ *
+ * @param order A whole entire order object
+ * @returns PaymentDefinition
+ */
+export async function getEscrowPayment(
+    order: any
+): Promise<PaymentDefinition | null> {
+    if (window.ethereum) {
+        try {
+            const escrow = await createEscrowContract(order);
+            return await escrow.getEscrowPayment(
+                ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
+            );
+        } catch (e: any) {
+            console.error('Error getting the payment:', e); // Log the error}
+        }
+    } else {
+        throw new Error('No web3 provider available');
+    }
+
+    return null;
 }
