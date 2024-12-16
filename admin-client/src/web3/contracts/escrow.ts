@@ -2,7 +2,7 @@ import { BigNumberish, ethers } from 'ethers';
 import { escrowAbi } from '../abi/escrow-abi';
 import { ITransactionOutput } from '..';
 
-type PaymentDefinition = {
+export type PaymentDefinition = {
     id: string;
     payer: string;
     receiver: string;
