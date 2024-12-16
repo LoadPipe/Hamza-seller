@@ -1,5 +1,56 @@
+import { getCurrencyPrecision } from '@/currency.config';
 import { EscrowClient, PaymentDefinition } from '@/web3/contracts/escrow';
-import { BigNumberish, ethers, providers, Signer } from 'ethers';
+import { BigNumber, BigNumberish, ethers, providers, Signer } from 'ethers';
+
+/**
+ * Converts any number decimal number (expressed as string or number) to an appropriate
+ * number of wei units, given the currency.
+ *
+ * @param amount Amount as decimal
+ * @param currencyCode usdc, usdt, eth
+ * @returns The value converted to smallest units of the currency (as BigNumber)
+ */
+export function convertToWei(
+    amount: string | number,
+    currencyCode: string
+): BigNumber {
+    try {
+        const precision = getCurrencyPrecision(currencyCode);
+        return convertToUnits(amount, precision.native);
+    } catch (e) {
+        console.log(e);
+    }
+
+    return BigNumber.from(0);
+}
+
+/**
+ * Converts any number decimal number (expressed as string or number) to a given number
+ * of units.
+ * Example: convertToUnits(3.21, 3) will return 3210.
+ *
+ * @param amount Amount as decimal
+ * @param units Number of units
+ * @param currencyCode usdc, usdt, eth
+ * @returns The value converted to given number of units of the currency (as BigNumber)
+ */
+export function convertToUnits(
+    amount: string | number,
+    units: number
+): BigNumber {
+    try {
+        const amt = amount.toString();
+        const decimalPlaces = amt.includes('.') ? amt.split('.')[1].length : 0;
+
+        return ethers.utils
+            .parseUnits(amt, decimalPlaces)
+            .mul(BigNumber.from(10).pow(units - decimalPlaces));
+    } catch (e) {
+        console.log(e);
+    }
+
+    return BigNumber.from(0);
+}
 
 /**
  * Releases a payment in escrow, from the seller side, on the escrow contract on the blockchain.
@@ -38,6 +89,7 @@ export async function releaseEscrowPayment(order: any): Promise<void> {
         throw new Error('No web3 provider available.');
     }
 }
+
 /**
  *
  * @param order An Order object with payments attached
