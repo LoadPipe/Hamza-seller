@@ -70,10 +70,8 @@ export class EscrowClient {
         }
     }
 
-    async getEscrowPayment(paymentId: string): Promise<PaymentDefinition> {
-        const output = await this.contract.getPayment(
-            ethers.utils.keccak256(ethers.utils.toUtf8Bytes(paymentId))
-        );
+    async getPayment(paymentId: string): Promise<PaymentDefinition> {
+        const output = await this.contract.getPayment(paymentId);
 
         return {
             id: output[0],

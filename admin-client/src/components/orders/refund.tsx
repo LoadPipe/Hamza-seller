@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundOrderEscrow } from '@/utils/order-escrow.ts';
+import { refundEscrowPayment } from '@/utils/order-escrow.ts';
 
 type RefundProps = {
     firstName: string;
@@ -66,7 +66,7 @@ const Refund: React.FC<RefundProps> = ({
 
                 let refundAmountInSmallestUnit = formData.refundAmount;
 
-                const escrowRefundResult = await refundOrderEscrow(
+                const escrowRefundResult = await refundEscrowPayment(
                     order,
                     refundAmountInSmallestUnit
                 );
