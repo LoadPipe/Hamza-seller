@@ -226,13 +226,13 @@ export default class StoreOrderService extends TransactionBaseService {
 
         if (sort?.field === 'currency_code') {
             transformedOrders.sort((a, b) => {
-                const nameA = a.currency_code;
-                const nameB = b.currency_code;
+                const currencyA = a.currency_code;
+                const currencyB = b.currency_code;
 
                 if (sort.direction === 'ASC') {
-                    return nameA.localeCompare(nameB);
+                    return currencyA.localeCompare(currencyB);
                 } else if (sort.direction === 'DESC') {
-                    return nameB.localeCompare(nameA);
+                    return currencyB.localeCompare(currencyA);
                 }
             });
         }
