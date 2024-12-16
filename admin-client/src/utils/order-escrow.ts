@@ -134,9 +134,11 @@ export async function getEscrowPayment(
     if (window.ethereum) {
         try {
             const escrow = await createEscrowContract(order);
-            return await escrow.getPayment(
+            const payment = await escrow.getPayment(
                 ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
             );
+
+            return paymentIsValid(payment) ? payment : null;
         } catch (e: any) {
             console.error('Error getting the payment:', e); // Log the error}
         }
