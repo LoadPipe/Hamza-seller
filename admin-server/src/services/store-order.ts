@@ -212,6 +212,19 @@ export default class StoreOrderService extends TransactionBaseService {
             });
         }
 
+        const transformedOrders = allOrders.map((order) => {
+            // Extract the first payment
+            const firstPayment = order.payments?.[0] || null;
+
+            // Return a transformed order with currency_code at the top level
+            return {
+                ...order,
+                currency_code: firstPayment?.currency_code || null, // Add currency_code
+            };
+        });
+
+        console.log('TRANSFORM ORDERS', transformedOrders);
+
         return {
             pageIndex: page,
             pageCount: Math.ceil(totalRecords / ordersPerPage),
@@ -219,7 +232,7 @@ export default class StoreOrderService extends TransactionBaseService {
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
-            orders: allOrders,
+            orders: transformedOrders,
             totalRecords,
             statusCount: statusCounts,
         };
