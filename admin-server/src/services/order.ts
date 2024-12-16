@@ -690,6 +690,11 @@ export default class OrderService extends MedusaOrderService {
 
             //save the order
             await this.orderRepository_.save(order);
+
+            //null metadata not allowed
+            if (!metadata) {
+                metadata = {};
+            }
             await this.orderHistoryService_.create(order, {
                 to_status,
                 to_payment_status,
