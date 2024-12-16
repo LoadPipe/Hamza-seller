@@ -13,7 +13,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ShieldQuestion } from 'lucide-react';
-import { releaseOrderEscrow } from '@/utils/order-escrow.ts';
+import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,7 +22,7 @@ export function ReleaseEscrow() {
     const { toast } = useToast();
 
     const mutation = useMutation({
-        mutationFn: async (order: any) => await releaseOrderEscrow(order),
+        mutationFn: async (order: any) => await releaseEscrowPayment(order),
         onSuccess: () => {
             toast({
                 variant: 'default',

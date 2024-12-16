@@ -14,10 +14,18 @@ import { BigNumberish, ethers, providers, Signer } from 'ethers';
  *
  * @returns True if it was possible to make the contract call.
  */
-export async function releaseOrderEscrow(order: any): Promise<void> {
+export async function releaseEscrowPayment(order: any): Promise<void> {
     if (window.ethereum) {
         const escrow: EscrowClient = await createEscrowContract(order);
+
         try {
+            const payment = await getEscrowPayment(order);
+
+            //validate before releasing
+            validatePaymentExists(payment, order.id);
+            validatePaymentNotReleased(payment, order.id);
+            validatePaymentNotReleasedBySeller(payment, order.id);
+
             await escrow.releaseEscrow(
                 ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
             );
@@ -44,7 +52,7 @@ export async function releaseOrderEscrow(order: any): Promise<void> {
  *
  * @returns True if it was possible to make the contract call.
  */
-export async function refundOrderEscrow(
+export async function refundEscrowPayment(
     order: any,
     amount: BigNumberish
 ): Promise<boolean | undefined> {
@@ -52,10 +60,16 @@ export async function refundOrderEscrow(
     if (window.ethereum) {
         try {
             const escrow: EscrowClient = await createEscrowContract(order);
-            await escrow.getEscrowPayment(order.id);
-            // const getEscrowLogs = await escrow.getEscrowPayment(order.id);
-            // console.log(`getEscrowLogs: ${JSON.stringify(getEscrowLogs)}`);
+
             if (escrow) {
+                const payment = await getEscrowPayment(order);
+
+                //validate before refunding
+                //validate before releasing
+                validatePaymentExists(payment, order.id);
+                validatePaymentNotReleased(payment, order.id);
+                validateRefundAmount(payment, order.id, amount);
+
                 await escrow.refundPayment(
                     ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id)),
                     amount
@@ -120,7 +134,7 @@ export async function getEscrowPayment(
     if (window.ethereum) {
         try {
             const escrow = await createEscrowContract(order);
-            return await escrow.getEscrowPayment(
+            return await escrow.getPayment(
                 ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
             );
         } catch (e: any) {
@@ -131,4 +145,61 @@ export async function getEscrowPayment(
     }
 
     return null;
+}
+
+//VALIDATION METHODS
+
+function paymentIsValid(payment: PaymentDefinition | null): boolean {
+    if (payment?.id) {
+        //return true if id contains more than just x and 0
+        const id: string = payment.id.toString() ?? '';
+        return id.replace('x', '').replace('0', '').length > 0;
+    }
+
+    return false;
+}
+
+function validatePaymentExists(
+    payment: PaymentDefinition | null,
+    orderId: string
+) {
+    if (payment && !paymentIsValid(payment)) {
+        throw new Error(`Payment ${orderId} not found.`);
+    }
+}
+
+function validatePaymentNotReleased(
+    payment: PaymentDefinition | null,
+    orderId: string
+) {
+    if (payment?.released) {
+        throw new Error(
+            `Escrow payment for ${orderId} has already been released.`
+        );
+    }
+}
+
+function validatePaymentNotReleasedBySeller(
+    payment: PaymentDefinition | null,
+    orderId: string
+) {
+    if (payment?.receiverReleased) {
+        throw new Error(
+            `Escrow payment for ${orderId} has already been released by the seller.`
+        );
+    }
+}
+
+function validateRefundAmount(
+    payment: PaymentDefinition | null,
+    orderId: string,
+    amount: BigNumberish
+) {
+    const refundableAmt =
+        (payment?.amount ?? 0) - (payment?.amountRefunded ?? 0);
+    if (refundableAmt < BigInt(amount.toString())) {
+        throw new Error(
+            `Amount of ${amount} exceeds the refundable amount of ${refundableAmt} for ${orderId}.`
+        );
+    }
 }
