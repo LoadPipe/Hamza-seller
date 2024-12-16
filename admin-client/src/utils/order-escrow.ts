@@ -56,7 +56,6 @@ export async function refundEscrowPayment(
     order: any,
     amount: BigNumberish
 ): Promise<boolean | undefined> {
-    // console.log(`$$$$ Refunding ${amount} escrowed funds $$$$`);
     if (window.ethereum) {
         try {
             const escrow: EscrowClient = await createEscrowContract(order);
@@ -65,7 +64,6 @@ export async function refundEscrowPayment(
                 const payment = await getEscrowPayment(order);
 
                 //validate before refunding
-                //validate before releasing
                 validatePaymentExists(payment, order.id);
                 validatePaymentNotReleased(payment, order.id);
                 validateRefundAmount(payment, order.id, amount);
@@ -76,11 +74,9 @@ export async function refundEscrowPayment(
                 );
                 return true;
             } else {
-                // console.log('Escrow contract creation failed.');
                 return false;
             }
         } catch (error) {
-            // console.log('Escrow contract creation failed 2.');
             throw error; // Ensure the error propagates to the caller
         }
     } else {
@@ -155,7 +151,10 @@ function paymentIsValid(payment: PaymentDefinition | null): boolean {
     if (payment?.id) {
         //return true if id contains more than just x and 0
         const id: string = payment.id.toString() ?? '';
-        return id.replace('x', '').replace('0', '').length > 0;
+        return (
+            id !=
+            '0x0000000000000000000000000000000000000000000000000000000000000000'
+        );
     }
 
     return false;
@@ -165,7 +164,7 @@ function validatePaymentExists(
     payment: PaymentDefinition | null,
     orderId: string
 ) {
-    if (payment && !paymentIsValid(payment)) {
+    if (!payment || !paymentIsValid(payment)) {
         throw new Error(`Payment ${orderId} not found.`);
     }
 }

@@ -31,6 +31,7 @@ export function ReleaseEscrow() {
             });
         },
         onError: (error: any) => {
+            console.log(error);
             toast({
                 variant: 'destructive',
                 title: 'Error',
