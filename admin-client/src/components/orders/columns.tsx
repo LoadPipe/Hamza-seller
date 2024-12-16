@@ -357,7 +357,7 @@ export const generateColumns = (
                         const formatted = `${formatCryptoPrice(
                             payments[0]?.amount,
                             payments[0]?.currency_code
-                        )} ${payments[0]?.currency_code?.toUpperCase()}`;
+                        )}`;
 
                         return <div className="font-medium">{formatted}</div>;
                     },
