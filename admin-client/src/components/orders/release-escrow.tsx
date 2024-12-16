@@ -58,9 +58,8 @@ export function ReleaseEscrow() {
                         Confirm Refund Request
                     </DialogTitle>
                     <DialogDescription className="text-center text-white">
-                        Are you sure you want to request a refund for order{' '}
-                        <strong>{order.id}</strong>? Refund requests will be
-                        reviewed based on our refund policy.
+                        Are you sure you want to release escrow for order{' '}
+                        <strong>{order.id}</strong>?
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="flex text-white pt-[32px]">
