@@ -174,7 +174,8 @@ export default class StoreOrderService extends TransactionBaseService {
             order:
                 sort?.field &&
                 sort.field !== 'customer' &&
-                sort.field !== 'payments'
+                sort.field !== 'payments' &&
+                sort.field !== 'currency_code'
                     ? {
                           [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
@@ -222,6 +223,19 @@ export default class StoreOrderService extends TransactionBaseService {
                 currency_code: firstPayment?.currency_code || null, // Add currency_code
             };
         });
+
+        if (sort?.field === 'currency_code') {
+            transformedOrders.sort((a, b) => {
+                const nameA = a.currency_code;
+                const nameB = b.currency_code;
+
+                if (sort.direction === 'ASC') {
+                    return nameA.localeCompare(nameB);
+                } else if (sort.direction === 'DESC') {
+                    return nameB.localeCompare(nameA);
+                }
+            });
+        }
 
         console.log('TRANSFORM ORDERS', transformedOrders);
 
