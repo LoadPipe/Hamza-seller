@@ -21,6 +21,14 @@ export class Order extends MedusaOrder {
     store_id?: string;
 
     @Column()
+    escrow_status?:
+        | 'in_escrow'
+        | 'buyer_released'
+        | 'seller_released'
+        | 'refunded'
+        | null;
+
+    @Column()
     massmarket_order_id?: string;
 
     @Column()
