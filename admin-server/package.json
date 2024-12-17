@@ -1,8 +1,8 @@
 {
-    "name": "hamza-seller",
-    "version": "0.0.1",
+    "name": "admin-server",
+    "version": "1.0.0",
     "description": "Hamza Seller server backend",
-    "author": "Garo Nazarian, Jonny Bajada, John R. Kosinski, Jan Mesaric",
+    "author": "Garo Nazarian, Jonny Bajada, John R. Kosinski, Chris Li",
     "license": "MIT",
     "keywords": [
         "sqlite",
