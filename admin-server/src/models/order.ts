@@ -7,9 +7,15 @@ import {
     Relation,
 } from 'typeorm';
 import { Order as MedusaOrder } from '@medusajs/medusa';
-import { Payment as MedusaPayment } from '@medusajs/medusa';
 import { Store } from './store';
-import { Payment } from './payment';
+
+export declare enum EscrowStatus {
+    IN_ESCROW = 'in_escrow',
+    BUYER_RELEASED = 'buyer_released',
+    SELLER_RELEASED = 'seller_released',
+    RELEASED = 'released',
+    REFUNDED = 'refunded',
+}
 
 @Entity()
 export class Order extends MedusaOrder {
@@ -21,12 +27,7 @@ export class Order extends MedusaOrder {
     store_id?: string;
 
     @Column()
-    escrow_status?:
-        | 'in_escrow'
-        | 'buyer_released'
-        | 'seller_released'
-        | 'refunded'
-        | null;
+    escrow_status?: string;
 
     @Column()
     massmarket_order_id?: string;
