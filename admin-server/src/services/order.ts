@@ -707,7 +707,7 @@ export default class OrderService extends MedusaOrderService {
 
     async createRefund(
         orderId: string,
-        refundAmount: number,
+        refundAmount: number, //must be a whole number
         reason: string,
         note?: string
     ): Promise<Order> {
