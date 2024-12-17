@@ -13,7 +13,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ShieldQuestion } from 'lucide-react';
-import { releaseOrderEscrow } from '@/utils/order-escrow.ts';
+import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,7 +22,7 @@ export function ReleaseEscrow() {
     const { toast } = useToast();
 
     const mutation = useMutation({
-        mutationFn: async (order: any) => await releaseOrderEscrow(order),
+        mutationFn: async (order: any) => await releaseEscrowPayment(order),
         onSuccess: () => {
             toast({
                 variant: 'default',
@@ -31,6 +31,7 @@ export function ReleaseEscrow() {
             });
         },
         onError: (error: any) => {
+            console.log(error);
             toast({
                 variant: 'destructive',
                 title: 'Error',
@@ -57,9 +58,8 @@ export function ReleaseEscrow() {
                         Confirm Refund Request
                     </DialogTitle>
                     <DialogDescription className="text-center text-white">
-                        Are you sure you want to request a refund for order{' '}
-                        <strong>{order.id}</strong>? Refund requests will be
-                        reviewed based on our refund policy.
+                        Are you sure you want to release escrow for order{' '}
+                        <strong>{order.id}</strong>?
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="flex text-white pt-[32px]">

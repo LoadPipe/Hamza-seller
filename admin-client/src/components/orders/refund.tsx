@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundOrderEscrow } from '@/utils/order-escrow.ts';
+import { refundEscrowPayment } from '@/utils/order-escrow.ts';
+import { getCurrencyPrecision } from '@/currency.config';
 
 type RefundProps = {
     firstName: string;
@@ -47,13 +48,32 @@ const Refund: React.FC<RefundProps> = ({
     });
     const { toast } = useToast();
 
-    // const currency_code = order?.items[0]?.currency_code;
+    //get the currency code & precision
+    const currencyCode = order?.payments[0]?.currency_code ?? 'usdc';
+    const precision = getCurrencyPrecision(currencyCode);
+
+    //convert the amount to db units
+    const getDbAmount = (amount: string | number) => {
+        return Math.floor(parseFloat(amount.toString()) * 10 ** precision.db);
+    };
+
+    //convert the amount to wei for blockchain use
+    const getBlockchainAmount = (amount: string | number) => {
+        const dbAmount = getDbAmount(amount);
+        const bcAmount = dbAmount
+            .toString()
+            .padEnd(
+                dbAmount.toString().length + (precision.native - precision.db),
+                '0'
+            );
+        return bcAmount;
+    };
 
     const refundMutation = useMutation({
         mutationFn: async () => {
             const payload = {
                 order_id: orderId,
-                amount: formData.refundAmount,
+                amount: getDbAmount(formData.refundAmount),
                 reason: formData.reason,
                 note: formData.note,
             };
@@ -64,13 +84,13 @@ const Refund: React.FC<RefundProps> = ({
             try {
                 const { metadata } = data;
 
-                let refundAmountInSmallestUnit = formData.refundAmount;
-
-                const escrowRefundResult = await refundOrderEscrow(
+                //send refund request to escrow contract
+                const escrowRefundResult = await refundEscrowPayment(
                     order,
-                    refundAmountInSmallestUnit
+                    getBlockchainAmount(formData.refundAmount)
                 );
 
+                //if result successful, confirm the refund
                 if (escrowRefundResult) {
                     await putSecure('/seller/order/refund', {
                         id: metadata?.refund_id,
@@ -81,7 +101,6 @@ const Refund: React.FC<RefundProps> = ({
                         title: 'Escrow Refund',
                         description: 'The escrow refund was successful.',
                     });
-                    // console.log('Escrow refund successful');
                 } else {
                     toast({
                         variant: 'destructive',

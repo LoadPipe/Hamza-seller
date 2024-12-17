@@ -690,6 +690,11 @@ export default class OrderService extends MedusaOrderService {
 
             //save the order
             await this.orderRepository_.save(order);
+
+            //null metadata not allowed
+            if (!metadata) {
+                metadata = {};
+            }
             await this.orderHistoryService_.create(order, {
                 to_status,
                 to_payment_status,
@@ -707,7 +712,7 @@ export default class OrderService extends MedusaOrderService {
 
     async createRefund(
         orderId: string,
-        refundAmount: number,
+        refundAmount: number, //must be a whole number
         reason: string,
         note?: string
     ): Promise<Order> {
