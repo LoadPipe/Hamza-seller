@@ -328,10 +328,6 @@ export function OrderDetailsSidebar() {
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
                             <Refund
-                                date={formatDate(orderDetails?.created_at)}
-                                firstName={orderDetails?.customer?.first_name}
-                                lastName={orderDetails?.customer?.last_name}
-                                email={orderDetails?.email}
                                 orderId={orderDetails?.id}
                                 customerId={orderDetails?.customer_id}
                                 order={orderDetails}

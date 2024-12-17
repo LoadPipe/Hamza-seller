@@ -6,6 +6,7 @@ import {
     AccordionContent,
 } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
@@ -14,29 +15,16 @@ import { refundEscrowPayment } from '@/utils/order-escrow.ts';
 import { getCurrencyPrecision } from '@/currency.config';
 
 type RefundProps = {
-    firstName: string;
-    lastName: string;
     customerId: string;
-    email: string;
     refundAmount?: number;
-    date: string;
     orderId: string;
     order: any;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({
-    firstName,
-    lastName,
-    refundAmount,
-    customerId,
-    orderId,
-    order,
-    date,
-    email,
-}) => {
-    const [manualRefund, setManualRefund] = useState(false);
+const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
+    const [manualRefund, setManualRefund] = useState(true);
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
@@ -178,26 +166,18 @@ const Refund: React.FC<RefundProps> = ({
         !manualRefund || !!errors.refundAmount || !!errors.note;
 
     return (
-        <div className="p-4">
-            <h2 className="text-lg font-bold">Refund Management</h2>
-
-            {/* Date Field */}
-            {!manualRefund && (
-                <div className="mt-4">
-                    <label className="block text-sm font-medium">Date</label>
-                    <Input value={date} disabled className="mt-2" />
-                </div>
-            )}
-
+        <div>
             {/* Manual Refund Checkbox */}
-            <div className="mt-4">
-                <div className="flex items-center">
-                    <input
-                        type="checkbox"
+            <div className="mt-4 flex justify-between items-center">
+                <div className="flex">
+                    <h2 className="text-lg font-bold">Refund Management</h2>
+                </div>
+                <div className="flex ">
+                    <Switch
+                        className="mr-2 bg-primary-black-65 peer-checked:bg-primary-green-900"
                         id="manual-refund"
                         checked={manualRefund}
-                        onChange={() => setManualRefund(!manualRefund)}
-                        className="mr-2"
+                        onCheckedChange={setManualRefund} // Shadcn uses `onCheckedChange`
                     />
                     <label htmlFor="manual-refund" className="text-sm">
                         Manual Refund
@@ -206,7 +186,12 @@ const Refund: React.FC<RefundProps> = ({
             </div>
 
             {/* Accordion for Refund Details */}
-            <Accordion type="single" collapsible className="mt-4">
+            <Accordion
+                type="single"
+                defaultValue="refund-details"
+                collapsible
+                className="mt-4"
+            >
                 <AccordionItem value="refund-details">
                     <AccordionTrigger
                         className={
@@ -226,39 +211,39 @@ const Refund: React.FC<RefundProps> = ({
                             }
                         >
                             {/* Customer Name */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Customer Name
-                                </label>
-                                <Input
-                                    value={`${firstName} ${lastName}`}
-                                    disabled
-                                />
-                            </div>
+                            {/*<div className="mt-2">*/}
+                            {/*    <label className="block text-sm font-medium">*/}
+                            {/*        Customer Name*/}
+                            {/*    </label>*/}
+                            {/*    <Input*/}
+                            {/*        value={`${firstName} ${lastName}`}*/}
+                            {/*        disabled*/}
+                            {/*    />*/}
+                            {/*</div>*/}
 
                             {/* Email */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Email
-                                </label>
-                                <Input value={email} disabled />
-                            </div>
+                            {/*<div className="mt-2">*/}
+                            {/*    <label className="block text-sm font-medium">*/}
+                            {/*        Email*/}
+                            {/*    </label>*/}
+                            {/*    <Input value={email} disabled />*/}
+                            {/*</div>*/}
 
                             {/* Order ID */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Order ID
-                                </label>
-                                <Input value={orderId} disabled />
-                            </div>
+                            {/*<div className="mt-2">*/}
+                            {/*    <label className="block text-sm font-medium">*/}
+                            {/*        Order ID*/}
+                            {/*    </label>*/}
+                            {/*    <Input value={orderId} disabled />*/}
+                            {/*</div>*/}
 
                             {/* Customer ID */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Customer ID
-                                </label>
-                                <Input value={customerId} disabled />
-                            </div>
+                            {/*<div className="mt-2">*/}
+                            {/*    <label className="block text-sm font-medium">*/}
+                            {/*        Customer ID*/}
+                            {/*    </label>*/}
+                            {/*    <Input value={customerId} disabled />*/}
+                            {/*</div>*/}
 
                             {/* Refund Amount */}
                             <div className="mt-2">
@@ -288,7 +273,7 @@ const Refund: React.FC<RefundProps> = ({
                                     name="reason"
                                     value={formData.reason}
                                     onChange={handleSelectChange}
-                                    className="block w-full mt-2 p-2 border rounded text-white  bg-primary-black-90"
+                                    className="block w-full mt-2 p-2 rounded text-white  bg-primary-black-90"
                                 >
                                     {reasonOptions.map((reason) => (
                                         <option key={reason} value={reason}>
@@ -306,6 +291,9 @@ const Refund: React.FC<RefundProps> = ({
                                 <Input
                                     type="text"
                                     name="note"
+                                    placeholder={
+                                        'Enter your note about this order refund.'
+                                    }
                                     value={formData.note}
                                     onChange={handleInputChange}
                                 />
