@@ -43,6 +43,7 @@ export const OrderSchema = z.object({
         'requires_action',
     ]),
     price: z.number().optional(), // Optional since it's not always passed
+    currency_code: z.string().optional().nullable(), // Optional since it's not always passed
     email: z.string().email(), // Add email back to the schema
     customer: z
         .object({
