@@ -774,18 +774,24 @@ class ProductService extends MedusaProductService {
         return variant;
     }
 
+
+    async deleteProductById(productId: string): Promise<void> {
+        await this.delete(productId);
+    }
+
     async getCategoryByHandle(
         categoryHandle: string
     ): Promise<ProductCategory | null> {
-        const categories = await categoryCache.retrieve(
-            this.productCategoryRepository_
-        );
-        return (
-            categories.find(
-                (cat) =>
-                    cat.handle.toLowerCase() === categoryHandle.toLowerCase()
-            ) || null
-        );
+        try {
+            const category = await this.productCategoryRepository_.findOne({
+                where: { handle: categoryHandle },
+            });
+
+            return category || null;
+        } catch (error) {
+            this.logger.error('Error fetching product category by handle:', error);
+            throw new Error('Failed to fetch product category by handle.');
+        }
     }
 
     async getProductByHandle(productHandle: string): Promise<Product | null> {
@@ -798,6 +804,19 @@ class ProductService extends MedusaProductService {
         } catch (error) {
             this.logger.error('Error fetching product by handle:', error);
             throw new Error('Failed to fetch product by handle.');
+        }
+    }
+
+    async getProductById(productId: string): Promise<Product | null> {
+        try {
+            const product = await this.productRepository_.findOne({
+                where: { id: productId },
+            });
+
+            return product || null;
+        } catch (error) {
+            this.logger.error('Error fetching product by id:', error);
+            throw new Error('Failed to fetch product by id.');
         }
     }
 
@@ -965,7 +984,8 @@ class ProductService extends MedusaProductService {
             return await this.validateCsvVariantRow(row, data);
         } else {
             if (requiredCsvHeadersForProduct.some((header) => !row[header])) {
-                return 'required product fields missing data';
+                const missingHeader = requiredCsvHeadersForProduct.find((header) => !row[header]);
+                return 'required product fields missing data: ' + missingHeader;
             }
 
             return await this.validateCsvProductRow(row, data, requiredCsvHeadersForProduct, requiredCsvHeadersForVariant);
@@ -1037,9 +1057,9 @@ class ProductService extends MedusaProductService {
         }
 
         // check if thumbnail is a valid url
-        if (!row['thumbnail'].startsWith('http')) {
-            return 'thumbnail must be a valid url';
-        }
+        // if (!row['thumbnail'].startsWith('http')) {
+        //     return 'thumbnail must be a valid url';
+        // }
 
         // check if thumbnail is a valid image
         // if (
