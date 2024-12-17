@@ -54,12 +54,16 @@ export declare module '@medusajs/medusa/dist/models/product' {
         store_id: string;
         reviews: ProductReview[];
         bucky_metadata?: Record<string, unknown>;
+        external_metadata?: Record<string, unknown>;
+        external_source?: string;
     }
 }
 
 export declare module '@medusajs/medusa/dist/models/product-variant' {
     declare interface ProductVariant {
         bucky_metadata?: Record<string, unknown>;
+        external_metadata?: Record<string, unknown>;
+        external_source?: string;
     }
 }
 
@@ -76,6 +80,6 @@ export declare module '@medusajs/medusa/dist/model/order' {
 
 export declare module '@medusajs/medusa/dis/model/refund' {
     declare interface Refund {
-        confirmed: boolean
+        confirmed: boolean;
     }
 }
