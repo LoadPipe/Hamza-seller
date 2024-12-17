@@ -329,6 +329,7 @@ export default class StoreOrderService extends TransactionBaseService {
                 newOrderStatus,
                 newFulfillmentStatus,
                 newPaymentStatus,
+                null,
                 { source: 'manual' }
             );
 
