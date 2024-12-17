@@ -254,7 +254,7 @@ export function DataTable<TData, TValue>({
                                     .getColumn('id')
                                     ?.setFilterValue(event.target.value)
                             }
-                            className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded-l bg-black pr-10"
+                            className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded bg-black pr-10"
                         />
                         {/*<Search*/}
                         {/*    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"*/}
@@ -271,7 +271,7 @@ export function DataTable<TData, TValue>({
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="ghost"
-                                        className="bg-[#242424] text-white w-[72px] h-[36px] rounded-l"
+                                        className="bg-[#242424] text-white w-[72px] h-[36px] rounded"
                                         size="sm"
                                     >
                                         {pageSize}{' '}
@@ -306,13 +306,14 @@ export function DataTable<TData, TValue>({
                         <div className="flex justify-end">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button className="bg-secondary-charcoal-69 text-white">
+                                    <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69">
                                         <Download />
                                         Export
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-secondary-charcoal-69 ">
+                                <DropdownMenuContent>
                                     <DropdownMenuItem
+                                        className="hover:bg-primary-purple-90 px-4 py-2 w-full"
                                         onClick={handleDownloadCSV}
                                     >
                                         Export as CSV
@@ -439,7 +440,7 @@ export function DataTable<TData, TValue>({
 
                     {/* First Page */}
                     <button
-                        className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                        className={`w-8 h-8 flex items-center justify-center rounded text-xs ${
                             pageIndex === 0
                                 ? 'bg-[#94D42A] text-black'
                                 : 'bg-[#121212] text-white'
@@ -464,7 +465,7 @@ export function DataTable<TData, TValue>({
                             pages.push(
                                 <button
                                     key={i}
-                                    className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                                    className={`w-6 h-8 flex items-center justify-center rounded text-xs ${
                                         pageIndex === i
                                             ? 'bg-[#94D42A] text-black'
                                             : 'bg-[#121212] text-white'
@@ -486,7 +487,7 @@ export function DataTable<TData, TValue>({
                     {/* Last Page */}
                     {pageCount > 1 && (
                         <button
-                            className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                            className={`w-8 h-8 flex items-center justify-center rounded text-xs ${
                                 pageIndex === pageCount - 1
                                     ? 'bg-[#94D42A] text-black'
                                     : 'bg-[#121212] text-white'

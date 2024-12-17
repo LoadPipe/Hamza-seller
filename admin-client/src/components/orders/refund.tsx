@@ -174,7 +174,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                 </div>
                 <div className="flex ">
                     <Switch
-                        className="mr-2 bg-primary-black-65 peer-checked:bg-primary-green-900"
+                        className="mr-2 bg-primary-black-65 peer-checked:primary-green-900"
                         id="manual-refund"
                         checked={manualRefund}
                         onCheckedChange={setManualRefund} // Shadcn uses `onCheckedChange`
@@ -307,6 +307,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                             {/* Submit Button */}
                             <div className="mt-4">
                                 <Button
+                                    className="w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
                                     onClick={handleRefundSubmit}
                                     disabled={isSubmitDisabled}
                                 >
