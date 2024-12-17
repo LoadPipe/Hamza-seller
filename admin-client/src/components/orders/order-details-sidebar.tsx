@@ -11,20 +11,26 @@ import {
 import Timeline from '@/components/orders/timeline';
 import Item from '@/components/orders/item';
 import Payment from '@/components/orders/payment';
+import Refund from '@/components/orders/refund';
 import { X } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     formatStatus,
     formatDate,
     customerName,
     formatShippingAddress,
 } from '@/utils/format-data.ts';
-import { getSecure } from '@/utils/api-calls';
+import { getSecure, putSecure } from '@/utils/api-calls';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
+import { getOrderStatusName } from '@/utils/check-order-status.ts';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
 
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
     const {
         data: orderDetails,
         isLoading,
@@ -44,8 +50,76 @@ export function OrderDetailsSidebar() {
         retry: 1, // Optional: Limit retries to avoid overloading the API
         staleTime: 5 * 60 * 1000, // Optional: Cache data for 5 minutes
     });
+
+    const [selectedStatus, setSelectedStatus] = useState(() =>
+        getOrderStatusName(
+            orderDetails?.fulfillment_status,
+            orderDetails?.status,
+            orderDetails?.payment_status
+        )
+    );
+
+    let currencyCode = orderDetails?.payments[0]?.currency_code;
+
+    useEffect(() => {
+        currencyCode = orderDetails?.payments[0]?.currency_code;
+        if (
+            orderDetails?.fulfillment_status &&
+            orderDetails?.status &&
+            orderDetails?.payment_status
+        ) {
+            setSelectedStatus(
+                getOrderStatusName(
+                    orderDetails.fulfillment_status,
+                    orderDetails.status,
+                    orderDetails.payment_status
+                )
+            );
+        }
+    }, [orderDetails]);
+
+    console.log(`STATUS IS ${selectedStatus}`);
+    console.log('Details', orderDetails);
+
+    const mutation = useMutation({
+        mutationFn: async (newStatus: string) =>
+            await putSecure('/seller/order/status', {
+                order_id: orderId,
+                status: newStatus,
+            }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['orderDetails', orderId],
+            });
+            // invalidate papa
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            toast({
+                variant: 'default',
+                title: 'Success!',
+                description: 'Order status updated successfully.',
+            });
+        },
+        onError: (error: any) => {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description:
+                    error?.response?.data?.message ||
+                    'Failed to update status.',
+            });
+        },
+    });
+
     // Conditionally render the sidebar only when it's open
     if (!isSidebarOpen) return null;
+
+    const handleStatusChange = (
+        event: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+        const newStatus = event.target.value;
+        setSelectedStatus(newStatus);
+        mutation.mutate(newStatus);
+    };
 
     const statusDetails = orderDetails && {
         status: orderDetails.status,
@@ -62,7 +136,6 @@ export function OrderDetailsSidebar() {
         },
         0 // Initial accumulator value
     );
-    console.log(`WTF ${totalPrice}`);
     return (
         <div>
             <Sidebar
@@ -124,11 +197,31 @@ export function OrderDetailsSidebar() {
                                     <span className="text-primary-black-60 text-sm leading-relaxed">
                                         STATUS
                                     </span>
-                                    <span className="text-white text-md">
-                                        {formatStatus(
-                                            orderDetails?.fulfillment_status
-                                        )}
-                                    </span>
+                                    {selectedStatus ? (
+                                        <select
+                                            className="text-white bg-primary-black-85 rounded-md p-2"
+                                            value={selectedStatus}
+                                            onChange={handleStatusChange}
+                                        >
+                                            <option value="Processing">
+                                                Processing
+                                            </option>
+                                            <option value="Shipped">
+                                                Shipped
+                                            </option>
+                                            <option value="Delivered">
+                                                Delivered
+                                            </option>
+                                            <option value="Cancelled">
+                                                Cancelled
+                                            </option>
+                                            <option value="Refunded">
+                                                Refunded
+                                            </option>
+                                        </select>
+                                    ) : (
+                                        <div>Loading status...</div>
+                                    )}
                                 </div>
                             </div>
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
@@ -234,6 +327,16 @@ export function OrderDetailsSidebar() {
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
+                            <Refund
+                                date={formatDate(orderDetails?.created_at)}
+                                firstName={orderDetails?.customer?.first_name}
+                                lastName={orderDetails?.customer?.last_name}
+                                email={orderDetails?.email}
+                                orderId={orderDetails?.id}
+                                customerId={orderDetails?.customer_id}
+                                order={orderDetails}
+                            />
+
                             {/* Items */}
                             <div className="flex flex-col">
                                 <h2 className="text-primary-black-60 text-md leading-relaxed mb-4">
@@ -251,9 +354,7 @@ export function OrderDetailsSidebar() {
                                                 quantity={item.quantity.toString()}
                                                 unitPrice={item.unit_price}
                                                 discount={0} // Adjust as needed
-                                                currencyCode={
-                                                    item.currency_code || 'USDC'
-                                                }
+                                                currencyCode={currencyCode}
                                                 image={item.thumbnail}
                                             />
                                             {index !==
@@ -270,17 +371,13 @@ export function OrderDetailsSidebar() {
 
                             {/* Payment */}
                             <Payment
-                                subtotal={`${formatCryptoPrice(totalPrice, orderDetails?.items[0]?.currency_code || 'usdc')}`}
+                                subtotal={`${formatCryptoPrice(totalPrice, currencyCode)}`}
                                 discount={0} // Adjust as needed
                                 shippingFee="0.00" // Adjust as needed
-                                currencyCode={
-                                    orderDetails?.items[0]?.currency_code ||
-                                    'usdc'
-                                }
+                                currencyCode={currencyCode}
                                 total={formatCryptoPrice(
-                                    totalPrice,
-                                    orderDetails?.items[0]?.currency_code ||
-                                        'usdc'
+                                    orderDetails?.payments[0]?.amount ?? 0,
+                                    currencyCode
                                 )}
                             />
 

@@ -109,8 +109,6 @@ export default function DatePickerFilter({
         return selectedOption || title;
     };
 
-    console.log(`$$$ TEMPORARY ${JSON.stringify(temporarySelection)}`);
-
     return (
         <div className="relative">
             <DropdownMenu.Root

@@ -64,7 +64,7 @@ const Item: React.FC<ItemProps> = ({
                             <span className="text-white font-semibold text-right">
                                 {formatCryptoPrice(
                                     unitPrice,
-                                    currencyCode || 'USDC'
+                                    currencyCode || 'usdc'
                                 )}
                             </span>
                         </div>
@@ -84,7 +84,7 @@ const Item: React.FC<ItemProps> = ({
                             <span className="text-white font-semibold text-right">
                                 {formatCryptoPrice(
                                     total,
-                                    currencyCode || 'USDC'
+                                    currencyCode || 'usdc'
                                 )}
                             </span>
                         </div>

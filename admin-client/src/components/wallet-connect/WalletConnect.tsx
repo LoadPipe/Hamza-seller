@@ -1,3 +1,4 @@
+import { deleteJwtCookie, getJwtWalletAddress } from '@/utils/authentication';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export const WalletConnect = () => {
@@ -34,9 +35,30 @@ export const WalletConnect = () => {
                         })}
                     >
                         {(() => {
+                            if (ready) {
+                                //check whether or not wallet is connected
+                                if (!connected) {
+                                    //openConnectModal();
+                                } else {
+                                    //if wallet connected, check whether jwt cookie matches wallet address
+                                    const cookieAddress = getJwtWalletAddress();
+                                    if (
+                                        !cookieAddress?.trim()?.length ||
+                                        account?.address
+                                            ?.trim()
+                                            ?.toLowerCase() !=
+                                            cookieAddress?.trim()?.toLowerCase()
+                                    ) {
+                                        deleteJwtCookie();
+                                        openAccountModal();
+                                    }
+                                }
+                            }
+
                             if (!connected) {
                                 return (
                                     <button
+                                        className="bg-[#94D42A] text-black font-semibold rounded-full"
                                         onClick={openConnectModal}
                                         type="button"
                                     >
@@ -54,6 +76,7 @@ export const WalletConnect = () => {
                                     </button>
                                 );
                             }
+
                             return (
                                 <div style={{ display: 'flex', gap: 12 }}>
                                     <button

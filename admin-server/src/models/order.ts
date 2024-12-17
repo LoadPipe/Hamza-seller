@@ -1,7 +1,15 @@
-import { Entity, OneToOne, JoinColumn, Column } from 'typeorm';
+import {
+    Entity,
+    OneToOne,
+    JoinColumn,
+    Column,
+    OneToMany,
+    Relation,
+} from 'typeorm';
 import { Order as MedusaOrder } from '@medusajs/medusa';
 import { Payment as MedusaPayment } from '@medusajs/medusa';
 import { Store } from './store';
+import { Payment } from './payment';
 
 @Entity()
 export class Order extends MedusaOrder {

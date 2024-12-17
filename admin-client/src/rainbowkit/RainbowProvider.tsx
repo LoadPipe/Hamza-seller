@@ -10,13 +10,16 @@ import { config } from './wagmi.ts';
 import { useState } from 'react';
 import { createAuthenticationAdapter } from '@rainbow-me/rainbowkit';
 import { createSiweMessage } from 'viem/siwe';
-import { sendVerifyRequest, getNonce } from '@/utils/authentication/';
+import {
+    sendVerifyRequest,
+    getNonce,
+    setJwtCookie,
+} from '@/utils/authentication/';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import LoginPage from '@/pages/login/login-page.tsx';
 
 export function RainbowWrapper({ children }: { children: React.ReactNode }) {
     const { authData, setCustomerAuthData } = useCustomerAuthStore();
-    const [walletAddress, setWalletAddress] = useState<string>('');
 
     const walletSignature = createAuthenticationAdapter({
         getNonce: async () => {
@@ -30,7 +33,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 address,
                 chainId,
             });
-            setWalletAddress(address);
+
             return createSiweMessage({
                 domain: window.location.host,
                 address,
@@ -43,7 +46,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
         },
 
         verify: async ({ message, signature }) => {
-            console.log('message', message);
+            console.log('SIEW MESSAGE', message);
             console.log('signature', signature);
             try {
                 const response = await sendVerifyRequest(message, signature);
@@ -55,13 +58,15 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 console.log('token', token);
 
                 // Set the JWT as a secure cookie
-                document.cookie = `jwt=${token}; path=/;`; // secure; HttpOnly`;
-                console.log('document.cookie=', document.cookie);
+                setJwtCookie(token);
+
+                const lines = message.split('\n');
+                const walletAddress = lines[1]?.trim();
 
                 if (response.status === 200) {
                     setCustomerAuthData({
                         token: token,
-                        wallet_address: walletAddress,
+                        wallet_address: walletAddress.toLowerCase(),
                         is_verified: true,
                         status: 'authenticated',
                     });

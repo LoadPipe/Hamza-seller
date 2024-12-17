@@ -6,8 +6,8 @@ POST http://localhost:9000/seller/order
 Content-Type: application/json
 
 {
-    "store_id": "store_01JCK8MX8DZCHXDMMR8SNKN7E3",
-    "wallet_address": "0x4fBCF49cC0f91d66Bc5bBbE931913D8709592012"
+    "store_id": "store_01JE8YPNX7QFSQF4T0RHR6V2BE",
+    "wallet_address": "0xb975Bf5ca0b09E17834d0b5A526F8315F82986D4"
 }
 
 #### Login Admin User
@@ -26,7 +26,28 @@ Content-Type: application/json
 {
   "count": 2,
   "date": "2024-12-04T10:00:00Z",
-  "store_id": "store_01JE8YHDQ95G6ASYEH66N7CAKX"
+  "store_id": "store_01JEB9QTTBKJ0JJ8WCTXJCYGN4"
+}
+
+
+###
+POST http://localhost:9000/seller/order/refund
+Content-Type: application/json
+
+{
+  "order_id": "order_01JEAMPWRH6Y8ZND8B15NWSJAE",
+  "amount": 6796,
+  "reason": "return",
+  "note": "this shit sucks, I hate it, give ma money back fool"
+}
+
+
+### Confirm REFUND ORDER
+PUT http://localhost:9000/seller/order/refund
+Content-Type: application/json
+
+{
+  "id": "ref_01JEBFA7QJQ5W9DYZH31Z5VFZQ"
 }
 
 
@@ -38,9 +59,9 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
 {
-  "store_id": "store_01JDVS0Z3RPDV983X4XQVV4F2G",
-  "page": 1,
-  "ordersPerPage": 2,
+  "store_id": "store_01JE8YPNX7QFSQF4T0RHR6V2BE",
+  "page": 0,
+  "ordersPerPage": 8,
   "sort": {
     "created_at": "ASC"
   },
@@ -56,17 +77,13 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6I
     },
     "payment_status": {
       "eq": "awaiting"
-    },
-    "created_at": {
-      "gte": "2024-11-01T00:00:00Z",
-      "lte": "2024-11-30T23:59:59Z"
     }
   }
 
 }
 
 ### Get Seller Order Details
-GET http://localhost:9000/seller/order/detail?order_id=order_01JDVVT4B2E566R32NM77P09WC
+GET http://localhost:9000/seller/order/detail?order_id=order_01JENFNJ3AM7M7EDBQ7JQMXD83
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
@@ -81,3 +98,26 @@ Content-Type: application/json
 
 }
 
+### Store Name
+GET  http://localhost:9000/seller/store/name
+Content-Type: application/json
+
+{
+  "wallet_address": "0xfb20a78fd35d20925af6f7379ab35fa6c41e9834"
+}
+
+### export csv
+GET http://localhost:9000/seller/product/csv/export
+Content-Type: application/json
+
+{
+  "store_id": "store_01JEVAP3K1YZV7HFRHZ6SFFR12"
+}
+
+### Get cancelled orders
+GET  http://localhost:9000/seller/order/cancel-request
+Content-Type: application/json
+
+{
+  "store_id": "store_01JEWRFN08KNC6S9M6NAYGDPBZ"
+}

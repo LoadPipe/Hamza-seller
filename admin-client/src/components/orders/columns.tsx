@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 import { formatStatus, formatDate, customerName } from '@/utils/format-data.ts';
-
+import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
 // Define the Zod schema for the columns you want to display
 export const OrderSchema = z.object({
     id: z.string(),
@@ -50,12 +50,38 @@ export const OrderSchema = z.object({
             last_name: z.string(),
         })
         .optional(), // Make it optional in case of any missing data
+    payments: z
+        .array(
+            z
+                .object({
+                    id: z.string(),
+                    amount: z.number(),
+                    currency_code: z.string(),
+                    provider_id: z.string(),
+                    created_at: z.string(),
+                    blockchain_data: z
+                        .object({
+                            chain_id: z
+                                .union([z.number(), z.string()])
+                                .optional(),
+                            payer_address: z.string().optional(),
+                            escrow_address: z.string().optional(),
+                            transaction_id: z.string().optional(),
+                        })
+                        .nullable()
+                        .optional(),
+                })
+                .optional()
+                .nullable()
+        )
+        .optional(), // Add payments as an optional array
 });
+import { formatCryptoPrice } from '@/utils/get-product-price';
 
 // Generate TypeScript type from Zod schema
 export type Order = z.infer<typeof OrderSchema>;
 
-// Define a dynamic column generation function
+// Pure Function; We aren't using sideEffects here, the purpose of this function is to generate columns
 export const generateColumns = (
     includeColumns: Array<keyof Order | 'select' | 'actions'>
 ): ColumnDef<Order>[] => {
@@ -291,45 +317,50 @@ export const generateColumns = (
                     },
                 };
 
-            // case 'price':
-            //     return {
-            //         accessorKey: 'price',
-            //         header: ({ column }) => (
-            //             <Button
-            //                 variant={'ghost'}
-            //                 className=" text-white hover:text-opacity-70 "
-            //                 onClick={() =>
-            //                     column.toggleSorting(
-            //                         column.getIsSorted() === 'asc'
-            //                     )
-            //                 }
-            //             >
-            //                 Price
-            //                 {column.getIsSorted() === 'asc' && (
-            //                     <ArrowUp className="ml-2 h-4 w-4" />
-            //                 )}
-            //                 {column.getIsSorted() === 'desc' && (
-            //                     <ArrowDown className="ml-2 h-4 w-4" />
-            //                 )}
-            //                 {!column.getIsSorted() && (
-            //                     <ArrowUpDown className="ml-2 h-4 w-4" />
-            //                 )}
-            //             </Button>
-            //         ),
-            //         cell: ({ row }) => {
-            //             const price = row.getValue('price') as Order['price'];
-            //             if (price === undefined) return <div>--</div>;
-            //             const formatted = new Intl.NumberFormat('en-US', {
-            //                 style: 'currency',
-            //                 currency: 'USD',
-            //             }).format(price);
-            //             return (
-            //                 <div className="text-right font-medium">
-            //                     {formatted}
-            //                 </div>
-            //             );
-            //         },
-            //     };
+            case 'price':
+                return {
+                    accessorKey: 'payments',
+                    header: ({ column }) => (
+                        <Button
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Price
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                        </Button>
+                    ),
+                    cell: ({ row }) => {
+                        const payments = row.getValue('payments') as
+                            | {
+                                  amount: number;
+                                  currency_code: string;
+                              }[]
+                            | undefined;
+
+                        if (!payments || payments.length === 0) {
+                            return <div>--</div>; // No payments available
+                        }
+                        const formatted = `${formatCryptoPrice(
+                            payments[0]?.amount,
+                            payments[0]?.currency_code
+                        )} ${payments[0]?.currency_code?.toUpperCase()}`;
+
+                        return <div className="font-medium">{formatted}</div>;
+                    },
+                };
             case 'email':
                 return {
                     accessorKey: 'email',
@@ -397,15 +428,20 @@ export const generateColumns = (
                                         Copy order ID
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                        View customer
-                                    </DropdownMenuItem>
+
                                     <DropdownMenuItem
                                         onClick={() =>
                                             openOrderSidebar(order.id)
                                         }
                                     >
                                         View order details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            openOrderEscrowDialog(order)
+                                        }
+                                    >
+                                        Release Escrow
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>

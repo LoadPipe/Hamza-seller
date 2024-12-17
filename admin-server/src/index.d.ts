@@ -4,6 +4,7 @@ import { Currency, Store } from '@medusajs/medusa';
 import { Role } from './models/role';
 import { User } from './models/user';
 import { ProductReview } from './models/product-review';
+import { Refund } from './models/refund';
 
 // modifying the User model such that email is now optional
 export declare module '@medusajs/medusa/dist/models/user' {
@@ -70,5 +71,11 @@ export declare module '@medusajs/medusa/dist/model/order' {
         massmarket_ttl?: number;
         massmarket_amount?: string;
         bucky_metadata?: Record<string, unknown>;
+    }
+}
+
+export declare module '@medusajs/medusa/dis/model/refund' {
+    declare interface Refund {
+        confirmed: boolean
     }
 }

@@ -50,6 +50,6 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             ordersPerPage
         );
 
-        return handler.returnStatus(200, orders);
+        return handler.returnStatus(200, orders, 100);
     });
 };
