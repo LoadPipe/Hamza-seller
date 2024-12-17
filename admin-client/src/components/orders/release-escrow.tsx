@@ -12,7 +12,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { ShieldQuestion, Rocket } from 'lucide-react';
+import { Rocket } from 'lucide-react';
 import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';

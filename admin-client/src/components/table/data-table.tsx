@@ -254,7 +254,7 @@ export function DataTable<TData, TValue>({
                                     .getColumn('id')
                                     ?.setFilterValue(event.target.value)
                             }
-                            className="w-full h-[34px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
+                            className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded-l bg-black pr-10"
                         />
                         {/*<Search*/}
                         {/*    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"*/}
@@ -271,7 +271,7 @@ export function DataTable<TData, TValue>({
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="ghost"
-                                        className="bg-[#242424] text-white w-[72px] h-[36px] rounded-full"
+                                        className="bg-[#242424] text-white w-[72px] h-[36px] rounded-l"
                                         size="sm"
                                     >
                                         {pageSize}{' '}
@@ -381,17 +381,16 @@ export function DataTable<TData, TValue>({
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
-                                    [...Array(pageSize)].map((_, idx) => (
-                                        <TableRow key={idx}>
-                                            {columns.map((col) => (
-                                                <TableCell key={col.id}>
-                                                    <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))
-                                ) :
-                                table.getRowModel().rows?.length ? (
+                                [...Array(pageSize)].map((_, idx) => (
+                                    <TableRow key={idx}>
+                                        {columns.map((col) => (
+                                            <TableCell key={col.id}>
+                                                <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
                                     <TableRow
                                         key={row.id}

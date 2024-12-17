@@ -56,7 +56,7 @@ export default function DropdownMultiselectFilter({
             <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
                 <DropdownMenu.Trigger asChild>
                     <button
-                        className="flex items-center gap-2 px-4 py-2 border h-[34px] text-sm rounded-full shadow-sm bg-secondary-charcoal-69"
+                        className="flex items-center gap-2 px-4 py-2 border h-[44px] text-sm rounded-l shadow-sm bg-secondary-charcoal-69"
                         aria-label="Customize options"
                     >
                         <p className="truncate overflow-hidden text-ellipsis">
