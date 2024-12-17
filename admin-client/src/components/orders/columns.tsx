@@ -43,6 +43,7 @@ export const OrderSchema = z.object({
         'requires_action',
     ]),
     price: z.number().optional(), // Optional since it's not always passed
+    currency_code: z.string().optional().nullable(), // Optional since it's not always passed
     email: z.string().email(), // Add email back to the schema
     customer: z
         .object({
@@ -356,11 +357,48 @@ export const generateColumns = (
                         const formatted = `${formatCryptoPrice(
                             payments[0]?.amount,
                             payments[0]?.currency_code
-                        )} ${payments[0]?.currency_code?.toUpperCase()}`;
+                        )}`;
 
                         return <div className="font-medium">{formatted}</div>;
                     },
                 };
+
+            case 'currency_code':
+                return {
+                    accessorKey: 'currency_code',
+                    header: ({ column }) => (
+                        <Button
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Currency
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                        </Button>
+                    ),
+                    cell: ({ row }) => {
+                        const currencyCode = row.getValue(
+                            'currency_code'
+                        ) as string;
+
+                        return (
+                            <div className="font-medium">{currencyCode}</div>
+                        );
+                    },
+                };
+
             case 'email':
                 return {
                     accessorKey: 'email',
@@ -465,6 +503,7 @@ export const columns = generateColumns([
     'created_at',
     'payment_status',
     'price',
+    'currency_code',
     'email',
     'fulfillment_status',
     'actions',

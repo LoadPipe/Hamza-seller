@@ -177,7 +177,8 @@ export default class StoreOrderService extends TransactionBaseService {
             order:
                 sort?.field &&
                 sort.field !== 'customer' &&
-                sort.field !== 'payments'
+                sort.field !== 'payments' &&
+                sort.field !== 'currency_code'
                     ? {
                           [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
@@ -215,6 +216,32 @@ export default class StoreOrderService extends TransactionBaseService {
             });
         }
 
+        const transformedOrders = allOrders.map((order) => {
+            // Extract the first payment
+            const firstPayment = order.payments?.[0] || null;
+
+            // Return a transformed order with currency_code at the top level
+            return {
+                ...order,
+                currency_code: firstPayment?.currency_code || null, // Add currency_code
+            };
+        });
+
+        if (sort?.field === 'currency_code') {
+            transformedOrders.sort((a, b) => {
+                const currencyA = a.currency_code;
+                const currencyB = b.currency_code;
+
+                if (sort.direction === 'ASC') {
+                    return currencyA.localeCompare(currencyB);
+                } else if (sort.direction === 'DESC') {
+                    return currencyB.localeCompare(currencyA);
+                }
+            });
+        }
+
+        console.log('TRANSFORM ORDERS', transformedOrders);
+
         return {
             pageIndex: page,
             pageCount: Math.ceil(totalRecords / ordersPerPage),
@@ -222,7 +249,7 @@ export default class StoreOrderService extends TransactionBaseService {
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
-            orders: allOrders,
+            orders: transformedOrders,
             totalRecords,
             statusCount: statusCounts,
         };
