@@ -72,3 +72,67 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         }
     });
 };
+
+/**
+ * @openapi
+ * /seller/product:
+ *   delete:
+ *     summary: Delete a product by ID
+ *     description: Deletes a product from the store by its ID
+ *     parameters:
+ *       - in: query
+ *         name: product_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the product to delete
+ *     responses:
+ *       200:
+ *         description: Product deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Product deleted successfully
+ *       400:
+ *         description: Error deleting product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error deleting product: [error message]
+ */
+export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
+    const productService: ProductService = req.scope.resolve('productService');
+
+    const handler = new RouteHandler(req, res, 'DELETE', '/seller/product', [
+        'product_id',
+    ]);
+
+    await handler.handle(async () => {
+        try {
+            if (handler.hasParam('product_id')) {
+                const productId = handler.inputParams.product_id;
+                const product = await productService.getProductById(productId);
+                if (!product) {
+                    throw new Error('Product not found');
+                }
+
+                await productService.deleteProductById(productId);
+                return res.status(200).json({
+                    message: 'Product deleted successfully',
+                });
+            } else {
+                throw new Error('No product_id provided');
+            }
+        } catch (error) {
+            return handler.returnStatusWithMessage(400, error.message);
+        }
+    });
+};
