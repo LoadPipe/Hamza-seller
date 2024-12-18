@@ -34,8 +34,6 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
 
         const refund = await orderService.confirmRefund(id, order_id);
 
-        await storeOrderService.syncEscrowPayment(order_id);
-
         return handler.returnStatus(200, refund);
     });
 };

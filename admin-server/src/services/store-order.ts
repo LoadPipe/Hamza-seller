@@ -242,8 +242,6 @@ export default class StoreOrderService extends TransactionBaseService {
             });
         }
 
-        console.log('TRANSFORM ORDERS', transformedOrders);
-
         return {
             pageIndex: page,
             pageCount: Math.ceil(totalRecords / ordersPerPage),
@@ -354,6 +352,7 @@ export default class StoreOrderService extends TransactionBaseService {
     }
 
     async getEscrowPayment(orderId: string): Promise<PaymentDefinition> {
+        console.log('SYNC ESCROW');
         const order: Order = await this.orderRepository_.findOne({
             where: { id: orderId },
             relations: ['payments'],
@@ -381,6 +380,8 @@ export default class StoreOrderService extends TransactionBaseService {
                 throw new Error(`Order with id ${orderId} not found`);
             }
 
+            await this.syncEscrowPaymentForOrder(order);
+
             return order;
         } catch (error) {
             this.logger.error(
@@ -399,7 +400,7 @@ export default class StoreOrderService extends TransactionBaseService {
         const buyerReleased = payment?.payerReleased;
         const sellerReleased = payment?.receiverReleased;
         const bothReleased = payment?.released;
-        const fullyRefunded = payment?.amountRefunded >= payment.amount;
+        const fullyRefunded = payment?.amountRefunded >= payment?.amount;
 
         //if no status, it's in sync if also no payment
         if (!order.escrow_status) inSync = !payment;
@@ -432,25 +433,34 @@ export default class StoreOrderService extends TransactionBaseService {
             }
         }
 
+        console.log('NOT IN SYNC', inSync);
+
         //if not in sync, we sync the database with the contract
         if (!inSync) {
-            if (!payment) order.escrow_status = null;
-            else {
-                if (fullyRefunded) order.escrow_status = EscrowStatus.REFUNDED;
+            let newEscrowStatus = null;
+            if (payment) {
+                if (fullyRefunded) newEscrowStatus = EscrowStatus.REFUNDED;
                 else {
                     if (bothReleased) {
-                        order.escrow_status = EscrowStatus.RELEASED;
+                        newEscrowStatus = EscrowStatus.RELEASED;
                     } else {
                         if (buyerReleased)
-                            order.escrow_status = EscrowStatus.BUYER_RELEASED;
+                            newEscrowStatus = EscrowStatus.BUYER_RELEASED;
                         else if (sellerReleased)
-                            order.escrow_status = EscrowStatus.SELLER_RELEASED;
-                        else order.escrow_status = EscrowStatus.IN_ESCROW;
+                            newEscrowStatus = EscrowStatus.SELLER_RELEASED;
+                        else newEscrowStatus = EscrowStatus.IN_ESCROW;
                     }
                 }
             }
 
-            await this.orderRepository_.save(order);
+            await this.orderService_.setOrderStatus(
+                order,
+                null,
+                null,
+                null,
+                newEscrowStatus,
+                { source: 'sync with blockchain' }
+            );
         }
 
         return order;
