@@ -11,7 +11,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 // import { Search } from 'lucide-react';
-import { Download } from 'lucide-react';
+import { Download, RefreshCw, Settings } from 'lucide-react';
 import OrderTabs from '@/components/orders/order-tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -248,7 +248,7 @@ export function DataTable<TData, TValue>({
 
                     <div className="ml-auto flex flex-row relative w-[376px]">
                         <Input
-                            placeholder="Orders..."
+                            placeholder="Search Orders..."
                             value={
                                 (table
                                     .getColumn('id')
@@ -259,12 +259,8 @@ export function DataTable<TData, TValue>({
                                     .getColumn('id')
                                     ?.setFilterValue(event.target.value)
                             }
-                            className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded bg-black pr-10"
+                            className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2] active:border-primary-purple-90  text-white rounded bg-black pr-10"
                         />
-                        {/*<Search*/}
-                        {/*    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"*/}
-                        {/*    size={14}*/}
-                        {/*/>*/}
                     </div>
                 </div>
 
@@ -309,20 +305,34 @@ export function DataTable<TData, TValue>({
 
                     <div className="flex flex-row gap-4 ml-auto">
                         <div className="flex justify-end">
-                            <Button
-                                onClick={handleClearFilters}
-                                className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69 mr-2"
-                            >
-                                Clear Filters
-                            </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69">
+                                    <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69 mr-4 hover:border-primary-purple-90">
+                                        <RefreshCw />
+                                        Clear
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="border-primary-purple-90">
+                                    <DropdownMenuItem
+                                        className="hover:bg-primary-purple-90 px-4 py-2 w-full hover:border-primary-purple-90"
+                                        onClick={handleClearFilters}
+                                    >
+                                        Clear Filters
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="hover:bg-primary-purple-90 px-4 py-2 w-full ">
+                                        Clear Date Picker
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69 hover:border-primary-purple-90">
                                         <Download />
                                         Export
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent>
+                                <DropdownMenuContent className="border-primary-purple-90">
                                     <DropdownMenuItem
                                         className="hover:bg-primary-purple-90 px-4 py-2 w-full"
                                         onClick={handleDownloadCSV}
@@ -338,12 +348,13 @@ export function DataTable<TData, TValue>({
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        className="ml-auto whitespace-nowrap bg-[#242424]"
+                                        className="ml-auto whitespace-nowrap bg-[#242424] hover:border-primary-purple-90"
                                     >
-                                        Columns
+                                        <Settings />
+                                        Toggle Columns
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-[#242424]">
+                                <DropdownMenuContent className="bg-[#242424] border-primary-purple-90">
                                     {table
                                         .getAllColumns()
                                         .filter((column) => column.getCanHide())

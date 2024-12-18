@@ -69,7 +69,7 @@ export default function DropdownMultiselectFilter({
 
                 <DropdownMenu.Portal>
                     <DropdownMenu.Content
-                        className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded shadow-lg text-white"
+                        className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded text-white border border-primary-purple-90"
                         sideOffset={5}
                     >
                         {options.map((option) => (
@@ -96,15 +96,15 @@ export default function DropdownMultiselectFilter({
                         ))}
 
                         {/* Buttons */}
-                        <div className="flex justify-end gap-2 mt-4">
+                        <div className="flex gap-2 mt-4">
                             <button
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                                className="px-4 py-2 text-sm font-medium rounded bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
                                 onClick={applyFilter}
                             >
                                 Apply
                             </button>
                             <button
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                                className="px-4 py-2 text-sm font-medium rounded bg-transparent  border-primary-purple-90 hover:bg-red-600 hover:border-none"
                                 onClick={clearFilter}
                             >
                                 Clear Filters
