@@ -39,10 +39,29 @@ export async function getEscrowPayment(
     escrowAddress: string,
     orderId: string
 ): Promise<PaymentDefinition> {
-    const escrow = new EscrowClient(escrowAddress);
-    return await escrow.getEscrowPayment(
-        ethers.keccak256(ethers.toUtf8Bytes(orderId))
-    );
+    try {
+        const escrow = new EscrowClient(escrowAddress);
+        const payment = await escrow.getEscrowPayment(
+            ethers.keccak256(ethers.toUtf8Bytes(orderId))
+        );
+
+        return paymentIsValid(payment) ? payment : null;
+    } catch (e: any) {
+        console.error('Error getting the payment:', e); // Log the error}
+    }
+}
+
+function paymentIsValid(payment: PaymentDefinition | null): boolean {
+    if (payment?.id) {
+        //return true if id contains more than just x and 0
+        const id: string = payment.id.toString() ?? '';
+        return (
+            id !=
+            '0x0000000000000000000000000000000000000000000000000000000000000000'
+        );
+    }
+
+    return false;
 }
 
 /**

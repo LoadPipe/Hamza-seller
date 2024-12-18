@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse, Logger } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
 import OrderService from '../../../../services/order';
+import StoreOrderService from '../../../../services/store-order';
 
 export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
     const orderService: OrderService = req.scope.resolve('orderService');
@@ -83,13 +84,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             );
         }
 
-        const orders = await orderService.createRefund(
+        const order = await orderService.createRefund(
             order_id,
             amount,
             reason,
             note
         );
 
-        return handler.returnStatus(200, orders);
+        return handler.returnStatus(200, order);
     });
 };

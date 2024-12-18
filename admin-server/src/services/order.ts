@@ -20,7 +20,7 @@ import { RefundRepository } from '../repositories/refund';
 import StoreRepository from '../repositories/store';
 import CustomerRepository from '../repositories/customer';
 import { LineItemService } from '@medusajs/medusa';
-import { Order } from '../models/order';
+import { EscrowStatus, Order } from '../models/order';
 import { Customer } from '../models/customer';
 import { Payment } from '../models/payment';
 import { Lifetime } from 'awilix';
@@ -645,13 +645,15 @@ export default class OrderService extends MedusaOrderService {
         status?: OrderStatus,
         fulfillmentStatus?: FulfillmentStatus,
         paymentStatus?: PaymentStatus,
+        escrowStatus?: string,
         metadata?: Record<string, unknown>
     ): Promise<Order> {
         if (
             (status && order.status != status) ||
             (fulfillmentStatus &&
                 order.fulfillment_status != fulfillmentStatus) ||
-            (paymentStatus && order.payment_status != paymentStatus)
+            (paymentStatus && order.payment_status != paymentStatus) ||
+            (escrowStatus && order.escrow_status != escrowStatus)
         ) {
             //get values to add to history
             const to_status: OrderStatus | null =
@@ -664,6 +666,11 @@ export default class OrderService extends MedusaOrderService {
                 fulfillmentStatus &&
                 order.fulfillment_status != fulfillmentStatus
                     ? fulfillmentStatus
+                    : null;
+
+            const to_escrow_status: string | null =
+                escrowStatus && order.escrow_status != escrowStatus.toString()
+                    ? escrowStatus
                     : null;
 
             if (status) {
@@ -684,6 +691,9 @@ export default class OrderService extends MedusaOrderService {
                     this.sendCancelledEmail(order);
                 }
             }
+            if (escrowStatus) {
+                order.escrow_status = escrowStatus.toString();
+            }
 
             //send emails
             //TODO: this should follow medusa events
@@ -699,6 +709,7 @@ export default class OrderService extends MedusaOrderService {
                 to_status,
                 to_payment_status,
                 to_fulfillment_status,
+                to_escrow_status,
                 metadata,
             });
         }
@@ -770,15 +781,11 @@ export default class OrderService extends MedusaOrderService {
             // Create a refund entity
             if (refund) {
                 // Update the existing refund
-                console.log(
-                    `Updating existing unconfirmed refund for Order ID: ${orderId}`
-                );
                 refund.amount = refundAmount;
                 refund.reason = reason;
                 refund.note = note || refund.note;
             } else {
                 // Create a new refund entity
-                console.log(`Creating a new refund for Order ID: ${orderId}`);
                 refund = this.refundRepository_.create({
                     order_id: orderId,
                     amount: refundAmount,
@@ -862,9 +869,6 @@ export default class OrderService extends MedusaOrderService {
         date: string = new Date().toDateString(),
         store_id: string = null
     ): Promise<Order[]> {
-        console.log(
-            `Parameters - count: ${count}, date: ${date}, store_id: ${store_id}`
-        );
         if (!count || count <= 0) {
             count = 1;
         }
@@ -874,9 +878,7 @@ export default class OrderService extends MedusaOrderService {
         let allStores = [];
         const randomStores = !store_id;
         if (randomStores) {
-            console.log('doing random stores');
             allStores = await this.storeRepository_.find({});
-            console.log('got', allStores.length, 'stores');
         }
 
         //get all customers
@@ -893,23 +895,17 @@ export default class OrderService extends MedusaOrderService {
 
             await this.customerRepository_.save(customer);
             allCustomers.push(customer);
-            console.log('New customer created:', customer);
         }
 
         try {
-            console.log('Starting mock order creation...');
-
             let actualOrderCount = 0;
             for (let i = 0; i < count; i++) {
-                console.log(`Creating mock order ${i + 1} of ${count}...`);
-
                 // Step 1: Get the first customer
                 const customer = allCustomers[randomInt(allCustomers.length)];
 
                 if (!customer) {
                     throw new Error('No customers found.');
                 }
-                console.log('Customer found:', customer);
 
                 // Step 2: Get the first region
                 const region = await this.regionRepository_
@@ -920,23 +916,15 @@ export default class OrderService extends MedusaOrderService {
                 if (!region) {
                     throw new Error('No regions found.');
                 }
-                console.log('Region found:', region);
 
                 //get random store if necessary
                 if (randomStores) {
-                    console.log(
-                        'getting random store from',
-                        allStores.length,
-                        'stores'
-                    );
                     store_id = allStores[randomInt(allStores.length)].id;
                 }
-                console.log('store_id is', store_id);
 
                 // Step 3: Get random products
                 const randomCount = randomInt(10) + 1; // Random between 1 and 10
 
-                console.log('getting products');
                 const products = await this.productRepository_.query(
                     `SELECT *
                      FROM product
@@ -945,14 +933,7 @@ export default class OrderService extends MedusaOrderService {
                      LIMIT ${randomCount}`
                 );
 
-                console.log(
-                    `Retrieved ${products.length} random products`,
-                    products
-                );
-
                 if (products.length) {
-                    console.log('Products found:', products);
-
                     const variants = await Promise.all(
                         products.map((product) =>
                             this.productVariantRepository_.findOne({
@@ -971,8 +952,6 @@ export default class OrderService extends MedusaOrderService {
                         }
                     });
 
-                    console.log('Variants found:', variants);
-
                     // Step 4: Store Id from params
                     const storeId = store_id;
 
@@ -988,13 +967,7 @@ export default class OrderService extends MedusaOrderService {
                     }
 
                     const sales_channel_id = salesChannel.id;
-                    console.log('Sales Channel ID:', sales_channel_id);
 
-                    console.log('Creating cart with:', {
-                        customer_id: customer.id,
-                        email: customer.email,
-                        region_id: region.id,
-                    });
                     // Step 5: Create a cart for the customer
                     const cart = await this.cartRepository_.save(
                         this.cartRepository_.create({
@@ -1006,7 +979,6 @@ export default class OrderService extends MedusaOrderService {
                             updated_at: new Date(),
                         })
                     );
-                    console.log('Cart created:', cart);
 
                     // Step 6: Add line items to the cart
                     let orderTotal = 0;
@@ -1033,7 +1005,6 @@ export default class OrderService extends MedusaOrderService {
                         lineItems.push(savedLineItem);
                     }
                     cart.items = lineItems;
-                    console.log('Line items added to cart:', cart.items);
 
                     // Step 7: Create an order using the cart and product's store_id
                     let order: Order = new Order();
@@ -1050,7 +1021,6 @@ export default class OrderService extends MedusaOrderService {
                     order.created_at = new Date(date);
 
                     order = await this.orderRepository_.save(order);
-                    console.log('Order created successfully:', order);
 
                     //create a payment
                     await this.paymentRepository_.save({
@@ -1079,17 +1049,10 @@ export default class OrderService extends MedusaOrderService {
                     await Promise.all(lineItemPromises);
                     actualOrderCount++;
 
-                    console.log('Line items linked to order:', order.items);
-
                     orders.push(order); // Add the order to the array
-
-                    console.log(`Order ${i + 1} created successfully:`, order);
                 }
             }
 
-            console.log(
-                `${actualOrderCount} mock orders created successfully.`
-            );
             return orders; // Return all created orders
         } catch (error) {
             console.error('Error during mock order creation:', error.message);
@@ -1292,6 +1255,7 @@ export default class OrderService extends MedusaOrderService {
             return this.orderRepository_.save({
                 id: o.id,
                 status: OrderStatus.PENDING,
+                escrow_status: EscrowStatus.IN_ESCROW,
                 payment_status: PaymentStatus.AWAITING,
             });
         });

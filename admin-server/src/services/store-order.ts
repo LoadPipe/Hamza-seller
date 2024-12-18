@@ -2,7 +2,7 @@ import { Payment, Store, TransactionBaseService } from '@medusajs/medusa';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import StoreRepository from '../repositories/store';
-import { Order } from '../models/order';
+import { EscrowStatus, Order } from '../models/order';
 import { Lifetime } from 'awilix';
 import {
     In,
@@ -22,6 +22,8 @@ import {
     FulfillmentStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
+import { findEscrowAddressFromOrder, getEscrowPayment } from '../web3';
+import { PaymentDefinition } from '../web3/contracts/escrow';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -240,8 +242,6 @@ export default class StoreOrderService extends TransactionBaseService {
             });
         }
 
-        console.log('TRANSFORM ORDERS', transformedOrders);
-
         return {
             pageIndex: page,
             pageCount: Math.ceil(totalRecords / ordersPerPage),
@@ -329,6 +329,7 @@ export default class StoreOrderService extends TransactionBaseService {
                 newOrderStatus,
                 newFulfillmentStatus,
                 newPaymentStatus,
+                null,
                 { source: 'manual' }
             );
 
@@ -339,6 +340,24 @@ export default class StoreOrderService extends TransactionBaseService {
             );
             throw error;
         }
+    }
+
+    async syncEscrowPayment(orderId: string): Promise<Order> {
+        const order: Order = await this.orderRepository_.findOne({
+            where: { id: orderId },
+            relations: ['payments'],
+        });
+
+        return await this.syncEscrowPaymentForOrder(order);
+    }
+
+    async getEscrowPayment(orderId: string): Promise<PaymentDefinition> {
+        const order: Order = await this.orderRepository_.findOne({
+            where: { id: orderId },
+            relations: ['payments'],
+        });
+
+        return await this.getEscrowPaymentForOrder(order);
     }
 
     async getOrderDetails(orderId: string) {
@@ -360,6 +379,8 @@ export default class StoreOrderService extends TransactionBaseService {
                 throw new Error(`Order with id ${orderId} not found`);
             }
 
+            await this.syncEscrowPaymentForOrder(order);
+
             return order;
         } catch (error) {
             this.logger.error(
@@ -367,5 +388,92 @@ export default class StoreOrderService extends TransactionBaseService {
             );
             throw error;
         }
+    }
+
+    private async syncEscrowPaymentForOrder(order: Order): Promise<Order> {
+        if (order) {
+            const payment = await this.getEscrowPaymentForOrder(order);
+
+            //is payment status in sync?
+            let inSync = false;
+
+            const buyerReleased = payment?.payerReleased;
+            const sellerReleased = payment?.receiverReleased;
+            const bothReleased = payment?.released;
+            const fullyRefunded = payment?.amountRefunded >= payment?.amount;
+
+            //if no status, it's in sync if also no payment
+            if (!order.escrow_status) inSync = !payment;
+            else {
+                //otherwise, in-sync can be different things
+                switch (order.escrow_status) {
+                    case EscrowStatus.IN_ESCROW.toString():
+                        inSync =
+                            !buyerReleased &&
+                            !sellerReleased &&
+                            !bothReleased &&
+                            !fullyRefunded;
+                        break;
+
+                    case EscrowStatus.BUYER_RELEASED.toString():
+                        inSync =
+                            buyerReleased && !bothReleased && !fullyRefunded;
+                        break;
+
+                    case EscrowStatus.SELLER_RELEASED.toString():
+                        inSync =
+                            sellerReleased && !bothReleased && !fullyRefunded;
+                        break;
+
+                    case EscrowStatus.REFUNDED.toString():
+                        inSync = fullyRefunded;
+                        break;
+
+                    case EscrowStatus.RELEASED.toString():
+                        inSync = bothReleased && !fullyRefunded;
+                        break;
+                }
+            }
+
+            //if not in sync, we sync the database with the contract
+            if (!inSync) {
+                let newEscrowStatus = null;
+                if (payment) {
+                    if (fullyRefunded) newEscrowStatus = EscrowStatus.REFUNDED;
+                    else {
+                        if (bothReleased) {
+                            newEscrowStatus = EscrowStatus.RELEASED;
+                        } else {
+                            if (buyerReleased)
+                                newEscrowStatus = EscrowStatus.BUYER_RELEASED;
+                            else if (sellerReleased)
+                                newEscrowStatus = EscrowStatus.SELLER_RELEASED;
+                            else newEscrowStatus = EscrowStatus.IN_ESCROW;
+                        }
+                    }
+                }
+
+                await this.orderService_.setOrderStatus(
+                    order,
+                    null,
+                    null,
+                    null,
+                    newEscrowStatus,
+                    { source: 'sync with blockchain' }
+                );
+            }
+        }
+
+        return order;
+    }
+
+    private async getEscrowPaymentForOrder(
+        order: Order
+    ): Promise<PaymentDefinition> {
+        const address: string = findEscrowAddressFromOrder(order);
+        if (address) {
+            return await getEscrowPayment(address, order.id);
+        }
+        return null;
     }
 }
