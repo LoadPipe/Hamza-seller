@@ -391,73 +391,77 @@ export default class StoreOrderService extends TransactionBaseService {
     }
 
     private async syncEscrowPaymentForOrder(order: Order): Promise<Order> {
-        const payment = await this.getEscrowPaymentForOrder(order);
+        if (order) {
+            const payment = await this.getEscrowPaymentForOrder(order);
 
-        //is payment status in sync?
-        let inSync = false;
+            //is payment status in sync?
+            let inSync = false;
 
-        const buyerReleased = payment?.payerReleased;
-        const sellerReleased = payment?.receiverReleased;
-        const bothReleased = payment?.released;
-        const fullyRefunded = payment?.amountRefunded >= payment?.amount;
+            const buyerReleased = payment?.payerReleased;
+            const sellerReleased = payment?.receiverReleased;
+            const bothReleased = payment?.released;
+            const fullyRefunded = payment?.amountRefunded >= payment?.amount;
 
-        //if no status, it's in sync if also no payment
-        if (!order.escrow_status) inSync = !payment;
-        else {
-            //otherwise, in-sync can be different things
-            switch (order.escrow_status) {
-                case EscrowStatus.IN_ESCROW.toString():
-                    inSync =
-                        !buyerReleased &&
-                        !sellerReleased &&
-                        !bothReleased &&
-                        !fullyRefunded;
-                    break;
+            //if no status, it's in sync if also no payment
+            if (!order.escrow_status) inSync = !payment;
+            else {
+                //otherwise, in-sync can be different things
+                switch (order.escrow_status) {
+                    case EscrowStatus.IN_ESCROW.toString():
+                        inSync =
+                            !buyerReleased &&
+                            !sellerReleased &&
+                            !bothReleased &&
+                            !fullyRefunded;
+                        break;
 
-                case EscrowStatus.BUYER_RELEASED.toString():
-                    inSync = buyerReleased && !bothReleased && !fullyRefunded;
-                    break;
+                    case EscrowStatus.BUYER_RELEASED.toString():
+                        inSync =
+                            buyerReleased && !bothReleased && !fullyRefunded;
+                        break;
 
-                case EscrowStatus.SELLER_RELEASED.toString():
-                    inSync = sellerReleased && !bothReleased && !fullyRefunded;
-                    break;
+                    case EscrowStatus.SELLER_RELEASED.toString():
+                        inSync =
+                            sellerReleased && !bothReleased && !fullyRefunded;
+                        break;
 
-                case EscrowStatus.REFUNDED.toString():
-                    inSync = fullyRefunded;
-                    break;
+                    case EscrowStatus.REFUNDED.toString():
+                        inSync = fullyRefunded;
+                        break;
 
-                case EscrowStatus.RELEASED.toString():
-                    inSync = bothReleased && !fullyRefunded;
-                    break;
-            }
-        }
-
-        //if not in sync, we sync the database with the contract
-        if (!inSync) {
-            let newEscrowStatus = null;
-            if (payment) {
-                if (fullyRefunded) newEscrowStatus = EscrowStatus.REFUNDED;
-                else {
-                    if (bothReleased) {
-                        newEscrowStatus = EscrowStatus.RELEASED;
-                    } else {
-                        if (buyerReleased)
-                            newEscrowStatus = EscrowStatus.BUYER_RELEASED;
-                        else if (sellerReleased)
-                            newEscrowStatus = EscrowStatus.SELLER_RELEASED;
-                        else newEscrowStatus = EscrowStatus.IN_ESCROW;
-                    }
+                    case EscrowStatus.RELEASED.toString():
+                        inSync = bothReleased && !fullyRefunded;
+                        break;
                 }
             }
 
-            await this.orderService_.setOrderStatus(
-                order,
-                null,
-                null,
-                null,
-                newEscrowStatus,
-                { source: 'sync with blockchain' }
-            );
+            //if not in sync, we sync the database with the contract
+            if (!inSync) {
+                let newEscrowStatus = null;
+                if (payment) {
+                    if (fullyRefunded) newEscrowStatus = EscrowStatus.REFUNDED;
+                    else {
+                        if (bothReleased) {
+                            newEscrowStatus = EscrowStatus.RELEASED;
+                        } else {
+                            if (buyerReleased)
+                                newEscrowStatus = EscrowStatus.BUYER_RELEASED;
+                            else if (sellerReleased)
+                                newEscrowStatus = EscrowStatus.SELLER_RELEASED;
+                            else newEscrowStatus = EscrowStatus.IN_ESCROW;
+                        }
+                    }
+                }
+
+                await this.orderService_.setOrderStatus(
+                    order,
+                    null,
+                    null,
+                    null,
+                    newEscrowStatus,
+                    { source: 'sync with blockchain' }
+                );
+            }
         }
 
         return order;
