@@ -30,6 +30,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
         reason: reasonOptions[0], // Default to the first option
         note: '',
     });
+    setManualRefund(true); // login failed or I would have removed this manualRefund
     const [errors, setErrors] = useState({
         refundAmount: '',
         note: '',

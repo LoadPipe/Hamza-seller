@@ -118,7 +118,7 @@ export function DataTable<TData, TValue>({
 
     useEffect(() => {
         const savedVisibility = JSON.parse(
-            localStorage.getItem(localStorageColumnSettingsKey)
+            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
         );
         if (savedVisibility) {
             table.getAllColumns().forEach((column) => {
@@ -133,10 +133,10 @@ export function DataTable<TData, TValue>({
     }, [table]);
 
     // Save column visibility settings to localStorage
-    const handleCheckedChange = (columnId: number, value: number) => {
-        const currentVisibility =
-            JSON.parse(localStorage.getItem(localStorageColumnSettingsKey)) ||
-            {};
+    const handleCheckedChange = (columnId: any, value: any) => {
+        const currentVisibility = JSON.parse(
+            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
+        );
         currentVisibility[columnId] = value;
         localStorage.setItem(
             localStorageColumnSettingsKey,
@@ -408,8 +408,8 @@ export function DataTable<TData, TValue>({
                                                         !!value
                                                     );
                                                     handleCheckedChange(
-                                                        column.id,
-                                                        !!value
+                                                        column.id as any,
+                                                        !!value as any
                                                     );
                                                 }}
                                                 onSelect={(e) =>
