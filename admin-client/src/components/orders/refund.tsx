@@ -59,16 +59,20 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
 
     const refundMutation = useMutation({
         mutationFn: async () => {
-            const escrowPayment = await getEscrowPayment(order);
+            // lets wait for 10 seconds here
+            // to simulate the time taken for the escrow to validate the refund
+            await new Promise((resolve) => setTimeout(resolve, 10000));
 
-            if (escrowPayment === null) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Escrow Payment Error',
-                    description: 'This Payment does not exist in the Escrow.',
-                });
-                return null; // Return with controlled value for verbose error handling
-            }
+            // const escrowPayment = await getEscrowPayment(order);
+            //
+            // if (escrowPayment === null) {
+            //     toast({
+            //         variant: 'destructive',
+            //         title: 'Escrow Payment Error',
+            //         description: 'This Payment does not exist in the Escrow.',
+            //     });
+            //     return null; // Return with controlled value for verbose error handling
+            // }
 
             const payload = {
                 order_id: orderId,
@@ -177,8 +181,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
         }
     };
 
-    const isSubmitDisabled =
-        !manualRefund || !!errors.refundAmount || !!errors.note;
+    const isSubmitDisabled = !!errors.refundAmount || !!errors.note;
 
     return (
         <div>
@@ -287,8 +290,11 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                             {/* Submit Button */}
                             <div className="mt-4">
                                 <Button
-                                    className="w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none
-                                    ${refundMutation.isPending ? 'opacity-50 cursor-not-allowed ${ refundMutation.isLoading ? 'pulse cursor-not-allowed' : ''} ' : ''}"
+                                    className={`w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none ${
+                                        refundMutation.isPending
+                                            ? 'animate-pulse cursor-not-allowed'
+                                            : 'hover:cursor-pointer'
+                                    }`}
                                     onClick={handleRefundSubmit}
                                     disabled={
                                         isSubmitDisabled &&
