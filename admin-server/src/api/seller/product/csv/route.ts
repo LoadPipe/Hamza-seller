@@ -24,7 +24,7 @@ type ProductDetails = {
         baseCurrency: string;
     };
     variants: csvProductData[];
-}
+};
 
 interface FileRequest extends MedusaRequest {
     file?: any;
@@ -47,7 +47,7 @@ const requiredCsvHeadersForProduct = [
     'variant_price',
     'variant_inventory_quantity',
     'variant_allow_backorder',
-    'variant_manage_inventory'
+    'variant_manage_inventory',
 ];
 
 const requiredCsvHeadersForVariant = [
@@ -56,7 +56,7 @@ const requiredCsvHeadersForVariant = [
     'variant_price',
     'variant_inventory_quantity',
     'variant_allow_backorder',
-    'variant_manage_inventory'
+    'variant_manage_inventory',
 ];
 
 /**
@@ -176,8 +176,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 const value = option.trim().split('[')[1].replace(']', '');
                 return { value };
             });
-        }
-        
+        };
+
         for (const variant of productDetails.variants) {
             //get price
             const baseAmount = variant.variant_price;
@@ -203,10 +203,12 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             // console.log('options: ' + JSON.stringify(options));
 
             variants.push({
-                title: options.map(option => option.value).join(' | '),
+                title: options.map((option) => option.value).join(' | '),
                 inventory_quantity: variant.variant_inventory_quantity,
-                allow_backorder: variant.variant_allow_backorder === '1' ? true : false,
-                manage_inventory: variant.variant_manage_inventory === '1' ? true : false,
+                allow_backorder:
+                    variant.variant_allow_backorder === '1' ? true : false,
+                manage_inventory:
+                    variant.variant_manage_inventory === '1' ? true : false,
                 sku: variant.variant_sku || null,
                 barcode: variant.variant_barcode || null,
                 ean: variant.variant_ean || null,
@@ -228,12 +230,12 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
     };
 
     /**
-     * 
-     * @param rowData - product row data 
+     *
+     * @param rowData - product row data
      * @param csvData - all csv data
      * @param requiredCsvHeadersForProduct - product headers
      * @param requiredCsvHeadersForVariant - variant headers
-     * @returns 
+     * @returns
      */
     const convertRowDataToProductDetails = async (
         rowData: csvProductData,
@@ -242,7 +244,11 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         //get all variant rows with same handle
         let variants = [];
         variants.push(rowData);
-        variants.push(...csvData.filter((row) => rowData !== row &&row.handle === rowData.handle));
+        variants.push(
+            ...csvData.filter(
+                (row) => rowData !== row && row.handle === rowData.handle
+            )
+        );
         // console.log('variants: ' + JSON.stringify(variants));
 
         const productDetails: ProductDetails = {
@@ -286,17 +292,14 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         //     ],
         // };
         const productDetails: ProductDetails =
-            await convertRowDataToProductDetails(
-                rowData,
-                csvData
-            );        
-        
+            await convertRowDataToProductDetails(rowData, csvData);
+
         // generate option names from variantData
         // const optionNames: extractOptionNames[] = [
         //     { title: 'color', values: ['Black', 'White'] },
         //     { title: 'size', values: ['L', 'XL'] },
         //     { title: 'gender', values: ['Male', 'Female'] },
-        // ];        
+        // ];
         const extractOptionNames = async (
             variants: csvProductData[]
         ): Promise<CreateProductProductOption_[]> => {
@@ -335,7 +338,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
         const optionNames = await extractOptionNames(productDetails.variants);
         // console.log('optionNames: ' + JSON.stringify(optionNames));
-        
+
         const variants = await mapVariants(productDetails);
         // console.log('variants: ' + JSON.stringify(variants));
 
@@ -408,7 +411,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         if (productRows.length === 0) {
             return {
                 success: false,
-                message: 'No product rows were detected'
+                message: 'No product rows were detected',
             };
         }
 

@@ -52,7 +52,6 @@ Content-Type: application/json
 
 
 
-
 ###
 // Get Seller Orders
 POST http://localhost:9000/seller/order

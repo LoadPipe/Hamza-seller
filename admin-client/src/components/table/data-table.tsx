@@ -381,17 +381,16 @@ export function DataTable<TData, TValue>({
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
-                                    [...Array(pageSize)].map((_, idx) => (
-                                        <TableRow key={idx}>
-                                            {columns.map((col) => (
-                                                <TableCell key={col.id}>
-                                                    <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))
-                                ) :
-                                table.getRowModel().rows?.length ? (
+                                [...Array(pageSize)].map((_, idx) => (
+                                    <TableRow key={idx}>
+                                        {columns.map((col) => (
+                                            <TableCell key={col.id}>
+                                                <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
                                     <TableRow
                                         key={row.id}
