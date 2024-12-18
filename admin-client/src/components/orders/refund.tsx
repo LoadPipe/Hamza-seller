@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundEscrowPayment } from '@/utils/order-escrow.ts';
+import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow.ts';
 import { getCurrencyPrecision } from '@/currency.config';
 
 type RefundProps = {
@@ -59,6 +59,17 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
 
     const refundMutation = useMutation({
         mutationFn: async () => {
+            const escrowPayment = await getEscrowPayment(order);
+
+            if (escrowPayment === null) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Escrow Payment Error',
+                    description: 'This Payment does not exist in the Escrow.',
+                });
+                return null; // Return with controlled value for verbose error handling
+            }
+
             const payload = {
                 order_id: orderId,
                 amount: getDbAmount(formData.refundAmount),
@@ -69,6 +80,10 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
             return await postSecure('/seller/order/refund', payload);
         },
         onSuccess: async (data) => {
+            if (data === null) {
+                console.log(`Escrow validation failed, skipped`);
+                return;
+            }
             try {
                 const { metadata } = data;
 
@@ -210,41 +225,6 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                                     : 'opacity-50 pointer-events-none'
                             }
                         >
-                            {/* Customer Name */}
-                            {/*<div className="mt-2">*/}
-                            {/*    <label className="block text-sm font-medium">*/}
-                            {/*        Customer Name*/}
-                            {/*    </label>*/}
-                            {/*    <Input*/}
-                            {/*        value={`${firstName} ${lastName}`}*/}
-                            {/*        disabled*/}
-                            {/*    />*/}
-                            {/*</div>*/}
-
-                            {/* Email */}
-                            {/*<div className="mt-2">*/}
-                            {/*    <label className="block text-sm font-medium">*/}
-                            {/*        Email*/}
-                            {/*    </label>*/}
-                            {/*    <Input value={email} disabled />*/}
-                            {/*</div>*/}
-
-                            {/* Order ID */}
-                            {/*<div className="mt-2">*/}
-                            {/*    <label className="block text-sm font-medium">*/}
-                            {/*        Order ID*/}
-                            {/*    </label>*/}
-                            {/*    <Input value={orderId} disabled />*/}
-                            {/*</div>*/}
-
-                            {/* Customer ID */}
-                            {/*<div className="mt-2">*/}
-                            {/*    <label className="block text-sm font-medium">*/}
-                            {/*        Customer ID*/}
-                            {/*    </label>*/}
-                            {/*    <Input value={customerId} disabled />*/}
-                            {/*</div>*/}
-
                             {/* Refund Amount */}
                             <div className="mt-2">
                                 <label className="block text-sm font-medium">
@@ -307,9 +287,13 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                             {/* Submit Button */}
                             <div className="mt-4">
                                 <Button
-                                    className="w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
+                                    className="w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none
+                                    ${refundMutation.isPending ? 'opacity-50 cursor-not-allowed ${ refundMutation.isLoading ? 'pulse cursor-not-allowed' : ''} ' : ''}"
                                     onClick={handleRefundSubmit}
-                                    disabled={isSubmitDisabled}
+                                    disabled={
+                                        isSubmitDisabled &&
+                                        refundMutation.isPending
+                                    }
                                 >
                                     Submit Refund
                                 </Button>

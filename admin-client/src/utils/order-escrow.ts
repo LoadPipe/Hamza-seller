@@ -173,7 +173,6 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
 /**
  * Gets a payment definition for the given order, from the escrow if it exists.
  *
- * @param order A whole entire order object
  * @returns PaymentDefinition
  */
 export async function getEscrowPayment(
@@ -188,13 +187,13 @@ export async function getEscrowPayment(
 
             return paymentIsValid(payment) ? payment : null;
         } catch (e: any) {
-            console.error('Error getting the payment:', e); // Log the error}
+            console.error('Error in getEscrowPayment:', e); // Log the error
+            return null; // Return null instead of throwing
         }
     } else {
-        throw new Error('No web3 provider available');
+        console.error('No web3 provider available');
+        return null; // Return null if no web3 provider is available
     }
-
-    return null;
 }
 
 //VALIDATION METHODS
