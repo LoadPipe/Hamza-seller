@@ -6,42 +6,31 @@ import {
     AccordionContent,
 } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
+// import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundEscrowPayment } from '@/utils/order-escrow.ts';
+import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow.ts';
 import { getCurrencyPrecision } from '@/currency.config';
 
 type RefundProps = {
-    firstName: string;
-    lastName: string;
     customerId: string;
-    email: string;
     refundAmount?: number;
-    date: string;
     orderId: string;
     order: any;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({
-    firstName,
-    lastName,
-    refundAmount,
-    customerId,
-    orderId,
-    order,
-    date,
-    email,
-}) => {
-    const [manualRefund, setManualRefund] = useState(false);
+const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
+    const [manualRefund, setManualRefund] = useState(true);
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
         note: '',
     });
+    setManualRefund(true); // login failed or I would have removed this manualRefund
     const [errors, setErrors] = useState({
         refundAmount: '',
         note: '',
@@ -71,6 +60,17 @@ const Refund: React.FC<RefundProps> = ({
 
     const refundMutation = useMutation({
         mutationFn: async () => {
+            const escrowPayment = await getEscrowPayment(order);
+
+            if (escrowPayment === null) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Escrow Payment Error',
+                    description: 'This Payment does not exist in the Escrow.',
+                });
+                return null; // Return with controlled value for verbose error handling
+            }
+
             const payload = {
                 order_id: orderId,
                 amount: getDbAmount(formData.refundAmount),
@@ -81,6 +81,10 @@ const Refund: React.FC<RefundProps> = ({
             return await postSecure('/seller/order/refund', payload);
         },
         onSuccess: async (data) => {
+            if (data === null) {
+                console.log(`Escrow validation failed, skipped`);
+                return;
+            }
             try {
                 const { metadata } = data;
 
@@ -174,39 +178,35 @@ const Refund: React.FC<RefundProps> = ({
         }
     };
 
-    const isSubmitDisabled =
-        !manualRefund || !!errors.refundAmount || !!errors.note;
+    const isSubmitDisabled = !!errors.refundAmount || !!errors.note;
 
     return (
-        <div className="p-4">
-            <h2 className="text-lg font-bold">Refund Management</h2>
-
-            {/* Date Field */}
-            {!manualRefund && (
-                <div className="mt-4">
-                    <label className="block text-sm font-medium">Date</label>
-                    <Input value={date} disabled className="mt-2" />
-                </div>
-            )}
-
+        <div>
             {/* Manual Refund Checkbox */}
-            <div className="mt-4">
-                <div className="flex items-center">
-                    <input
-                        type="checkbox"
-                        id="manual-refund"
-                        checked={manualRefund}
-                        onChange={() => setManualRefund(!manualRefund)}
-                        className="mr-2"
-                    />
-                    <label htmlFor="manual-refund" className="text-sm">
-                        Manual Refund
-                    </label>
+            <div className="mt-4 flex justify-between items-center">
+                <div className="flex">
+                    <h2 className="text-lg font-bold">Refund Management</h2>
+                </div>
+                <div className="flex ">
+                    {/*<Switch*/}
+                    {/*    className="mr-2 bg-primary-black-65 peer-checked:primary-green-900"*/}
+                    {/*    id="manual-refund"*/}
+                    {/*    checked={manualRefund}*/}
+                    {/*    onCheckedChange={setManualRefund} // Shadcn uses `onCheckedChange`*/}
+                    {/*/>*/}
+                    {/*<label htmlFor="manual-refund" className="text-sm">*/}
+                    {/*    Manual Refund*/}
+                    {/*</label>*/}
                 </div>
             </div>
 
             {/* Accordion for Refund Details */}
-            <Accordion type="single" collapsible className="mt-4">
+            <Accordion
+                type="single"
+                defaultValue="refund-details"
+                collapsible
+                className="mt-4"
+            >
                 <AccordionItem value="refund-details">
                     <AccordionTrigger
                         className={
@@ -225,41 +225,6 @@ const Refund: React.FC<RefundProps> = ({
                                     : 'opacity-50 pointer-events-none'
                             }
                         >
-                            {/* Customer Name */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Customer Name
-                                </label>
-                                <Input
-                                    value={`${firstName} ${lastName}`}
-                                    disabled
-                                />
-                            </div>
-
-                            {/* Email */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Email
-                                </label>
-                                <Input value={email} disabled />
-                            </div>
-
-                            {/* Order ID */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Order ID
-                                </label>
-                                <Input value={orderId} disabled />
-                            </div>
-
-                            {/* Customer ID */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Customer ID
-                                </label>
-                                <Input value={customerId} disabled />
-                            </div>
-
                             {/* Refund Amount */}
                             <div className="mt-2">
                                 <label className="block text-sm font-medium">
@@ -288,7 +253,7 @@ const Refund: React.FC<RefundProps> = ({
                                     name="reason"
                                     value={formData.reason}
                                     onChange={handleSelectChange}
-                                    className="block w-full mt-2 p-2 border rounded text-white  bg-primary-black-90"
+                                    className="block w-full mt-2 p-2 rounded text-white  bg-primary-black-90"
                                 >
                                     {reasonOptions.map((reason) => (
                                         <option key={reason} value={reason}>
@@ -306,6 +271,9 @@ const Refund: React.FC<RefundProps> = ({
                                 <Input
                                     type="text"
                                     name="note"
+                                    placeholder={
+                                        'Enter your note about this order refund.'
+                                    }
                                     value={formData.note}
                                     onChange={handleInputChange}
                                 />
@@ -319,8 +287,16 @@ const Refund: React.FC<RefundProps> = ({
                             {/* Submit Button */}
                             <div className="mt-4">
                                 <Button
+                                    className={`w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none ${
+                                        refundMutation.isPending
+                                            ? 'animate-pulse cursor-not-allowed'
+                                            : 'hover:cursor-pointer'
+                                    }`}
                                     onClick={handleRefundSubmit}
-                                    disabled={isSubmitDisabled}
+                                    disabled={
+                                        isSubmitDisabled &&
+                                        refundMutation.isPending
+                                    }
                                 >
                                     Submit Refund
                                 </Button>

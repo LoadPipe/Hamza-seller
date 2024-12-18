@@ -92,7 +92,7 @@ export const generateColumns = (
                 return {
                     id: 'select',
                     header: ({ table }) => (
-                        <div className="flex">
+                        <div className="flex ">
                             <Checkbox
                                 checked={
                                     table.getIsAllPageRowsSelected() ||

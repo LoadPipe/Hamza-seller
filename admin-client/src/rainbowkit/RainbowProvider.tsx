@@ -79,6 +79,11 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
         },
 
         signOut: async () => {
+            // Clear localStorage keys
+            localStorage.removeItem('tableColumnVisibility');
+            localStorage.removeItem('filter_store');
+            localStorage.removeItem('status_count_store');
+
             setCustomerAuthData({
                 token: '',
                 wallet_address: '',
@@ -100,6 +105,14 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 },
             })
     );
+
+    // If currently not logged in, reset localStorage
+    // if (authData.is_verified === false) {
+    //     localStorage.removeItem('tableColumnVisibility');
+    //     localStorage.removeItem('filter_store');
+    //     localStorage.removeItem('status_count_store');
+    // }
+
     return (
         <>
             <WagmiProvider config={config}>
