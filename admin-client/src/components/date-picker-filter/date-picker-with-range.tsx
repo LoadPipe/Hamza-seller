@@ -85,7 +85,7 @@ export default function DatePickerWithRange({
                     <div className="flex justify-end p-2">
                         <Button
                             variant="default"
-                            className="bg-primary-purple-90 hover:bg-blue-600 text-white"
+                            className="bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
                             onClick={() => setIsOpen(false)} // Close the popover
                         >
                             Accept

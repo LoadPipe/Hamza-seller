@@ -170,6 +170,7 @@ export function DataTable<TData, TValue>({
         clearAllFilters();
         console.log(`Clearing all the filters.`);
     };
+
     return (
         <div className="flex flex-col min-h-screen">
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
@@ -319,9 +320,12 @@ export function DataTable<TData, TValue>({
                                     >
                                         Clear Filters
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="hover:bg-primary-purple-90 px-4 py-2 w-full ">
-                                        Clear Date Picker
-                                    </DropdownMenuItem>
+                                    {/*<DropdownMenuItem*/}
+                                    {/*    className="hover:bg-primary-purple-90 px-4 py-2 w-full "*/}
+                                    {/*    onClick={handleClearDateFilter}*/}
+                                    {/*>*/}
+                                    {/*    Clear Date Picker*/}
+                                    {/*</DropdownMenuItem>*/}
                                 </DropdownMenuContent>
                             </DropdownMenu>
 

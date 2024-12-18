@@ -49,7 +49,10 @@ export function ReleaseEscrow() {
             <DialogContent className="sm:max-w-[448.97px] bg-primary-black-90 text-white m-['40px'] [&>button]:hidden border-primary-purple-90">
                 <DialogHeader>
                     <div className="flex justify-center mb-4">
-                        <Rocket size={64} className="text-primary-green-900" />
+                        <Rocket
+                            size={64}
+                            className="text-primary-green-900 animate-pulse"
+                        />
                     </div>
                     <DialogTitle className="text-center pb-[32px]">
                         Release Escrow

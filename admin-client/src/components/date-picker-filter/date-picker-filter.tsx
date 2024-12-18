@@ -132,7 +132,7 @@ export default function DatePickerFilter({
                 <DropdownMenu.Portal>
                     <DropdownMenu.Content
                         forceMount
-                        className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded-lg shadow-lg text-white"
+                        className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded text-white border border-primary-purple-90"
                     >
                         {Object.entries(DateOptions).map(([key, value]) => (
                             <div
