@@ -49,11 +49,14 @@ import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter
 import { ChevronDown } from 'lucide-react';
 import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
 import { Order } from '@/components/orders/columns';
+import { useEffect } from 'react';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
 }
+
+// Localstorage key for storing the user's preferred columns
 
 export function DataTable<TData, TValue>({
     columns,
@@ -110,6 +113,36 @@ export function DataTable<TData, TValue>({
             },
         },
     });
+
+    const localStorageColumnSettingsKey = 'tableColumnVisibility';
+
+    useEffect(() => {
+        const savedVisibility = JSON.parse(
+            localStorage.getItem(localStorageColumnSettingsKey)
+        );
+        if (savedVisibility) {
+            table.getAllColumns().forEach((column) => {
+                if (
+                    column.getCanHide() &&
+                    savedVisibility[column.id] !== undefined
+                ) {
+                    column.toggleVisibility(savedVisibility[column.id]);
+                }
+            });
+        }
+    }, [table]);
+
+    // Save column visibility settings to localStorage
+    const handleCheckedChange = (columnId: number, value: number) => {
+        const currentVisibility =
+            JSON.parse(localStorage.getItem(localStorageColumnSettingsKey)) ||
+            {};
+        currentVisibility[columnId] = value;
+        localStorage.setItem(
+            localStorageColumnSettingsKey,
+            JSON.stringify(currentVisibility)
+        );
+    };
 
     const handleDownloadCSV = () => {
         if (!data || data.length === 0) {
@@ -320,6 +353,9 @@ export function DataTable<TData, TValue>({
                                     >
                                         Clear Filters
                                     </DropdownMenuItem>
+                                    <DropdownMenuItem className="hover:bg-primary-purple-90 px-4 py-2 w-full hover:border-primary-purple-90">
+                                        Reset Columns
+                                    </DropdownMenuItem>
                                     {/*<DropdownMenuItem*/}
                                     {/*    className="hover:bg-primary-purple-90 px-4 py-2 w-full "*/}
                                     {/*    onClick={handleClearDateFilter}*/}
@@ -367,11 +403,15 @@ export function DataTable<TData, TValue>({
                                                 key={column.id}
                                                 className="capitalize"
                                                 checked={column.getIsVisible()}
-                                                onCheckedChange={(value) =>
+                                                onCheckedChange={(value) => {
                                                     column.toggleVisibility(
                                                         !!value
-                                                    )
-                                                }
+                                                    );
+                                                    handleCheckedChange(
+                                                        column.id,
+                                                        !!value
+                                                    );
+                                                }}
                                                 onSelect={(e) =>
                                                     e.preventDefault()
                                                 } // Prevent menu close on select

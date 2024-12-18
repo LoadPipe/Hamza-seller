@@ -59,20 +59,16 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
 
     const refundMutation = useMutation({
         mutationFn: async () => {
-            // lets wait for 10 seconds here
-            // to simulate the time taken for the escrow to validate the refund
-            await new Promise((resolve) => setTimeout(resolve, 10000));
+            const escrowPayment = await getEscrowPayment(order);
 
-            // const escrowPayment = await getEscrowPayment(order);
-            //
-            // if (escrowPayment === null) {
-            //     toast({
-            //         variant: 'destructive',
-            //         title: 'Escrow Payment Error',
-            //         description: 'This Payment does not exist in the Escrow.',
-            //     });
-            //     return null; // Return with controlled value for verbose error handling
-            // }
+            if (escrowPayment === null) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Escrow Payment Error',
+                    description: 'This Payment does not exist in the Escrow.',
+                });
+                return null; // Return with controlled value for verbose error handling
+            }
 
             const payload = {
                 order_id: orderId,
