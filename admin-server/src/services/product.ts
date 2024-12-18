@@ -91,12 +91,12 @@ export type csvProductData = {
     variant_width?: number;
     category_id?: string; // optional: created when data is valid, and retrieved from DB
     invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
-}
+};
 
 export type Price = {
     currency_code: string;
     amount: number;
-}
+};
 
 type UpdateProductInput = Omit<Partial<CreateProductInput>, 'variants'> & {
     variants?: UpdateProductProductVariantDTO[];
@@ -774,18 +774,24 @@ class ProductService extends MedusaProductService {
         return variant;
     }
 
+
+    async deleteProductById(productId: string): Promise<void> {
+        await this.delete(productId);
+    }
+
     async getCategoryByHandle(
         categoryHandle: string
     ): Promise<ProductCategory | null> {
-        const categories = await categoryCache.retrieve(
-            this.productCategoryRepository_
-        );
-        return (
-            categories.find(
-                (cat) =>
-                    cat.handle.toLowerCase() === categoryHandle.toLowerCase()
-            ) || null
-        );
+        try {
+            const category = await this.productCategoryRepository_.findOne({
+                where: { handle: categoryHandle },
+            });
+
+            return category || null;
+        } catch (error) {
+            this.logger.error('Error fetching product category by handle:', error);
+            throw new Error('Failed to fetch product category by handle.');
+        }
     }
 
     async getProductByHandle(productHandle: string): Promise<Product | null> {
@@ -798,6 +804,19 @@ class ProductService extends MedusaProductService {
         } catch (error) {
             this.logger.error('Error fetching product by handle:', error);
             throw new Error('Failed to fetch product by handle.');
+        }
+    }
+
+    async getProductById(productId: string): Promise<Product | null> {
+        try {
+            const product = await this.productRepository_.findOne({
+                where: { id: productId },
+            });
+
+            return product || null;
+        } catch (error) {
+            this.logger.error('Error fetching product by id:', error);
+            throw new Error('Failed to fetch product by id.');
         }
     }
 
@@ -965,10 +984,16 @@ class ProductService extends MedusaProductService {
             return await this.validateCsvVariantRow(row, data);
         } else {
             if (requiredCsvHeadersForProduct.some((header) => !row[header])) {
-                return 'required product fields missing data';
+                const missingHeader = requiredCsvHeadersForProduct.find((header) => !row[header]);
+                return 'required product fields missing data: ' + missingHeader;
             }
 
-            return await this.validateCsvProductRow(row, data, requiredCsvHeadersForProduct, requiredCsvHeadersForVariant);
+            return await this.validateCsvProductRow(
+                row,
+                data,
+                requiredCsvHeadersForProduct,
+                requiredCsvHeadersForVariant
+            );
         }
     }
 
@@ -1037,9 +1062,9 @@ class ProductService extends MedusaProductService {
         }
 
         // check if thumbnail is a valid url
-        if (!row['thumbnail'].startsWith('http')) {
-            return 'thumbnail must be a valid url';
-        }
+        // if (!row['thumbnail'].startsWith('http')) {
+        //     return 'thumbnail must be a valid url';
+        // }
 
         // check if thumbnail is a valid image
         // if (
@@ -1057,16 +1082,24 @@ class ProductService extends MedusaProductService {
         return null;
     }
 
-    async validateCsvVariantRow(row: csvProductData, data: csvProductData[]): Promise<string | null> {
+    async validateCsvVariantRow(
+        row: csvProductData,
+        data: csvProductData[]
+    ): Promise<string | null> {
         // START: check if barcode is unique
         if (row['variant_barcode'] && row['variant_barcode'].trim() !== '') {
-            const productVariantBarcode = await this.productVariantService_.getVariantByBarcode(row['variant_barcode']);
+            const productVariantBarcode =
+                await this.productVariantService_.getVariantByBarcode(
+                    row['variant_barcode']
+                );
             if (productVariantBarcode) {
                 return 'barcode must be unique';
             }
 
             const barcodeExistsInVariants = data.some(
-                (item) => item !== row && item['variant_barcode'] === row['variant_barcode']
+                (item) =>
+                    item !== row &&
+                    item['variant_barcode'] === row['variant_barcode']
             );
             if (barcodeExistsInVariants) {
                 return 'barcode must be unique from other rows';
@@ -1076,13 +1109,17 @@ class ProductService extends MedusaProductService {
 
         // START: check if sku is unique
         if (row['variant_sku'] && row['variant_sku'].trim() !== '') {
-            const productVariantSku = await this.productVariantService_.getVariantBySku(row['variant_sku']);
+            const productVariantSku =
+                await this.productVariantService_.getVariantBySku(
+                    row['variant_sku']
+                );
             if (productVariantSku) {
                 return 'sku must be unique';
             }
 
             const skuExistsInVariants = data.some(
-                (item) => item !== row && item['variant_sku'] === row['variant_sku']
+                (item) =>
+                    item !== row && item['variant_sku'] === row['variant_sku']
             );
             if (skuExistsInVariants) {
                 return 'sku must be unique from other rows';
@@ -1092,13 +1129,17 @@ class ProductService extends MedusaProductService {
 
         // START: check if upc is unique
         if (row['variant_upc'] && row['variant_upc'].trim() !== '') {
-            const productVariantUpc = await this.productVariantService_.getVariantByUpc(row['variant_upc']);
+            const productVariantUpc =
+                await this.productVariantService_.getVariantByUpc(
+                    row['variant_upc']
+                );
             if (productVariantUpc) {
                 return 'upc must be unique';
             }
 
             const upcExistsInVariants = data.some(
-                (item) => item !== row && item['variant_upc'] === row['variant_upc']
+                (item) =>
+                    item !== row && item['variant_upc'] === row['variant_upc']
             );
             if (upcExistsInVariants) {
                 return 'upc must be unique from other rows';
@@ -1108,13 +1149,17 @@ class ProductService extends MedusaProductService {
 
         // START: check if ean is unique
         if (row['variant_ean'] && row['variant_ean'].trim() !== '') {
-            const productVariantEan = await this.productVariantService_.getVariantByEan(row['variant_ean']);
+            const productVariantEan =
+                await this.productVariantService_.getVariantByEan(
+                    row['variant_ean']
+                );
             if (productVariantEan) {
                 return 'ean must be unique';
             }
 
             const eanExistsInVariants = data.some(
-                (item) => item !== row && item['variant_ean'] === row['variant_ean']
+                (item) =>
+                    item !== row && item['variant_ean'] === row['variant_ean']
             );
             if (eanExistsInVariants) {
                 return 'ean must be unique from other rows';

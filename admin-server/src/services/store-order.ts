@@ -16,6 +16,7 @@ import {
 import { createLogger, ILogger } from '../utils/logging/logger';
 import OrderHistoryService from './order-history';
 import StoreOrderRepository from '../repositories/order';
+import OrderService from '../services/order';
 import {
     OrderStatus,
     FulfillmentStatus,
@@ -62,6 +63,7 @@ export default class StoreOrderService extends TransactionBaseService {
     protected readonly storeRepository_: typeof StoreRepository;
     protected readonly productVariantRepository_: typeof ProductVariantRepository;
     protected orderHistoryService_: OrderHistoryService;
+    protected orderService_: OrderService;
     protected readonly logger: ILogger;
 
     constructor(container) {
@@ -71,6 +73,7 @@ export default class StoreOrderService extends TransactionBaseService {
         this.paymentRepository_ = container.paymentRepository;
         this.productVariantRepository_ = container.productVariantRepository;
         this.orderHistoryService_ = container.orderHistoryService;
+        this.orderService_ = container.orderService;
         this.logger = createLogger(container, 'StoreOrderService');
     }
 
@@ -174,7 +177,8 @@ export default class StoreOrderService extends TransactionBaseService {
             order:
                 sort?.field &&
                 sort.field !== 'customer' &&
-                sort.field !== 'payments'
+                sort.field !== 'payments' &&
+                sort.field !== 'currency_code'
                     ? {
                           [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
@@ -212,6 +216,32 @@ export default class StoreOrderService extends TransactionBaseService {
             });
         }
 
+        const transformedOrders = allOrders.map((order) => {
+            // Extract the first payment
+            const firstPayment = order.payments?.[0] || null;
+
+            // Return a transformed order with currency_code at the top level
+            return {
+                ...order,
+                currency_code: firstPayment?.currency_code || null, // Add currency_code
+            };
+        });
+
+        if (sort?.field === 'currency_code') {
+            transformedOrders.sort((a, b) => {
+                const currencyA = a.currency_code;
+                const currencyB = b.currency_code;
+
+                if (sort.direction === 'ASC') {
+                    return currencyA.localeCompare(currencyB);
+                } else if (sort.direction === 'DESC') {
+                    return currencyB.localeCompare(currencyA);
+                }
+            });
+        }
+
+        console.log('TRANSFORM ORDERS', transformedOrders);
+
         return {
             pageIndex: page,
             pageCount: Math.ceil(totalRecords / ordersPerPage),
@@ -219,7 +249,7 @@ export default class StoreOrderService extends TransactionBaseService {
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
-            orders: allOrders,
+            orders: transformedOrders,
             totalRecords,
             statusCount: statusCounts,
         };
@@ -251,31 +281,36 @@ export default class StoreOrderService extends TransactionBaseService {
                 throw new Error(`Order with id ${orderId} not found`);
             }
 
+            let newOrderStatus: OrderStatus = order.status;
+            let newFulfillmentStatus: FulfillmentStatus =
+                order.fulfillment_status;
+            let newPaymentStatus: PaymentStatus = order.payment_status;
+
             switch (newStatus) {
                 case 'processing':
-                    order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
-                    order.status = OrderStatus.PENDING;
+                    newFulfillmentStatus = FulfillmentStatus.NOT_FULFILLED;
+                    newOrderStatus = OrderStatus.PENDING;
                     break;
 
                 case 'shipped':
-                    order.fulfillment_status = FulfillmentStatus.SHIPPED;
-                    order.payment_status = PaymentStatus.CAPTURED;
+                    newFulfillmentStatus = FulfillmentStatus.SHIPPED;
+                    newPaymentStatus = PaymentStatus.CAPTURED;
                     break;
 
                 case 'delivered':
-                    order.fulfillment_status = FulfillmentStatus.FULFILLED;
-                    order.status = OrderStatus.COMPLETED;
+                    newFulfillmentStatus = FulfillmentStatus.FULFILLED;
+                    newOrderStatus = OrderStatus.COMPLETED;
                     break;
 
                 case 'cancelled':
-                    order.status = OrderStatus.CANCELED;
-                    order.fulfillment_status = FulfillmentStatus.CANCELED;
+                    newOrderStatus = OrderStatus.CANCELED;
+                    newFulfillmentStatus = FulfillmentStatus.CANCELED;
                     break;
 
                 case 'refunded':
-                    order.payment_status = PaymentStatus.REFUNDED;
+                    newPaymentStatus = PaymentStatus.REFUNDED;
                     // either canceled or returned...
-                    order.fulfillment_status = FulfillmentStatus.CANCELED;
+                    newFulfillmentStatus = FulfillmentStatus.CANCELED;
                     // order.status = OrderStatus.RETURNED;
                     break;
 
@@ -289,7 +324,13 @@ export default class StoreOrderService extends TransactionBaseService {
             }
 
             // Save the updated order
-            await this.orderRepository_.save(order);
+            await this.orderService_.setOrderStatus(
+                order,
+                newOrderStatus,
+                newFulfillmentStatus,
+                newPaymentStatus,
+                { source: 'manual' }
+            );
 
             return order;
         } catch (error) {
