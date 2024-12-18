@@ -21,3 +21,12 @@ CREATE TABLE "cancellation_request" (
 ALTER TABLE "cancellation_request" ADD CONSTRAINT "FK_Cancellation_Request_Order" FOREIGN KEY ("order_id") REFERENCES "order"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "store" ADD "escrow_metadata" jsonb;
+
+ALTER TABLE "product" ADD "external_metadata" jsonb;
+ALTER TABLE "product_variant" ADD "external_metadata" jsonb;
+ALTER TABLE "product" ADD "external_source" character varying;
+ALTER TABLE "product_variant" ADD "external_source" character varying;
+
+
+
+-- add amount_adjustment to order_history

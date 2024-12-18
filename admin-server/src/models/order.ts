@@ -7,9 +7,15 @@ import {
     Relation,
 } from 'typeorm';
 import { Order as MedusaOrder } from '@medusajs/medusa';
-import { Payment as MedusaPayment } from '@medusajs/medusa';
 import { Store } from './store';
-import { Payment } from './payment';
+
+export const EscrowStatus = {
+    IN_ESCROW: 'in_escrow',
+    BUYER_RELEASED: 'buyer_released',
+    SELLER_RELEASED: 'seller_released',
+    RELEASED: 'released',
+    REFUNDED: 'refunded',
+};
 
 @Entity()
 export class Order extends MedusaOrder {
@@ -19,6 +25,9 @@ export class Order extends MedusaOrder {
 
     @Column('store_id')
     store_id?: string;
+
+    @Column()
+    escrow_status?: string;
 
     @Column()
     massmarket_order_id?: string;
