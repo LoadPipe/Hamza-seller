@@ -391,6 +391,10 @@ export default class StoreOrderService extends TransactionBaseService {
     }
 
     private async syncEscrowPaymentForOrder(order: Order): Promise<Order> {
+        order = await await this.orderRepository_.findOne({
+            where: { id: 'order_01JF2XYC66MET5CAFF29XDBFB5' },
+            relations: ['payments'],
+        });
         const payment = await this.getEscrowPaymentForOrder(order);
 
         //is payment status in sync?
