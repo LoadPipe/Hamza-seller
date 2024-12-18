@@ -318,7 +318,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         const images = await extractImages(rowData['images']);
         // console.log('images: ' + JSON.stringify(images));
 
-        const thumbnail = (rowData['thumbnail'].startsWith('http')) ? rowData['thumbnail'] : baseImageUrl + rowData['thumbnail'];
+        const thumbnail = rowData['thumbnail'].startsWith('http')
+            ? rowData['thumbnail']
+            : baseImageUrl + rowData['thumbnail'];
 
         const output = {
             title: rowData['title'],
@@ -444,7 +446,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     });
                 }
 
-                const baseImageUrl = (base_image_url) ? base_image_url : '/downloads/stores/';
+                const baseImageUrl = (base_image_url) ? base_image_url : 'https://static.hamza.market/stores/';
 
                 const file = req.file;
                 if (!file) {
