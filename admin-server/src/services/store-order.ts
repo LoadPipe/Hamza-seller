@@ -352,7 +352,6 @@ export default class StoreOrderService extends TransactionBaseService {
     }
 
     async getEscrowPayment(orderId: string): Promise<PaymentDefinition> {
-        console.log('SYNC ESCROW');
         const order: Order = await this.orderRepository_.findOne({
             where: { id: orderId },
             relations: ['payments'],
@@ -432,8 +431,6 @@ export default class StoreOrderService extends TransactionBaseService {
                     break;
             }
         }
-
-        console.log('NOT IN SYNC', inSync);
 
         //if not in sync, we sync the database with the contract
         if (!inSync) {

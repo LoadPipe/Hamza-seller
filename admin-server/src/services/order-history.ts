@@ -15,7 +15,7 @@ type CreateOrderHistoryInput = {
     to_status: OrderStatus | null;
     to_payment_status: PaymentStatus | null;
     to_fulfillment_status: FulfillmentStatus | null;
-    to_escrow_status: EscrowStatus | null;
+    to_escrow_status: string | null;
     metadata?: Record<string, unknown>;
 };
 
@@ -48,6 +48,8 @@ export default class OrderHistoryService extends TransactionBaseService {
         } else {
             if (item.to_fulfillment_status)
                 item.title = item.to_fulfillment_status.toString();
+            else if (item.to_escrow_status)
+                item.title = item.to_escrow_status.toString();
             else item.title = item.to_payment_status.toString();
         }
 

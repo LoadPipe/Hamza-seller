@@ -9,13 +9,13 @@ import {
 import { Order as MedusaOrder } from '@medusajs/medusa';
 import { Store } from './store';
 
-export declare enum EscrowStatus {
-    IN_ESCROW = 'in_escrow',
-    BUYER_RELEASED = 'buyer_released',
-    SELLER_RELEASED = 'seller_released',
-    RELEASED = 'released',
-    REFUNDED = 'refunded',
-}
+export const EscrowStatus = {
+    IN_ESCROW: 'in_escrow',
+    BUYER_RELEASED: 'buyer_released',
+    SELLER_RELEASED: 'seller_released',
+    RELEASED: 'released',
+    REFUNDED: 'refunded',
+};
 
 @Entity()
 export class Order extends MedusaOrder {
