@@ -46,10 +46,6 @@ export default function DatePickerWithRange({
         }
     };
 
-    const handleOpen = () => {
-        setIsOpen(false);
-    };
-
     return (
         <div className={cn('grid gap-2', className)}>
             <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -86,7 +82,7 @@ export default function DatePickerWithRange({
                         onSelect={handleDateChange}
                         numberOfMonths={2}
                     />
-                    <div className="flex justify-end p-2 border-t">
+                    <div className="flex justify-end p-2">
                         <Button
                             variant="default"
                             className="bg-primary-purple-90 hover:bg-blue-600 text-white"

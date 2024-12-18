@@ -42,6 +42,7 @@ import {
     filterStore,
     setFilter,
     clearFilter,
+    clearAllFilters,
     setDatePickerFilter,
 } from '@/stores/order-filter/order-filter-store.ts';
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
@@ -165,6 +166,10 @@ export function DataTable<TData, TValue>({
         downloadCSV(`${dataCSV}`, 'orders.csv');
     };
 
+    const handleClearFilters = () => {
+        clearAllFilters();
+        console.log(`Clearing all the filters.`);
+    };
     return (
         <div className="flex flex-col min-h-screen">
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
@@ -243,7 +248,7 @@ export function DataTable<TData, TValue>({
 
                     <div className="ml-auto flex flex-row relative w-[376px]">
                         <Input
-                            placeholder="Search Order"
+                            placeholder="Orders..."
                             value={
                                 (table
                                     .getColumn('id')
@@ -304,6 +309,12 @@ export function DataTable<TData, TValue>({
 
                     <div className="flex flex-row gap-4 ml-auto">
                         <div className="flex justify-end">
+                            <Button
+                                onClick={handleClearFilters}
+                                className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69 mr-2"
+                            >
+                                Clear Filters
+                            </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69">
