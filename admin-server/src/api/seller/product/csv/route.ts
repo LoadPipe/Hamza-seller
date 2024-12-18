@@ -75,6 +75,18 @@ const requiredCsvHeadersForVariant = [
  *                 type: string
  *                 format: binary
  *                 description: The CSV file to be uploaded.
+ *               store_id:
+ *                 type: string
+ *                 description: The ID of the store where products will be imported.
+ *               collection_id:
+ *                 type: string
+ *                 description: The ID of the collection to which products belong.
+ *               sales_channel_id:
+ *                 type: string
+ *                 description: The ID of the sales channel for the products.
+ *               base_image_url:
+ *                 type: string
+ *                 description: (Optional) The base URL for product images.
  *     responses:
  *       200:
  *         description: Products imported successfully.
@@ -104,6 +116,18 @@ const requiredCsvHeadersForVariant = [
  *                 message:
  *                   type: string
  *                   example: Error importing products: [error message]
+ *     requiredCsvHeaders:
+ *       description: The required headers and required fields for the CSV file.
+ *       product:
+ *         type: array
+ *         items:
+ *           type: string
+ *         example: ['category', 'images', 'title', 'subtitle', 'description', 'status', 'thumbnail', 'weight', 'discountable', 'handle', 'variant', 'variant_price', 'variant_inventory_quantity', 'variant_allow_backorder', 'variant_manage_inventory']
+ *       variant:
+ *         type: array
+ *         items:
+ *           type: string
+ *         example: ['handle', 'variant', 'variant_price', 'variant_inventory_quantity', 'variant_allow_backorder', 'variant_manage_inventory']
  */
 
 export const POST = async (req: FileRequest, res: MedusaResponse) => {
