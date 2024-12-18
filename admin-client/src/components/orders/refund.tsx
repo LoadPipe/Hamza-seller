@@ -6,7 +6,7 @@ import {
     AccordionContent,
 } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
+// import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
@@ -173,15 +173,15 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                     <h2 className="text-lg font-bold">Refund Management</h2>
                 </div>
                 <div className="flex ">
-                    <Switch
-                        className="mr-2 bg-primary-black-65 peer-checked:primary-green-900"
-                        id="manual-refund"
-                        checked={manualRefund}
-                        onCheckedChange={setManualRefund} // Shadcn uses `onCheckedChange`
-                    />
-                    <label htmlFor="manual-refund" className="text-sm">
-                        Manual Refund
-                    </label>
+                    {/*<Switch*/}
+                    {/*    className="mr-2 bg-primary-black-65 peer-checked:primary-green-900"*/}
+                    {/*    id="manual-refund"*/}
+                    {/*    checked={manualRefund}*/}
+                    {/*    onCheckedChange={setManualRefund} // Shadcn uses `onCheckedChange`*/}
+                    {/*/>*/}
+                    {/*<label htmlFor="manual-refund" className="text-sm">*/}
+                    {/*    Manual Refund*/}
+                    {/*</label>*/}
                 </div>
             </div>
 
