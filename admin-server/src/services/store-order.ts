@@ -350,6 +350,47 @@ export default class StoreOrderService extends TransactionBaseService {
             relations: ['payments'],
         });
 
+        return await this.syncEscrowPaymentForOrder(order);
+    }
+
+    async getEscrowPayment(orderId: string): Promise<PaymentDefinition> {
+        const order: Order = await this.orderRepository_.findOne({
+            where: { id: orderId },
+            relations: ['payments'],
+        });
+
+        return await this.getEscrowPaymentForOrder(order);
+    }
+
+    async getOrderDetails(orderId: string) {
+        try {
+            // Fetch the order with the specific relation
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+                relations: [
+                    'items',
+                    'items.variant',
+                    'items.variant.product',
+                    'customer.walletAddresses',
+                    'shipping_address',
+                    'payments',
+                ],
+            });
+
+            if (!order) {
+                throw new Error(`Order with id ${orderId} not found`);
+            }
+
+            return order;
+        } catch (error) {
+            this.logger.error(
+                `Failed to fetch order details for order ${orderId}: ${error.message}`
+            );
+            throw error;
+        }
+    }
+
+    private async syncEscrowPaymentForOrder(order: Order): Promise<Order> {
         const payment = await this.getEscrowPaymentForOrder(order);
 
         //is payment status in sync?
@@ -415,48 +456,13 @@ export default class StoreOrderService extends TransactionBaseService {
         return order;
     }
 
-    async getEscrowPayment(orderId: string): Promise<PaymentDefinition> {
-        const order: Order = await this.orderRepository_.findOne({
-            where: { id: orderId },
-            relations: ['payments'],
-        });
-
-        return await this.getEscrowPaymentForOrder(order);
-    }
-
-    async getEscrowPaymentForOrder(order: Order): Promise<PaymentDefinition> {
+    private async getEscrowPaymentForOrder(
+        order: Order
+    ): Promise<PaymentDefinition> {
         const address: string = findEscrowAddressFromOrder(order);
         if (address) {
             return await getEscrowPayment(address, order.id);
         }
         return null;
-    }
-
-    async getOrderDetails(orderId: string) {
-        try {
-            // Fetch the order with the specific relation
-            const order = await this.orderRepository_.findOne({
-                where: { id: orderId },
-                relations: [
-                    'items',
-                    'items.variant',
-                    'items.variant.product',
-                    'customer.walletAddresses',
-                    'shipping_address',
-                    'payments',
-                ],
-            });
-
-            if (!order) {
-                throw new Error(`Order with id ${orderId} not found`);
-            }
-
-            return order;
-        } catch (error) {
-            this.logger.error(
-                `Failed to fetch order details for order ${orderId}: ${error.message}`
-            );
-            throw error;
-        }
     }
 }
