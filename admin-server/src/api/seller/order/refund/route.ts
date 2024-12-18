@@ -5,8 +5,6 @@ import StoreOrderService from '../../../../services/store-order';
 
 export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
     const orderService: OrderService = req.scope.resolve('orderService');
-    const storeOrderService: StoreOrderService =
-        req.scope.resolve('storeOrderService');
 
     const handler = new RouteHandler(req, res, 'PUT', '/seller/order/refund', [
         'id',
