@@ -247,12 +247,13 @@ function validateRefundAmount(
     orderId: string,
     amount: BigNumberish
 ) {
+    console.log(BigInt(payment?.amount.toString() ?? '0'));
+    console.log(BigInt(payment?.amountRefunded.toString() ?? '0'));
+    console.log(BigInt(amount.toString()));
+
     const refundableAmt =
         BigInt(payment?.amount.toString() ?? '0') -
         BigInt(payment?.amountRefunded.toString() ?? '0');
-
-    console.log(BigInt('10') > BigInt('1'));
-    console.log(BigInt('1') > BigInt('10'));
 
     if (refundableAmt < BigInt(amount.toString())) {
         throw new Error(
