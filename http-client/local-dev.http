@@ -121,3 +121,11 @@ Content-Type: application/json
 {
   "store_id": "store_01JEWRFN08KNC6S9M6NAYGDPBZ"
 }
+
+### delete product
+DELETE http://localhost:9000/seller/product
+Content-Type: application/json
+
+{
+  "product_id": "prod_01JFCJBKQCEW6EPP1CTPWCXT53"
+}
