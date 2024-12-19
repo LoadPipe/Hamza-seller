@@ -25,7 +25,7 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { getOrderStatusName } from '@/utils/check-order-status.ts';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-
+import { ConfirmStatusChange } from '@/components/orders/confirm-status-change';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
@@ -58,6 +58,9 @@ export function OrderDetailsSidebar() {
             orderDetails?.payment_status
         )
     );
+
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [newStatus, setNewStatus] = useState<string | null>(null);
 
     let currencyCode = orderDetails?.payments[0]?.currency_code;
 
@@ -117,8 +120,21 @@ export function OrderDetailsSidebar() {
         event: React.ChangeEvent<HTMLSelectElement>
     ) => {
         const newStatus = event.target.value;
-        setSelectedStatus(newStatus);
-        mutation.mutate(newStatus);
+        setNewStatus(newStatus);
+        setIsDialogOpen(true);
+    };
+
+    const confirmStatusChange = () => {
+        if (newStatus) {
+            setSelectedStatus(newStatus);
+            mutation.mutate(newStatus);
+        }
+        setIsDialogOpen(false);
+    };
+
+    const cancelStatusChange = () => {
+        setNewStatus(null);
+        setIsDialogOpen(false);
     };
 
     const statusDetails = orderDetails && {
@@ -395,6 +411,12 @@ export function OrderDetailsSidebar() {
                     )}
                 </SidebarContent>
             </Sidebar>
+            <ConfirmStatusChange
+                isOpen={isDialogOpen}
+                newStatus={newStatus}
+                onConfirm={confirmStatusChange}
+                onCancel={cancelStatusChange}
+            />
         </div>
     );
 }
