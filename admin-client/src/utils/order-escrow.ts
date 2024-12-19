@@ -248,8 +248,8 @@ function validateRefundAmount(
     amount: BigNumberish
 ) {
     const refundableAmt =
-        (BigInt(payment.amount.toString()) ?? 0) -
-        (BigInt(payment?.amountRefunded.toString()) ?? 0);
+        BigInt(payment?.amount.toString() ?? '0') -
+        BigInt(payment?.amountRefunded.toString() ?? '0');
 
     console.log(BigInt('10') > BigInt('1'));
     console.log(BigInt('1') > BigInt('10'));
