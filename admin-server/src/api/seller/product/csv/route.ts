@@ -1,4 +1,4 @@
-import { MedusaRequest, MedusaResponse, ProductStatus } from '@medusajs/medusa';
+import { MedusaRequest, MedusaResponse, ProductStatus, Store } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
 import ProductService, { csvProductData } from '../../../../services/product';
 import StoreService from '../../../../services/store';
@@ -195,7 +195,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 // console.log('price: ' + JSON.stringify(price));
                 prices.push({
                     currency_code: currency.code,
-                    amount: price.amount,
+                    amount: Number(price.amount) * 100,
                 });
             }
 
@@ -239,7 +239,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
      */
     const convertRowDataToProductDetails = async (
         rowData: csvProductData,
-        csvData: csvProductData[]
+        csvData: csvProductData[],
+        store: Store
     ): Promise<ProductDetails> => {
         //get all variant rows with same handle
         let variants = [];
@@ -254,7 +255,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         const productDetails: ProductDetails = {
             productInfo: {
                 name: rowData['title'],
-                baseCurrency: 'cny',
+                baseCurrency: store.default_currency_code,
             },
             variants: variants,
         };
@@ -264,7 +265,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
     const convertCsvDataToCreateDataInput = async (
         rowData: csvProductData,
         csvData: csvProductData[],
-        storeId: string,
+        store: Store,
         collectionId: string,
         salesChannelIds: string[],
         baseImageUrl: string
@@ -292,7 +293,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         //     ],
         // };
         const productDetails: ProductDetails =
-            await convertRowDataToProductDetails(rowData, csvData);
+            await convertRowDataToProductDetails(rowData, csvData, store);
 
         // generate option names from variantData
         // const optionNames: extractOptionNames[] = [
@@ -361,7 +362,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             collection_id: collectionId,
             weight: Math.round(Number(rowData['weight']) ?? 100),
             discountable: rowData['discountable'] === '1' ? true : false,
-            store_id: storeId,
+            store_id: store.id,
             categories: [{ id: rowData['category_id'] }],
             sales_channels: salesChannelIds.map((sc) => {
                 return { id: sc };
@@ -383,7 +384,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
     };
 
     const convertCsvData = async (
-        storeId: string,
+        store: Store,
         collectionId: string,
         salesChannelId: string,
         baseImageUrl: string,
@@ -422,7 +423,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 await convertCsvDataToCreateDataInput(
                     p,
                     data,
-                    storeId,
+                    store,
                     collectionId,
                     [salesChannelId],
                     baseImageUrl
@@ -528,7 +529,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     message: string;
                     jsonData?: CreateProductInput[];
                 } = await convertCsvData(
-                    store.id,
+                    store,
                     collection_id,
                     sales_channel_id,
                     baseImageUrl,
