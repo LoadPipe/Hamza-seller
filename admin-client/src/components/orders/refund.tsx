@@ -24,13 +24,11 @@ type RefundProps = {
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
 const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
-    const [manualRefund, setManualRefund] = useState(true);
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
         note: '',
     });
-    setManualRefund(true); // login failed or I would have removed this manualRefund
     const [errors, setErrors] = useState({
         refundAmount: '',
         note: '',
@@ -187,17 +185,6 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                 <div className="flex">
                     <h2 className="text-lg font-bold">Refund Management</h2>
                 </div>
-                <div className="flex ">
-                    {/*<Switch*/}
-                    {/*    className="mr-2 bg-primary-black-65 peer-checked:primary-green-900"*/}
-                    {/*    id="manual-refund"*/}
-                    {/*    checked={manualRefund}*/}
-                    {/*    onCheckedChange={setManualRefund} // Shadcn uses `onCheckedChange`*/}
-                    {/*/>*/}
-                    {/*<label htmlFor="manual-refund" className="text-sm">*/}
-                    {/*    Manual Refund*/}
-                    {/*</label>*/}
-                </div>
             </div>
 
             {/* Accordion for Refund Details */}
@@ -208,24 +195,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                 className="mt-4"
             >
                 <AccordionItem value="refund-details">
-                    <AccordionTrigger
-                        className={
-                            manualRefund
-                                ? ''
-                                : 'text-gray-400 cursor-not-allowed'
-                        }
-                    >
-                        Refund Details
-                    </AccordionTrigger>
+                    <AccordionTrigger>Refund Details</AccordionTrigger>
                     <AccordionContent>
-                        <div
-                            className={
-                                manualRefund
-                                    ? ''
-                                    : 'opacity-50 pointer-events-none'
-                            }
-                        >
-                            {/* Refund Amount */}
+                        <div>
                             <div className="mt-2">
                                 <label className="block text-sm font-medium">
                                     Refund Amount
