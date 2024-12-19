@@ -205,6 +205,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                                 <Input
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     name="refundAmount"
                                     value={formData.refundAmount}
                                     onChange={handleInputChange}
