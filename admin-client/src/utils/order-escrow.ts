@@ -114,7 +114,7 @@ export async function refundEscrowPayment(
 
             if (escrow) {
                 const payment = await getEscrowPayment(order);
-
+                console.log('payments yoooo', payment);
                 //validate before refunding
                 validatePaymentExists(payment, order.id);
                 validatePaymentNotReleased(payment, order.id);
@@ -248,7 +248,9 @@ function validateRefundAmount(
     amount: BigNumberish
 ) {
     const refundableAmt =
-        (payment?.amount ?? 0) - (payment?.amountRefunded ?? 0);
+        BigInt(payment?.amount.toString() ?? '0') -
+        BigInt(payment?.amountRefunded.toString() ?? '0');
+
     if (refundableAmt < BigInt(amount.toString())) {
         throw new Error(
             `Amount of ${amount} exceeds the refundable amount of ${refundableAmt} for ${orderId}.`
