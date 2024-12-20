@@ -35,7 +35,6 @@ interface TimelineProps {
 }
 
 const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
-    // Generate timeline events
     const events: TimelineEvent[] = [];
 
     // Base event: Order created
@@ -73,12 +72,21 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
 
     // Add historical events from `histories` array
     orderDetails.histories?.forEach((history) => {
+        const details = [];
+        if (history.to_status) {
+            details.push(`Status: ${history.to_status}`);
+        }
+        if (history.to_payment_status) {
+            details.push(`Payment: ${history.to_payment_status}`);
+        }
+        if (history.to_fulfillment_status) {
+            details.push(`Fulfillment: ${history.to_fulfillment_status}`);
+        }
+
         events.push({
             title:
                 history.title.charAt(0).toUpperCase() + history.title.slice(1),
-            details: `Status: ${history.to_status || 'N/A'}, Payment: ${
-                history.to_payment_status || 'N/A'
-            }, Fulfillment: ${history.to_fulfillment_status || 'N/A'}`,
+            details: details.join(', '), // Combine available details
             timestamp: formatDate(history.created_at),
         });
     });
@@ -93,6 +101,9 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
             timestamp: formatDate(refund.created_at),
         });
     });
+
+    // Determine the most recent event (last item in events)
+    const recentIndex = events.length - 1;
 
     return (
         <div className="flex flex-col">
@@ -111,13 +122,47 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
                         transition={{ duration: 0.5, delay: index * 0.2 }}
                     >
                         {/* Dot */}
-                        <div className="relative flex items-center justify-center h-5 w-5 bg-black rounded-full border-2 border-white">
+                        <motion.div
+                            className="relative flex items-center justify-center h-5 w-5 rounded-full border-2 border-white"
+                            style={{
+                                backgroundColor:
+                                    index === recentIndex ? 'green' : 'black',
+                            }}
+                            animate={
+                                index === recentIndex
+                                    ? {
+                                          scale: [1.2, 1.5, 1.2], // Pulsating effect for the most recent update
+                                          backgroundColor: [
+                                              '#28a745',
+                                              '#34d058',
+                                              '#28a745',
+                                          ], // Green animation
+                                      }
+                                    : {}
+                            }
+                            transition={
+                                index === recentIndex
+                                    ? { repeat: Infinity, duration: 1.5 }
+                                    : {}
+                            }
+                        >
                             <motion.div
                                 className="h-2.5 w-2.5 bg-primary-black-60 rounded-full"
-                                animate={{ scale: [0.5, 1, 0.8] }}
-                                transition={{ repeat: 10, duration: 1.5 }}
+                                animate={
+                                    index === recentIndex
+                                        ? {
+                                              scale: [0.8, 1, 0.8],
+                                              opacity: [0.8, 1, 0.8],
+                                          }
+                                        : {}
+                                }
+                                transition={
+                                    index === recentIndex
+                                        ? { repeat: 5, duration: 1.5 }
+                                        : {}
+                                }
                             />
-                        </div>
+                        </motion.div>
                         {/* Event Content */}
                         <div className="ml-4 flex-1">
                             <div className="flex justify-between mb-[16px]">
