@@ -330,7 +330,9 @@ export function OrderDetailsSidebar() {
                                                 orderDetails?.shipping_address
                                                     ?.province,
                                                 orderDetails?.shipping_address
-                                                    ?.postal_code
+                                                    ?.postal_code,
+                                                orderDetails?.shipping_address
+                                                    ?.country_code
                                             )}
                                         </span>
                                     </div>

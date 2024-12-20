@@ -32,13 +32,19 @@ export const formatShippingAddress = (
     address_2: string,
     city: string,
     province: string,
-    postal_code: string
+    postal_code: string,
+    country_code: string
 ) => {
-    const parts = [address_1, address_2, city, province, postal_code].filter(
-        Boolean
-    );
+    const parts = [
+        address_1,
+        address_2,
+        city,
+        province,
+        postal_code,
+        country_code,
+    ].filter(Boolean);
 
-    return parts.length > 0 ? parts.join(' ') : 'Undefined';
+    return parts.length > 0 ? parts.join(', ') : 'Undefined';
 };
 
 export const capitalizeWords = (str: string) => {
