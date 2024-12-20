@@ -19,11 +19,17 @@ type RefundProps = {
     refundAmount?: number;
     orderId: string;
     order: any;
+    chainId: number;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
+const Refund: React.FC<RefundProps> = ({
+    refundAmount,
+    orderId,
+    order,
+    chainId,
+}) => {
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
@@ -37,7 +43,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
 
     //get the currency code & precision
     const currencyCode = order?.payments[0]?.currency_code ?? 'usdc';
-    const precision = getCurrencyPrecision(currencyCode);
+    const precision = getCurrencyPrecision(currencyCode, chainId);
 
     //convert the amount to db units
     const getDbAmount = (amount: string | number) => {
@@ -47,12 +53,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
     //convert the amount to wei for blockchain use
     const getBlockchainAmount = (amount: string | number) => {
         const dbAmount = getDbAmount(amount);
-        const bcAmount = dbAmount
-            .toString()
-            .padEnd(
-                dbAmount.toString().length + (precision.native - precision.db),
-                '0'
-            );
+        const bcAmount =
+            dbAmount.toString() +
+            ''.padEnd(precision.native - precision.db, '0');
         return bcAmount;
     };
 

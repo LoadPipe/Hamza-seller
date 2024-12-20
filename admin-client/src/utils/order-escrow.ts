@@ -12,10 +12,11 @@ import { BigNumber, BigNumberish, ethers, providers, Signer } from 'ethers';
  */
 export function convertToWei(
     amount: string | number,
-    currencyCode: string
+    currencyCode: string,
+    chainId: number
 ): BigNumber {
     try {
-        const precision = getCurrencyPrecision(currencyCode);
+        const precision = getCurrencyPrecision(currencyCode, chainId);
         return convertToUnits(amount, precision.native);
     } catch (e) {
         console.log(e);
@@ -114,7 +115,7 @@ export async function refundEscrowPayment(
 
             if (escrow) {
                 const payment = await getEscrowPayment(order);
-                console.log('payments yoooo', payment);
+                console.log(payment);
                 //validate before refunding
                 validatePaymentExists(payment, order.id);
                 validatePaymentNotReleased(payment, order.id);
