@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { formatDate, formatStatus } from '@/utils/format-data.ts';
 
 interface TimelineEvent {
@@ -14,6 +15,14 @@ interface TimelineProps {
         status: string;
         fulfillment_status: string;
         payment_status: string;
+        histories?: Array<{
+            id: string;
+            title: string;
+            to_status?: string | null;
+            to_payment_status?: string | null;
+            to_fulfillment_status?: string | null;
+            metadata?: Record<string, any>;
+        }>;
     };
 }
 
