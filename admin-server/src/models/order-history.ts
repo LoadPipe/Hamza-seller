@@ -3,6 +3,8 @@ import {
     BeforeInsert,
     Column,
     Entity,
+    JoinColumn,
+    ManyToOne,
     PrimaryColumn,
 } from 'typeorm';
 import { generateEntityId } from '@medusajs/medusa/dist/utils';
@@ -11,6 +13,7 @@ import {
     OrderStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
+import { Order } from './order';
 
 @Entity()
 export class OrderHistory extends BaseEntity {
@@ -24,6 +27,12 @@ export class OrderHistory extends BaseEntity {
 
     @Column({ name: 'order_id' })
     order_id: string;
+
+    @ManyToOne(() => Order, (order) => order.histories, {
+        onDelete: 'CASCADE',
+    })
+    @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
+    order?: Order;
 
     @Column({ name: 'title' })
     title: string;
