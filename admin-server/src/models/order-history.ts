@@ -2,6 +2,7 @@ import {
     BaseEntity,
     BeforeInsert,
     Column,
+    CreateDateColumn,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -51,6 +52,9 @@ export class OrderHistory extends BaseEntity {
 
     @Column('jsonb')
     metadata?: Record<string, unknown>;
+
+    @CreateDateColumn()
+    created_at: Date;
 
     @BeforeInsert()
     private beforeInsert(): void {
