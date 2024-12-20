@@ -23,6 +23,13 @@ interface TimelineProps {
             to_fulfillment_status?: string | null;
             metadata?: Record<string, any>;
         }>;
+        refunds?: Array<{
+            id: string;
+            amount: number;
+            note?: string | null;
+            reason: string;
+            created_at: string;
+        }>;
     };
 }
 
