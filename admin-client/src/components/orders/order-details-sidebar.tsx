@@ -353,6 +353,7 @@ export function OrderDetailsSidebar() {
                                 orderId={orderDetails?.id}
                                 customerId={orderDetails?.customer_id}
                                 order={orderDetails}
+                                chainId={import.meta.env.VITE_CHAIN_ID}
                             />
 
                             {/* Items */}
