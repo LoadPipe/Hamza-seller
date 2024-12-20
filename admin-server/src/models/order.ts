@@ -44,7 +44,6 @@ export class Order extends MedusaOrder {
 
     @OneToMany(() => OrderHistory, (orderHistory) => orderHistory.order, {
         cascade: true,
-        eager: false,
     })
     histories?: Relation<OrderHistory[]>;
 }

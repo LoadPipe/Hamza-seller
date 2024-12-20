@@ -372,6 +372,7 @@ export default class StoreOrderService extends TransactionBaseService {
                     'customer.walletAddresses',
                     'shipping_address',
                     'payments',
+                    'histories',
                 ],
             });
 

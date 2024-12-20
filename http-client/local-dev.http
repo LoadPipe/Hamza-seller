@@ -83,7 +83,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6I
 }
 
 ### Get Seller Order Details
-GET http://localhost:9000/seller/order/detail?order_id=order_01JENFNJ3AM7M7EDBQ7JQMXD83
+GET http://localhost:9000/seller/order/detail?order_id=order_01JFF3P9EXVGM6FBK4CKCMPYSS
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
