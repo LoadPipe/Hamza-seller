@@ -78,7 +78,7 @@ export declare module '@medusajs/medusa/dist/model/order' {
     }
 }
 
-export declare module '@medusajs/medusa/dis/model/refund' {
+export declare module '@medusajs/medusa/dist/model/refund' {
     declare interface Refund {
         confirmed: boolean;
     }
