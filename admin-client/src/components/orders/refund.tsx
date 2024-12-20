@@ -51,16 +51,11 @@ const Refund: React.FC<RefundProps> = ({
     };
 
     //convert the amount to wei for blockchain use
-    //returning 10000 for 0.01 usd
-    //actually should be
     const getBlockchainAmount = (amount: string | number) => {
         const dbAmount = getDbAmount(amount);
-        const bcAmount = dbAmount
-            .toString()
-            .padEnd(
-                dbAmount.toString().length + (precision.native - precision.db),
-                '0'
-            );
+        const bcAmount =
+            dbAmount.toString() +
+            ''.padEnd(precision.native - precision.db, '0');
         return bcAmount;
     };
 
