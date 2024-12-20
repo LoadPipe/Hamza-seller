@@ -311,6 +311,7 @@ export function OrderDetailsSidebar() {
                                         </span>
                                     </div>
                                 </div>
+                                {/* {orderDetails?.shipping_address && ( */}
                                 <div className="flex justify-between">
                                     <div className="w-1/3">
                                         <span className="text-primary-black-60">
@@ -334,6 +335,7 @@ export function OrderDetailsSidebar() {
                                         </span>
                                     </div>
                                 </div>
+                                {/* )} */}
                             </div>
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />

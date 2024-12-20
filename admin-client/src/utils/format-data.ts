@@ -34,7 +34,11 @@ export const formatShippingAddress = (
     province: string,
     postal_code: string
 ) => {
-    return `${address_1} ${address_2} ${city}, ${province}, ${postal_code}`;
+    const parts = [address_1, address_2, city, province, postal_code].filter(
+        Boolean
+    );
+
+    return parts.length > 0 ? parts.join(' ') : 'Undefined';
 };
 
 export const capitalizeWords = (str: string) => {
