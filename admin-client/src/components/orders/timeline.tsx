@@ -117,8 +117,8 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
                     <motion.div
                         key={index}
                         className="flex items-start mb-[24px] last:mb-0"
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: -30 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: index * 0.2 }}
                     >
                         {/* Dot */}
@@ -131,7 +131,7 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
                             animate={
                                 index === recentIndex
                                     ? {
-                                          scale: [1.2, 1.5, 1.2], // Pulsating effect for the most recent update
+                                          scale: [1.2, 1.5, 1.2],
                                           backgroundColor: [
                                               '#28a745',
                                               '#34d058',
@@ -142,7 +142,7 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
                             }
                             transition={
                                 index === recentIndex
-                                    ? { repeat: Infinity, duration: 1.5 }
+                                    ? { repeat: 5, duration: 1.5 }
                                     : {}
                             }
                         >
