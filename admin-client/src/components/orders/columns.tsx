@@ -103,6 +103,7 @@ export const generateColumns = (
                                     table.toggleAllPageRowsSelected(!!value)
                                 }
                                 aria-label="Select all"
+                                className="order-table-checkbox"
                             />
                         </div>
                     ),
@@ -114,6 +115,7 @@ export const generateColumns = (
                                     row.toggleSelected(!!value)
                                 }
                                 aria-label="Select row"
+                                className="order-table-checkbox"
                             />
                         </div>
                     ),
