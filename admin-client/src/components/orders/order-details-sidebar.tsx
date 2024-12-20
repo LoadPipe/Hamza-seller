@@ -143,6 +143,8 @@ export function OrderDetailsSidebar() {
         payment_status: orderDetails.payment_status,
         created_at: orderDetails.created_at,
         updated_at: orderDetails.updated_at,
+        histories: orderDetails.histories,
+        refunds: orderDetails.refunds,
     };
     const totalPrice = (orderDetails?.items || []).reduce(
         (acc: number, item: any) => {
