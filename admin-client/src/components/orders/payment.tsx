@@ -1,4 +1,10 @@
+import { flowPreviewnet } from 'viem/chains';
 import currencyIcons from '../../../public/currencies/crypto-currencies.ts';
+import {
+    convertCryptoPrice,
+    formatCryptoPrice,
+} from '@/utils/get-product-price.ts';
+import React from 'react';
 
 type PaymentProps = {
     subtotal: string | number;
@@ -15,6 +21,26 @@ const Payment: React.FC<PaymentProps> = ({
     shippingFee,
     total,
 }) => {
+    const [convertedPrice, setConvertedPrice] = React.useState<string | null>(
+        null
+    );
+
+    React.useEffect(() => {
+        const fetchConvertedPrice = async () => {
+            const result = await convertCryptoPrice(
+                Number(total),
+                'eth',
+                'usdt'
+            );
+            const formattedResult = Number(result).toFixed(2);
+            setConvertedPrice(formattedResult);
+        };
+
+        if (currencyCode === 'eth') {
+            fetchConvertedPrice();
+        }
+    }, [currencyCode]);
+
     return (
         <div className="flex flex-col">
             {/* Payment Header */}
@@ -73,6 +99,18 @@ const Payment: React.FC<PaymentProps> = ({
                     </span>
                 </div>
             </div>
+            {currencyCode === 'eth' && (
+                <div className="flex items-center">
+                    <img
+                        className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                        src={currencyIcons['usdt']}
+                        alt={'usdt'}
+                    />
+                    <span className="text-white opacity-60 font-bold text-l">
+                        ≅ {convertedPrice}
+                    </span>
+                </div>
+            )}
         </div>
     );
 };
