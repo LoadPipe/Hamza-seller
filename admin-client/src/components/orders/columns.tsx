@@ -373,14 +373,14 @@ export const generateColumns = (
 
                         React.useEffect(() => {
                             const fetchConvertedPrice = async () => {
-                                const result = await convertPrice(
-                                    payments[0]?.amount,
+                                const result = await convertCryptoPrice(
+                                    Number(formatted),
                                     'eth',
                                     'usdt'
                                 );
-                                setConvertedPrice(
-                                    `${formatCryptoPrice(result, 'usdt')}`
-                                );
+                                const formattedResult =
+                                    Number(result).toFixed(2);
+                                setConvertedPrice(formattedResult);
                             };
 
                             if (payments[0]?.currency_code === 'eth') {
