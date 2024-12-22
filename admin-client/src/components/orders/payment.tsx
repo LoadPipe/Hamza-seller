@@ -1,9 +1,5 @@
-import { flowPreviewnet } from 'viem/chains';
 import currencyIcons from '../../../public/currencies/crypto-currencies.ts';
-import {
-    convertCryptoPrice,
-    formatCryptoPrice,
-} from '@/utils/get-product-price.ts';
+import { convertCryptoPrice } from '@/utils/get-product-price.ts';
 import React from 'react';
 
 type PaymentProps = {

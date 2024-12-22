@@ -81,8 +81,6 @@ import {
     convertCryptoPrice,
     formatCryptoPrice,
 } from '@/utils/get-product-price';
-import { getCurrencyPrecision } from '@/currency.config';
-import { convertPrice } from '@/utils/price-conversion';
 import React from 'react';
 
 // Generate TypeScript type from Zod schema
