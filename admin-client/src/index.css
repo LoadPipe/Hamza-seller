@@ -49,13 +49,12 @@ button {
     transition: border-color 0.25s;
 }
 button:hover {
-    border-color: #7B61FF;
+    border-color: #7b61ff;
 }
 button:focus,
 button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
 }
-
 
 @layer base {
     :root {
@@ -125,4 +124,9 @@ button:focus-visible {
         --sidebar-accent: 240 3.7% 15.9%;
         --sidebar-accent-foreground: 94 76% 42%;
     }
+}
+
+.order-table-checkbox {
+    padding: 0 !important;
+    border-radius: 2px !important;
 }

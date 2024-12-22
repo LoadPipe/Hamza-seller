@@ -103,6 +103,7 @@ export const generateColumns = (
                                     table.toggleAllPageRowsSelected(!!value)
                                 }
                                 aria-label="Select all"
+                                className="order-table-checkbox"
                             />
                         </div>
                     ),
@@ -114,6 +115,7 @@ export const generateColumns = (
                                     row.toggleSelected(!!value)
                                 }
                                 aria-label="Select row"
+                                className="order-table-checkbox"
                             />
                         </div>
                     ),
@@ -300,9 +302,9 @@ export const generateColumns = (
                             orderStatus === 'fulfilled' ||
                             orderStatus === 'returned'
                         ) {
-                            statusClass = 'bg-green-800 text-green-800'; // Green box for fulfilled or returned
+                            statusClass = 'bg-lime-400 text-black'; // Green box for fulfilled or returned
                         } else if (orderStatus === 'canceled') {
-                            statusClass = 'bg-red-800 text-red-800'; // Red box for canceled
+                            statusClass = 'bg-rose-500 text-black'; // Red box for canceled
                         }
 
                         // Format the status using your `formatStatus` function
@@ -310,7 +312,7 @@ export const generateColumns = (
 
                         return (
                             <div
-                                className={`inline-block px-4 py-1 rounded-lg ${statusClass}`}
+                                className={`inline-block px-4 py-2 rounded-md ${statusClass}`}
                             >
                                 {formattedStatus}
                             </div>

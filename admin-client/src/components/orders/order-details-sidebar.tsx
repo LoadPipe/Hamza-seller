@@ -143,6 +143,8 @@ export function OrderDetailsSidebar() {
         payment_status: orderDetails.payment_status,
         created_at: orderDetails.created_at,
         updated_at: orderDetails.updated_at,
+        histories: orderDetails.histories,
+        refunds: orderDetails.refunds,
     };
     const totalPrice = (orderDetails?.items || []).reduce(
         (acc: number, item: any) => {
@@ -311,6 +313,7 @@ export function OrderDetailsSidebar() {
                                         </span>
                                     </div>
                                 </div>
+                                {/* {orderDetails?.shipping_address && ( */}
                                 <div className="flex justify-between">
                                     <div className="w-1/3">
                                         <span className="text-primary-black-60">
@@ -329,11 +332,14 @@ export function OrderDetailsSidebar() {
                                                 orderDetails?.shipping_address
                                                     ?.province,
                                                 orderDetails?.shipping_address
-                                                    ?.postal_code
+                                                    ?.postal_code,
+                                                orderDetails?.shipping_address
+                                                    ?.country_code
                                             )}
                                         </span>
                                     </div>
                                 </div>
+                                {/* )} */}
                             </div>
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
@@ -347,6 +353,7 @@ export function OrderDetailsSidebar() {
                                 orderId={orderDetails?.id}
                                 customerId={orderDetails?.customer_id}
                                 order={orderDetails}
+                                chainId={import.meta.env.VITE_CHAIN_ID}
                             />
 
                             {/* Items */}
