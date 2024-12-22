@@ -23,12 +23,16 @@ export async function convertPrice(
     const key = `${from}-${to}`;
     const output = await exchangeRateCache.retrieve();
 
+    console.log('currency output', output);
     if (!output[key])
         throw new Error(
             `Conversion from ${from} to ${to} is not supported, or some error occurred on the server side`
         );
 
     const rate = output[key];
+    console.log('rate', rate);
+    console.log('amount', amount);
+    console.log(amount * rate);
     return amount * rate;
 }
 
