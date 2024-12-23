@@ -394,7 +394,7 @@ export const generateColumns = (
                                 {/* Render the asynchronous converted value */}
                                 {convertedPrice !== null &&
                                     payments[0]?.currency_code === 'eth' && (
-                                        <div>{convertedPrice} usdt</div>
+                                        <div>≅ {convertedPrice} (usdt)</div>
                                     )}
                             </div>
                         );
