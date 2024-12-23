@@ -51,7 +51,6 @@ import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
 import { Order } from '@/components/orders/columns';
 import { useEffect } from 'react';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -340,13 +339,6 @@ export function DataTable<TData, TValue>({
                     </div>
 
                     <div className="flex flex-row gap-4 ml-auto">
-                        <div className="flex items-center space-x-2">
-                            <Switch id="airplane-mode" />
-                            <label htmlFor="airplane-mode">
-                                Store Currency
-                            </label>
-                            {/* <Label htmlFor="airplane-mode">Airplane Mode</Label> */}
-                        </div>
                         <div className="flex justify-end">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
