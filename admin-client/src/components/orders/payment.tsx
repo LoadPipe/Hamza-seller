@@ -26,7 +26,7 @@ const Payment: React.FC<PaymentProps> = ({
             const result = await convertCryptoPrice(
                 Number(total),
                 'eth',
-                'usdt'
+                'usdc'
             );
             const formattedResult = Number(result).toFixed(2);
             setConvertedPrice(formattedResult);
@@ -99,7 +99,7 @@ const Payment: React.FC<PaymentProps> = ({
                 <div className="flex items-center">
                     <img
                         className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
-                        src={currencyIcons['usdt']}
+                        src={currencyIcons['usdc']}
                         alt={'usdt'}
                     />
                     <span className="text-white opacity-60 font-bold text-l">

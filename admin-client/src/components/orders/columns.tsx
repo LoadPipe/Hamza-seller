@@ -374,7 +374,7 @@ export const generateColumns = (
                                 const result = await convertCryptoPrice(
                                     Number(formatted),
                                     'eth',
-                                    'usdt'
+                                    'usdc'
                                 );
                                 const formattedResult =
                                     Number(result).toFixed(2);
@@ -394,7 +394,7 @@ export const generateColumns = (
                                 {/* Render the asynchronous converted value */}
                                 {convertedPrice !== null &&
                                     payments[0]?.currency_code === 'eth' && (
-                                        <div>≅ {convertedPrice} (usdt)</div>
+                                        <div>≅ {convertedPrice} (usdc)</div>
                                     )}
                             </div>
                         );
