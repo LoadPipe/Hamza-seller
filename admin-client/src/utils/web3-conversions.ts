@@ -25,6 +25,7 @@ export function convertFromWeiToDisplay(
     ) {
         output = output.substring(0, output.length - 1);
     }
+    if (output.startsWith('.')) output = `0${output}`;
     while (output.startsWith('0') && !output.startsWith('0.')) {
         output = output.substring(1);
     }
