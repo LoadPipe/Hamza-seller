@@ -1,38 +1,48 @@
-import React, { useState } from 'react';
+import { PaymentDefinition } from '@/web3/contracts/escrow';
 
-const EscrowStatus = () => {
-    const escrowStatusOptions = [
-        '-',
-        'in escrow',
-        'buyer released',
-        'released',
-        'fully refunded',
-    ];
-    const [escrowStatus, setEscrowStatus] = useState('');
+type EscrowStatusProps = {
+    payment: PaymentDefinition;
+};
 
-    const handleStatusChange = (event) => {
-        setEscrowStatus(event.target.value);
-    };
+/**
+ * Uses the properties of the payment to come up with an appropriate escrow status to display.
+ * @param payment PaymentDefinition from escrow
+ * @returns string
+ */
+function getEscrowStatus(payment: PaymentDefinition): string {
+    if (!payment) return '-';
+
+    if (payment.payerReleased && !payment.receiverReleased)
+        return 'buyer released';
+    else if (payment.receiverReleased && !payment.payerReleased)
+        return 'seller released';
+    else if (payment.released) return 'released';
+
+    //calculate if refunded or not
+    const amount: BigInt = BigInt(payment.amount?.toString() ?? '0;');
+
+    const refundableAmt: BigInt =
+        BigInt(payment.amount?.toString() ?? '0') -
+        BigInt(payment.amountRefunded?.toString() ?? '0');
+
+    if (amount != BigInt(0) && refundableAmt == BigInt(0)) {
+        return 'fully refunded';
+    }
+
+    return 'in escrow';
+}
+
+const EscrowStatus: React.FC<EscrowStatusProps> = ({ payment }) => {
+    const status = getEscrowStatus(payment);
 
     return (
         <div>
             <div className="mt-4 flex justify-between items-center">
                 <div className="flex">
-                    <h2 className="text-lg font-bold">Escrow Status</h2>
+                    <h2 className="text-lg font-bold">
+                        Escrow Status: {status}
+                    </h2>
                 </div>
-            </div>
-            <div className="mt-2">
-                <select
-                    value={escrowStatus}
-                    onChange={handleStatusChange}
-                    className="block w-full mt-2 p-2 rounded text-white bg-primary-black-90"
-                >
-                    {escrowStatusOptions.map((escrowStatus) => (
-                        <option key={escrowStatus} value={escrowStatus}>
-                            {escrowStatus}
-                        </option>
-                    ))}
-                </select>
             </div>
         </div>
     );

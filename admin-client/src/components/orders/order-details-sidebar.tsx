@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { ConfirmStatusChange } from '@/components/orders/confirm-status-change';
 import EscrowStatus from './escrow-status';
+import { getEscrowPayment } from '@/utils/order-escrow';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
@@ -42,9 +43,14 @@ export function OrderDetailsSidebar() {
             if (!orderId) {
                 throw new Error('Order ID is required');
             }
-            return await getSecure('/seller/order/detail', {
+            const order: any = await getSecure('/seller/order/detail', {
                 order_id: orderId,
             });
+            if (order) {
+                order.escrow_payment = await getEscrowPayment(order);
+            }
+
+            return order;
         },
         enabled: !!orderId && isSidebarOpen, // Fetch only when these conditions are met
         refetchOnWindowFocus: false, // Prevent refetching on focus
@@ -62,8 +68,6 @@ export function OrderDetailsSidebar() {
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [newStatus, setNewStatus] = useState<string | null>(null);
-
-    const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
     let currencyCode = orderDetails?.payments[0]?.currency_code;
 
@@ -83,9 +87,6 @@ export function OrderDetailsSidebar() {
             );
         }
     }, [orderDetails]);
-
-    console.log(`STATUS IS ${selectedStatus}`);
-    console.log('Details', orderDetails);
 
     const mutation = useMutation({
         mutationFn: async (newStatus: string) =>
@@ -352,7 +353,9 @@ export function OrderDetailsSidebar() {
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
-                            <EscrowStatus />
+                            <EscrowStatus
+                                payment={orderDetails?.escrow_payment}
+                            />
 
                             <Refund
                                 orderId={orderDetails?.id}
