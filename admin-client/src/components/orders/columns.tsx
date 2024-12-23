@@ -77,7 +77,11 @@ export const OrderSchema = z.object({
         )
         .optional(), // Add payments as an optional array
 });
-import { formatCryptoPrice } from '@/utils/get-product-price';
+import {
+    convertCryptoPrice,
+    formatCryptoPrice,
+} from '@/utils/get-product-price';
+import React from 'react';
 
 // Generate TypeScript type from Zod schema
 export type Order = z.infer<typeof OrderSchema>;
@@ -263,7 +267,28 @@ export const generateColumns = (
                         const paymentStatus = row.getValue(
                             'payment_status'
                         ) as Order['payment_status'];
-                        return <div>{formatStatus(paymentStatus)}</div>;
+                        // Determine the class based on the fulfillment status
+                        let statusClass = 'bg-amber-700 text-black'; // Default gray class
+
+                        if (paymentStatus === 'captured') {
+                            statusClass = 'bg-amber-500 text-black';
+                        } else if (paymentStatus === 'refunded') {
+                            statusClass = 'bg-lime-400 text-black';
+                        } else if (paymentStatus === 'partially_refunded') {
+                            statusClass = 'bg-gray-700 text-white';
+                        } else if (paymentStatus === 'canceled') {
+                            statusClass = 'bg-zinc-900 text-white';
+                        } else if (paymentStatus === 'requires_action') {
+                            statusClass = 'bg-rose-500 text-white';
+                        }
+
+                        return (
+                            <div
+                                className={`inline-block px-4 py-2 rounded-md ${statusClass}`}
+                            >
+                                {formatStatus(paymentStatus)}
+                            </div>
+                        );
                     },
                 };
             case 'fulfillment_status':
@@ -297,14 +322,17 @@ export const generateColumns = (
                         ) as Order['fulfillment_status'];
 
                         // Determine the class based on the fulfillment status
-                        let statusClass = 'bg-gray-800 text-white'; // Default gray class
+                        let statusClass = 'bg-gray-700 text-white'; // Default gray class
                         if (
                             orderStatus === 'fulfilled' ||
-                            orderStatus === 'returned'
+                            orderStatus === 'returned' ||
+                            orderStatus === 'shipped'
                         ) {
                             statusClass = 'bg-lime-400 text-black'; // Green box for fulfilled or returned
                         } else if (orderStatus === 'canceled') {
-                            statusClass = 'bg-rose-500 text-black'; // Red box for canceled
+                            statusClass = 'bg-zinc-900 text-white'; // Red box for canceled
+                        } else if (orderStatus === 'requires_action') {
+                            statusClass = 'bg-rose-500 text-white';
                         }
 
                         // Format the status using your `formatStatus` function
@@ -361,7 +389,39 @@ export const generateColumns = (
                             payments[0]?.currency_code
                         )}`;
 
-                        return <div className="font-medium">{formatted}</div>;
+                        // Use state to handle the asynchronous value
+                        const [convertedPrice, setConvertedPrice] =
+                            React.useState<string | null>(null);
+
+                        React.useEffect(() => {
+                            const fetchConvertedPrice = async () => {
+                                const result = await convertCryptoPrice(
+                                    Number(formatted),
+                                    'eth',
+                                    'usdc'
+                                );
+                                const formattedResult =
+                                    Number(result).toFixed(2);
+                                setConvertedPrice(formattedResult);
+                            };
+
+                            if (payments[0]?.currency_code === 'eth') {
+                                fetchConvertedPrice();
+                            }
+                        }, [payments]);
+
+                        return (
+                            <div className="font-medium">
+                                {/* Render the synchronous formatted value */}
+                                {formatted}
+
+                                {/* Render the asynchronous converted value */}
+                                {convertedPrice !== null &&
+                                    payments[0]?.currency_code === 'eth' && (
+                                        <div>≅ {convertedPrice} (usdc)</div>
+                                    )}
+                            </div>
+                        );
                     },
                 };
 

@@ -3,7 +3,13 @@ import { RouteHandler } from '../../route-handler';
 import PriceConversionService from '../../../services/price-conversion';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-    const handler = new RouteHandler(req, res, 'POST', '/seller/order', []);
+    const handler = new RouteHandler(
+        req,
+        res,
+        'GET',
+        '/seller/exchange-rate',
+        []
+    );
     const priceConversionService: PriceConversionService = req.scope.resolve(
         'priceConversionService'
     );
