@@ -284,6 +284,17 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                 )}
                             </div>
 
+                            <div className="mt-2">
+                                <label className="block text-sm font-medium">
+                                    Amount Refunded: {refundedAmount.toString()}
+                                </label>
+                            </div>
+                            <div className="mt-2">
+                                <label className="block text-sm font-medium">
+                                    Refundable Amount:{' '}
+                                    {refundableAmount.toString()}
+                                </label>
+                            </div>
                             {/* Submit Button */}
                             <div className="mt-4">
                                 <Button
@@ -306,16 +317,6 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                     Refund completed in escrow
                                 </p>
                             )}
-                        </div>
-                        <div className="mt-2">
-                            <label className="block text-sm font-medium">
-                                Amount Refunded: {refundedAmount.toString()}
-                            </label>
-                        </div>
-                        <div className="mt-2">
-                            <label className="block text-sm font-medium">
-                                Refundable Amount: {refundableAmount.toString()}
-                            </label>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
