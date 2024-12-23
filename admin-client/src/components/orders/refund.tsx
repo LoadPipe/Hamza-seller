@@ -106,6 +106,13 @@ const Refund: React.FC<RefundProps> = ({
                         title: 'Escrow Refund',
                         description: 'The escrow refund was successful.',
                     });
+
+                    //clear fields on success to prevent duplicate submissions
+                    setFormData({
+                        ...formData,
+                        refundAmount: '',
+                        note: '',
+                    });
                 } else {
                     toast({
                         variant: 'destructive',
@@ -178,8 +185,6 @@ const Refund: React.FC<RefundProps> = ({
             refundMutation.mutate();
         }
     };
-
-    const isSubmitDisabled = !!errors.refundAmount || !!errors.note;
 
     return (
         <div>
@@ -269,12 +274,11 @@ const Refund: React.FC<RefundProps> = ({
                                             : 'hover:cursor-pointer'
                                     }`}
                                     onClick={handleRefundSubmit}
-                                    disabled={
-                                        isSubmitDisabled &&
-                                        refundMutation.isPending
-                                    }
+                                    disabled={refundMutation.isPending}
                                 >
-                                    Submit Refund
+                                    {refundMutation.isPending
+                                        ? 'Processing refund...'
+                                        : 'Submit Refund'}
                                 </Button>
                             </div>
                             {showSuccessMessage && (
