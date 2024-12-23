@@ -36,12 +36,15 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ payment }) => {
     const status = getEscrowStatus(payment);
 
     return (
-        <div>
-            <div className="mt-4 flex justify-between items-center">
-                <div className="flex">
-                    <h2 className="text-lg font-bold">
-                        Escrow Status: {status}
+        <div className="mt-4 p-4 bg-[#242424] rounded-lg shadow-sm">
+            <div className="flex justify-between items-center">
+                <div className="flex flex-col space-y-1">
+                    <h2 className="text-xl font-bold text-white">
+                        Escrow Status
                     </h2>
+                    <p className="text-sm font-semibold text-[#94d42a]">
+                        {status}
+                    </p>
                 </div>
             </div>
         </div>
