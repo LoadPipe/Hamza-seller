@@ -11,11 +11,8 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import {
-    refundEscrowPayment,
-    getEscrowPayment,
-    convertFromWeiToDisplay,
-} from '@/utils/order-escrow.ts';
+import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
+import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
 import { getCurrencyPrecision } from '@/currency.config';
 
 type RefundProps = {
@@ -286,13 +283,13 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
 
                             <div className="mt-2">
                                 <label className="block text-sm font-medium">
-                                    Amount Refunded: {refundedAmount.toString()}
+                                    Amount Refunded: {refundedAmountToDisplay}
                                 </label>
                             </div>
                             <div className="mt-2">
                                 <label className="block text-sm font-medium">
                                     Refundable Amount:{' '}
-                                    {refundableAmount.toString()}
+                                    {refundableAmountToDisplay}
                                 </label>
                             </div>
                             {/* Submit Button */}
