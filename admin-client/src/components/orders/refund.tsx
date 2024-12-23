@@ -309,12 +309,12 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                         </div>
                         <div className="mt-2">
                             <label className="block text-sm font-medium">
-                                Amount Refunded: 0
+                                Amount Refunded: {refundedAmount.toString()}
                             </label>
                         </div>
                         <div className="mt-2">
                             <label className="block text-sm font-medium">
-                                Refundable Amount: 0
+                                Refundable Amount: {refundableAmount.toString()}
                             </label>
                         </div>
                     </AccordionContent>
