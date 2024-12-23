@@ -50,7 +50,6 @@ import { ChevronDown } from 'lucide-react';
 import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
 import { Order } from '@/components/orders/columns';
 import { useEffect } from 'react';
-import { Switch } from '@/components/ui/switch';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
