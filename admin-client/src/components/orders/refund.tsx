@@ -31,11 +31,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     });
 
     const payment = order?.escrow_payment;
-    let refundedAmount: BigInt = BigInt(0);
     let refundableAmount: BigInt = BigInt(0);
 
     if (payment) {
-        refundedAmount = BigInt(payment.amountRefunded?.toString() ?? '0');
         refundableAmount =
             BigInt(payment.amount?.toString() ?? '0') -
             BigInt(payment.amountRefunded?.toString() ?? '0');
