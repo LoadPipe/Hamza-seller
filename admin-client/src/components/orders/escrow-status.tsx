@@ -8,10 +8,10 @@ const EscrowStatus = () => {
         'released',
         'fully refunded',
     ];
-    const [reason, setReason] = useState('');
+    const [escrowStatus, setEscrowStatus] = useState('');
 
-    const handleReasonChange = (event) => {
-        setReason(event.target.value);
+    const handleStatusChange = (event) => {
+        setEscrowStatus(event.target.value);
     };
 
     return (
@@ -23,8 +23,8 @@ const EscrowStatus = () => {
             </div>
             <div className="mt-2">
                 <select
-                    value={reason}
-                    onChange={handleReasonChange}
+                    value={escrowStatus}
+                    onChange={handleStatusChange}
                     className="block w-full mt-2 p-2 rounded text-white bg-primary-black-90"
                 >
                     {escrowStatusOptions.map((escrowStatus) => (
