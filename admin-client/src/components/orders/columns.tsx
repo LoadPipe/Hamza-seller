@@ -77,7 +77,11 @@ export const OrderSchema = z.object({
         )
         .optional(), // Add payments as an optional array
 });
-import { formatCryptoPrice } from '@/utils/get-product-price';
+import {
+    convertCryptoPrice,
+    formatCryptoPrice,
+} from '@/utils/get-product-price';
+import React from 'react';
 
 // Generate TypeScript type from Zod schema
 export type Order = z.infer<typeof OrderSchema>;
@@ -385,7 +389,39 @@ export const generateColumns = (
                             payments[0]?.currency_code
                         )}`;
 
-                        return <div className="font-medium">{formatted}</div>;
+                        // Use state to handle the asynchronous value
+                        const [convertedPrice, setConvertedPrice] =
+                            React.useState<string | null>(null);
+
+                        React.useEffect(() => {
+                            const fetchConvertedPrice = async () => {
+                                const result = await convertCryptoPrice(
+                                    Number(formatted),
+                                    'eth',
+                                    'usdc'
+                                );
+                                const formattedResult =
+                                    Number(result).toFixed(2);
+                                setConvertedPrice(formattedResult);
+                            };
+
+                            if (payments[0]?.currency_code === 'eth') {
+                                fetchConvertedPrice();
+                            }
+                        }, [payments]);
+
+                        return (
+                            <div className="font-medium">
+                                {/* Render the synchronous formatted value */}
+                                {formatted}
+
+                                {/* Render the asynchronous converted value */}
+                                {convertedPrice !== null &&
+                                    payments[0]?.currency_code === 'eth' && (
+                                        <div>≅ {convertedPrice} (usdc)</div>
+                                    )}
+                            </div>
+                        );
                     },
                 };
 
