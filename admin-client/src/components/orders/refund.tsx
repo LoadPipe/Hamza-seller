@@ -13,6 +13,7 @@ import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
 import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow.ts';
 import { getCurrencyPrecision } from '@/currency.config';
+import { formatStatus } from '@/utils/format-data';
 
 type RefundProps = {
     customerId: string;
@@ -217,6 +218,11 @@ const Refund: React.FC<RefundProps> = ({
                                     name="refundAmount"
                                     value={formData.refundAmount}
                                     onChange={handleInputChange}
+                                    disabled={
+                                        order.payment_status === 'refunded' ||
+                                        order.payment_status === 'canceled' ||
+                                        order.payment_status === 'not_paid'
+                                    }
                                 />
                                 {errors.refundAmount && (
                                     <p className="text-red-500 text-sm mt-1">
@@ -257,6 +263,11 @@ const Refund: React.FC<RefundProps> = ({
                                     }
                                     value={formData.note}
                                     onChange={handleInputChange}
+                                    disabled={
+                                        order.payment_status === 'refunded' ||
+                                        order.payment_status === 'canceled' ||
+                                        order.payment_status === 'not_paid'
+                                    }
                                 />
                                 {errors.note && (
                                     <p className="text-red-500 text-sm mt-1">
@@ -267,19 +278,31 @@ const Refund: React.FC<RefundProps> = ({
 
                             {/* Submit Button */}
                             <div className="mt-4">
-                                <Button
-                                    className={`w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none ${
-                                        refundMutation.isPending
-                                            ? 'animate-pulse cursor-not-allowed'
-                                            : 'hover:cursor-pointer'
-                                    }`}
-                                    onClick={handleRefundSubmit}
-                                    disabled={refundMutation.isPending}
-                                >
-                                    {refundMutation.isPending
-                                        ? 'Processing refund...'
-                                        : 'Submit Refund'}
-                                </Button>
+                                {order.payment_status === 'refunded' ||
+                                order.payment_status === 'canceled' ||
+                                order.payment_status === 'not_paid' ? (
+                                    <div
+                                        className="bg-sky-600 border border-sky-900 text-black px-4 py-3 rounded relative text-center"
+                                        role="alert"
+                                    >
+                                        Cannot refund this payment status: (
+                                        {formatStatus(order.payment_status)})
+                                    </div>
+                                ) : (
+                                    <Button
+                                        className={`w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none ${
+                                            refundMutation.isPending
+                                                ? 'animate-pulse cursor-not-allowed'
+                                                : 'hover:cursor-pointer'
+                                        }`}
+                                        onClick={handleRefundSubmit}
+                                        disabled={refundMutation.isPending}
+                                    >
+                                        {refundMutation.isPending
+                                            ? 'Processing refund...'
+                                            : 'Submit Refund'}
+                                    </Button>
+                                )}
                             </div>
                             {showSuccessMessage && (
                                 <p className="text-green-600 font-medium mt-2">
