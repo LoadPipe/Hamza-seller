@@ -283,6 +283,16 @@ const Refund: React.FC<RefundProps> = ({
                                 </p>
                             )}
                         </div>
+                        <div className="mt-2">
+                            <label className="block text-sm font-medium">
+                                Amount Refunded: 0
+                            </label>
+                        </div>
+                        <div className="mt-2">
+                            <label className="block text-sm font-medium">
+                                Refundable Amount: 0
+                            </label>
+                        </div>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>

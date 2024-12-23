@@ -26,6 +26,7 @@ import { getOrderStatusName } from '@/utils/check-order-status.ts';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { ConfirmStatusChange } from '@/components/orders/confirm-status-change';
+import EscrowStatus from './escrow-status';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
@@ -61,6 +62,8 @@ export function OrderDetailsSidebar() {
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [newStatus, setNewStatus] = useState<string | null>(null);
+
+    const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
     let currencyCode = orderDetails?.payments[0]?.currency_code;
 
@@ -348,6 +351,8 @@ export function OrderDetailsSidebar() {
                             <Timeline orderDetails={statusDetails} />
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
+
+                            <EscrowStatus />
 
                             <Refund
                                 orderId={orderDetails?.id}
