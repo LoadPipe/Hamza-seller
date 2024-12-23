@@ -2,6 +2,17 @@ import { getCurrencyPrecision } from '@/currency.config';
 import { EscrowClient, PaymentDefinition } from '@/web3/contracts/escrow';
 import { BigNumber, BigNumberish, ethers, providers, Signer } from 'ethers';
 
+export function convertFromWeiToDisplay(
+    amount: string | number,
+    currencyCode: string,
+    chainId: number
+): string {
+    //const precision = getCurrencyPrecision(currencyCode, chainId);
+    console.log(currencyCode);
+    console.log(chainId);
+    return amount.toString();
+}
+
 /**
  * Converts any number decimal number (expressed as string or number) to an appropriate
  * number of wei units, given the currency.

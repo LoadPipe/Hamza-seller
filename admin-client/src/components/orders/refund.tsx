@@ -11,30 +11,54 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow.ts';
+import {
+    refundEscrowPayment,
+    getEscrowPayment,
+    convertFromWeiToDisplay,
+} from '@/utils/order-escrow.ts';
 import { getCurrencyPrecision } from '@/currency.config';
 
 type RefundProps = {
-    customerId: string;
     refundAmount?: number;
-    orderId: string;
     order: any;
     chainId: number;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({
-    refundAmount,
-    orderId,
-    order,
-    chainId,
-}) => {
+const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
         note: '',
     });
+
+    const payment = order?.escrow_payment;
+    let refundedAmount: BigInt = BigInt(0);
+    let refundableAmount: BigInt = BigInt(0);
+
+    if (payment) {
+        refundedAmount = BigInt(payment.amountRefunded?.toString() ?? '0');
+        refundableAmount =
+            BigInt(payment.amount?.toString() ?? '0') -
+            BigInt(payment.amountRefunded?.toString() ?? '0');
+    }
+
+    const refundableAmountToDisplay = convertFromWeiToDisplay(
+        refundableAmount.toString(),
+        order?.currency_code,
+        chainId
+    );
+
+    const refundedAmountToDisplay = convertFromWeiToDisplay(
+        refundableAmount.toString(),
+        order?.currency_code,
+        chainId
+    );
+
+    //get order id
+    const orderId = order?.id ?? '';
+
     const [errors, setErrors] = useState({
         refundAmount: '',
         note: '',
