@@ -371,6 +371,7 @@ export default class StoreOrderService extends TransactionBaseService {
                     'items.variant.product',
                     'customer.walletAddresses',
                     'shipping_address',
+                    'shipping_methods',
                     'payments',
                     'histories',
                     'refunds',

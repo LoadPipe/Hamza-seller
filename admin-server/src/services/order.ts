@@ -765,7 +765,7 @@ export default class OrderService extends MedusaOrderService {
 
             if (refundAmount > refundableAmount) {
                 throw new Error(
-                    `Refund amount exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`
+                    `Refund amount ${refundAmount} exceeds the refundable amount. Maximum refundable amount is ${refundableAmount}.`
                 );
             }
 
