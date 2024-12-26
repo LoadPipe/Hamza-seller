@@ -11,30 +11,51 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow.ts';
+import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
+import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
 import { getCurrencyPrecision } from '@/currency.config';
 
 type RefundProps = {
-    customerId: string;
     refundAmount?: number;
-    orderId: string;
     order: any;
     chainId: number;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({
-    refundAmount,
-    orderId,
-    order,
-    chainId,
-}) => {
+const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
         note: '',
     });
+
+    const payment = order?.escrow_payment;
+    let refundableAmount: BigInt = BigInt(0);
+    let refundedAmount: BigInt = BigInt(0);
+
+    if (payment) {
+        refundedAmount = BigInt(payment.amountRefunded?.toString() ?? '0');
+        refundableAmount =
+            BigInt(payment.amount?.toString() ?? '0') -
+            BigInt(payment.amountRefunded?.toString() ?? '0');
+    }
+
+    const refundableAmountToDisplay = convertFromWeiToDisplay(
+        refundableAmount.toString(),
+        order?.currency_code,
+        chainId
+    );
+
+    const refundedAmountToDisplay = convertFromWeiToDisplay(
+        refundedAmount.toString(),
+        order?.currency_code,
+        chainId
+    );
+
+    //get order id
+    const orderId = order?.id ?? '';
+
     const [errors, setErrors] = useState({
         refundAmount: '',
         note: '',
@@ -105,6 +126,13 @@ const Refund: React.FC<RefundProps> = ({
                         variant: 'default',
                         title: 'Escrow Refund',
                         description: 'The escrow refund was successful.',
+                    });
+
+                    //clear fields on success to prevent duplicate submissions
+                    setFormData({
+                        ...formData,
+                        refundAmount: '',
+                        note: '',
                     });
                 } else {
                     toast({
@@ -178,8 +206,6 @@ const Refund: React.FC<RefundProps> = ({
             refundMutation.mutate();
         }
     };
-
-    const isSubmitDisabled = !!errors.refundAmount || !!errors.note;
 
     return (
         <div>
@@ -260,6 +286,17 @@ const Refund: React.FC<RefundProps> = ({
                                 )}
                             </div>
 
+                            <div className="mt-2">
+                                <label className="block text-sm font-medium">
+                                    Amount Refunded: {refundedAmountToDisplay}
+                                </label>
+                            </div>
+                            <div className="mt-2">
+                                <label className="block text-sm font-medium">
+                                    Refundable Amount:{' '}
+                                    {refundableAmountToDisplay}
+                                </label>
+                            </div>
                             {/* Submit Button */}
                             <div className="mt-4">
                                 <Button
@@ -269,12 +306,11 @@ const Refund: React.FC<RefundProps> = ({
                                             : 'hover:cursor-pointer'
                                     }`}
                                     onClick={handleRefundSubmit}
-                                    disabled={
-                                        isSubmitDisabled &&
-                                        refundMutation.isPending
-                                    }
+                                    disabled={refundMutation.isPending}
                                 >
-                                    Submit Refund
+                                    {refundMutation.isPending
+                                        ? 'Processing refund...'
+                                        : 'Submit Refund'}
                                 </Button>
                             </div>
                             {showSuccessMessage && (
