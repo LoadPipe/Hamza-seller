@@ -4,10 +4,12 @@ import { WalletConnect } from './wallet-connect/WalletConnect';
 import { useQuery } from '@tanstack/react-query';
 import { getSecure } from '@/utils/api-calls';
 import { getJwtStoreId } from '@/utils/authentication';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import { useEffect } from 'react';
 
 const TopDash = () => {
+    const { setCustomerPreferredCurrency } = useCustomerAuthStore();
     const store_id = getJwtStoreId();
-
     const { data: storeName } = useQuery({
         queryKey: ['store', store_id],
         queryFn: async () => {
@@ -17,6 +19,23 @@ const TopDash = () => {
         },
         enabled: !!store_id,
     });
+
+    const store_id2 = getJwtStoreId();
+    const { data: storeCurrency } = useQuery({
+        queryKey: ['store-currency', store_id2],
+        queryFn: async () => {
+            return await getSecure('/seller/store/default-currency', {
+                store_id: store_id2,
+            });
+        },
+        enabled: !!store_id2,
+    });
+
+    useEffect(() => {
+        if (storeCurrency) {
+            setCustomerPreferredCurrency(storeCurrency);
+        }
+    }, [storeCurrency, setCustomerPreferredCurrency]);
 
     return (
         <div className="flex flex-col text-white">

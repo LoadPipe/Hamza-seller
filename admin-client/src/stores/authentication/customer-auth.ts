@@ -12,7 +12,7 @@ type State = {
         status: AuthenticationStatus;
         is_verified: boolean;
     };
-    preferred_currency_code: string | null;
+    preferred_currency_code: string;
     storeDetails: {
         name: string;
         default_currency_code: string;
@@ -42,7 +42,7 @@ export const useCustomerAuthStore = create<State & Actions>()(
                 token: '',
                 wallet_address: '',
             },
-            preferred_currency_code: null,
+            preferred_currency_code: '',
             storeDetails: null, // Initialize storeDetails as null
 
             setStatus: (status: AuthenticationStatus) => {

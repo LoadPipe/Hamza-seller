@@ -378,6 +378,8 @@ export const generateColumns = (
                         </Button>
                     ),
                     cell: ({ row }) => {
+                        const { preferred_currency_code } =
+                            useCustomerAuthStore();
                         const payments = row.getValue('payments') as
                             | {
                                   amount: number;
@@ -389,31 +391,66 @@ export const generateColumns = (
                             return <div>--</div>; // No payments available
                         }
 
-                        const formatted = `${formatCryptoPrice(
-                            payments[0]?.amount,
-                            payments[0]?.currency_code
-                        )}`;
-
                         // Use state to handle the asynchronous value
                         const [convertedPrice, setConvertedPrice] =
                             React.useState<string | null>(null);
 
-                        React.useEffect(() => {
-                            const fetchConvertedPrice = async () => {
-                                const result = await convertCryptoPrice(
-                                    Number(formatted),
-                                    'eth',
-                                    'usdc'
-                                );
-                                const formattedResult =
-                                    Number(result).toFixed(2);
-                                setConvertedPrice(formattedResult);
-                            };
+                        let formatted:
+                            | string
+                            | number
+                            | boolean
+                            | React.ReactElement<
+                                  any,
+                                  string | React.JSXElementConstructor<any>
+                              >
+                            | Iterable<React.ReactNode>
+                            | null
+                            | undefined;
+                        if (preferred_currency_code !== '') {
+                            formatted = `${formatCryptoPrice(
+                                payments[0]?.amount,
+                                preferred_currency_code
+                            )}`;
 
-                            if (payments[0]?.currency_code === 'eth') {
-                                fetchConvertedPrice();
-                            }
-                        }, [payments]);
+                            React.useEffect(() => {
+                                const fetchConvertedPrice = async () => {
+                                    const result = await convertCryptoPrice(
+                                        Number(formatted),
+                                        'eth',
+                                        'usdc'
+                                    );
+                                    const formattedResult =
+                                        Number(result).toFixed(2);
+                                    setConvertedPrice(formattedResult);
+                                };
+
+                                if (preferred_currency_code === 'eth') {
+                                    fetchConvertedPrice();
+                                }
+                            }, [payments]);
+                        } else {
+                            formatted = `${formatCryptoPrice(
+                                payments[0]?.amount,
+                                payments[0]?.currency_code
+                            )}`;
+
+                            React.useEffect(() => {
+                                const fetchConvertedPrice = async () => {
+                                    const result = await convertCryptoPrice(
+                                        Number(formatted),
+                                        'eth',
+                                        'usdc'
+                                    );
+                                    const formattedResult =
+                                        Number(result).toFixed(2);
+                                    setConvertedPrice(formattedResult);
+                                };
+
+                                if (payments[0]?.currency_code === 'eth') {
+                                    fetchConvertedPrice();
+                                }
+                            }, [payments]);
+                        }
 
                         return (
                             <div className="font-medium">
@@ -422,6 +459,12 @@ export const generateColumns = (
 
                                 {/* Render the asynchronous converted value */}
                                 {convertedPrice !== null &&
+                                    preferred_currency_code === 'eth' && (
+                                        <div>≅ {convertedPrice} (usdc)</div>
+                                    )}
+
+                                {convertedPrice !== null &&
+                                    preferred_currency_code === '' &&
                                     payments[0]?.currency_code === 'eth' && (
                                         <div>≅ {convertedPrice} (usdc)</div>
                                     )}
