@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
 import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
 import { getCurrencyPrecision } from '@/currency.config';
+import { getJwtWalletAddress } from '@/utils/authentication';
 
 type RefundProps = {
     refundAmount?: number;
@@ -78,6 +79,24 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
             dbAmount.toString() +
             ''.padEnd(precision.native - precision.db, '0');
         return bcAmount;
+    };
+
+    // Pre-validate if you are the seller of this order,
+    // this mutation will be harder to maintain if we keep adding complexity...
+    const validateSeller = async (order: any): Promise<boolean> => {
+        const sellerAddress = order?.payments[0]?.receiver_address;
+        const walletAddress = getJwtWalletAddress();
+
+        if (sellerAddress !== walletAddress) {
+            toast({
+                variant: 'destructive',
+                title: 'Validation Error',
+                description: 'You are not the seller of this order.',
+            });
+            return false;
+        }
+
+        return true;
     };
 
     const refundMutation = useMutation({
@@ -201,8 +220,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
         return !newErrors.refundAmount && !newErrors.note;
     };
 
-    const handleRefundSubmit = () => {
-        if (validateForm()) {
+    const handleRefundSubmit = async () => {
+        const isValid = await validateSeller(order); // Wait for the promise to resolve
+        if (validateForm() && isValid) {
             refundMutation.mutate();
         }
     };
