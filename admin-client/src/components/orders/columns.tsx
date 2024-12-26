@@ -156,10 +156,11 @@ export const generateColumns = (
                     cell: ({ row }) => {
                         const orderId: string = row.getValue('id');
                         // Truncate after 11 characters and add ellipsis
+                        // Truncate to show the end of the string and add ellipsis
                         const cleanedId = orderId.replace(/^order_/, '#');
                         const truncatedId =
                             cleanedId.length > 11
-                                ? `${cleanedId.slice(0, 11)}...`
+                                ? `...${cleanedId.slice(-11)}` // Show the last 11 characters
                                 : cleanedId;
                         return <div>{truncatedId}</div>;
                     },
