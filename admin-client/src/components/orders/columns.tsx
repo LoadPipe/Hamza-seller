@@ -499,12 +499,19 @@ export const generateColumns = (
                         </Button>
                     ),
                     cell: ({ row }) => {
+                        const { preferred_currency_code } =
+                            useCustomerAuthStore();
+
                         const currencyCode = row.getValue(
                             'currency_code'
                         ) as string;
 
                         return (
-                            <div className="font-medium">{currencyCode}</div>
+                            <div className="font-medium">
+                                {preferred_currency_code !== ''
+                                    ? preferred_currency_code
+                                    : currencyCode}
+                            </div>
                         );
                     },
                 };
