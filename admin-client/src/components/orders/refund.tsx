@@ -221,17 +221,21 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                 type="single"
                 defaultValue="refund-details"
                 collapsible
-                className="mt-4"
+                className="mt-4 "
             >
                 <AccordionItem value="refund-details">
                     <AccordionTrigger>Refund Details</AccordionTrigger>
                     <AccordionContent>
                         <div>
-                            <div className="mt-2">
+                            <div className="flex flex-col mt-4 gap-3">
                                 <label className="block text-sm font-medium">
                                     Refund Amount
                                 </label>
                                 <Input
+                                    style={{
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                    }}
                                     type="number"
                                     step="0.01"
                                     min="0"
@@ -252,6 +256,10 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                     Reason
                                 </label>
                                 <select
+                                    style={{
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                    }}
                                     name="reason"
                                     value={formData.reason}
                                     onChange={handleSelectChange}
@@ -266,13 +274,17 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                             </div>
 
                             {/* Note */}
-                            <div className="mt-2">
+                            <div className="flex flex-col mt-2 gap-3">
                                 <label className="block text-sm font-medium">
                                     Note
                                 </label>
                                 <Input
                                     type="text"
                                     name="note"
+                                    style={{
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                    }}
                                     placeholder={
                                         'Enter your note about this order refund.'
                                     }
@@ -286,17 +298,22 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                 )}
                             </div>
 
-                            <div className="mt-2">
+                            <div className="flex flex-row my-5 justify-evenly">
                                 <label className="block text-sm font-medium">
-                                    Amount Refunded: {refundedAmountToDisplay}
+                                    Amount Refunded:{' '}
+                                    <span className="text-[#94d42a]">
+                                        {refundedAmountToDisplay}
+                                    </span>
                                 </label>
-                            </div>
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
+
+                                <label className="block text-sm font-medium ">
                                     Refundable Amount:{' '}
-                                    {refundableAmountToDisplay}
+                                    <span className="text-[#94d42a]">
+                                        {refundableAmountToDisplay}
+                                    </span>
                                 </label>
                             </div>
+
                             {/* Submit Button */}
                             <div className="mt-4">
                                 <Button
