@@ -1,4 +1,8 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+    QueryClient,
+    QueryClientProvider,
+    useQuery,
+} from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { WagmiProvider } from 'wagmi';
 import {
@@ -14,12 +18,15 @@ import {
     sendVerifyRequest,
     getNonce,
     setJwtCookie,
+    getJwtStoreId,
 } from '@/utils/authentication/';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import LoginPage from '@/pages/login/login-page.tsx';
+import { getSecure } from '@/utils/api-calls.ts';
 
 export function RainbowWrapper({ children }: { children: React.ReactNode }) {
-    const { authData, setCustomerAuthData } = useCustomerAuthStore();
+    const { authData, setCustomerAuthData, setCustomerPreferredCurrency } =
+        useCustomerAuthStore();
 
     const walletSignature = createAuthenticationAdapter({
         getNonce: async () => {
@@ -70,6 +77,8 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                         is_verified: true,
                         status: 'authenticated',
                     });
+
+                    console.log('mother fucking token', response.data);
                 }
 
                 return response.data;

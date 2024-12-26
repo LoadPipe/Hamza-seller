@@ -13,6 +13,10 @@ type State = {
         is_verified: boolean;
     };
     preferred_currency_code: string | null;
+    storeDetails: {
+        name: string;
+        default_currency_code: string;
+    } | null;
 };
 
 type Actions = {
@@ -23,6 +27,7 @@ type Actions = {
     setCustomerPreferredCurrency: (currency: string) => void;
     setIsVerified: (isVerified: boolean) => void;
     setStatus: (status: AuthenticationStatus) => void;
+    setStoreDetails: (details: State['storeDetails']) => void;
 };
 
 export const useCustomerAuthStore = create<State & Actions>()(
@@ -37,8 +42,8 @@ export const useCustomerAuthStore = create<State & Actions>()(
                 token: '',
                 wallet_address: '',
             },
-
             preferred_currency_code: null,
+            storeDetails: null, // Initialize storeDetails as null
 
             setStatus: (status: AuthenticationStatus) => {
                 set((state) => ({
@@ -49,26 +54,18 @@ export const useCustomerAuthStore = create<State & Actions>()(
                 }));
             },
 
-            // Correctly define setWalletAddress
             setWalletAddress: (walletAddress: string) => {
-                set({
-                    walletAddress,
-                });
+                set({ walletAddress });
             },
 
-            // Define setCustomerAuthData
             setCustomerAuthData: (authData) => {
-                set({
-                    authData: authData,
-                });
+                set({ authData });
             },
 
-            // Define setCustomerPreferredCurrency
             setCustomerPreferredCurrency: (currency) => {
                 set({ preferred_currency_code: currency });
             },
 
-            // Define setIsVerified
             setIsVerified: (isVerified: boolean) => {
                 set((state) => ({
                     authData: {
@@ -77,14 +74,17 @@ export const useCustomerAuthStore = create<State & Actions>()(
                     },
                 }));
             },
-            // Define setHnsAvatar
+
             setHnsAvatar: (hnsAvatar: string | null) => {
                 set({ hnsAvatar });
             },
 
-            // Define setHnsName
             setHnsName: (hnsName: string | null) => {
                 set({ hnsName });
+            },
+
+            setStoreDetails: (details) => {
+                set({ storeDetails: details });
             },
         }),
 

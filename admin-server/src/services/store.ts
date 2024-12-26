@@ -99,6 +99,15 @@ class StoreService extends MedusaStoreService {
         return store.name;
     }
 
+    async getStoreCurrencyById(store_id: string) {
+        const store = await this.storeRepository_.findOne({
+            where: { id: store_id },
+            select: ['default_currency_code'],
+        });
+
+        return store.default_currency_code;
+    }
+
     async update(data: UpdateStoreInput) {
         return super.update(data);
     }
