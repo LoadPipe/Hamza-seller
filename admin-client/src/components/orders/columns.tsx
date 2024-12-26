@@ -381,93 +381,58 @@ export const generateColumns = (
                         const { preferred_currency_code } =
                             useCustomerAuthStore();
                         const payments = row.getValue('payments') as
-                            | {
-                                  amount: number;
-                                  currency_code: string;
-                              }[]
+                            | { amount: number; currency_code: string }[]
                             | undefined;
 
+                        // Handle no payments case
                         if (!payments || payments.length === 0) {
-                            return <div>--</div>; // No payments available
+                            return <div>--</div>;
                         }
 
-                        // Use state to handle the asynchronous value
+                        // State for converted price
                         const [convertedPrice, setConvertedPrice] =
                             React.useState<string | null>(null);
 
-                        let formatted:
-                            | string
-                            | number
-                            | boolean
-                            | React.ReactElement<
-                                  any,
-                                  string | React.JSXElementConstructor<any>
-                              >
-                            | Iterable<React.ReactNode>
-                            | null
-                            | undefined;
-                        if (preferred_currency_code !== '') {
-                            formatted = `${formatCryptoPrice(
-                                payments[0]?.amount,
-                                preferred_currency_code
-                            )}`;
+                        // Determine base and target currencies
+                        const payment = payments[0];
+                        const baseCurrency =
+                            preferred_currency_code !== ''
+                                ? preferred_currency_code
+                                : payment.currency_code;
+                        const showConversion = baseCurrency === 'eth';
 
-                            React.useEffect(() => {
+                        // Format initial price
+                        const formattedPrice = formatCryptoPrice(
+                            payment.amount,
+                            baseCurrency
+                        );
+
+                        // Fetch converted price if necessary
+                        React.useEffect(() => {
+                            if (showConversion) {
                                 const fetchConvertedPrice = async () => {
                                     const result = await convertCryptoPrice(
-                                        Number(formatted),
+                                        Number(payment.amount),
                                         'eth',
                                         'usdc'
                                     );
-                                    const formattedResult =
-                                        Number(result).toFixed(2);
-                                    setConvertedPrice(formattedResult);
-                                };
-
-                                if (preferred_currency_code === 'eth') {
-                                    fetchConvertedPrice();
-                                }
-                            }, [payments]);
-                        } else {
-                            formatted = `${formatCryptoPrice(
-                                payments[0]?.amount,
-                                payments[0]?.currency_code
-                            )}`;
-
-                            React.useEffect(() => {
-                                const fetchConvertedPrice = async () => {
-                                    const result = await convertCryptoPrice(
-                                        Number(formatted),
-                                        'eth',
-                                        'usdc'
+                                    setConvertedPrice(
+                                        Number(result).toFixed(2)
                                     );
-                                    const formattedResult =
-                                        Number(result).toFixed(2);
-                                    setConvertedPrice(formattedResult);
                                 };
-
-                                if (payments[0]?.currency_code === 'eth') {
-                                    fetchConvertedPrice();
-                                }
-                            }, [payments]);
-                        }
+                                fetchConvertedPrice();
+                            }
+                        }, [payment, showConversion]);
 
                         return (
                             <div className="font-medium">
-                                {/* Render the synchronous formatted value */}
-                                {formatted}
+                                {/* Render formatted price */}
+                                {formattedPrice}
 
-                                {/* Render the asynchronous converted value */}
-                                {convertedPrice !== null &&
-                                    preferred_currency_code === 'eth' && (
-                                        <div>≅ {convertedPrice} (usdc)</div>
-                                    )}
-
-                                {convertedPrice !== null &&
-                                    preferred_currency_code === '' &&
-                                    payments[0]?.currency_code === 'eth' && (
-                                        <div>≅ {convertedPrice} (usdc)</div>
-                                    )}
+                                {/* Render converted price if available */}
+                                {showConversion && convertedPrice !== null && (
+                                    <div>≅ {convertedPrice} (usdc)</div>
+                                )}
                             </div>
                         );
                     },
