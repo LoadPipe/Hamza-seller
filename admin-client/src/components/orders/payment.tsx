@@ -6,7 +6,7 @@ type PaymentProps = {
     subtotal: string | number;
     discount: number;
     currencyCode: string;
-    shippingFee: string;
+    shippingFee: string | number;
     total: string | number;
 };
 
@@ -61,18 +61,28 @@ const Payment: React.FC<PaymentProps> = ({
                         {subtotal}
                     </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                     <span className="text-white font-semibold text-sm">
                         Discount
                     </span>
+                    <img
+                        className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                        src={currencyIcons[currencyCode ?? 'usdc']}
+                        alt={currencyCode ?? 'usdc'}
+                    />
                     <span className="text-white font-semibold text-lg">
                         {discount}
                     </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                     <span className="text-white font-semibold text-sm">
                         Shipping fee
                     </span>
+                    <img
+                        className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                        src={currencyIcons[currencyCode ?? 'usdc']}
+                        alt={currencyCode ?? 'usdc'}
+                    />
                     <span className="text-white font-semibold text-lg">
                         {shippingFee}
                     </span>

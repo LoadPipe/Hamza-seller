@@ -398,7 +398,11 @@ export function OrderDetailsSidebar() {
                             <Payment
                                 subtotal={`${formatCryptoPrice(totalPrice, currencyCode)}`}
                                 discount={0} // Adjust as needed
-                                shippingFee="0.00" // Adjust as needed
+                                shippingFee={formatCryptoPrice(
+                                    orderDetails?.shipping_methods[0]?.price ??
+                                        0,
+                                    currencyCode
+                                )} // Adjust as needed
                                 currencyCode={currencyCode}
                                 total={formatCryptoPrice(
                                     orderDetails?.payments[0]?.amount ?? 0,
