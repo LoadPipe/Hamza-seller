@@ -235,6 +235,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                     style={{
                                         backgroundColor: '#242424',
                                         height: '40px',
+                                        border: 'none',
                                     }}
                                     type="number"
                                     step="0.01"
@@ -255,22 +256,30 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                 <label className="block text-sm font-medium">
                                     Reason
                                 </label>
-                                <select
-                                    style={{
-                                        backgroundColor: '#242424',
-                                        height: '40px',
-                                    }}
-                                    name="reason"
-                                    value={formData.reason}
-                                    onChange={handleSelectChange}
-                                    className="block w-full mt-2 pl-2  rounded text-white  "
-                                >
-                                    {reasonOptions.map((reason) => (
-                                        <option key={reason} value={reason}>
-                                            {reason}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        style={{
+                                            backgroundColor: '#242424',
+                                            height: '40px',
+                                            backgroundImage:
+                                                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E\")",
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: '10px center',
+                                            backgroundSize: '12px',
+                                            borderRadius: '6px',
+                                        }}
+                                        name="reason"
+                                        value={formData.reason}
+                                        onChange={handleSelectChange}
+                                        className="block w-full mt-2 pl-10 rounded text-white appearance-none"
+                                    >
+                                        {reasonOptions.map((reason) => (
+                                            <option key={reason} value={reason}>
+                                                {reason}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             {/* Note */}
@@ -282,6 +291,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                     type="text"
                                     name="note"
                                     style={{
+                                        border: 'none',
                                         backgroundColor: '#242424',
                                         height: '40px',
                                     }}
