@@ -363,7 +363,7 @@ export function OrderDetailsSidebar() {
                             />
 
                             {/* Items */}
-                            <div className="flex flex-col">
+                            <div className="flex flex-col mt-4">
                                 <h2 className="text-primary-black-60 text-md leading-relaxed mb-4">
                                     ITEMS
                                 </h2>
