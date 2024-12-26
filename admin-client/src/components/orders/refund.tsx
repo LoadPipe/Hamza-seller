@@ -156,11 +156,11 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
             }
         },
         onError: (error: any) => {
+            console.error(error);
             toast({
                 variant: 'destructive',
                 title: 'Refund Error',
-                description: `Refund amount exceeds the refundable amount.
-                ${error}`,
+                description: `Failed to process the refund; rejected by contract.`,
             });
         },
     });
