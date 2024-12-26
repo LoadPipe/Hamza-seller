@@ -222,17 +222,22 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                 type="single"
                 defaultValue="refund-details"
                 collapsible
-                className="mt-4"
+                className="mt-4 "
             >
                 <AccordionItem value="refund-details">
                     <AccordionTrigger>Refund Details</AccordionTrigger>
                     <AccordionContent>
                         <div>
-                            <div className="mt-2">
+                            <div className="flex flex-col mt-4 gap-3">
                                 <label className="block text-sm font-medium">
                                     Refund Amount
                                 </label>
                                 <Input
+                                    style={{
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                        border: 'none',
+                                    }}
                                     type="number"
                                     step="0.01"
                                     min="0"
@@ -257,28 +262,45 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                 <label className="block text-sm font-medium">
                                     Reason
                                 </label>
-                                <select
-                                    name="reason"
-                                    value={formData.reason}
-                                    onChange={handleSelectChange}
-                                    className="block w-full mt-2 p-2 rounded text-white  bg-primary-black-90"
-                                >
-                                    {reasonOptions.map((reason) => (
-                                        <option key={reason} value={reason}>
-                                            {reason}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        style={{
+                                            backgroundColor: '#242424',
+                                            height: '40px',
+                                            backgroundImage:
+                                                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E\")",
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: '10px center',
+                                            backgroundSize: '12px',
+                                            borderRadius: '6px',
+                                        }}
+                                        name="reason"
+                                        value={formData.reason}
+                                        onChange={handleSelectChange}
+                                        className="block w-full mt-2 pl-10 rounded text-white appearance-none"
+                                    >
+                                        {reasonOptions.map((reason) => (
+                                            <option key={reason} value={reason}>
+                                                {reason}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             {/* Note */}
-                            <div className="mt-2">
+                            <div className="flex flex-col mt-2 gap-3">
                                 <label className="block text-sm font-medium">
                                     Note
                                 </label>
                                 <Input
                                     type="text"
                                     name="note"
+                                    style={{
+                                        border: 'none',
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                    }}
                                     placeholder={
                                         'Enter your note about this order refund.'
                                     }
@@ -297,17 +319,22 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                 )}
                             </div>
 
-                            <div className="mt-2">
+                            <div className="flex flex-row my-5 justify-evenly">
                                 <label className="block text-sm font-medium">
-                                    Amount Refunded: {refundedAmountToDisplay}
+                                    Amount Refunded:{' '}
+                                    <span className="text-[#94d42a]">
+                                        {refundedAmountToDisplay}
+                                    </span>
                                 </label>
-                            </div>
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
+
+                                <label className="block text-sm font-medium ">
                                     Refundable Amount:{' '}
-                                    {refundableAmountToDisplay}
+                                    <span className="text-[#94d42a]">
+                                        {refundableAmountToDisplay}
+                                    </span>
                                 </label>
                             </div>
+
                             {/* Submit Button */}
                             <div className="mt-4">
                                 {order.payment_status === 'refunded' ||
