@@ -82,9 +82,6 @@ import {
     formatCryptoPrice,
 } from '@/utils/get-product-price';
 import React from 'react';
-import { getJwtStoreId } from '@/utils/authentication';
-import { getSecure } from '@/utils/api-calls';
-import { useQuery } from '@tanstack/react-query';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 
 // Generate TypeScript type from Zod schema
