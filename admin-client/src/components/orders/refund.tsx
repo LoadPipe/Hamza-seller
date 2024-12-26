@@ -263,7 +263,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                                     name="reason"
                                     value={formData.reason}
                                     onChange={handleSelectChange}
-                                    className="block w-full mt-2 p-2 rounded text-white  bg-primary-black-90"
+                                    className="block w-full mt-2 pl-2  rounded text-white  "
                                 >
                                     {reasonOptions.map((reason) => (
                                         <option key={reason} value={reason}>
