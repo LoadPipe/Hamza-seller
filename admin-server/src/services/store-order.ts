@@ -384,6 +384,11 @@ export default class StoreOrderService extends TransactionBaseService {
 
             await this.syncEscrowPaymentForOrder(order);
 
+            //filter out unconfirmed refunds
+            if (order.refunds) {
+                order.refunds = order.refunds.filter((r: any) => r.confirmed);
+            }
+
             return order;
         } catch (error) {
             this.logger.error(
