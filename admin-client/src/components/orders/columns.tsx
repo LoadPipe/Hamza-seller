@@ -537,13 +537,17 @@ export const generateColumns = (
                                     >
                                         View order details
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            openOrderEscrowDialog(order)
-                                        }
-                                    >
-                                        Release Escrow
-                                    </DropdownMenuItem>
+                                    {order.payment_status !== 'refunded' &&
+                                        order.payment_status !== 'canceled' &&
+                                        order.payment_status !== 'not_paid' && (
+                                            <DropdownMenuItem
+                                                onClick={() =>
+                                                    openOrderEscrowDialog(order)
+                                                }
+                                            >
+                                                Release Escrow
+                                            </DropdownMenuItem>
+                                        )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         );
