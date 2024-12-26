@@ -91,7 +91,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
             toast({
                 variant: 'destructive',
                 title: 'Validation Error',
-                description: 'You are not the seller of this order.',
+                description: `Only the owner of wallet ${order?.payments[0]?.receiver_address} may modify this escrow.`,
             });
             return false;
         }
