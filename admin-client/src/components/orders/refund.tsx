@@ -15,6 +15,7 @@ import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
 import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
 import { getCurrencyPrecision } from '@/currency.config';
 import { formatStatus } from '@/utils/format-data';
+import { validateSeller } from '@/utils/validation-functions/validate-seller';
 
 type RefundProps = {
     refundAmount?: number;
@@ -202,8 +203,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
         return !newErrors.refundAmount && !newErrors.note;
     };
 
-    const handleRefundSubmit = () => {
-        if (validateForm()) {
+    const handleRefundSubmit = async () => {
+        const isValid = await validateSeller(order, toast);
+        if (validateForm() && isValid) {
             refundMutation.mutate();
         }
     };

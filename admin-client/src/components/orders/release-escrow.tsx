@@ -16,13 +16,17 @@ import { Rocket } from 'lucide-react';
 import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { validateSeller } from '@/utils/validation-functions/validate-seller';
 
 export function ReleaseEscrow() {
     const { isOpen, order } = useStore(orderEscrowStore);
     const { toast } = useToast();
 
-    const mutation = useMutation({
-        mutationFn: async (order: any) => await releaseEscrowPayment(order),
+    const releaseEscrowMutation = useMutation({
+        mutationFn: async (order: any) => {
+            // Escrow release logic
+            await releaseEscrowPayment(order);
+        },
         onSuccess: () => {
             toast({
                 variant: 'default',
@@ -41,6 +45,14 @@ export function ReleaseEscrow() {
             });
         },
     });
+
+    const handleConfirm = async () => {
+        const isValid = await validateSeller(order, toast);
+        closeOrderEscrowDialog();
+        if (isValid) {
+            releaseEscrowMutation.mutate(order);
+        }
+    };
 
     if (!isOpen || !order) return null;
 
@@ -72,10 +84,7 @@ export function ReleaseEscrow() {
                     </Button>
                     <Button
                         className="bg-primary-purple-90 rounded-[53px] hover:border-none w-[200px] h-[52px] hover:bg-primary-green-900"
-                        onClick={() => {
-                            mutation.mutate(order);
-                            closeOrderEscrowDialog();
-                        }}
+                        onClick={handleConfirm}
                     >
                         Confirm Request
                     </Button>
