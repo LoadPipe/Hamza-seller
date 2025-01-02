@@ -1,6 +1,6 @@
 import HamzaLogo from '../../../public/Hamza-logo.svg';
 import { WalletConnect } from '@/components/wallet-connect/WalletConnect';
-import HomeBgImage from '../../../public/images/home_bg_image.png';
+import HomeBgImage from '../../../public/images/home_bg_image.webp';
 
 export default function LoginPage() {
     return (
