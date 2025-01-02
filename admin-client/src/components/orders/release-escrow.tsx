@@ -12,17 +12,21 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { ShieldQuestion } from 'lucide-react';
+import { Rocket } from 'lucide-react';
 import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { validateSeller } from '@/utils/validation-functions/validate-seller';
 
 export function ReleaseEscrow() {
     const { isOpen, order } = useStore(orderEscrowStore);
     const { toast } = useToast();
 
-    const mutation = useMutation({
-        mutationFn: async (order: any) => await releaseEscrowPayment(order),
+    const releaseEscrowMutation = useMutation({
+        mutationFn: async (order: any) => {
+            // Escrow release logic
+            await releaseEscrowPayment(order);
+        },
         onSuccess: () => {
             toast({
                 variant: 'default',
@@ -42,20 +46,28 @@ export function ReleaseEscrow() {
         },
     });
 
+    const handleConfirm = async () => {
+        const isValid = await validateSeller(order, toast);
+        closeOrderEscrowDialog();
+        if (isValid) {
+            releaseEscrowMutation.mutate(order);
+        }
+    };
+
     if (!isOpen || !order) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={closeOrderEscrowDialog}>
-            <DialogContent className="sm:max-w-[448.97px] bg-primary-black-90 text-white m-['40px'] [&>button]:hidden">
+            <DialogContent className="sm:max-w-[448.97px] bg-primary-black-90 text-white m-['40px'] [&>button]:hidden border-primary-purple-90">
                 <DialogHeader>
                     <div className="flex justify-center mb-4">
-                        <ShieldQuestion
+                        <Rocket
                             size={64}
-                            className="text-primary-green-900"
+                            className="text-primary-green-900 animate-pulse"
                         />
                     </div>
                     <DialogTitle className="text-center pb-[32px]">
-                        Confirm Refund Request
+                        Release Escrow
                     </DialogTitle>
                     <DialogDescription className="text-center text-white">
                         Are you sure you want to release escrow for order{' '}
@@ -64,18 +76,15 @@ export function ReleaseEscrow() {
                 </DialogHeader>
                 <DialogFooter className="flex text-white pt-[32px]">
                     <Button
-                        className="w-[200px] h-[52px] rounded-[53px] border-primary-purple-90 text-primary-purple-90 hover:bg-red-600"
+                        className="w-[200px] h-[52px] rounded-[53px] hover:border-none border-primary-purple-90 text-primary-purple-90 hover:bg-red-600"
                         variant="outline"
                         onClick={closeOrderEscrowDialog}
                     >
                         Cancel
                     </Button>
                     <Button
-                        className="bg-primary-purple-90 rounded-[53px] w-[200px] h-[52px] hover:bg-primary-green-900"
-                        onClick={() => {
-                            mutation.mutate(order);
-                            closeOrderEscrowDialog();
-                        }}
+                        className="bg-primary-purple-90 rounded-[53px] hover:border-none w-[200px] h-[52px] hover:bg-primary-green-900"
+                        onClick={handleConfirm}
                     >
                         Confirm Request
                     </Button>

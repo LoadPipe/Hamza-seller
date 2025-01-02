@@ -6,42 +6,58 @@ import {
     AccordionContent,
 } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
+// import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundEscrowPayment } from '@/utils/order-escrow.ts';
+import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
+import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
 import { getCurrencyPrecision } from '@/currency.config';
+import { formatStatus } from '@/utils/format-data';
+import { validateSeller } from '@/utils/validation-functions/validate-seller';
 
 type RefundProps = {
-    firstName: string;
-    lastName: string;
-    customerId: string;
-    email: string;
     refundAmount?: number;
-    date: string;
-    orderId: string;
     order: any;
+    chainId: number;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({
-    firstName,
-    lastName,
-    refundAmount,
-    customerId,
-    orderId,
-    order,
-    date,
-    email,
-}) => {
-    const [manualRefund, setManualRefund] = useState(false);
+const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
         note: '',
     });
+
+    const payment = order?.escrow_payment;
+    let refundableAmount: BigInt = BigInt(0);
+    let refundedAmount: BigInt = BigInt(0);
+
+    if (payment) {
+        refundedAmount = BigInt(payment.amountRefunded?.toString() ?? '0');
+        refundableAmount =
+            BigInt(payment.amount?.toString() ?? '0') -
+            BigInt(payment.amountRefunded?.toString() ?? '0');
+    }
+
+    const refundableAmountToDisplay = convertFromWeiToDisplay(
+        refundableAmount.toString(),
+        order?.currency_code,
+        chainId
+    );
+
+    const refundedAmountToDisplay = convertFromWeiToDisplay(
+        refundedAmount.toString(),
+        order?.currency_code,
+        chainId
+    );
+
+    //get order id
+    const orderId = order?.id ?? '';
+
     const [errors, setErrors] = useState({
         refundAmount: '',
         note: '',
@@ -50,7 +66,7 @@ const Refund: React.FC<RefundProps> = ({
 
     //get the currency code & precision
     const currencyCode = order?.payments[0]?.currency_code ?? 'usdc';
-    const precision = getCurrencyPrecision(currencyCode);
+    const precision = getCurrencyPrecision(currencyCode, chainId);
 
     //convert the amount to db units
     const getDbAmount = (amount: string | number) => {
@@ -60,17 +76,25 @@ const Refund: React.FC<RefundProps> = ({
     //convert the amount to wei for blockchain use
     const getBlockchainAmount = (amount: string | number) => {
         const dbAmount = getDbAmount(amount);
-        const bcAmount = dbAmount
-            .toString()
-            .padEnd(
-                dbAmount.toString().length + (precision.native - precision.db),
-                '0'
-            );
+        const bcAmount =
+            dbAmount.toString() +
+            ''.padEnd(precision.native - precision.db, '0');
         return bcAmount;
     };
 
     const refundMutation = useMutation({
         mutationFn: async () => {
+            const escrowPayment = await getEscrowPayment(order);
+
+            if (escrowPayment === null) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Escrow Payment Error',
+                    description: 'This Payment does not exist in the Escrow.',
+                });
+                return null; // Return with controlled value for verbose error handling
+            }
+
             const payload = {
                 order_id: orderId,
                 amount: getDbAmount(formData.refundAmount),
@@ -81,6 +105,10 @@ const Refund: React.FC<RefundProps> = ({
             return await postSecure('/seller/order/refund', payload);
         },
         onSuccess: async (data) => {
+            if (data === null) {
+                console.log(`Escrow validation failed, skipped`);
+                return;
+            }
             try {
                 const { metadata } = data;
 
@@ -100,6 +128,13 @@ const Refund: React.FC<RefundProps> = ({
                         variant: 'default',
                         title: 'Escrow Refund',
                         description: 'The escrow refund was successful.',
+                    });
+
+                    //clear fields on success to prevent duplicate submissions
+                    setFormData({
+                        ...formData,
+                        refundAmount: '',
+                        note: '',
                     });
                 } else {
                     toast({
@@ -122,11 +157,11 @@ const Refund: React.FC<RefundProps> = ({
             }
         },
         onError: (error: any) => {
+            console.error(error);
             toast({
                 variant: 'destructive',
                 title: 'Refund Error',
-                description: `Refund amount exceeds the refundable amount.
-                ${error}`,
+                description: `Failed to process the refund; rejected by contract.`,
             });
         },
     });
@@ -168,109 +203,54 @@ const Refund: React.FC<RefundProps> = ({
         return !newErrors.refundAmount && !newErrors.note;
     };
 
-    const handleRefundSubmit = () => {
-        if (validateForm()) {
+    const handleRefundSubmit = async () => {
+        const isValid = await validateSeller(order, toast);
+        if (validateForm() && isValid) {
             refundMutation.mutate();
         }
     };
 
-    const isSubmitDisabled =
-        !manualRefund || !!errors.refundAmount || !!errors.note;
-
     return (
-        <div className="p-4">
-            <h2 className="text-lg font-bold">Refund Management</h2>
-
-            {/* Date Field */}
-            {!manualRefund && (
-                <div className="mt-4">
-                    <label className="block text-sm font-medium">Date</label>
-                    <Input value={date} disabled className="mt-2" />
-                </div>
-            )}
-
+        <div>
             {/* Manual Refund Checkbox */}
-            <div className="mt-4">
-                <div className="flex items-center">
-                    <input
-                        type="checkbox"
-                        id="manual-refund"
-                        checked={manualRefund}
-                        onChange={() => setManualRefund(!manualRefund)}
-                        className="mr-2"
-                    />
-                    <label htmlFor="manual-refund" className="text-sm">
-                        Manual Refund
-                    </label>
+            <div className="mt-4 flex justify-between items-center">
+                <div className="flex">
+                    <h2 className="text-lg font-bold">Refund Management</h2>
                 </div>
             </div>
 
             {/* Accordion for Refund Details */}
-            <Accordion type="single" collapsible className="mt-4">
+            <Accordion
+                type="single"
+                defaultValue="refund-details"
+                collapsible
+                className="mt-4 "
+            >
                 <AccordionItem value="refund-details">
-                    <AccordionTrigger
-                        className={
-                            manualRefund
-                                ? ''
-                                : 'text-gray-400 cursor-not-allowed'
-                        }
-                    >
-                        Refund Details
-                    </AccordionTrigger>
+                    <AccordionTrigger>Refund Details</AccordionTrigger>
                     <AccordionContent>
-                        <div
-                            className={
-                                manualRefund
-                                    ? ''
-                                    : 'opacity-50 pointer-events-none'
-                            }
-                        >
-                            {/* Customer Name */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Customer Name
-                                </label>
-                                <Input
-                                    value={`${firstName} ${lastName}`}
-                                    disabled
-                                />
-                            </div>
-
-                            {/* Email */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Email
-                                </label>
-                                <Input value={email} disabled />
-                            </div>
-
-                            {/* Order ID */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Order ID
-                                </label>
-                                <Input value={orderId} disabled />
-                            </div>
-
-                            {/* Customer ID */}
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium">
-                                    Customer ID
-                                </label>
-                                <Input value={customerId} disabled />
-                            </div>
-
-                            {/* Refund Amount */}
-                            <div className="mt-2">
+                        <div>
+                            <div className="flex flex-col mt-4 gap-3">
                                 <label className="block text-sm font-medium">
                                     Refund Amount
                                 </label>
                                 <Input
+                                    style={{
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                        border: 'none',
+                                    }}
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     name="refundAmount"
                                     value={formData.refundAmount}
                                     onChange={handleInputChange}
+                                    disabled={
+                                        order.payment_status === 'refunded' ||
+                                        order.payment_status === 'canceled' ||
+                                        order.payment_status === 'not_paid'
+                                    }
                                 />
                                 {errors.refundAmount && (
                                     <p className="text-red-500 text-sm mt-1">
@@ -284,30 +264,55 @@ const Refund: React.FC<RefundProps> = ({
                                 <label className="block text-sm font-medium">
                                     Reason
                                 </label>
-                                <select
-                                    name="reason"
-                                    value={formData.reason}
-                                    onChange={handleSelectChange}
-                                    className="block w-full mt-2 p-2 border rounded text-white  bg-primary-black-90"
-                                >
-                                    {reasonOptions.map((reason) => (
-                                        <option key={reason} value={reason}>
-                                            {reason}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        style={{
+                                            backgroundColor: '#242424',
+                                            height: '40px',
+                                            backgroundImage:
+                                                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E\")",
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: '10px center',
+                                            backgroundSize: '12px',
+                                            borderRadius: '6px',
+                                        }}
+                                        name="reason"
+                                        value={formData.reason}
+                                        onChange={handleSelectChange}
+                                        className="block w-full mt-2 pl-10 rounded text-white appearance-none"
+                                    >
+                                        {reasonOptions.map((reason) => (
+                                            <option key={reason} value={reason}>
+                                                {reason}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             {/* Note */}
-                            <div className="mt-2">
+                            <div className="flex flex-col mt-2 gap-3">
                                 <label className="block text-sm font-medium">
                                     Note
                                 </label>
                                 <Input
                                     type="text"
                                     name="note"
+                                    style={{
+                                        border: 'none',
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                    }}
+                                    placeholder={
+                                        'Enter your note about this order refund.'
+                                    }
                                     value={formData.note}
                                     onChange={handleInputChange}
+                                    disabled={
+                                        order.payment_status === 'refunded' ||
+                                        order.payment_status === 'canceled' ||
+                                        order.payment_status === 'not_paid'
+                                    }
                                 />
                                 {errors.note && (
                                     <p className="text-red-500 text-sm mt-1">
@@ -316,14 +321,49 @@ const Refund: React.FC<RefundProps> = ({
                                 )}
                             </div>
 
+                            <div className="flex flex-row my-5 justify-evenly">
+                                <label className="block text-sm font-medium">
+                                    Amount Refunded:{' '}
+                                    <span className="text-[#94d42a]">
+                                        {refundedAmountToDisplay}
+                                    </span>
+                                </label>
+
+                                <label className="block text-sm font-medium ">
+                                    Refundable Amount:{' '}
+                                    <span className="text-[#94d42a]">
+                                        {refundableAmountToDisplay}
+                                    </span>
+                                </label>
+                            </div>
+
                             {/* Submit Button */}
                             <div className="mt-4">
-                                <Button
-                                    onClick={handleRefundSubmit}
-                                    disabled={isSubmitDisabled}
-                                >
-                                    Submit Refund
-                                </Button>
+                                {order.payment_status === 'refunded' ||
+                                order.payment_status === 'canceled' ||
+                                order.payment_status === 'not_paid' ? (
+                                    <div
+                                        className="bg-sky-600 border border-sky-900 text-black px-4 py-3 rounded relative text-center"
+                                        role="alert"
+                                    >
+                                        Cannot refund this payment status: (
+                                        {formatStatus(order.payment_status)})
+                                    </div>
+                                ) : (
+                                    <Button
+                                        className={`w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none ${
+                                            refundMutation.isPending
+                                                ? 'animate-pulse cursor-not-allowed'
+                                                : 'hover:cursor-pointer'
+                                        }`}
+                                        onClick={handleRefundSubmit}
+                                        disabled={refundMutation.isPending}
+                                    >
+                                        {refundMutation.isPending
+                                            ? 'Processing refund...'
+                                            : 'Submit Refund'}
+                                    </Button>
+                                )}
                             </div>
                             {showSuccessMessage && (
                                 <p className="text-green-600 font-medium mt-2">

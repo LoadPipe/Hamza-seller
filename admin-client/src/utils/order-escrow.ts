@@ -1,56 +1,5 @@
-import { getCurrencyPrecision } from '@/currency.config';
 import { EscrowClient, PaymentDefinition } from '@/web3/contracts/escrow';
-import { BigNumber, BigNumberish, ethers, providers, Signer } from 'ethers';
-
-/**
- * Converts any number decimal number (expressed as string or number) to an appropriate
- * number of wei units, given the currency.
- *
- * @param amount Amount as decimal
- * @param currencyCode usdc, usdt, eth
- * @returns The value converted to smallest units of the currency (as BigNumber)
- */
-export function convertToWei(
-    amount: string | number,
-    currencyCode: string
-): BigNumber {
-    try {
-        const precision = getCurrencyPrecision(currencyCode);
-        return convertToUnits(amount, precision.native);
-    } catch (e) {
-        console.log(e);
-    }
-
-    return BigNumber.from(0);
-}
-
-/**
- * Converts any number decimal number (expressed as string or number) to a given number
- * of units.
- * Example: convertToUnits(3.21, 3) will return 3210.
- *
- * @param amount Amount as decimal
- * @param units Number of units
- * @param currencyCode usdc, usdt, eth
- * @returns The value converted to given number of units of the currency (as BigNumber)
- */
-export function convertToUnits(
-    amount: string | number,
-    units: number
-): BigNumber {
-    try {
-        const amt = amount.toString();
-        const decimalPlaces = amt.includes('.') ? amt.split('.')[1].length : 0;
-
-        return ethers.utils
-            .parseUnits(amt, decimalPlaces)
-            .mul(BigNumber.from(10).pow(units - decimalPlaces));
-    } catch (e) {
-        console.log(e);
-    }
-
-    return BigNumber.from(0);
-}
+import { BigNumberish, ethers, providers, Signer } from 'ethers';
 
 /**
  * Releases a payment in escrow, from the seller side, on the escrow contract on the blockchain.
@@ -114,7 +63,7 @@ export async function refundEscrowPayment(
 
             if (escrow) {
                 const payment = await getEscrowPayment(order);
-
+                console.log(payment);
                 //validate before refunding
                 validatePaymentExists(payment, order.id);
                 validatePaymentNotReleased(payment, order.id);
@@ -173,7 +122,6 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
 /**
  * Gets a payment definition for the given order, from the escrow if it exists.
  *
- * @param order A whole entire order object
  * @returns PaymentDefinition
  */
 export async function getEscrowPayment(
@@ -188,13 +136,13 @@ export async function getEscrowPayment(
 
             return paymentIsValid(payment) ? payment : null;
         } catch (e: any) {
-            console.error('Error getting the payment:', e); // Log the error}
+            console.error('Error in getEscrowPayment:', e); // Log the error
+            return null; // Return null instead of throwing
         }
     } else {
-        throw new Error('No web3 provider available');
+        console.error('No web3 provider available');
+        return null; // Return null if no web3 provider is available
     }
-
-    return null;
 }
 
 //VALIDATION METHODS
@@ -249,7 +197,9 @@ function validateRefundAmount(
     amount: BigNumberish
 ) {
     const refundableAmt =
-        (payment?.amount ?? 0) - (payment?.amountRefunded ?? 0);
+        BigInt(payment?.amount.toString() ?? '0') -
+        BigInt(payment?.amountRefunded.toString() ?? '0');
+
     if (refundableAmt < BigInt(amount.toString())) {
         throw new Error(
             `Amount of ${amount} exceeds the refundable amount of ${refundableAmt} for ${orderId}.`

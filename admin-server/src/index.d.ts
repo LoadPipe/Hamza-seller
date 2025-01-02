@@ -32,6 +32,7 @@ export declare module '@medusajs/medusa/dist/models/customer' {
 export declare module '@medusajs/medusa/dist/models/line-item' {
     declare interface LineItem {
         currency_code: string;
+        external_order_id: number;
     }
 }
 
@@ -78,7 +79,7 @@ export declare module '@medusajs/medusa/dist/model/order' {
     }
 }
 
-export declare module '@medusajs/medusa/dis/model/refund' {
+export declare module '@medusajs/medusa/dist/model/refund' {
     declare interface Refund {
         confirmed: boolean;
     }

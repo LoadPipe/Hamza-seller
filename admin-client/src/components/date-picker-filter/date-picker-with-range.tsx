@@ -26,6 +26,8 @@ export default function DatePickerWithRange({
         selectedRange
     );
 
+    const [isOpen, setIsOpen] = React.useState(false);
+
     React.useEffect(() => {
         if (selectedRange) {
             setDate(selectedRange); // Sync the internal state with the parent state
@@ -46,7 +48,7 @@ export default function DatePickerWithRange({
 
     return (
         <div className={cn('grid gap-2', className)}>
-            <Popover>
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         id="date"
@@ -80,6 +82,15 @@ export default function DatePickerWithRange({
                         onSelect={handleDateChange}
                         numberOfMonths={2}
                     />
+                    <div className="flex justify-end p-2">
+                        <Button
+                            variant="default"
+                            className="bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
+                            onClick={() => setIsOpen(false)} // Close the popover
+                        >
+                            Accept
+                        </Button>
+                    </div>
                 </PopoverContent>
             </Popover>
         </div>

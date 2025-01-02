@@ -11,7 +11,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 // import { Search } from 'lucide-react';
-import { Download } from 'lucide-react';
+import { Download, RefreshCw, Settings } from 'lucide-react';
 import OrderTabs from '@/components/orders/order-tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,17 +42,21 @@ import {
     filterStore,
     setFilter,
     clearFilter,
+    clearAllFilters,
     setDatePickerFilter,
 } from '@/stores/order-filter/order-filter-store.ts';
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 import { ChevronDown } from 'lucide-react';
 import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
 import { Order } from '@/components/orders/columns';
+import { useEffect } from 'react';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
 }
+
+// Localstorage key for storing the user's preferred columns
 
 export function DataTable<TData, TValue>({
     columns,
@@ -110,6 +114,36 @@ export function DataTable<TData, TValue>({
         },
     });
 
+    const localStorageColumnSettingsKey = 'tableColumnVisibility';
+
+    useEffect(() => {
+        const savedVisibility = JSON.parse(
+            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
+        );
+        if (savedVisibility) {
+            table.getAllColumns().forEach((column) => {
+                if (
+                    column.getCanHide() &&
+                    savedVisibility[column.id] !== undefined
+                ) {
+                    column.toggleVisibility(savedVisibility[column.id]);
+                }
+            });
+        }
+    }, [table]);
+
+    // Save column visibility settings to localStorage
+    const handleCheckedChange = (columnId: any, value: any) => {
+        const currentVisibility = JSON.parse(
+            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
+        );
+        currentVisibility[columnId] = value;
+        localStorage.setItem(
+            localStorageColumnSettingsKey,
+            JSON.stringify(currentVisibility)
+        );
+    };
+
     const handleDownloadCSV = () => {
         if (!data || data.length === 0) {
             console.error('No data available for download.');
@@ -163,6 +197,11 @@ export function DataTable<TData, TValue>({
         const dataCSV = convertJSONToCSV(filteredData, columnTitles);
 
         downloadCSV(`${dataCSV}`, 'orders.csv');
+    };
+
+    const handleClearFilters = () => {
+        clearAllFilters();
+        console.log(`Clearing all the filters.`);
     };
 
     return (
@@ -243,7 +282,7 @@ export function DataTable<TData, TValue>({
 
                     <div className="ml-auto flex flex-row relative w-[376px]">
                         <Input
-                            placeholder="Search Order"
+                            placeholder="Search Orders..."
                             value={
                                 (table
                                     .getColumn('id')
@@ -254,12 +293,8 @@ export function DataTable<TData, TValue>({
                                     .getColumn('id')
                                     ?.setFilterValue(event.target.value)
                             }
-                            className="w-full h-[34px] pl-5 border-none placeholder-[#C2C2C2]  text-white rounded-full bg-black pr-10"
+                            className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2] active:border-primary-purple-90  text-white rounded bg-black pr-10"
                         />
-                        {/*<Search*/}
-                        {/*    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"*/}
-                        {/*    size={14}*/}
-                        {/*/>*/}
                     </div>
                 </div>
 
@@ -271,7 +306,7 @@ export function DataTable<TData, TValue>({
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="ghost"
-                                        className="bg-[#242424] text-white w-[72px] h-[36px] rounded-full"
+                                        className="bg-[#242424] text-white w-[72px] h-[36px] rounded"
                                         size="sm"
                                     >
                                         {pageSize}{' '}
@@ -306,13 +341,40 @@ export function DataTable<TData, TValue>({
                         <div className="flex justify-end">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button className="bg-secondary-charcoal-69 text-white">
+                                    <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69 mr-4 hover:border-primary-purple-90">
+                                        <RefreshCw />
+                                        Clear
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="border-primary-purple-90">
+                                    <DropdownMenuItem
+                                        className="hover:bg-primary-purple-90 px-4 py-2 w-full hover:border-primary-purple-90"
+                                        onClick={handleClearFilters}
+                                    >
+                                        Clear Filters
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="hover:bg-primary-purple-90 px-4 py-2 w-full hover:border-primary-purple-90">
+                                        Reset Columns
+                                    </DropdownMenuItem>
+                                    {/*<DropdownMenuItem*/}
+                                    {/*    className="hover:bg-primary-purple-90 px-4 py-2 w-full "*/}
+                                    {/*    onClick={handleClearDateFilter}*/}
+                                    {/*>*/}
+                                    {/*    Clear Date Picker*/}
+                                    {/*</DropdownMenuItem>*/}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69 hover:border-primary-purple-90">
                                         <Download />
                                         Export
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-secondary-charcoal-69 ">
+                                <DropdownMenuContent className="border-primary-purple-90">
                                     <DropdownMenuItem
+                                        className="hover:bg-primary-purple-90 px-4 py-2 w-full"
                                         onClick={handleDownloadCSV}
                                     >
                                         Export as CSV
@@ -326,12 +388,13 @@ export function DataTable<TData, TValue>({
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        className="ml-auto whitespace-nowrap bg-[#242424]"
+                                        className="ml-auto whitespace-nowrap bg-[#242424] hover:border-primary-purple-90"
                                     >
-                                        Columns
+                                        <Settings />
+                                        Toggle Columns
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-[#242424]">
+                                <DropdownMenuContent className="bg-[#242424] border-primary-purple-90">
                                     {table
                                         .getAllColumns()
                                         .filter((column) => column.getCanHide())
@@ -340,11 +403,15 @@ export function DataTable<TData, TValue>({
                                                 key={column.id}
                                                 className="capitalize"
                                                 checked={column.getIsVisible()}
-                                                onCheckedChange={(value) =>
+                                                onCheckedChange={(value) => {
                                                     column.toggleVisibility(
                                                         !!value
-                                                    )
-                                                }
+                                                    );
+                                                    handleCheckedChange(
+                                                        column.id as any,
+                                                        !!value as any
+                                                    );
+                                                }}
                                                 onSelect={(e) =>
                                                     e.preventDefault()
                                                 } // Prevent menu close on select
@@ -439,7 +506,7 @@ export function DataTable<TData, TValue>({
 
                     {/* First Page */}
                     <button
-                        className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                        className={`w-8 h-8 flex items-center justify-center rounded text-xs ${
                             pageIndex === 0
                                 ? 'bg-[#94D42A] text-black'
                                 : 'bg-[#121212] text-white'
@@ -464,7 +531,7 @@ export function DataTable<TData, TValue>({
                             pages.push(
                                 <button
                                     key={i}
-                                    className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                                    className={`w-6 h-8 flex items-center justify-center rounded text-xs ${
                                         pageIndex === i
                                             ? 'bg-[#94D42A] text-black'
                                             : 'bg-[#121212] text-white'
@@ -486,7 +553,7 @@ export function DataTable<TData, TValue>({
                     {/* Last Page */}
                     {pageCount > 1 && (
                         <button
-                            className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                            className={`w-8 h-8 flex items-center justify-center rounded text-xs ${
                                 pageIndex === pageCount - 1
                                     ? 'bg-[#94D42A] text-black'
                                     : 'bg-[#121212] text-white'

@@ -23,6 +23,10 @@ export const WalletConnect = () => {
                     (!authenticationStatus ||
                         authenticationStatus === 'authenticated');
 
+                if (ready && connected && chain.unsupported) {
+                    openChainModal();
+                }
+
                 return (
                     <div
                         {...(!ready && {

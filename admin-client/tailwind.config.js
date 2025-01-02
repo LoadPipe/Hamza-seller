@@ -110,7 +110,7 @@ module.exports = {
                         60: '#C2C2C2',
                     },
                     purple: {
-                        90: '#7B61FF'
+                        90: '#7B61FF',
                     },
                 },
                 secondary: {
@@ -200,6 +200,9 @@ module.exports = {
                     tighter: '1.1',
                     relaxed: '1.7',
                 },
+            },
+            animation: {
+                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             },
         },
     },

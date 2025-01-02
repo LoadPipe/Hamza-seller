@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 export type HexString = `0x${string}`;
 
 const REST_URL =
-    process.env.CURRENCY_CONVERSION_REST_URL || 'http://localhost:3000/convert';
+    process.env.CURRENCY_CONVERSION_REST_URL || 'http://127.0.0.1:3000/convert';
 try {
     new URL(REST_URL);
 } catch (error) {
@@ -42,7 +42,6 @@ export class CurrencyConversionClient {
     ): Promise<number> {
         try {
             const url = `/exch?base=${baseCurrency}&to=${toCurrency}`;
-            //console.log('getting exchange rate', url);
 
             if (baseCurrency === toCurrency) return 1;
 

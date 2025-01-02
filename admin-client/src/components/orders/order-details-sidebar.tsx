@@ -25,7 +25,9 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { getOrderStatusName } from '@/utils/check-order-status.ts';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-
+import { ConfirmStatusChange } from '@/components/orders/confirm-status-change';
+import EscrowStatus from './escrow-status';
+import { getEscrowPayment } from '@/utils/order-escrow';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
@@ -41,9 +43,14 @@ export function OrderDetailsSidebar() {
             if (!orderId) {
                 throw new Error('Order ID is required');
             }
-            return await getSecure('/seller/order/detail', {
+            const order: any = await getSecure('/seller/order/detail', {
                 order_id: orderId,
             });
+            if (order) {
+                order.escrow_payment = await getEscrowPayment(order);
+            }
+
+            return order;
         },
         enabled: !!orderId && isSidebarOpen, // Fetch only when these conditions are met
         refetchOnWindowFocus: false, // Prevent refetching on focus
@@ -58,6 +65,9 @@ export function OrderDetailsSidebar() {
             orderDetails?.payment_status
         )
     );
+
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [newStatus, setNewStatus] = useState<string | null>(null);
 
     let currencyCode = orderDetails?.payments[0]?.currency_code;
 
@@ -77,9 +87,6 @@ export function OrderDetailsSidebar() {
             );
         }
     }, [orderDetails]);
-
-    console.log(`STATUS IS ${selectedStatus}`);
-    console.log('Details', orderDetails);
 
     const mutation = useMutation({
         mutationFn: async (newStatus: string) =>
@@ -117,8 +124,21 @@ export function OrderDetailsSidebar() {
         event: React.ChangeEvent<HTMLSelectElement>
     ) => {
         const newStatus = event.target.value;
-        setSelectedStatus(newStatus);
-        mutation.mutate(newStatus);
+        setNewStatus(newStatus);
+        setIsDialogOpen(true);
+    };
+
+    const confirmStatusChange = () => {
+        if (newStatus) {
+            setSelectedStatus(newStatus);
+            mutation.mutate(newStatus);
+        }
+        setIsDialogOpen(false);
+    };
+
+    const cancelStatusChange = () => {
+        setNewStatus(null);
+        setIsDialogOpen(false);
     };
 
     const statusDetails = orderDetails && {
@@ -127,6 +147,8 @@ export function OrderDetailsSidebar() {
         payment_status: orderDetails.payment_status,
         created_at: orderDetails.created_at,
         updated_at: orderDetails.updated_at,
+        histories: orderDetails.histories,
+        refunds: orderDetails.refunds,
     };
     const totalPrice = (orderDetails?.items || []).reduce(
         (acc: number, item: any) => {
@@ -295,6 +317,7 @@ export function OrderDetailsSidebar() {
                                         </span>
                                     </div>
                                 </div>
+                                {/* {orderDetails?.shipping_address && ( */}
                                 <div className="flex justify-between">
                                     <div className="w-1/3">
                                         <span className="text-primary-black-60">
@@ -313,11 +336,14 @@ export function OrderDetailsSidebar() {
                                                 orderDetails?.shipping_address
                                                     ?.province,
                                                 orderDetails?.shipping_address
-                                                    ?.postal_code
+                                                    ?.postal_code,
+                                                orderDetails?.shipping_address
+                                                    ?.country_code
                                             )}
                                         </span>
                                     </div>
                                 </div>
+                                {/* )} */}
                             </div>
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
@@ -327,18 +353,17 @@ export function OrderDetailsSidebar() {
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
+                            <EscrowStatus
+                                payment={orderDetails?.escrow_payment}
+                            />
+
                             <Refund
-                                date={formatDate(orderDetails?.created_at)}
-                                firstName={orderDetails?.customer?.first_name}
-                                lastName={orderDetails?.customer?.last_name}
-                                email={orderDetails?.email}
-                                orderId={orderDetails?.id}
-                                customerId={orderDetails?.customer_id}
                                 order={orderDetails}
+                                chainId={import.meta.env.VITE_CHAIN_ID}
                             />
 
                             {/* Items */}
-                            <div className="flex flex-col">
+                            <div className="flex flex-col mt-4">
                                 <h2 className="text-primary-black-60 text-md leading-relaxed mb-4">
                                     ITEMS
                                 </h2>
@@ -373,7 +398,11 @@ export function OrderDetailsSidebar() {
                             <Payment
                                 subtotal={`${formatCryptoPrice(totalPrice, currencyCode)}`}
                                 discount={0} // Adjust as needed
-                                shippingFee="0.00" // Adjust as needed
+                                shippingFee={formatCryptoPrice(
+                                    orderDetails?.shipping_methods[0]?.price ??
+                                        0,
+                                    currencyCode
+                                )} // Adjust as needed
                                 currencyCode={currencyCode}
                                 total={formatCryptoPrice(
                                     orderDetails?.payments[0]?.amount ?? 0,
@@ -399,6 +428,12 @@ export function OrderDetailsSidebar() {
                     )}
                 </SidebarContent>
             </Sidebar>
+            <ConfirmStatusChange
+                isOpen={isDialogOpen}
+                newStatus={newStatus}
+                onConfirm={confirmStatusChange}
+                onCancel={cancelStatusChange}
+            />
         </div>
     );
 }

@@ -1,10 +1,12 @@
 import currencyIcons from '../../../public/currencies/crypto-currencies.ts';
+import { convertCryptoPrice } from '@/utils/get-product-price.ts';
+import React from 'react';
 
 type PaymentProps = {
     subtotal: string | number;
     discount: number;
     currencyCode: string;
-    shippingFee: string;
+    shippingFee: string | number;
     total: string | number;
 };
 
@@ -15,6 +17,26 @@ const Payment: React.FC<PaymentProps> = ({
     shippingFee,
     total,
 }) => {
+    const [convertedPrice, setConvertedPrice] = React.useState<string | null>(
+        null
+    );
+
+    React.useEffect(() => {
+        const fetchConvertedPrice = async () => {
+            const result = await convertCryptoPrice(
+                Number(total),
+                'eth',
+                'usdc'
+            );
+            const formattedResult = Number(result).toFixed(2);
+            setConvertedPrice(formattedResult);
+        };
+
+        if (currencyCode === 'eth') {
+            fetchConvertedPrice();
+        }
+    }, [currencyCode]);
+
     return (
         <div className="flex flex-col">
             {/* Payment Header */}
@@ -39,18 +61,28 @@ const Payment: React.FC<PaymentProps> = ({
                         {subtotal}
                     </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                     <span className="text-white font-semibold text-sm">
                         Discount
                     </span>
+                    <img
+                        className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                        src={currencyIcons[currencyCode ?? 'usdc']}
+                        alt={currencyCode ?? 'usdc'}
+                    />
                     <span className="text-white font-semibold text-lg">
                         {discount}
                     </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                     <span className="text-white font-semibold text-sm">
                         Shipping fee
                     </span>
+                    <img
+                        className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                        src={currencyIcons[currencyCode ?? 'usdc']}
+                        alt={currencyCode ?? 'usdc'}
+                    />
                     <span className="text-white font-semibold text-lg">
                         {shippingFee}
                     </span>
@@ -73,6 +105,18 @@ const Payment: React.FC<PaymentProps> = ({
                     </span>
                 </div>
             </div>
+            {currencyCode === 'eth' && (
+                <div className="flex items-center">
+                    <img
+                        className="ml-auto mr-1 h-[12px] w-[12px] md:h-[16px] md:w-[16px]"
+                        src={currencyIcons['usdc']}
+                        alt={'usdt'}
+                    />
+                    <span className="text-white opacity-60 font-bold text-l">
+                        ≅ {convertedPrice}
+                    </span>
+                </div>
+            )}
         </div>
     );
 };
