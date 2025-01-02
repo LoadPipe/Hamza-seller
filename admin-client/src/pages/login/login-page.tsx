@@ -8,7 +8,7 @@ export default function LoginPage() {
             {/* Top Navigation */}
             <nav className="w-full py-[21px] ">
                 <div className="max-w-[1440px] mx-auto flex items-center justify-between px-[75px]">
-                    <img src={HamzaLogo} />
+                    <img src={HamzaLogo} alt="hamza-logo" />
                     <WalletConnect />
                 </div>
             </nav>
