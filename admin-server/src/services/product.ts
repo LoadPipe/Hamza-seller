@@ -774,9 +774,15 @@ class ProductService extends MedusaProductService {
         return variant;
     }
 
-
     async deleteProductById(productId: string): Promise<void> {
         await this.delete(productId);
+    }
+
+    // Were getting products from the store for the /products page..
+    async getProductsForAdmin(storeId: string): Promise<Product[]> {
+        return await this.productRepository_.find({
+            where: { store_id: storeId },
+        });
     }
 
     async getCategoryByHandle(
@@ -789,7 +795,10 @@ class ProductService extends MedusaProductService {
 
             return category || null;
         } catch (error) {
-            this.logger.error('Error fetching product category by handle:', error);
+            this.logger.error(
+                'Error fetching product category by handle:',
+                error
+            );
             throw new Error('Failed to fetch product category by handle.');
         }
     }
@@ -984,7 +993,9 @@ class ProductService extends MedusaProductService {
             return await this.validateCsvVariantRow(row, data);
         } else {
             if (requiredCsvHeadersForProduct.some((header) => !row[header])) {
-                const missingHeader = requiredCsvHeadersForProduct.find((header) => !row[header]);
+                const missingHeader = requiredCsvHeadersForProduct.find(
+                    (header) => !row[header]
+                );
                 return 'required product fields missing data: ' + missingHeader;
             }
 

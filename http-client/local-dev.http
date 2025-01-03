@@ -129,3 +129,8 @@ Content-Type: application/json
 {
   "product_id": "prod_01JFCJBKQCEW6EPP1CTPWCXT53"
 }
+
+
+### Get Products By Store
+GET http://localhost:9000/seller/product/seller-products/?store_id=store_01JGBEPMEGQNX59BP30EPWK8Y8
+Content-Type: application/json
