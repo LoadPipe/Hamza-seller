@@ -35,6 +35,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 
 interface Product {
     id: string;
@@ -345,9 +346,11 @@ export function ProductTable({
                                                                                     idx
                                                                                 }
                                                                             >
-                                                                                {
-                                                                                    price.amount
-                                                                                }{' '}
+                                                                                {formatCryptoPrice(
+                                                                                    price.amount,
+                                                                                    price.currency_code ||
+                                                                                        'usdc'
+                                                                                )}{' '}
                                                                                 {
                                                                                     price.currency_code
                                                                                 }

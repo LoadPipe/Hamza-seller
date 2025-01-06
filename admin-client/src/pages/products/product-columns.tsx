@@ -16,6 +16,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 
 // Define Product Schema
 // Define Product Schema
@@ -169,7 +170,7 @@ export const generateColumns = (
                                                             {variant.prices
                                                                 ?.map(
                                                                     (price) =>
-                                                                        `${price.amount} ${price.currency_code}`
+                                                                        `${formatCryptoPrice(price.amount, price.currency_code || 'usdc')} ${price.currency_code}`
                                                                 )
                                                                 .join(', ') ||
                                                                 'N/A'}
