@@ -38,20 +38,23 @@ export default function AnalyticsPage() {
         <div className="bg-black text-white px-8 py-12">
             <div className="max-w-7xl mx-auto space-y-12">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Analytics</h1>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-semibold">Analytics</h2>
                     <Select>
-                        <SelectTrigger>
-                            <SelectValue placeholder="This month" />
+                        <SelectTrigger className="w-36 text-sm">
+                            <span>This Month</span>
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="month">This month</SelectItem>
-                            <SelectItem value="week">This week</SelectItem>
-                            <SelectItem value="day">Today</SelectItem>
+                            <SelectItem value="thisMonth">
+                                This Month
+                            </SelectItem>
+                            <SelectItem value="lastMonth">
+                                Last Month
+                            </SelectItem>
+                            <SelectItem value="lastYear">Last Year</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
-
                 {/* Metrics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     <Card className="bg-primary-black-90">
