@@ -7,7 +7,29 @@ export const ProductSchema = z.object({
     subtitle: z.string().optional().nullable(),
     description: z.string().optional(),
     thumbnail: z.string().optional(),
-    category: z.string().optional(),
+    categories: z
+        .array(
+            z.object({
+                id: z.string(),
+                created_at: z.string(),
+                updated_at: z.string(),
+                name: z.string(),
+                description: z.string().optional().nullable(),
+                handle: z.string(),
+                is_active: z.boolean(),
+                is_internal: z.boolean(),
+                parent_category_id: z.string().nullable(),
+                rank: z.number(),
+                metadata: z
+                    .object({
+                        icon_url: z.string().optional().nullable(),
+                    })
+                    .optional()
+                    .nullable(),
+            })
+        )
+        .optional()
+        .nullable(), // Ensure categories can be optional and nullable
     variants: z
         .array(
             z.object({

@@ -84,7 +84,10 @@ export const generateColumns = (
                                 {subtitle && (
                                     <span className="text-muted-foreground text-sm">
                                         {' '}
-                                        - {subtitle}
+                                        -{' '}
+                                        {subtitle.length > 20
+                                            ? `${subtitle.slice(0, 20)}...`
+                                            : subtitle}
                                     </span>
                                 )}
                             </div>
@@ -92,13 +95,29 @@ export const generateColumns = (
                     },
                 };
 
-            case 'category':
+            case 'categories':
                 return {
-                    accessorKey: 'category',
+                    accessorKey: 'categories',
                     header: 'Category',
-                    cell: ({ row }) => (
-                        <div>{row.getValue('category') || 'Uncategorized'}</div>
-                    ),
+                    cell: ({ row }) => {
+                        const categories = row.getValue('categories');
+
+                        if (!categories) {
+                            return <div>Uncategorized</div>;
+                        }
+
+                        if (Array.isArray(categories)) {
+                            return (
+                                <div>
+                                    {categories
+                                        .map((cat) => cat.name)
+                                        .join(', ')}
+                                </div>
+                            );
+                        }
+
+                        return <div>{categories.name || 'Uncategorized'}</div>;
+                    },
                 };
 
             case 'variants':
@@ -233,7 +252,7 @@ export const generateColumns = (
 export const productColumns = generateColumns([
     'thumbnail',
     'title',
-    'category',
+    'categories',
     'variants',
     'actions',
 ]);
