@@ -231,6 +231,8 @@ export function ProductTable({
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
+                                    {/* Extra header for collapsible button */}
+                                    <TableHead className="w-[40px]"></TableHead>
                                     {headerGroup.headers.map((header) => (
                                         <TableHead key={header.id}>
                                             {header.isPlaceholder
@@ -260,7 +262,7 @@ export function ProductTable({
                                 table.getRowModel().rows.map((row) => (
                                     <React.Fragment key={row.id}>
                                         <TableRow>
-                                            {/* Toggle Button for Expanding Rows */}
+                                            {/* Collapsible Button */}
                                             <TableCell className="w-[40px]">
                                                 {row.original.variants &&
                                                 row.original.variants.length >
@@ -316,7 +318,7 @@ export function ProductTable({
                                                                         ID:
                                                                     </strong>{' '}
                                                                     {variant.id}
-                                                                </div>{' '}
+                                                                </div>
                                                                 <div>
                                                                     <strong>
                                                                         Title:
@@ -394,7 +396,7 @@ export function ProductTable({
                             ) : (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={columns.length}
+                                        colSpan={columns.length + 1}
                                         className="text-center"
                                     >
                                         No products found.

@@ -33,7 +33,7 @@ export const generateColumns = (
             case 'thumbnail':
                 return {
                     accessorKey: 'thumbnail',
-                    header: '',
+                    header: 'Thumbnail',
                     cell: ({ row }) => {
                         const thumbnail = row.original.thumbnail; // Access thumbnail directly
                         return (
