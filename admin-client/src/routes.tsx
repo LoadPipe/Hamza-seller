@@ -15,6 +15,7 @@ import EditProductPage from '@/pages/products/edit-product-page.tsx';
 import ProductCategoryPage from '@/pages/products/product-category-page.tsx';
 import DashboardPage from '@/pages/dashboard/dashboard-page.tsx';
 import SettingsPage from '@/pages/settings/settings-page.tsx';
+import AnalyticsPage from '@/pages/analytics/analytics-page.tsx';
 
 export const OrderSearchSchema = z.object({
     page: z.coerce.number().catch(0),
@@ -87,6 +88,12 @@ const DashboardRoute = createRoute({
     getParentRoute: () => rootRoute,
 });
 
+const analyticsRoute = createRoute({
+    path: 'analytics',
+    component: AnalyticsPage,
+    getParentRoute: () => rootRoute,
+});
+
 const settingsRoute = createRoute({
     path: 'settings',
     component: SettingsPage,
@@ -108,6 +115,7 @@ rootRoute.addChildren([
     addProductRoute,
     editProductRoute,
     productCategory,
+    analyticsRoute,
     settingsRoute,
     notFoundRoute,
 ]);
