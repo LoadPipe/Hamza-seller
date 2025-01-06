@@ -55,7 +55,7 @@ export const generateColumns = (
                     cell: ({ row }) => {
                         const thumbnail = row.original.thumbnail; // Access thumbnail directly
                         return (
-                            <div className="w-16 h-16 flex items-center justify-center">
+                            <div className="w-[100px] h-[100px] px-[15px] flex items-center justify-center">
                                 {thumbnail ? (
                                     <img
                                         src={thumbnail}
@@ -63,13 +63,9 @@ export const generateColumns = (
                                             row.original.title ||
                                             'Product Image'
                                         }
-                                        className="object-cover rounded-md w-full h-full"
+                                        className="object-cover rounded-md"
                                     />
-                                ) : (
-                                    <div className="bg-gray-200 text-gray-500 text-sm flex items-center justify-center w-full h-full rounded-md">
-                                        No Image
-                                    </div>
-                                )}
+                                ) : null}
                             </div>
                         );
                     },
@@ -259,6 +255,7 @@ export const generateColumns = (
 
 // Usage
 export const productColumns = generateColumns([
+    'thumbnail',
     'title',
     'category',
     'variants',

@@ -194,10 +194,10 @@ export function ProductTable({
                                                 column.toggleVisibility(
                                                     !!value
                                                 );
-                                                handleCheckedChange(
-                                                    column.id as any,
-                                                    !!value as any
-                                                );
+                                                // handleCheckedChange(
+                                                //     column.id as any,
+                                                //     !!value as any
+                                                // );
                                             }}
                                             onSelect={(e) => e.preventDefault()} // Prevent menu close on select
                                         >
