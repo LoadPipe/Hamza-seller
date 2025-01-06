@@ -11,11 +11,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 
 // Define Product Schema
@@ -124,20 +119,44 @@ export const generateColumns = (
                         if (variants.length === 1) {
                             const variant = variants[0];
                             return (
-                                <div className="flex gap-4">
+                                <div className="flex gap-4 items-center">
+                                    {/* SKU */}
                                     <span>{variant.sku || 'N/A'}</span>
-                                    <span>
-                                        {variant.prices
-                                            ?.map(
-                                                (price) =>
-                                                    `${formatCryptoPrice(price.amount, price.currency_code || 'usdc')} ${price.currency_code}`
-                                            )
-                                            .join(', ') || 'N/A'}
-                                    </span>
+
+                                    {/* Prices */}
+                                    <div className="space-y-1">
+                                        {variant.prices?.length > 0
+                                            ? variant.prices.map(
+                                                  (price, idx) => (
+                                                      <div
+                                                          key={idx}
+                                                          className="flex items-center gap-2"
+                                                      >
+                                                          <span>
+                                                              {formatCryptoPrice(
+                                                                  price.amount,
+                                                                  price.currency_code ||
+                                                                      'usdc'
+                                                              )}
+                                                          </span>
+                                                          <span>
+                                                              {price.currency_code.toUpperCase()}
+                                                          </span>
+                                                      </div>
+                                                  )
+                                              )
+                                            : 'N/A'}
+                                    </div>
+
+                                    {/* Inventory */}
                                     <span>{variant.inventory_quantity}</span>
+
+                                    {/* Backorder */}
                                     <span>
                                         {variant.allow_backorder ? 'Yes' : 'No'}
                                     </span>
+
+                                    {/* Created At */}
                                     <span>
                                         {new Date(
                                             variant.created_at
