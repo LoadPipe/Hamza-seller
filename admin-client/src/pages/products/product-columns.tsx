@@ -109,97 +109,48 @@ export const generateColumns = (
             case 'variants':
                 return {
                     accessorKey: 'variants',
-                    header: 'Variants',
+                    header: ({ column }) => (
+                        <div className="flex gap-4">
+                            <span>SKU</span>
+                            <span>Prices</span>
+                            <span>Inventory</span>
+                            <span>Backorder</span>
+                            <span>Created At</span>
+                        </div>
+                    ),
                     cell: ({ row }) => {
-                        const variants = row.original.variants || []; // Handle undefined/null
+                        const variants = row.original.variants || [];
 
-                        if (!Array.isArray(variants) || variants.length === 0) {
+                        if (variants.length === 1) {
+                            const variant = variants[0];
                             return (
-                                <div className="text-muted-foreground">
-                                    No variants available
+                                <div className="flex gap-4">
+                                    <span>{variant.sku || 'N/A'}</span>
+                                    <span>
+                                        {variant.prices
+                                            ?.map(
+                                                (price) =>
+                                                    `${formatCryptoPrice(price.amount, price.currency_code || 'usdc')} ${price.currency_code}`
+                                            )
+                                            .join(', ') || 'N/A'}
+                                    </span>
+                                    <span>{variant.inventory_quantity}</span>
+                                    <span>
+                                        {variant.allow_backorder ? 'Yes' : 'No'}
+                                    </span>
+                                    <span>
+                                        {new Date(
+                                            variant.created_at
+                                        ).toLocaleDateString()}
+                                    </span>
                                 </div>
                             );
                         }
 
-                        return (
-                            <div className="flex flex-col">
-                                {/* Collapsible Root */}
-                                <Collapsible>
-                                    <CollapsibleTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            {variants.length} variant
-                                            {variants.length > 1
-                                                ? 's'
-                                                : ''}{' '}
-                                            available
-                                        </Button>
-                                    </CollapsibleTrigger>
-                                    <CollapsibleContent className="pt-2">
-                                        <table className="table-auto w-full text-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th className="text-left">
-                                                        Title
-                                                    </th>
-                                                    <th className="text-left">
-                                                        SKU
-                                                    </th>
-                                                    <th className="text-left">
-                                                        Prices
-                                                    </th>
-                                                    <th className="text-left">
-                                                        Inventory
-                                                    </th>
-                                                    <th className="text-left">
-                                                        Backorder
-                                                    </th>
-                                                    <th className="text-left">
-                                                        Created At
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {variants.map((variant) => (
-                                                    <tr key={variant.id}>
-                                                        <td>{variant.title}</td>
-                                                        <td>
-                                                            {variant.sku ||
-                                                                'N/A'}
-                                                        </td>
-                                                        <td>
-                                                            {variant.prices
-                                                                ?.map(
-                                                                    (price) =>
-                                                                        `${formatCryptoPrice(price.amount, price.currency_code || 'usdc')} ${price.currency_code}`
-                                                                )
-                                                                .join(', ') ||
-                                                                'N/A'}
-                                                        </td>
-                                                        <td>
-                                                            {
-                                                                variant.inventory_quantity
-                                                            }
-                                                        </td>
-                                                        <td>
-                                                            {variant.allow_backorder
-                                                                ? 'Yes'
-                                                                : 'No'}
-                                                        </td>
-                                                        <td>
-                                                            {new Date(
-                                                                variant.created_at
-                                                            ).toLocaleDateString()}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </CollapsibleContent>
-                                </Collapsible>
-                            </div>
-                        );
+                        return null; // Multi-variant products don't render individual data in this column.
                     },
                 };
+
             case 'actions':
                 return {
                     id: 'actions',
