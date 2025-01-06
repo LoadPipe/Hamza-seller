@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { FilePlus } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -96,6 +98,7 @@ export function ProductTable({
         },
     });
 
+    const navigate = useNavigate();
     const localStorageColumnSettingsKey = 'productTableColumnVisibility';
 
     useEffect(() => {
@@ -125,13 +128,19 @@ export function ProductTable({
         <div className="flex flex-col min-h-screen">
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
                 {/* Filters and Actions */}
-                <div className="flex flex-row gap-4 ml-auto">
+                <div className="flex flex-row gap-4 ml-auto ">
                     <div className="mb-4">
                         <Button
                             variant="outline"
-                            className="border-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] hover:bg-primary-green-900 text-white"
+                            className="hover:text-primary-purple-90 border-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] hover:bg-primary-green-900 text-white"
+                            onClick={() =>
+                                navigate({
+                                    to: '/add-product',
+                                })
+                            }
                         >
                             Add new product
+                            <FilePlus />
                         </Button>
                     </div>
                     <div className="ml-auto flex flex-row relative w-[376px]">

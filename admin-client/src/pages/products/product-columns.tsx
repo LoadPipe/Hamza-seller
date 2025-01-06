@@ -13,9 +13,6 @@ import {
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 
-// Define Product Schema
-// Define Product Schema
-
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
 

@@ -76,14 +76,8 @@ const productCategory = createRoute({
     getParentRoute: () => rootRoute, // Specify the parent route
 });
 
-const homeRoute = createRoute({
-    path: '/',
-    component: HomePage,
-    getParentRoute: () => rootRoute,
-});
-
 const DashboardRoute = createRoute({
-    path: 'dashboard',
+    path: '/',
     component: DashboardPage,
     getParentRoute: () => rootRoute,
 });
@@ -108,7 +102,6 @@ const notFoundRoute = createRoute({
 
 // Add child routes to the root route
 rootRoute.addChildren([
-    homeRoute,
     DashboardRoute,
     ordersRoute,
     productsRoute,
