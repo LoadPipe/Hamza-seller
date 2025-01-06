@@ -117,10 +117,22 @@ export function ProductTable({
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
                 {/* Filters and Actions */}
                 <div className="flex flex-row gap-4 ml-auto">
-                    <Input
-                        placeholder="Search products..."
-                        className="bg-[#242424] text-white w-1/3 rounded-lg border-none"
-                    />
+                    <div className="ml-auto flex flex-row relative w-[376px]">
+                        <Input
+                            placeholder="Search Orders..."
+                            value={
+                                (table
+                                    .getColumn('title')
+                                    ?.getFilterValue() as string) ?? ''
+                            }
+                            onChange={(event) =>
+                                table
+                                    .getColumn('title')
+                                    ?.setFilterValue(event.target.value)
+                            }
+                            className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2] active:border-primary-purple-90  text-white rounded bg-black pr-10"
+                        />
+                    </div>
                     <div className="flex justify-end">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
