@@ -10,34 +10,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ProductSchema } from '@/pages/products/product-schema.ts';
 
 // Define Product Schema
-export const ProductSchema = z.object({
-    id: z.string(),
-    title: z.string(),
-    subtitle: z.string().optional().nullable(),
-    description: z.string().optional(),
-    thumbnail: z.string().optional(),
-    category: z.string().optional(),
-    variants: z
-        .array(
-            z.object({
-                id: z.string(),
-                title: z.string(),
-                sku: z.string().nullable(),
-                inventory_quantity: z.number(),
-                prices: z.array(
-                    z.object({
-                        id: z.string(),
-                        currency_code: z.string(),
-                        amount: z.string(),
-                    })
-                ),
-            })
-        )
-        .optional()
-        .nullable(),
-});
+// Define Product Schema
 
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
@@ -129,9 +105,15 @@ export const generateColumns = (
                     accessorKey: 'variants',
                     header: 'Variants',
                     cell: ({ row }) => {
-                        const variants = row.original.variants || []; // Access variants directly from row.original
+                        // Log the entire row data for debugging
+                        console.log('Row data:', row.original);
 
-                        if (!variants.length) {
+                        // Access the variants
+                        const variants = row.original.variants || [];
+                        console.log('Variants:', variants);
+
+                        // Check if the variants array is valid and has length
+                        if (!Array.isArray(variants) || variants.length === 0) {
                             return (
                                 <div className="text-muted-foreground">
                                     No variants available

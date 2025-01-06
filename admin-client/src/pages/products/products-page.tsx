@@ -21,7 +21,7 @@ async function getProducts(): Promise<{
         console.log(response); // Inspect the response structure
         console.log(response.products); // Ensure `products` is an array
         return {
-            products: ProductSchema.array().parse(response ?? []),
+            products: ProductSchema.array().parse(response),
             totalRecords: response.totalRecords ?? 0,
         };
     } catch (error) {
