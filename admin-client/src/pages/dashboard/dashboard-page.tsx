@@ -8,8 +8,47 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    LineChart,
+    Line,
+    PieChart,
+    Pie,
+    Cell,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+} from 'recharts';
 
 export default function DashboardPage() {
+    // Dummy data for charts
+    const lineChartData = [
+        { name: 'Jan', revenue: 400 },
+        { name: 'Feb', revenue: 600 },
+        { name: 'Mar', revenue: 800 },
+        { name: 'Apr', revenue: 500 },
+        { name: 'May', revenue: 700 },
+        { name: 'Jun', revenue: 900 },
+    ];
+
+    const pieChartData = [
+        { name: 'New Orders', value: 0 },
+        { name: 'Others', value: 100 },
+    ];
+
+    const barChartData = [
+        { name: 'Jan', logins: 5 },
+        { name: 'Feb', logins: 8 },
+        { name: 'Mar', logins: 10 },
+        { name: 'Apr', logins: 7 },
+        { name: 'May', logins: 12 },
+        { name: 'Jun', logins: 9 },
+    ];
+
+    const COLORS = ['#94D42A', '#242424']; // Colors for pie chart
+
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
             <div className="max-w-7xl mx-auto space-y-8">
@@ -23,9 +62,36 @@ export default function DashboardPage() {
                         'Pending Orders',
                         'Confirmed Orders',
                         'Canceled Orders',
-                    ].map((title) => (
+                    ].map((title, index) => (
                         <Card key={title}>
-                            <CardContent className="text-center space-y-2">
+                            <CardContent className="text-center space-y-4">
+                                <ResponsiveContainer width="100%" height={120}>
+                                    <PieChart>
+                                        <Pie
+                                            data={pieChartData}
+                                            dataKey="value"
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={40}
+                                            outerRadius={50}
+                                            fill="#8884d8"
+                                            paddingAngle={5}
+                                            startAngle={90}
+                                            endAngle={-270}
+                                        >
+                                            {pieChartData.map((entry, i) => (
+                                                <Cell
+                                                    key={`cell-${i}`}
+                                                    fill={
+                                                        COLORS[
+                                                            i % COLORS.length
+                                                        ]
+                                                    }
+                                                />
+                                            ))}
+                                        </Pie>
+                                    </PieChart>
+                                </ResponsiveContainer>
                                 <p className="text-4xl font-semibold">00</p>
                                 <p>{title}</p>
                                 <p className="text-sm text-muted-foreground">
@@ -57,33 +123,35 @@ export default function DashboardPage() {
                                 </Select>
                             </div>
                         </CardHeader>
-                        <CardContent className="flex items-center justify-center h-40">
-                            <div className="text-center text-muted-foreground">
-                                <p className="text-lg">No Data Available</p>
-                                <p className="text-sm">
-                                    Data will be displayed here once you start
-                                    receiving orders or adding products.
-                                </p>
-                            </div>
+                        <CardContent className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={lineChartData}>
+                                    <Line
+                                        type="monotone"
+                                        dataKey="revenue"
+                                        stroke="#94D42A"
+                                        strokeWidth={2}
+                                    />
+                                    <Tooltip />
+                                </LineChart>
+                            </ResponsiveContainer>
                         </CardContent>
                     </Card>
 
-                    {/* Recent Activity */}
+                    {/* Recent Activity with Bar Chart */}
                     <Card>
                         <CardHeader>
                             <CardTitle>Recent Activity</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-sm">
-                                <strong>Your account is logged in</strong>
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                Account was logged in by one of your team
-                                members: John Doe
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                5 mins ago
-                            </p>
+                        <CardContent className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={barChartData}>
+                                    <XAxis dataKey="name" stroke="#ffffff" />
+                                    <YAxis stroke="#ffffff" />
+                                    <Tooltip />
+                                    <Bar dataKey="logins" fill="#94D42A" />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </CardContent>
                     </Card>
                 </div>
@@ -101,7 +169,11 @@ export default function DashboardPage() {
                         <CardContent className="text-center">
                             <p className="text-lg">Add your first product</p>
                             <p className="text-sm text-muted-foreground">
-                                Add your first product to your store.
+                                Add your first product to your store. Provide
+                                detailed descriptions, high-quality images, and
+                                accurate pricing to attract more customers.
+                                Don’t forget to categorize your product for easy
+                                discovery!
                             </p>
                         </CardContent>
                     </Card>
