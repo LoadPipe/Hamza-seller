@@ -13,18 +13,11 @@ import {
 } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    ChevronDown,
-    RefreshCw,
-    Settings,
-    Download,
-    ChevronUp,
-} from 'lucide-react';
+import { ChevronDown, Settings, ChevronUp } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
-    DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -133,6 +126,14 @@ export function ProductTable({
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
                 {/* Filters and Actions */}
                 <div className="flex flex-row gap-4 ml-auto">
+                    <div className="mb-4">
+                        <Button
+                            variant="outline"
+                            className="border-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] hover:bg-primary-green-900 text-white"
+                        >
+                            Add new product
+                        </Button>
+                    </div>
                     <div className="ml-auto flex flex-row relative w-[376px]">
                         <Input
                             placeholder="Search Products..."
@@ -191,7 +192,7 @@ export function ProductTable({
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className="ml-auto whitespace-nowrap bg-[#242424] hover:border-primary-purple-90"
+                                    className="ml-auto whitespace-nowrap bg-[#242424] hover:border-primary-purple-90 text-white"
                                 >
                                     <Settings />
                                     Toggle Columns

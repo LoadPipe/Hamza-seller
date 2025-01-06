@@ -18,8 +18,6 @@ async function getProducts(): Promise<{
         const response = await getSecure('/seller/product/seller-products', {
             store_id: getJwtStoreId(),
         });
-        console.log(response); // Inspect the response structure
-        console.log(response.products); // Ensure `products` is an array
         return {
             products: ProductSchema.array().parse(response),
             totalRecords: response.totalRecords ?? 0,
