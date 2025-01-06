@@ -34,7 +34,7 @@ const items = [
         isDropdown: true,
         submenu: [
             { title: 'All Products', url: '/products' },
-            { title: 'Add Product', url: '#add-product' },
+            { title: 'Add Product', url: '/add-product' },
             { title: 'Product Categories', url: '#categories' },
         ],
     },
