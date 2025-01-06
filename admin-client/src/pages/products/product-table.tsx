@@ -301,96 +301,108 @@ export function ProductTable({
                                         </TableRow>
 
                                         {/* Expanded Content for Variants */}
-                                        {expandedRows[row.id] &&
-                                            row.original.variants?.map(
-                                                (variant) => (
-                                                    <TableRow key={variant.id}>
-                                                        <TableCell
-                                                            colSpan={
-                                                                columns.length +
-                                                                1
-                                                            }
-                                                        >
-                                                            <div className="p-4 border rounded-md">
-                                                                <div>
-                                                                    <strong>
+                                        {expandedRows[row.id] && (
+                                            <TableRow>
+                                                <TableCell
+                                                    colSpan={columns.length + 1}
+                                                >
+                                                    <div className="p-4 border rounded-md bg-primary-dark text-white">
+                                                        <table className="w-full table-auto">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className="text-left p-2">
                                                                         Variant
-                                                                        ID:
-                                                                    </strong>{' '}
-                                                                    {variant.id}
-                                                                </div>
-                                                                <div>
-                                                                    <strong>
-                                                                        Title:
-                                                                    </strong>{' '}
-                                                                    {
-                                                                        variant.title
-                                                                    }
-                                                                </div>
-                                                                <div>
-                                                                    <strong>
-                                                                        SKU:
-                                                                    </strong>{' '}
-                                                                    {variant.sku ||
-                                                                        'N/A'}
-                                                                </div>
-                                                                <div>
-                                                                    <strong>
-                                                                        Price:
-                                                                    </strong>{' '}
-                                                                    {variant.prices?.map(
-                                                                        (
-                                                                            price,
-                                                                            idx
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    idx
-                                                                                }
-                                                                            >
-                                                                                {formatCryptoPrice(
-                                                                                    price.amount,
-                                                                                    price.currency_code ||
-                                                                                        'usdc'
-                                                                                )}{' '}
-                                                                                {
-                                                                                    price.currency_code
-                                                                                }
-                                                                            </div>
-                                                                        )
-                                                                    )}
-                                                                </div>
-                                                                <div>
-                                                                    <strong>
-                                                                        Inventory:
-                                                                    </strong>{' '}
-                                                                    {
-                                                                        variant.inventory_quantity
-                                                                    }
-                                                                </div>
-                                                                <div>
-                                                                    <strong>
+                                                                        ID
+                                                                    </th>
+                                                                    <th className="text-left p-2">
+                                                                        Title
+                                                                    </th>
+                                                                    <th className="text-left p-2">
+                                                                        SKU
+                                                                    </th>
+                                                                    <th className="text-left p-2">
+                                                                        Price
+                                                                    </th>
+                                                                    <th className="text-left p-2">
+                                                                        Inventory
+                                                                    </th>
+                                                                    <th className="text-left p-2">
                                                                         Allow
-                                                                        Backorder:
-                                                                    </strong>{' '}
-                                                                    {variant.allow_backorder
-                                                                        ? 'Yes'
-                                                                        : 'No'}
-                                                                </div>
-                                                                <div>
-                                                                    <strong>
+                                                                        Backorder
+                                                                    </th>
+                                                                    <th className="text-left p-2">
                                                                         Created
-                                                                        At:
-                                                                    </strong>{' '}
-                                                                    {
-                                                                        variant.created_at
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )
-                                            )}
+                                                                        At
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {row.original.variants?.map(
+                                                                    (
+                                                                        variant
+                                                                    ) => (
+                                                                        <tr
+                                                                            key={
+                                                                                variant.id
+                                                                            }
+                                                                        >
+                                                                            <td className="p-2">
+                                                                                {
+                                                                                    variant.id
+                                                                                }
+                                                                            </td>
+                                                                            <td className="p-2">
+                                                                                {variant.title ||
+                                                                                    'N/A'}
+                                                                            </td>
+                                                                            <td className="p-2">
+                                                                                {variant.sku ||
+                                                                                    'N/A'}
+                                                                            </td>
+                                                                            <td className="p-2">
+                                                                                {variant.prices?.map(
+                                                                                    (
+                                                                                        price,
+                                                                                        idx
+                                                                                    ) => (
+                                                                                        <div
+                                                                                            key={
+                                                                                                idx
+                                                                                            }
+                                                                                        >
+                                                                                            {formatCryptoPrice(
+                                                                                                price.amount,
+                                                                                                price.currency_code ||
+                                                                                                    'usdc'
+                                                                                            )}{' '}
+                                                                                            {price.currency_code.toUpperCase()}
+                                                                                        </div>
+                                                                                    )
+                                                                                )}
+                                                                            </td>
+                                                                            <td className="p-2">
+                                                                                {variant.inventory_quantity ||
+                                                                                    'N/A'}
+                                                                            </td>
+                                                                            <td className="p-2">
+                                                                                {variant.allow_backorder
+                                                                                    ? 'Yes'
+                                                                                    : 'No'}
+                                                                            </td>
+                                                                            <td className="p-2">
+                                                                                {new Date(
+                                                                                    variant.created_at
+                                                                                ).toLocaleString()}
+                                                                            </td>
+                                                                        </tr>
+                                                                    )
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
                                     </React.Fragment>
                                 ))
                             ) : (
