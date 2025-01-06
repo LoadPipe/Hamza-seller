@@ -17,6 +17,7 @@ import {
 import { useNavigate } from '@tanstack/react-router';
 import { setFilter } from '@/stores/order-filter/order-filter-store.ts';
 import { ReleaseEscrow } from '@/components/orders/release-escrow.tsx';
+
 type Order = z.infer<typeof OrderSchema>;
 
 async function getSellerOrders(
@@ -120,8 +121,6 @@ export default function OrdersPage() {
     if (error instanceof Error) {
         return <div>{error.message}</div>;
     }
-
-    console.log('orders', data);
 
     return (
         <>
