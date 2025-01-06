@@ -29,7 +29,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
 
 interface Product {
     id: string;
@@ -113,146 +112,192 @@ export function ProductTable({
         }
     }, [table]);
 
-    const handleCheckedChange = (columnId: string, value: boolean) => {
-        const currentVisibility = JSON.parse(
-            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
-        );
-        currentVisibility[columnId] = value;
-        localStorage.setItem(
-            localStorageColumnSettingsKey,
-            JSON.stringify(currentVisibility)
-        );
-    };
-
-    const handleDownloadCSV = () => {
-        const dataCSV = convertJSONToCSV(
-            data,
-            columns.map((col) => col.id)
-        );
-        downloadCSV(`${dataCSV}`, 'products.csv');
-    };
-
     return (
-        <div className="flex flex-col min-h-screen max-w-[1280px] mx-auto bg-[#121212] rounded-lg">
-            {/* Filters and Actions */}
-            <div className="flex justify-between items-center py-4 px-6 bg-[#1E1E1E]">
-                <Input
-                    placeholder="Search products..."
-                    className="bg-[#242424] text-white w-1/3 rounded-lg border-none"
-                />
-                <div className="flex gap-4">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                className="bg-[#242424] text-white"
-                            >
-                                {pageSize} per page
-                                <ChevronDown className="ml-2 w-4 h-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            {[5, 10, 20, 50].map((size) => (
-                                <DropdownMenuCheckboxItem
-                                    key={size}
-                                    checked={pageSize === size}
-                                    onCheckedChange={() => setPageSize(size)}
+        <div className="flex flex-col min-h-screen">
+            <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
+                {/* Filters and Actions */}
+                <div className="flex flex-row gap-4 ml-auto">
+                    <Input
+                        placeholder="Search products..."
+                        className="bg-[#242424] text-white w-1/3 rounded-lg border-none"
+                    />
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="bg-[#242424] text-white"
                                 >
-                                    {size}
-                                </DropdownMenuCheckboxItem>
+                                    {pageSize} per page
+                                    <ChevronDown className="ml-2 w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {[5, 10, 20, 50].map((size) => (
+                                    <DropdownMenuCheckboxItem
+                                        key={size}
+                                        checked={pageSize === size}
+                                        onCheckedChange={() =>
+                                            setPageSize(size)
+                                        }
+                                    >
+                                        {size}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-auto px-6">
+                    <Table className="table-fixed w-full">
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext()
+                                                  )}
+                                        </TableHead>
+                                    ))}
+                                </TableRow>
                             ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                        </TableHeader>
+                        <TableBody>
+                            {isLoading ? (
+                                [...Array(pageSize)].map((_, idx) => (
+                                    <TableRow key={idx}>
+                                        {columns.map((col) => (
+                                            <TableCell key={col.id}>
+                                                <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : table.getRowModel().rows.length > 0 ? (
+                                table.getRowModel().rows.map((row) => (
+                                    <TableRow key={row.id}>
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={columns.length}
+                                        className="text-center"
+                                    >
+                                        No products found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>{' '}
+            {/* Pagination */}
+            <div className="max-w-[1280px] w-full mx-4 rounded-xl p-[24px]">
+                <div className="flex justify-center items-center gap-2">
+                    {/* Previous Button */}
                     <Button
                         variant="outline"
-                        className="bg-[#242424] text-white"
-                        onClick={handleDownloadCSV}
+                        className="bg-primary-black-90 mr-1"
+                        size="sm"
+                        onClick={() =>
+                            setPageIndex((old) => Math.max(old - 1, 0))
+                        }
+                        disabled={pageIndex === 0}
                     >
-                        <Download />
-                        Export CSV
+                        Previous
+                    </Button>
+
+                    {/* First Page */}
+                    <button
+                        className={`w-8 h-8 flex items-center justify-center rounded text-xs ${
+                            pageIndex === 0
+                                ? 'bg-[#94D42A] text-black'
+                                : 'bg-[#121212] text-white'
+                        }`}
+                        onClick={() => setPageIndex(0)}
+                    >
+                        1
+                    </button>
+
+                    {/* Left Ellipsis */}
+                    {pageIndex > 2 && (
+                        <span className="text-gray-500">...</span>
+                    )}
+
+                    {/* Middle Pages */}
+                    {(() => {
+                        const pages = [];
+                        const start = Math.max(1, pageIndex - 1); // Start from one page before
+                        const end = Math.min(pageCount - 2, pageIndex + 1); // End one before the last page
+
+                        for (let i = start; i <= end; i++) {
+                            pages.push(
+                                <button
+                                    key={i}
+                                    className={`w-6 h-8 flex items-center justify-center rounded text-xs ${
+                                        pageIndex === i
+                                            ? 'bg-[#94D42A] text-black'
+                                            : 'bg-[#121212] text-white'
+                                    }`}
+                                    onClick={() => setPageIndex(i)}
+                                >
+                                    {i + 1}
+                                </button>
+                            );
+                        }
+                        return pages;
+                    })()}
+
+                    {/* Right Ellipsis */}
+                    {pageIndex < pageCount - 3 && (
+                        <span className="text-gray-500">...</span>
+                    )}
+
+                    {/* Last Page */}
+                    {pageCount > 1 && (
+                        <button
+                            className={`w-8 h-8 flex items-center justify-center rounded text-xs ${
+                                pageIndex === pageCount - 1
+                                    ? 'bg-[#94D42A] text-black'
+                                    : 'bg-[#121212] text-white'
+                            }`}
+                            onClick={() => setPageIndex(pageCount - 1)}
+                        >
+                            {pageCount}
+                        </button>
+                    )}
+
+                    {/* Next Button */}
+                    <Button
+                        variant="outline"
+                        className="bg-primary-black-90 ml-1"
+                        size="sm"
+                        onClick={() =>
+                            setPageIndex((old) =>
+                                Math.min(old + 1, pageCount - 1)
+                            )
+                        }
+                        disabled={pageIndex === pageCount - 1}
+                    >
+                        Next
                     </Button>
                 </div>
-            </div>
-
-            {/* Table */}
-            <div className="overflow-auto px-6">
-                <Table className="table-fixed w-full">
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext()
-                                              )}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            [...Array(pageSize)].map((_, idx) => (
-                                <TableRow key={idx}>
-                                    {columns.map((col) => (
-                                        <TableCell key={col.id}>
-                                            <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : table.getRowModel().rows.length > 0 ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="text-center"
-                                >
-                                    No products found.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex justify-between items-center py-4 px-6 bg-[#1E1E1E]">
-                <Button
-                    variant="outline"
-                    className="bg-[#242424] text-white"
-                    disabled={pageIndex === 0}
-                    onClick={() => setPageIndex(pageIndex - 1)}
-                >
-                    Previous
-                </Button>
-                <span className="text-white">
-                    Page {pageIndex + 1} of {pageCount}
-                </span>
-                <Button
-                    variant="outline"
-                    className="bg-[#242424] text-white"
-                    disabled={pageIndex === pageCount - 1}
-                    onClick={() => setPageIndex(pageIndex + 1)}
-                >
-                    Next
-                </Button>
             </div>
         </div>
     );
