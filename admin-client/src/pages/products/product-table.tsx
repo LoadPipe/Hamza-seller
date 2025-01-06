@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -11,7 +11,16 @@ import {
     getPaginationRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChevronDown, RefreshCw, Settings, Download } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Table,
     TableBody,
@@ -20,15 +29,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
+import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
 
 interface Product {
     id: string;
@@ -67,8 +68,7 @@ export function ProductTable({
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState({});
-    const [searchQuery, setSearchQuery] = React.useState('');
-
+    const [rowSelection, setRowSelection] = React.useState({});
     const pageCount = Math.ceil(totalRecords / pageSize);
 
     const table = useReactTable({
@@ -82,10 +82,12 @@ export function ProductTable({
         getCoreRowModel: getCoreRowModel(),
         onColumnFiltersChange: setColumnFilters,
         onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
         state: {
             sorting,
             columnFilters,
             columnVisibility,
+            rowSelection,
             pagination: {
                 pageIndex,
                 pageSize,
@@ -93,32 +95,60 @@ export function ProductTable({
         },
     });
 
-    const handleSearch = (value: string) => {
-        setSearchQuery(value);
-        table.getColumn('name')?.setFilterValue(value);
+    const localStorageColumnSettingsKey = 'productTableColumnVisibility';
+
+    useEffect(() => {
+        const savedVisibility = JSON.parse(
+            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
+        );
+        if (savedVisibility) {
+            table.getAllColumns().forEach((column) => {
+                if (
+                    column.getCanHide() &&
+                    savedVisibility[column.id] !== undefined
+                ) {
+                    column.toggleVisibility(savedVisibility[column.id]);
+                }
+            });
+        }
+    }, [table]);
+
+    const handleCheckedChange = (columnId: string, value: boolean) => {
+        const currentVisibility = JSON.parse(
+            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
+        );
+        currentVisibility[columnId] = value;
+        localStorage.setItem(
+            localStorageColumnSettingsKey,
+            JSON.stringify(currentVisibility)
+        );
+    };
+
+    const handleDownloadCSV = () => {
+        const dataCSV = convertJSONToCSV(
+            data,
+            columns.map((col) => col.id)
+        );
+        downloadCSV(`${dataCSV}`, 'products.csv');
     };
 
     return (
-        <div className="flex flex-col min-h-screen">
-            {/* Search and Controls */}
-            <div className="flex flex-row items-center justify-between mb-4">
+        <div className="flex flex-col min-h-screen max-w-[1280px] mx-auto bg-[#121212] rounded-lg">
+            {/* Filters and Actions */}
+            <div className="flex justify-between items-center py-4 px-6 bg-[#1E1E1E]">
                 <Input
-                    placeholder="Search product..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="w-1/3"
+                    placeholder="Search products..."
+                    className="bg-[#242424] text-white w-1/3 rounded-lg border-none"
                 />
-
-                <div className="flex gap-2">
-                    {/* Page Size Dropdown */}
+                <div className="flex gap-4">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="ghost"
-                                className="flex items-center gap-2"
+                                className="bg-[#242424] text-white"
                             >
                                 {pageSize} per page
-                                <ChevronDown className="w-4 h-4" />
+                                <ChevronDown className="ml-2 w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
@@ -128,37 +158,25 @@ export function ProductTable({
                                     checked={pageSize === size}
                                     onCheckedChange={() => setPageSize(size)}
                                 >
-                                    {size} entries
+                                    {size}
                                 </DropdownMenuCheckboxItem>
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
-
-                    {/* Column Visibility Toggle */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline">Toggle Columns</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            {table.getAllColumns().map((column) => (
-                                <DropdownMenuCheckboxItem
-                                    key={column.id}
-                                    checked={column.getIsVisible()}
-                                    onCheckedChange={(value) =>
-                                        column.toggleVisibility(value)
-                                    }
-                                >
-                                    {column.id}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                        variant="outline"
+                        className="bg-[#242424] text-white"
+                        onClick={handleDownloadCSV}
+                    >
+                        <Download />
+                        Export CSV
+                    </Button>
                 </div>
             </div>
 
             {/* Table */}
-            <div className="rounded-md border">
-                <Table>
+            <div className="overflow-auto px-6">
+                <Table className="table-fixed w-full">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
@@ -178,11 +196,15 @@ export function ProductTable({
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            <TableRow>
-                                <TableCell colSpan={columns.length}>
-                                    Loading...
-                                </TableCell>
-                            </TableRow>
+                            [...Array(pageSize)].map((_, idx) => (
+                                <TableRow key={idx}>
+                                    {columns.map((col) => (
+                                        <TableCell key={col.id}>
+                                            <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
                         ) : table.getRowModel().rows.length > 0 ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
@@ -211,19 +233,21 @@ export function ProductTable({
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4">
+            <div className="flex justify-between items-center py-4 px-6 bg-[#1E1E1E]">
                 <Button
                     variant="outline"
+                    className="bg-[#242424] text-white"
                     disabled={pageIndex === 0}
                     onClick={() => setPageIndex(pageIndex - 1)}
                 >
                     Previous
                 </Button>
-                <span>
+                <span className="text-white">
                     Page {pageIndex + 1} of {pageCount}
                 </span>
                 <Button
                     variant="outline"
+                    className="bg-[#242424] text-white"
                     disabled={pageIndex === pageCount - 1}
                     onClick={() => setPageIndex(pageIndex + 1)}
                 >
