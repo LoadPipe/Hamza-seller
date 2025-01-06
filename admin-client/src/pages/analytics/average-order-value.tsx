@@ -1,17 +1,14 @@
-import { Select } from '@/components/ui/select';
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export function AverageOrderValue() {
     return (
-        <div className="bg-[#1A1A1A] p-4 rounded-lg shadow-md text-white">
-            <h2 className="text-lg font-medium">Average Order Value</h2>
-            <p className="text-4xl font-bold mt-2">$32</p>
-            <Select defaultValue="USD">
-                {/*<Select.Item value="USD">USD</Select.Item>*/}
-                {/*<Select.Item value="EUR">EUR</Select.Item>*/}
-            </Select>
-            <p className="text-sm text-muted-foreground mt-2">
-                Average revenue per order
-            </p>
-        </div>
+        <Card className="bg-primary-black-90">
+            <CardHeader>
+                <CardTitle>Average Order Value</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <h3 className="text-4xl font-bold">$32</h3>
+                <p className="text-blue-500">Average revenue per order</p>
+            </CardContent>
+        </Card>
     );
 }

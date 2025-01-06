@@ -1,27 +1,25 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export function TopProducts() {
-    const products = [
-        { item: 'Macbook Pro 14" M3 Chip', qtySold: 4200 },
-        { item: 'Macbook Pro 14" M3 Chip', qtySold: 4100 },
-        { item: 'Macbook Pro 14" M3 Chip', qtySold: 4000 },
-        { item: 'Macbook Pro 14" M3 Chip', qtySold: 3900 },
-    ];
-
     return (
-        <div className="bg-[#1A1A1A] p-4 rounded-lg shadow-md text-white h-full flex flex-col">
-            <h2 className="text-lg font-medium mb-4">Top Products</h2>
-            <ul className="mt-4 space-y-2 overflow-auto">
-                {products.map((product, index) => (
-                    <li
-                        key={index}
-                        className="flex justify-between border-b border-gray-700 pb-2"
-                    >
-                        <span className="truncate">{product.item}</span>
-                        <span className="font-bold">
-                            {product.qtySold.toLocaleString()}
-                        </span>
-                    </li>
-                ))}
-            </ul>
-        </div>
+        <Card className="bg-primary-black-90 lg:row-span-2">
+            <CardHeader>
+                <CardTitle>Top Products</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-y-auto max-h-[300px]">
+                <ul className="space-y-2">
+                    {[
+                        { name: "Macbook Pro 14'' M3 Chip", sold: 4200 },
+                        { name: "Macbook Pro 14'' M3 Chip", sold: 4100 },
+                        { name: "Macbook Pro 14'' M3 Chip", sold: 4000 },
+                        { name: "Macbook Pro 14'' M3 Chip", sold: 3900 },
+                    ].map((product, index) => (
+                        <li key={index} className="flex justify-between">
+                            <span>{product.name}</span>
+                            <span>{product.sold}</span>
+                        </li>
+                    ))}
+                </ul>
+            </CardContent>
+        </Card>
     );
 }

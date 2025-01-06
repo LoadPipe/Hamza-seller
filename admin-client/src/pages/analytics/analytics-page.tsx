@@ -202,12 +202,43 @@ export default function AnalyticsPage() {
                     </Card>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                    <TotalOrders />
-                    <TotalRefunds />
-                    <OrderOverview />
-                    <AverageOrderValue />
-                    <TopProducts />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+                    {/* Left Section: Smaller Cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-2 gap-6 lg:col-span-2">
+                        <TotalOrders />
+                        <TotalRefunds />
+                        <OrderOverview />
+                        <AverageOrderValue />
+                    </div>
+
+                    {/* Right Section: Scrollable Top Products */}
+                    <div className="lg:row-span-2">
+                        <div className="bg-primary-black-90 rounded-lg p-4 h-full">
+                            <h3 className="text-xl font-semibold mb-4">
+                                Top Products
+                            </h3>
+                            <div className="overflow-y-auto max-h-[300px] scrollbar-thin">
+                                {/* Dummy Product List */}
+                                <ul className="space-y-2">
+                                    {Array(20)
+                                        .fill(null)
+                                        .map((_, index) => (
+                                            <li
+                                                key={index}
+                                                className="flex justify-between items-center p-2 rounded-md"
+                                            >
+                                                <span>
+                                                    Macbook Pro 14" M3 Chip
+                                                </span>
+                                                <span className="font-semibold">
+                                                    4,200
+                                                </span>
+                                            </li>
+                                        ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
