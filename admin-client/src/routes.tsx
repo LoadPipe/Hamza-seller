@@ -12,6 +12,7 @@ import { zodValidator } from '@tanstack/zod-adapter';
 import HomePage from './pages/home/home-page.tsx';
 import AddProductPage from '@/pages/products/add-product-page.tsx';
 import EditProductPage from '@/pages/products/edit-product-page.tsx';
+import ProductCategoryPage from '@/pages/products/product-category-page.tsx';
 
 export const OrderSearchSchema = z.object({
     page: z.coerce.number().catch(0),
@@ -66,6 +67,12 @@ const editProductRoute = createRoute({
     getParentRoute: () => rootRoute, // Specify the parent route
 });
 
+const productCategory = createRoute({
+    path: 'product-category',
+    component: ProductCategoryPage,
+    getParentRoute: () => rootRoute, // Specify the parent route
+});
+
 // Add additional routes
 const homeRoute = createRoute({
     path: '/',
@@ -86,6 +93,7 @@ rootRoute.addChildren([
     productsRoute,
     addProductRoute,
     editProductRoute,
+    productCategory,
     notFoundRoute,
 ]);
 

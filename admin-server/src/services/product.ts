@@ -787,6 +787,10 @@ class ProductService extends MedusaProductService {
         });
     }
 
+    // Simple function, just list product categories
+    // TODO: Create relation O:M -> `store` - > `product_category
+    async getStoreCategories(storeId: string) {}
+
     async getCategoryByHandle(
         categoryHandle: string
     ): Promise<ProductCategory | null> {

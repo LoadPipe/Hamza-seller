@@ -36,7 +36,7 @@ const items = [
             { title: 'All Products', url: '/products' },
             { title: 'Add Product', url: '/add-product' },
             { title: 'Edit Product', url: '/edit-product' },
-            { title: 'Product Categories', url: '#categories' },
+            { title: 'Product Categories', url: '/product-category' },
         ],
     },
     {
