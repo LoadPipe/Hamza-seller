@@ -56,7 +56,7 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
 }
 
-// Localstorage key for storing the user's preferred columns
+// Localstorage key for storing the user's preferred productColumns
 
 export function DataTable<TData, TValue>({
     columns,
@@ -162,7 +162,7 @@ export function DataTable<TData, TValue>({
             .filter((key): key is string => !!key); // Ensure keys are non-null strings
 
         if (headers.length === 0) {
-            console.error('No valid columns available for CSV export.');
+            console.error('No valid productColumns available for CSV export.');
             return;
         }
 

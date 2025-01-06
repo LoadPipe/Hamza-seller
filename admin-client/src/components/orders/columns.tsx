@@ -15,7 +15,7 @@ import {
 import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 import { formatStatus, formatDate, customerName } from '@/utils/format-data.ts';
 import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
-// Define the Zod schema for the columns you want to display
+// Define the Zod schema for the productColumns you want to display
 export const OrderSchema = z.object({
     id: z.string(),
     customer_id: z.string(),
@@ -86,7 +86,7 @@ import React from 'react';
 // Generate TypeScript type from Zod schema
 export type Order = z.infer<typeof OrderSchema>;
 
-// Pure Function; We aren't using sideEffects here, the purpose of this function is to generate columns
+// Pure Function; We aren't using sideEffects here, the purpose of this function is to generate productColumns
 export const generateColumns = (
     includeColumns: Array<keyof Order | 'select' | 'actions'>
 ): ColumnDef<Order>[] => {

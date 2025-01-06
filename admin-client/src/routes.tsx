@@ -5,12 +5,20 @@ import {
     createRouter,
 } from '@tanstack/react-router';
 import OrdersPage from '@/pages/orders/orders-page.tsx';
+import ProductsPage from '@/pages/products/products-page.tsx';
 import RootComponent from '@/pages/RootComponent.tsx';
 import { z } from 'zod';
 import { zodValidator } from '@tanstack/zod-adapter';
 import HomePage from './pages/home/home-page.tsx';
 
 export const OrderSearchSchema = z.object({
+    page: z.coerce.number().catch(0),
+    count: z.coerce.number().catch(10),
+    filter: z.string().optional(),
+    sort: z.string().optional(),
+});
+
+export const ProductSearchSchema = z.object({
     page: z.coerce.number().catch(0),
     count: z.coerce.number().catch(10),
     filter: z.string().optional(),
@@ -35,6 +43,15 @@ const ordersRoute = createRoute({
     validateSearch: zodValidator(OrderSearchSchema),
 });
 
+const productsRoute = createRoute({
+    path: '/products',
+    component: ProductsPage,
+    getParentRoute: () => rootRoute, // Specify the parent route
+
+    // Use Zod Validator to validate the search parameters
+    validateSearch: zodValidator(ProductSearchSchema),
+});
+
 // Add additional routes
 const homeRoute = createRoute({
     path: '/',
@@ -49,7 +66,7 @@ const notFoundRoute = createRoute({
 });
 
 // Add child routes to the root route
-rootRoute.addChildren([homeRoute, ordersRoute, notFoundRoute]);
+rootRoute.addChildren([homeRoute, ordersRoute, productsRoute, notFoundRoute]);
 
 // Create the router
 export const router = createRouter({
