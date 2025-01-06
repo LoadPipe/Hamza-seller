@@ -28,6 +28,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AddCategoryDialog from '@/pages/products/utils/add-category-dialog';
+import { useNavigate } from '@tanstack/react-router';
 
 interface Category {
     id: string;
@@ -140,8 +141,19 @@ export default function ProductCategoryPage() {
         getPaginationRowModel: getPaginationRowModel(),
     });
 
+    const navigate = useNavigate();
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
+            <button
+                className="mb-4"
+                onClick={() =>
+                    navigate({
+                        to: '/products',
+                    })
+                }
+            >
+                Back to All Products
+            </button>
             <div className="max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Categories</h1>
