@@ -307,98 +307,101 @@ export function ProductTable({
                                                     colSpan={columns.length + 1}
                                                 >
                                                     <div className="p-4 border rounded-md bg-primary-dark text-white">
-                                                        <table className="w-full table-auto">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th className="text-left p-2">
-                                                                        Variant
-                                                                        ID
-                                                                    </th>
-                                                                    <th className="text-left p-2">
-                                                                        Title
-                                                                    </th>
-                                                                    <th className="text-left p-2">
-                                                                        SKU
-                                                                    </th>
-                                                                    <th className="text-left p-2">
-                                                                        Price
-                                                                    </th>
-                                                                    <th className="text-left p-2">
-                                                                        Inventory
-                                                                    </th>
-                                                                    <th className="text-left p-2">
-                                                                        Allow
-                                                                        Backorder
-                                                                    </th>
-                                                                    <th className="text-left p-2">
-                                                                        Created
-                                                                        At
-                                                                    </th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {row.original.variants?.map(
-                                                                    (
-                                                                        variant
-                                                                    ) => (
-                                                                        <tr
-                                                                            key={
-                                                                                variant.id
-                                                                            }
-                                                                        >
-                                                                            <td className="p-2">
-                                                                                {
+                                                        {/* Scrollable Table Wrapper */}
+                                                        <div className="max-h-[300px] overflow-y-auto">
+                                                            <table className="w-full table-auto">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th className="text-left p-2">
+                                                                            Variant
+                                                                            ID
+                                                                        </th>
+                                                                        <th className="text-left p-2">
+                                                                            Title
+                                                                        </th>
+                                                                        <th className="text-left p-2">
+                                                                            SKU
+                                                                        </th>
+                                                                        <th className="text-left p-2">
+                                                                            Price
+                                                                        </th>
+                                                                        <th className="text-left p-2">
+                                                                            Inventory
+                                                                        </th>
+                                                                        <th className="text-left p-2">
+                                                                            Allow
+                                                                            Backorder
+                                                                        </th>
+                                                                        <th className="text-left p-2">
+                                                                            Created
+                                                                            At
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {row.original.variants?.map(
+                                                                        (
+                                                                            variant
+                                                                        ) => (
+                                                                            <tr
+                                                                                key={
                                                                                     variant.id
                                                                                 }
-                                                                            </td>
-                                                                            <td className="p-2">
-                                                                                {variant.title ||
-                                                                                    'N/A'}
-                                                                            </td>
-                                                                            <td className="p-2">
-                                                                                {variant.sku ||
-                                                                                    'N/A'}
-                                                                            </td>
-                                                                            <td className="p-2">
-                                                                                {variant.prices?.map(
-                                                                                    (
-                                                                                        price,
-                                                                                        idx
-                                                                                    ) => (
-                                                                                        <div
-                                                                                            key={
-                                                                                                idx
-                                                                                            }
-                                                                                        >
-                                                                                            {formatCryptoPrice(
-                                                                                                price.amount,
-                                                                                                price.currency_code ||
-                                                                                                    'usdc'
-                                                                                            )}{' '}
-                                                                                            {price.currency_code.toUpperCase()}
-                                                                                        </div>
-                                                                                    )
-                                                                                )}
-                                                                            </td>
-                                                                            <td className="p-2">
-                                                                                {variant.inventory_quantity ||
-                                                                                    'N/A'}
-                                                                            </td>
-                                                                            <td className="p-2">
-                                                                                {variant.allow_backorder
-                                                                                    ? 'Yes'
-                                                                                    : 'No'}
-                                                                            </td>
-                                                                            <td className="p-2">
-                                                                                {new Date(
-                                                                                    variant.created_at
-                                                                                ).toLocaleString()}
-                                                                            </td>
-                                                                        </tr>
-                                                                    )
-                                                                )}
-                                                            </tbody>
-                                                        </table>
+                                                                            >
+                                                                                <td className="p-2">
+                                                                                    {
+                                                                                        variant.id
+                                                                                    }
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {variant.title ||
+                                                                                        'N/A'}
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {variant.sku ||
+                                                                                        'N/A'}
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {variant.prices?.map(
+                                                                                        (
+                                                                                            price,
+                                                                                            idx
+                                                                                        ) => (
+                                                                                            <div
+                                                                                                key={
+                                                                                                    idx
+                                                                                                }
+                                                                                            >
+                                                                                                {formatCryptoPrice(
+                                                                                                    price.amount,
+                                                                                                    price.currency_code ||
+                                                                                                        'usdc'
+                                                                                                )}{' '}
+                                                                                                {price.currency_code.toUpperCase()}
+                                                                                            </div>
+                                                                                        )
+                                                                                    )}
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {variant.inventory_quantity ||
+                                                                                        'N/A'}
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {variant.allow_backorder
+                                                                                        ? 'Yes'
+                                                                                        : 'No'}
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {new Date(
+                                                                                        variant.created_at
+                                                                                    ).toLocaleString()}
+                                                                                </td>
+                                                                            </tr>
+                                                                        )
+                                                                    )}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
