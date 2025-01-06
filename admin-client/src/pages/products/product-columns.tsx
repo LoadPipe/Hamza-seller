@@ -48,6 +48,35 @@ export const generateColumns = (
 ): ColumnDef<Product>[] => {
     const baseColumns: ColumnDef<Product>[] = includeColumns.map((column) => {
         switch (column) {
+            case 'thumbnail':
+                return {
+                    accessorKey: 'thumbnail',
+                    header: '',
+                    cell: ({ row }) => {
+                        const thumbnail = row.original.thumbnail; // Access thumbnail directly
+                        return (
+                            <div className="w-16 h-16 flex items-center justify-center">
+                                {thumbnail ? (
+                                    <img
+                                        src={thumbnail}
+                                        alt={
+                                            row.original.title ||
+                                            'Product Image'
+                                        }
+                                        className="object-cover rounded-md w-full h-full"
+                                    />
+                                ) : (
+                                    <div className="bg-gray-200 text-gray-500 text-sm flex items-center justify-center w-full h-full rounded-md">
+                                        No Image
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    },
+                    enableSorting: false,
+                    enableHiding: false,
+                };
+
             case 'title':
                 return {
                     accessorKey: 'title',
@@ -104,35 +133,32 @@ export const generateColumns = (
                     accessorKey: 'variants',
                     header: 'Variants',
                     cell: ({ row }) => {
-                        const variants = row.getValue(
-                            'variants'
-                        ) as Product['variants'];
+                        const variants = row.original.variants || []; // Access variants directly from row.original
 
-                        if (!variants || variants.length === 0) {
-                            return <div>No variants available</div>;
-                        }
-
-                        if (variants.length === 1) {
-                            const variant = variants[0];
-                            const priceDetails = variant.prices
-                                .map(
-                                    (price) =>
-                                        `${price.currency_code.toUpperCase()}: ${price.amount}`
-                                )
-                                .join(', ');
-
+                        if (!variants.length) {
                             return (
-                                <div>
-                                    <div>SKU: {variant.sku || 'N/A'}</div>
-                                    <div>
-                                        Stock:{' '}
-                                        {variant.inventory_quantity ?? 'N/A'}
-                                    </div>
-                                    <div>Prices: {priceDetails}</div>
+                                <div className="text-muted-foreground">
+                                    No variants available
                                 </div>
                             );
                         }
 
+                        if (variants.length === 1) {
+                            const variant = variants[0];
+                            const price = variant.prices?.[0]?.amount || 'N/A'; // Get the first price
+                            const currency =
+                                variant.prices?.[0]?.currency_code || '';
+                            return (
+                                <div>
+                                    <div>
+                                        Price: {price} {currency}
+                                    </div>
+                                    <div>SKU: {variant.sku || 'N/A'}</div>
+                                </div>
+                            );
+                        }
+
+                        // Render dropdown for multiple variants
                         return (
                             <div className="flex flex-col">
                                 <div className="text-sm text-muted-foreground">
@@ -145,42 +171,28 @@ export const generateColumns = (
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        {variants.map((variant) => {
-                                            const priceDetails = variant.prices
-                                                .map(
-                                                    (price) =>
-                                                        `${price.currency_code.toUpperCase()}: ${price.amount}`
-                                                )
-                                                .join(', ');
-
-                                            return (
-                                                <DropdownMenuItem
-                                                    key={variant.id}
-                                                >
+                                        {variants.map((variant) => (
+                                            <DropdownMenuItem key={variant.id}>
+                                                <div>
                                                     <div>
-                                                        <div>
-                                                            Title:{' '}
-                                                            {variant.title}
-                                                        </div>
-                                                        <div>
-                                                            SKU:{' '}
-                                                            {variant.sku ||
-                                                                'N/A'}
-                                                        </div>
-                                                        <div>
-                                                            Stock:{' '}
-                                                            {
-                                                                variant.inventory_quantity
-                                                            }
-                                                        </div>
-                                                        <div>
-                                                            Prices:{' '}
-                                                            {priceDetails}
-                                                        </div>
+                                                        Title: {variant.title}
                                                     </div>
-                                                </DropdownMenuItem>
-                                            );
-                                        })}
+                                                    <div>
+                                                        SKU:{' '}
+                                                        {variant.sku || 'N/A'}
+                                                    </div>
+                                                    <div>
+                                                        Price:{' '}
+                                                        {variant.prices?.[0]
+                                                            ?.amount ||
+                                                            'N/A'}{' '}
+                                                        {variant.prices?.[0]
+                                                            ?.currency_code ||
+                                                            ''}
+                                                    </div>
+                                                </div>
+                                            </DropdownMenuItem>
+                                        ))}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>

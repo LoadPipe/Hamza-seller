@@ -119,7 +119,7 @@ export function ProductTable({
                 <div className="flex flex-row gap-4 ml-auto">
                     <div className="ml-auto flex flex-row relative w-[376px]">
                         <Input
-                            placeholder="Search Orders..."
+                            placeholder="Search Products..."
                             value={
                                 (table
                                     .getColumn('title')
@@ -135,7 +135,7 @@ export function ProductTable({
                     </div>
                     <div className="flex justify-end"></div>
                 </div>
-                <div className="flex text-sm text-muted-foreground m-2 ">
+                <div className="flex text-sm text-muted-foreground m-2 justify-between">
                     <div className="flex items-center gap-4">
                         <p className="text-sm text-white">Showing</p>
                         <DropdownMenu>
@@ -168,6 +168,43 @@ export function ProductTable({
                                 of {table.getFilteredRowModel().rows.length}{' '}
                                 entries.
                             </div>
+                        </DropdownMenu>
+                    </div>
+                    <div className="flex">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="ml-auto whitespace-nowrap bg-[#242424] hover:border-primary-purple-90"
+                                >
+                                    <Settings />
+                                    Toggle Columns
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-[#242424] border-primary-purple-90">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) => {
+                                                column.toggleVisibility(
+                                                    !!value
+                                                );
+                                                handleCheckedChange(
+                                                    column.id as any,
+                                                    !!value as any
+                                                );
+                                            }}
+                                            onSelect={(e) => e.preventDefault()} // Prevent menu close on select
+                                        >
+                                            {column.id}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                            </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </div>
