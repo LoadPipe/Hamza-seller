@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -13,7 +13,13 @@ import {
 } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronDown, RefreshCw, Settings, Download } from 'lucide-react';
+import {
+    ChevronDown,
+    RefreshCw,
+    Settings,
+    Download,
+    ChevronUp,
+} from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -69,7 +75,9 @@ export function ProductTable({
     const [columnVisibility, setColumnVisibility] = React.useState({});
     const [rowSelection, setRowSelection] = React.useState({});
     const pageCount = Math.ceil(totalRecords / pageSize);
-
+    const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>(
+        {}
+    );
     const table = useReactTable({
         data,
         columns,
@@ -111,6 +119,13 @@ export function ProductTable({
             });
         }
     }, [table]);
+
+    const toggleRowExpansion = (rowId: string) => {
+        setExpandedRows((prev) => ({
+            ...prev,
+            [rowId]: !prev[rowId],
+        }));
+    };
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -242,16 +257,136 @@ export function ProductTable({
                                 ))
                             ) : table.getRowModel().rows.length > 0 ? (
                                 table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id}>
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
+                                    <React.Fragment key={row.id}>
+                                        <TableRow>
+                                            {/* Toggle Button for Expanding Rows */}
+                                            <TableCell className="w-[40px]">
+                                                {row.original.variants &&
+                                                row.original.variants.length >
+                                                    1 ? (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            toggleRowExpansion(
+                                                                row.id
+                                                            )
+                                                        }
+                                                    >
+                                                        {expandedRows[
+                                                            row.id
+                                                        ] ? (
+                                                            <ChevronUp />
+                                                        ) : (
+                                                            <ChevronDown />
+                                                        )}
+                                                    </Button>
+                                                ) : null}
                                             </TableCell>
-                                        ))}
-                                    </TableRow>
+                                            {/* Main Row Data */}
+                                            {row
+                                                .getVisibleCells()
+                                                .map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column
+                                                                .columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                        </TableRow>
+
+                                        {/* Expanded Content for Variants */}
+                                        {expandedRows[row.id] &&
+                                            row.original.variants?.map(
+                                                (variant) => (
+                                                    <TableRow key={variant.id}>
+                                                        <TableCell
+                                                            colSpan={
+                                                                columns.length +
+                                                                1
+                                                            }
+                                                        >
+                                                            <div className="p-4 border rounded-md">
+                                                                <div>
+                                                                    <strong>
+                                                                        Variant
+                                                                        ID:
+                                                                    </strong>{' '}
+                                                                    {variant.id}
+                                                                </div>{' '}
+                                                                <div>
+                                                                    <strong>
+                                                                        Title:
+                                                                    </strong>{' '}
+                                                                    {
+                                                                        variant.title
+                                                                    }
+                                                                </div>
+                                                                <div>
+                                                                    <strong>
+                                                                        SKU:
+                                                                    </strong>{' '}
+                                                                    {variant.sku ||
+                                                                        'N/A'}
+                                                                </div>
+                                                                <div>
+                                                                    <strong>
+                                                                        Price:
+                                                                    </strong>{' '}
+                                                                    {variant.prices?.map(
+                                                                        (
+                                                                            price,
+                                                                            idx
+                                                                        ) => (
+                                                                            <div
+                                                                                key={
+                                                                                    idx
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    price.amount
+                                                                                }{' '}
+                                                                                {
+                                                                                    price.currency_code
+                                                                                }
+                                                                            </div>
+                                                                        )
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <strong>
+                                                                        Inventory:
+                                                                    </strong>{' '}
+                                                                    {
+                                                                        variant.inventory_quantity
+                                                                    }
+                                                                </div>
+                                                                <div>
+                                                                    <strong>
+                                                                        Allow
+                                                                        Backorder:
+                                                                    </strong>{' '}
+                                                                    {variant.allow_backorder
+                                                                        ? 'Yes'
+                                                                        : 'No'}
+                                                                </div>
+                                                                <div>
+                                                                    <strong>
+                                                                        Created
+                                                                        At:
+                                                                    </strong>{' '}
+                                                                    {
+                                                                        variant.created_at
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )
+                                            )}
+                                    </React.Fragment>
                                 ))
                             ) : (
                                 <TableRow>

@@ -11,6 +11,11 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 // Define Product Schema
 // Define Product Schema
@@ -105,14 +110,8 @@ export const generateColumns = (
                     accessorKey: 'variants',
                     header: 'Variants',
                     cell: ({ row }) => {
-                        // Log the entire row data for debugging
-                        console.log('Row data:', row.original);
+                        const variants = row.original.variants || []; // Handle undefined/null
 
-                        // Access the variants
-                        const variants = row.original.variants || [];
-                        console.log('Variants:', variants);
-
-                        // Check if the variants array is valid and has length
                         if (!Array.isArray(variants) || variants.length === 0) {
                             return (
                                 <div className="text-muted-foreground">
@@ -121,63 +120,85 @@ export const generateColumns = (
                             );
                         }
 
-                        if (variants.length === 1) {
-                            const variant = variants[0];
-                            const price = variant.prices?.[0]?.amount || 'N/A'; // Get the first price
-                            const currency =
-                                variant.prices?.[0]?.currency_code || '';
-                            return (
-                                <div>
-                                    <div>
-                                        Price: {price} {currency}
-                                    </div>
-                                    <div>SKU: {variant.sku || 'N/A'}</div>
-                                </div>
-                            );
-                        }
-
-                        // Render dropdown for multiple variants
                         return (
                             <div className="flex flex-col">
-                                <div className="text-sm text-muted-foreground">
-                                    {variants.length} variants available
-                                </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
+                                {/* Collapsible Root */}
+                                <Collapsible>
+                                    <CollapsibleTrigger asChild>
                                         <Button variant="outline" size="sm">
-                                            View Variants
+                                            {variants.length} variant
+                                            {variants.length > 1
+                                                ? 's'
+                                                : ''}{' '}
+                                            available
                                         </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        {variants.map((variant) => (
-                                            <DropdownMenuItem key={variant.id}>
-                                                <div>
-                                                    <div>
-                                                        Title: {variant.title}
-                                                    </div>
-                                                    <div>
-                                                        SKU:{' '}
-                                                        {variant.sku || 'N/A'}
-                                                    </div>
-                                                    <div>
-                                                        Price:{' '}
-                                                        {variant.prices?.[0]
-                                                            ?.amount ||
-                                                            'N/A'}{' '}
-                                                        {variant.prices?.[0]
-                                                            ?.currency_code ||
-                                                            ''}
-                                                    </div>
-                                                </div>
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent className="pt-2">
+                                        <table className="table-auto w-full text-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th className="text-left">
+                                                        Title
+                                                    </th>
+                                                    <th className="text-left">
+                                                        SKU
+                                                    </th>
+                                                    <th className="text-left">
+                                                        Prices
+                                                    </th>
+                                                    <th className="text-left">
+                                                        Inventory
+                                                    </th>
+                                                    <th className="text-left">
+                                                        Backorder
+                                                    </th>
+                                                    <th className="text-left">
+                                                        Created At
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {variants.map((variant) => (
+                                                    <tr key={variant.id}>
+                                                        <td>{variant.title}</td>
+                                                        <td>
+                                                            {variant.sku ||
+                                                                'N/A'}
+                                                        </td>
+                                                        <td>
+                                                            {variant.prices
+                                                                ?.map(
+                                                                    (price) =>
+                                                                        `${price.amount} ${price.currency_code}`
+                                                                )
+                                                                .join(', ') ||
+                                                                'N/A'}
+                                                        </td>
+                                                        <td>
+                                                            {
+                                                                variant.inventory_quantity
+                                                            }
+                                                        </td>
+                                                        <td>
+                                                            {variant.allow_backorder
+                                                                ? 'Yes'
+                                                                : 'No'}
+                                                        </td>
+                                                        <td>
+                                                            {new Date(
+                                                                variant.created_at
+                                                            ).toLocaleDateString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </CollapsibleContent>
+                                </Collapsible>
                             </div>
                         );
                     },
                 };
-
             case 'actions':
                 return {
                     id: 'actions',
