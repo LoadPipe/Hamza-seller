@@ -133,30 +133,41 @@ export function ProductTable({
                             className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2] active:border-primary-purple-90  text-white rounded bg-black pr-10"
                         />
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex justify-end"></div>
+                </div>
+                <div className="flex text-sm text-muted-foreground m-2 ">
+                    <div className="flex items-center gap-4">
+                        <p className="text-sm text-white">Showing</p>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
-                                    className="bg-[#242424] text-white"
+                                    className="bg-[#242424] text-white w-[72px] h-[36px] rounded"
+                                    size="sm"
                                 >
-                                    {pageSize} per page
-                                    <ChevronDown className="ml-2 w-4 h-4" />
+                                    {pageSize} {/* Display current page size */}
+                                    <ChevronDown className="w-4 h-4 text-white" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {[5, 10, 20, 50].map((size) => (
+                            <DropdownMenuContent className="bg-[#242424]">
+                                {[5, 10, 20, 50, 100].map((size) => (
                                     <DropdownMenuCheckboxItem
                                         key={size}
                                         checked={pageSize === size}
-                                        onCheckedChange={() =>
-                                            setPageSize(size)
-                                        }
+                                        onCheckedChange={() => {
+                                            setPageSize(size); // Update page size
+                                            setPageIndex(0); // Reset to the first page
+                                        }}
+                                        onSelect={(e) => e.preventDefault()} // Prevent menu close on select
                                     >
                                         {size}
                                     </DropdownMenuCheckboxItem>
                                 ))}
                             </DropdownMenuContent>
+                            <div className="text-sm text-white">
+                                of {table.getFilteredRowModel().rows.length}{' '}
+                                entries.
+                            </div>
                         </DropdownMenu>
                     </div>
                 </div>
