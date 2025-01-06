@@ -169,11 +169,7 @@ export default function DashboardPage() {
                         <CardContent className="text-center">
                             <p className="text-lg">Add your first product</p>
                             <p className="text-sm text-muted-foreground">
-                                Add your first product to your store. Provide
-                                detailed descriptions, high-quality images, and
-                                accurate pricing to attract more customers.
-                                Don’t forget to categorize your product for easy
-                                discovery!
+                                Add your first product to your store.
                             </p>
                         </CardContent>
                     </Card>
