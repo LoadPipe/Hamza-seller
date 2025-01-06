@@ -8,10 +8,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useNavigate } from '@tanstack/react-router';
 
 export default function AddProductPage() {
+    const navigate = useNavigate();
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
+            <button
+                className="mb-4"
+                onClick={() =>
+                    navigate({
+                        to: '/products',
+                    })
+                }
+            >
+                Back to All Products
+            </button>
             <div className="max-w-4xl mx-auto bg-[#1A1A1A] p-8 rounded-lg shadow-md">
                 <h1 className="text-2xl font-semibold mb-6">Add New Product</h1>
 

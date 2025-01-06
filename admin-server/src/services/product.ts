@@ -780,7 +780,12 @@ class ProductService extends MedusaProductService {
 
     // Were getting products from the store for the /products page..
     // TODO: We really need to add the filters and totalCount ot this, and we will do this after the skeleton Products Panel
-    async getProductsForAdmin(storeId: string): Promise<Product[]> {
+    async getProductsForAdmin(
+        storeId: string,
+        sort: any,
+        page: number,
+        ordersPerPage: number
+    ): Promise<Product[]> {
         return await this.productRepository_.find({
             where: { store_id: storeId },
             relations: ['variants', 'variants.prices', 'categories'],
