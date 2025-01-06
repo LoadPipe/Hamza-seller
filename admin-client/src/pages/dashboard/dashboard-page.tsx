@@ -63,7 +63,7 @@ export default function DashboardPage() {
                         'Confirmed Orders',
                         'Canceled Orders',
                     ].map((title, index) => (
-                        <Card key={title}>
+                        <Card key={title} className="bg-primary-black-90">
                             <CardContent className="text-center space-y-4">
                                 <ResponsiveContainer width="100%" height={120}>
                                     <PieChart>
@@ -105,7 +105,7 @@ export default function DashboardPage() {
                 {/* Revenue Report */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Revenue Card */}
-                    <Card className="lg:col-span-2">
+                    <Card className="lg:col-span-2 bg-primary-black-90">
                         <CardHeader>
                             <CardTitle>Revenue Report</CardTitle>
                             <div className="flex items-center space-x-4">
@@ -139,7 +139,7 @@ export default function DashboardPage() {
                     </Card>
 
                     {/* Recent Activity with Bar Chart */}
-                    <Card>
+                    <Card className="bg-primary-black-90">
                         <CardHeader>
                             <CardTitle>Recent Activity</CardTitle>
                         </CardHeader>
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                             <Button variant="ghost">Sort By</Button>
                         </div>
                     </div>
-                    <Card className="flex items-center justify-center h-32">
+                    <Card className="flex items-center justify-center h-32 bg-primary-black-90">
                         <CardContent className="text-center">
                             <p className="text-lg">Add your first product</p>
                             <p className="text-sm text-muted-foreground">

@@ -18,7 +18,7 @@ export default function SettingsPage() {
                 <h1 className="text-3xl font-bold mb-6">Settings</h1>
 
                 {/* Account Information */}
-                <Card>
+                <Card className="bg-primary-black-90">
                     <CardHeader>
                         <CardTitle>Account Information</CardTitle>
                     </CardHeader>
@@ -68,7 +68,7 @@ export default function SettingsPage() {
                 </Card>
 
                 {/* Business Information */}
-                <Card>
+                <Card className="bg-primary-black-90">
                     <CardHeader>
                         <CardTitle>Business Information</CardTitle>
                     </CardHeader>
@@ -126,7 +126,7 @@ export default function SettingsPage() {
                 </Card>
 
                 {/* Store Information */}
-                <Card>
+                <Card className="bg-primary-black-90">
                     <CardHeader>
                         <CardTitle>Store Information</CardTitle>
                     </CardHeader>
@@ -160,7 +160,7 @@ export default function SettingsPage() {
                 </Card>
 
                 {/* Wallet/Payment Settings */}
-                <Card>
+                <Card className="bg-primary-black-90">
                     <CardHeader>
                         <CardTitle>Wallet/Payment Settings</CardTitle>
                     </CardHeader>
