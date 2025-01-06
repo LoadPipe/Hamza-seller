@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
+import { useNavigate } from '@tanstack/react-router';
 
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
@@ -191,7 +192,7 @@ export const generateColumns = (
                     id: 'actions',
                     cell: ({ row }) => {
                         const product = row.original;
-
+                        const navigate = useNavigate();
                         return (
                             <div className="flex justify-end">
                                 <DropdownMenu>
@@ -221,7 +222,14 @@ export const generateColumns = (
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
-                                            onClick={() => console.log(product)}
+                                            onClick={() =>
+                                                navigate({
+                                                    to: '/edit-product',
+                                                    state: {
+                                                        productId: product.id,
+                                                    },
+                                                })
+                                            }
                                         >
                                             Edit Product
                                         </DropdownMenuItem>
