@@ -121,8 +121,6 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
         throw new Error('No escrow address found in order');
     }
 
-    //TODO: here, if chain id is not matching, switch chain.
-
     const escrow: EscrowClient = new EscrowClient(
         provider,
         signer,
