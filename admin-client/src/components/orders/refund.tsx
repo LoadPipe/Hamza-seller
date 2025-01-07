@@ -204,7 +204,8 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     };
 
     const handleRefundSubmit = async () => {
-        const isValid = await validateSeller(order, toast);
+        const payment = await getEscrowPayment(order);
+        const isValid = await validateSeller(payment, toast);
         if (validateForm() && isValid) {
             refundMutation.mutate();
         }
