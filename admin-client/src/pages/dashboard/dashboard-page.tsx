@@ -176,7 +176,7 @@ export default function DashboardPage() {
                         onValueChange={handleCurrencyChange} // Sync to Zustand store
                         defaultValue={preferred_currency_code || 'eth'} // Set default from store
                     >
-                        <SelectTrigger className="w-48">
+                        <SelectTrigger className="w-48 border-2 border-primary-purple-90 rounded-md animate-pulse-limited">
                             <SelectValue placeholder="Select Currency">
                                 {preferred_currency_code?.toUpperCase() ||
                                     'ETH'}
