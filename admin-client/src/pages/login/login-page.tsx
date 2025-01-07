@@ -1,6 +1,6 @@
 import HamzaLogo from '../../../public/Hamza-logo.svg';
 import { WalletConnect } from '@/components/wallet-connect/WalletConnect';
-import HomeBgImage from '../../../public/images/home_bg_image.png';
+import HomeBgImage from '../../../public/images/home_bg_image.webp';
 
 export default function LoginPage() {
     return (
@@ -8,7 +8,7 @@ export default function LoginPage() {
             {/* Top Navigation */}
             <nav className="w-full py-[21px] ">
                 <div className="max-w-[1440px] mx-auto flex items-center justify-between px-[75px]">
-                    <img src={HamzaLogo} />
+                    <img src={HamzaLogo} alt="hamza-logo" />
                     <WalletConnect />
                 </div>
             </nav>

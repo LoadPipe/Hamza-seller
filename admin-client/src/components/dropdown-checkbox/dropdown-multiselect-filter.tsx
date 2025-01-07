@@ -39,6 +39,12 @@ export default function DropdownMultiselectFilter({
         }
     };
 
+    const selectAllFilters = () => {
+        onFilterChange(options);
+        setTemporarySelection(options);
+        setIsOpen(true);
+    };
+
     const clearFilter = () => {
         onFilterChange(null);
         setTemporarySelection([]);
@@ -70,6 +76,7 @@ export default function DropdownMultiselectFilter({
                 <DropdownMenu.Portal>
                     <DropdownMenu.Content
                         className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded text-white border border-primary-purple-90"
+                        align="start"
                         sideOffset={5}
                     >
                         {options.map((option) => (
@@ -102,6 +109,12 @@ export default function DropdownMultiselectFilter({
                                 onClick={applyFilter}
                             >
                                 Apply
+                            </button>
+                            <button
+                                className="px-4 py-2 text-sm font-medium rounded bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
+                                onClick={selectAllFilters}
+                            >
+                                Select All
                             </button>
                             <button
                                 className="px-4 py-2 text-sm font-medium rounded bg-transparent  border-primary-purple-90 hover:bg-red-600 hover:border-none"
