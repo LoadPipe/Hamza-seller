@@ -57,6 +57,13 @@ export interface StoreOrdersDTO {
     statusCount: {};
 }
 
+export interface DashboardDTO {
+    newOrders: number;
+    pendingOrders: number;
+    confirmedOrders: number;
+    canceledOrders: number;
+}
+
 export default class StoreOrderService extends TransactionBaseService {
     static LIFE_TIME = Lifetime.SINGLETON;
 
@@ -340,6 +347,62 @@ export default class StoreOrderService extends TransactionBaseService {
             );
             throw error;
         }
+    }
+
+    async dashboardDTO(storeId: string): Promise<DashboardDTO> {
+        // Fetch counts for the specified categories
+        const categoryCounts = {
+            newOrders: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.PENDING,
+                    fulfillment_status: FulfillmentStatus.NOT_FULFILLED,
+                    payment_status: PaymentStatus.AWAITING,
+                },
+            }),
+            pendingOrders: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.REQUIRES_ACTION,
+                    fulfillment_status: In([
+                        FulfillmentStatus.PARTIALLY_FULFILLED,
+                        FulfillmentStatus.REQUIRES_ACTION,
+                    ]),
+                    payment_status: In([
+                        PaymentStatus.PARTIALLY_REFUNDED,
+                        PaymentStatus.REQUIRES_ACTION,
+                    ]),
+                },
+            }),
+            confirmedOrders: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.COMPLETED,
+                    fulfillment_status: In([
+                        FulfillmentStatus.FULFILLED,
+                        FulfillmentStatus.SHIPPED,
+                    ]),
+                    payment_status: PaymentStatus.CAPTURED,
+                },
+            }),
+            canceledOrders: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.CANCELED,
+                    fulfillment_status: In([
+                        FulfillmentStatus.CANCELED,
+                        FulfillmentStatus.RETURNED,
+                        FulfillmentStatus.PARTIALLY_RETURNED,
+                    ]),
+                    payment_status: In([
+                        PaymentStatus.CANCELED,
+                        PaymentStatus.REFUNDED,
+                    ]),
+                },
+            }),
+        };
+
+        return categoryCounts;
     }
 
     async syncEscrowPayment(orderId: string): Promise<Order> {
