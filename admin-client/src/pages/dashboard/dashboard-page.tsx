@@ -27,7 +27,7 @@ import { getJwtStoreId } from '@/utils/authentication';
 import { getSecure } from '@/utils/api-calls.ts';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button.tsx';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 async function getDashboardData(store_id: string, wallet_address: string) {
     try {
@@ -44,8 +44,27 @@ async function getDashboardData(store_id: string, wallet_address: string) {
 }
 
 export default function DashboardPage() {
+    const { toast } = useToast();
     const userData = useCustomerAuthStore();
-    console.log(`$$$$$ ${userData.authData.wallet_address}`);
+    const isAuthenticated = userData.authData.status === 'authenticated';
+    const hasLoggedIn = useCustomerAuthStore((state) => state.hasLoggedIn);
+    const setHasLoggedIn = useCustomerAuthStore(
+        (state) => state.setHasLoggedIn
+    );
+    const showWelcomeToast = useCallback(() => {
+        toast({
+            title: 'Welcome!',
+            description: 'You have successfully logged in.',
+        });
+    }, [toast]);
+
+    useEffect(() => {
+        if (isAuthenticated && !hasLoggedIn) {
+            // console.log('RUN TOAST');
+            showWelcomeToast();
+            setHasLoggedIn(true); // Mark as logged in
+        }
+    }, [isAuthenticated, hasLoggedIn, setHasLoggedIn, showWelcomeToast]);
 
     const { data, isLoading, error } = useQuery<{
         name: string;
@@ -131,8 +150,6 @@ export default function DashboardPage() {
         { name: 'May', logins: 12 },
         { name: 'Jun', logins: 9 },
     ];
-
-    const { toast } = useToast();
 
     const { preferred_currency_code, setCustomerPreferredCurrency } =
         useCustomerAuthStore();
