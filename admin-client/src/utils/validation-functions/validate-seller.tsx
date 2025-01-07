@@ -1,17 +1,18 @@
 import { getJwtWalletAddress } from '@/utils/authentication';
+import { PaymentDefinition } from '@/web3/contracts/escrow';
 
 export const validateSeller = async (
-    order: any,
+    escrowPayment: PaymentDefinition | null,
     toast: (options: any) => void
 ): Promise<boolean> => {
-    const sellerAddress = order?.payments[0]?.receiver_address;
+    const sellerAddress = escrowPayment?.receiver;
     const walletAddress = getJwtWalletAddress();
 
     if (sellerAddress !== walletAddress) {
         toast({
             variant: 'destructive',
             title: 'Validation Error',
-            description: `Only the owner of wallet ${order?.payments[0]?.receiver_address} may modify this escrow.`,
+            description: `Only the owner of wallet ${sellerAddress} may modify this escrow.`,
         });
         return false;
     }

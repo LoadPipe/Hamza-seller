@@ -13,7 +13,10 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Rocket } from 'lucide-react';
-import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
+import {
+    getEscrowPayment,
+    releaseEscrowPayment,
+} from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { validateSeller } from '@/utils/validation-functions/validate-seller';
@@ -47,7 +50,8 @@ export function ReleaseEscrow() {
     });
 
     const handleConfirm = async () => {
-        const isValid = await validateSeller(order, toast);
+        const payment = await getEscrowPayment(order);
+        const isValid = await validateSeller(payment, toast);
         closeOrderEscrowDialog();
         if (isValid) {
             releaseEscrowMutation.mutate(order);
