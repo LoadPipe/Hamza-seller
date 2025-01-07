@@ -13,6 +13,7 @@ import {
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useNavigate } from '@tanstack/react-router';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
@@ -132,6 +133,9 @@ export const generateColumns = (
                     ),
                     cell: ({ row }) => {
                         const variants = row.original.variants || [];
+                        const preferredCurrency = useCustomerAuthStore(
+                            (state) => state.preferred_currency_code
+                        );
 
                         if (variants.length === 1) {
                             const variant = variants[0];
@@ -142,38 +146,40 @@ export const generateColumns = (
 
                                     {/* Prices */}
                                     <div className="space-y-1">
-                                        {variant.prices?.length > 0
-                                            ? variant.prices.map(
-                                                  (price, idx) => (
-                                                      <div
-                                                          key={idx}
-                                                          className="flex items-center gap-2"
-                                                      >
-                                                          <span>
-                                                              {formatCryptoPrice(
-                                                                  price.amount,
-                                                                  price.currency_code ||
-                                                                      'usdc'
-                                                              )}
-                                                          </span>
-                                                          <span>
-                                                              {price.currency_code.toUpperCase()}
-                                                          </span>
-                                                      </div>
-                                                  )
-                                              )
-                                            : 'N/A'}
+                                        {variant.prices?.length > 0 ? (
+                                            variant.prices
+                                                .filter(
+                                                    (price) =>
+                                                        price.currency_code ===
+                                                        preferredCurrency
+                                                )
+                                                .map((price, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-center gap-2"
+                                                    >
+                                                        <span>
+                                                            {formatCryptoPrice(
+                                                                price.amount,
+                                                                price.currency_code
+                                                            )}
+                                                        </span>
+                                                        <span>
+                                                            {price.currency_code.toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                        ) : (
+                                            <div>N/A</div>
+                                        )}
                                     </div>
 
-                                    {/* Inventory */}
                                     <span>{variant.inventory_quantity}</span>
 
-                                    {/* Backorder */}
                                     <span>
                                         {variant.allow_backorder ? 'Yes' : 'No'}
                                     </span>
 
-                                    {/* Created At */}
                                     <span>
                                         {new Date(
                                             variant.created_at

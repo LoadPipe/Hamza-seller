@@ -31,6 +31,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 
 interface Product {
     id: string;
@@ -123,6 +124,11 @@ export function ProductTable({
             [rowId]: !prev[rowId],
         }));
     };
+
+    const preferredCurrency = useCustomerAuthStore(
+        (state) => state.preferred_currency_code
+    );
+    console.log(`what is preferefwe $$$ ${preferredCurrency}`);
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -372,25 +378,59 @@ export function ProductTable({
                                                                                         'N/A'}
                                                                                 </td>
                                                                                 <td className="p-2">
-                                                                                    {variant.prices?.map(
-                                                                                        (
-                                                                                            price,
-                                                                                            idx
-                                                                                        ) => (
-                                                                                            <div
-                                                                                                key={
-                                                                                                    idx
-                                                                                                }
-                                                                                            >
-                                                                                                {formatCryptoPrice(
-                                                                                                    price.amount,
-                                                                                                    price.currency_code ||
-                                                                                                        'usdc'
-                                                                                                )}{' '}
-                                                                                                {price.currency_code.toUpperCase()}
-                                                                                            </div>
-                                                                                        )
-                                                                                    )}
+                                                                                    {variant.prices
+                                                                                        ? variant.prices
+                                                                                              .filter(
+                                                                                                  (
+                                                                                                      price
+                                                                                                  ) =>
+                                                                                                      price.currency_code ===
+                                                                                                      preferredCurrency
+                                                                                              )
+                                                                                              .map(
+                                                                                                  (
+                                                                                                      price,
+                                                                                                      idx
+                                                                                                  ) => (
+                                                                                                      <div
+                                                                                                          key={
+                                                                                                              idx
+                                                                                                          }
+                                                                                                      >
+                                                                                                          {formatCryptoPrice(
+                                                                                                              price.amount,
+                                                                                                              price.currency_code
+                                                                                                          )}{' '}
+                                                                                                          {price.currency_code.toUpperCase()}
+                                                                                                      </div>
+                                                                                                  )
+                                                                                              )
+                                                                                        : variant.prices
+                                                                                              .filter(
+                                                                                                  (
+                                                                                                      price
+                                                                                                  ) =>
+                                                                                                      price.currency_code ===
+                                                                                                      'eth'
+                                                                                              )
+                                                                                              .map(
+                                                                                                  (
+                                                                                                      price,
+                                                                                                      idx
+                                                                                                  ) => (
+                                                                                                      <div
+                                                                                                          key={
+                                                                                                              idx
+                                                                                                          }
+                                                                                                      >
+                                                                                                          {formatCryptoPrice(
+                                                                                                              price.amount,
+                                                                                                              price.currency_code
+                                                                                                          )}{' '}
+                                                                                                          {price.currency_code.toUpperCase()}
+                                                                                                      </div>
+                                                                                                  )
+                                                                                              )}
                                                                                 </td>
                                                                                 <td className="p-2">
                                                                                     {variant.inventory_quantity ||
