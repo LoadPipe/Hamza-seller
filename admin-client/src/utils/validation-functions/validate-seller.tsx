@@ -8,6 +8,15 @@ export const validateSeller = async (
     const sellerAddress = escrowPayment?.receiver;
     const walletAddress = getJwtWalletAddress();
 
+    if (!escrowPayment) {
+        toast({
+            variant: 'destructive',
+            title: 'Validation Error',
+            description: `Escrow payment for order not found.`,
+        });
+        return false;
+    }
+
     if (sellerAddress !== walletAddress) {
         toast({
             variant: 'destructive',

@@ -205,9 +205,17 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
 
     const handleRefundSubmit = async () => {
         const payment = await getEscrowPayment(order);
-        const isValid = await validateSeller(payment, toast);
-        if (validateForm() && isValid) {
-            refundMutation.mutate();
+        if (!payment) {
+            toast({
+                variant: 'destructive',
+                title: 'Validation Error',
+                description: `Escrow payment for order ${order?.id} not found`,
+            });
+        } else {
+            const isValid = await validateSeller(payment, toast);
+            if (validateForm() && isValid) {
+                refundMutation.mutate();
+            }
         }
     };
 
