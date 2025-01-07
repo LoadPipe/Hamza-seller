@@ -22,7 +22,7 @@ import {
     FulfillmentStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
-import { findEscrowAddressFromOrder, getEscrowPayment } from '../web3';
+import { findEscrowDataFromOrder, getEscrowPayment } from '../web3';
 import { PaymentDefinition } from '../web3/contracts/escrow';
 
 const DEFAULT_PAGE_COUNT = 10;
@@ -480,9 +480,13 @@ export default class StoreOrderService extends TransactionBaseService {
     private async getEscrowPaymentForOrder(
         order: Order
     ): Promise<PaymentDefinition> {
-        const address: string = findEscrowAddressFromOrder(order);
-        if (address) {
-            return await getEscrowPayment(address, order.id);
+        const escrowData = findEscrowDataFromOrder(order);
+        if (escrowData) {
+            return await getEscrowPayment(
+                escrowData.chain_id,
+                escrowData.address,
+                order.id
+            );
         }
         return null;
     }
