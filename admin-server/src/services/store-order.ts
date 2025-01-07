@@ -23,7 +23,10 @@ import {
     PaymentStatus,
 } from '@medusajs/medusa';
 import { findEscrowDataFromOrder, getEscrowPayment } from '../web3';
-import { PaymentDefinition } from '../web3/contracts/escrow';
+import {
+    EscrowPaymentDefinition,
+    PaymentDefinition,
+} from '../web3/contracts/escrow';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -353,7 +356,7 @@ export default class StoreOrderService extends TransactionBaseService {
         return await this.syncEscrowPaymentForOrder(order);
     }
 
-    async getEscrowPayment(orderId: string): Promise<PaymentDefinition> {
+    async getEscrowPayment(orderId: string): Promise<EscrowPaymentDefinition> {
         const order: Order = await this.orderRepository_.findOne({
             where: { id: orderId },
             relations: ['payments'],
@@ -407,10 +410,12 @@ export default class StoreOrderService extends TransactionBaseService {
             //is payment status in sync?
             let inSync = false;
 
-            const buyerReleased = payment?.payerReleased;
-            const sellerReleased = payment?.receiverReleased;
-            const bothReleased = payment?.released;
-            const fullyRefunded = payment?.amountRefunded >= payment?.amount;
+            //get payment properties
+            const buyerReleased = payment?.payment?.payerReleased;
+            const sellerReleased = payment?.payment?.receiverReleased;
+            const bothReleased = payment?.payment?.released;
+            const fullyRefunded =
+                payment?.payment?.amountRefunded >= payment?.payment?.amount;
 
             //if no status, it's in sync if also no payment
             if (!order.escrow_status) inSync = !payment;
@@ -479,15 +484,23 @@ export default class StoreOrderService extends TransactionBaseService {
 
     private async getEscrowPaymentForOrder(
         order: Order
-    ): Promise<PaymentDefinition> {
+    ): Promise<EscrowPaymentDefinition> {
         const escrowData = findEscrowDataFromOrder(order);
+        const output = {
+            order_id: order?.id,
+            chain_id: escrowData.chain_id,
+            escrow_address: escrowData.address,
+            payment: null,
+        };
+
         if (escrowData) {
-            return await getEscrowPayment(
+            output.payment = await getEscrowPayment(
                 escrowData.chain_id,
                 escrowData.address,
                 order.id
             );
         }
-        return null;
+
+        return output;
     }
 }

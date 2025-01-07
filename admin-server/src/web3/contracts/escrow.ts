@@ -13,6 +13,13 @@ export type PaymentDefinition = {
     currency: string; //token address, or 0x0 for native
 };
 
+export type EscrowPaymentDefinition = {
+    order_id: string;
+    escrow_address: string;
+    chain_id: number;
+    payment: PaymentDefinition;
+};
+
 export class EscrowClient {
     contractAddress: string;
     contract: ethers.Contract;
