@@ -87,9 +87,10 @@ export function ProductTable({
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>(
         {}
     );
-    const getFilterValues = (key: string) => filters?.[key]?.in || [];
+
     const { filters } = useStore(productStore);
-    const selectedFilters = filters.categories ?? [];
+
+    const getFilterValues = (key: string) => filters?.[key]?.in || [];
 
     const table = useReactTable({
         data,

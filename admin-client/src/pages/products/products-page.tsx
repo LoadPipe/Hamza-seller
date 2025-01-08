@@ -8,6 +8,9 @@ import { ProductTable } from '@/pages/products/product-table.tsx';
 import { productColumns } from '@/pages/products/product-columns.tsx';
 import { SortingState } from '@tanstack/react-table';
 import { useNavigate, useSearch } from '@tanstack/react-router';
+import { productStore } from '@/stores/product-filter/product-filter-store.tsx';
+import { useStore } from '@tanstack/react-store';
+import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -76,7 +79,7 @@ export default function ProductsPage() {
         : ['created_at', 'ASC'];
 
     // Initialize filters from URL or default
-    const filters = filter ? JSON.parse(filter) : {};
+    const { filters } = useStore(productStore);
 
     // Local state for pagination and sorting
     const [pageIndex, setPageIndex] = React.useState(page ?? 0);

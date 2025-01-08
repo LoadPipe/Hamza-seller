@@ -20,7 +20,7 @@ export default function DropdownMultiselectFilter({
     >(selectedFilters || []);
     console.log(
         `DUCK DUCK: ${title} \n ENUM: ${JSON.stringify(optionsEnum)} \n FILTER FUNC 
-        ${onFilterChange} \n\n SELECTED FILTERS${JSON.stringify(selectedFilters)}`
+       \n SELECTED FILTERS${JSON.stringify(selectedFilters)}`
     );
 
     const [isOpen, setIsOpen] = React.useState(false);
