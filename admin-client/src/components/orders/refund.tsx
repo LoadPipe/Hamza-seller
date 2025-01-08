@@ -15,7 +15,7 @@ import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
 import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
 import { getCurrencyPrecision } from '@/currency.config';
 import { formatStatus } from '@/utils/format-data';
-import { getEscrowPaymentData } from '@/utils/validation-functions/validate-seller';
+import { getEscrowPaymentData } from '@/api/get-escrow-payment';
 import { getChainId, getWalletAddress } from '@/web3';
 import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
 import { useSwitchChain } from 'wagmi';
@@ -212,7 +212,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
         const userChainId = await getChainId();
 
         const payment: EscrowPaymentDefinitionWithError =
-            await getEscrowPaymentData(order, true, false, address);
+            await getEscrowPaymentData(order?.id, true, false, address);
         if (!payment) {
             toast({
                 variant: 'destructive',

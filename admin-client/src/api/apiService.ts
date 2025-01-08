@@ -72,7 +72,7 @@ export const get = async <R>(
             options
         );
         setLoading(false);
-        return response.data.data; // Access `data` from `ApiResponse`
+        return response.data as R; // Access `data` from `ApiResponse`
     } catch (error) {
         return errorHandler(error as ApiErrorResponse);
     }

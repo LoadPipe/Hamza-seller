@@ -16,7 +16,7 @@ import { Rocket } from 'lucide-react';
 import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { getEscrowPaymentData } from '@/utils/validation-functions/validate-seller';
+import { getEscrowPaymentData } from '@/api/get-escrow-payment';
 import { useSwitchChain } from 'wagmi';
 import { getChainId, getWalletAddress } from '@/web3';
 import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
@@ -54,7 +54,8 @@ export function ReleaseEscrow() {
         const address = await getWalletAddress();
         const chainId = await getChainId();
         const payment: EscrowPaymentDefinitionWithError =
-            await getEscrowPaymentData(order, false, true, address);
+            await getEscrowPaymentData(order?.id, false, true, address);
+        closeOrderEscrowDialog();
         if (!payment) {
             toast({
                 variant: 'destructive',
@@ -74,7 +75,6 @@ export function ReleaseEscrow() {
                     switchChain({ chainId: payment.chain_id });
                 }
 
-                closeOrderEscrowDialog();
                 releaseEscrowMutation.mutate(order);
             }
         }

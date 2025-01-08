@@ -45,6 +45,7 @@ export async function getEscrowPayment(
         const payment = await escrow.getEscrowPayment(
             ethers.keccak256(ethers.toUtf8Bytes(orderId))
         );
+        console.log('PAYMENT IS ', payment);
 
         return paymentIsValid(payment) ? payment : null;
     } catch (e: any) {

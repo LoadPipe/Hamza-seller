@@ -32,6 +32,7 @@ export class EscrowClient {
      * @param address Address of the LiteSwitch contract
      */
     constructor(chainId: number, address: string) {
+        console.log(process.env[`ETHERS_RPC_PROVIDER_URL_${chainId}`]);
         this.provider = new ethers.JsonRpcProvider(
             process.env[`ETHERS_RPC_PROVIDER_URL_${chainId}`]
         );
