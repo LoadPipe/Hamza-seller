@@ -17,6 +17,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronDown, Settings, ChevronUp } from 'lucide-react';
 import {
+    productStore,
+    setProductFilter,
+    clearProductFilter,
+} from '@/stores/product-filter/product-filter-store.tsx';
+import { useStore } from '@tanstack/react-store';
+
+import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
@@ -42,6 +49,9 @@ interface Product {
     sku: string;
 }
 
+import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
+import { ProductCategory } from '@/utils/status-enum.ts';
+
 interface ProductTableProps {
     columns: ColumnDef<Product, any>[];
     data: Product[];
@@ -50,6 +60,7 @@ interface ProductTableProps {
     setPageIndex: React.Dispatch<React.SetStateAction<number>>;
     setPageSize: React.Dispatch<React.SetStateAction<number>>;
     totalRecords: number;
+    filteredProductsCount: number;
     sorting: SortingState;
     setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
     isLoading: boolean;
@@ -63,6 +74,7 @@ export function ProductTable({
     setPageIndex,
     setPageSize,
     totalRecords,
+    filteredProductsCount,
     sorting,
     setSorting,
     isLoading,
@@ -71,10 +83,14 @@ export function ProductTable({
         React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState({});
     const [rowSelection, setRowSelection] = React.useState({});
-    const pageCount = Math.ceil(totalRecords / pageSize);
+    const pageCount = Math.ceil(filteredProductsCount / pageSize);
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>(
         {}
     );
+    const getFilterValues = (key: string) => filters?.[key]?.in || [];
+    const { filters } = useStore(productStore);
+    const selectedFilters = filters.categories ?? [];
+
     const table = useReactTable({
         data,
         columns,
@@ -128,7 +144,14 @@ export function ProductTable({
     const preferredCurrency = useCustomerAuthStore(
         (state) => state.preferred_currency_code
     );
-    console.log(`what is preferefwe $$$ ${preferredCurrency}`);
+
+    const handleFilterChange = (selected: string[] | null) => {
+        if (selected) {
+            setProductFilter('categories', selected);
+        } else {
+            clearProductFilter('categories');
+        }
+    };
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -149,6 +172,14 @@ export function ProductTable({
                             <FilePlus />
                         </Button>
                     </div>
+                    <div className="flex justify-start">
+                        <DropdownMultiselectFilter
+                            title="Filter By Category"
+                            optionsEnum={ProductCategory} // Pass the enum directly
+                            selectedFilters={selectedFilters} // Your filters from the store
+                            onFilterChange={handleFilterChange} // Update the store or parent state
+                        />
+                    </div>
                     <div className="ml-auto flex flex-row relative w-[376px]">
                         <Input
                             placeholder="Search Products..."
@@ -165,7 +196,6 @@ export function ProductTable({
                             className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2] active:border-primary-purple-90  text-white rounded bg-black pr-10"
                         />
                     </div>
-                    <div className="flex justify-end"></div>
                 </div>
                 <div className="flex text-sm text-muted-foreground m-2 justify-between">
                     <div className="flex items-center gap-4">

@@ -118,6 +118,7 @@ interface StoreProductsDTO {
     filtering: FilterProducts | null;
     products: Product[];
     totalRecords: number;
+    filteredProductsCount: number;
     availableCategories: Array<{
         id: string;
         name: string;
@@ -822,6 +823,9 @@ class ProductService extends MedusaProductService {
     ): Promise<StoreProductsDTO> {
         const where: any = { store_id: storeId };
 
+        // Total product count for pagination
+        const totalRecords = await this.productRepository_.count({ where });
+
         // Fetch all available categories
         const availableCategories = await this.productCategoryRepository_
             .find({
@@ -845,9 +849,6 @@ class ProductService extends MedusaProductService {
             where.categories = { id: In(categoryIds) };
         }
 
-        // Total product count for pagination
-        const totalRecords = await this.productRepository_.count({ where });
-
         const params = {
             where,
             take: productsPerPage,
@@ -856,7 +857,9 @@ class ProductService extends MedusaProductService {
             relations: ['variants', 'variants.prices', 'categories'], // Include necessary relations
         };
 
-        const allProducts = await this.productRepository_.find(params);
+        const filteredProductsCount =
+            await this.productRepository_.count(params);
+        const filteredProducts = await this.productRepository_.find(params);
 
         return {
             pageIndex: page,
@@ -865,15 +868,18 @@ class ProductService extends MedusaProductService {
             sortedBy: sort?.field ?? null,
             sortDirection: sort?.direction ?? 'ASC',
             filtering: filter,
-            products: allProducts,
+            products: filteredProducts,
+            filteredProductsCount: filteredProductsCount,
             totalRecords,
-            availableCategories, // Pass available categories to the client
+            availableCategories,
         };
     }
 
     // Simple function, just list product categories
-    // TODO: Create relation O:M -> `store` - > `product_category
-    async getStoreCategories(storeId: string) {}
+    // TODO: Just return all from categories repo?
+    async queryAllCategories() // await this.productCategoryRepository_.
+
+    {}
 
     async getCategoryByHandle(
         categoryHandle: string
