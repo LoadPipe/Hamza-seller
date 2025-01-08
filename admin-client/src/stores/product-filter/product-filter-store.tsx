@@ -55,7 +55,7 @@ export const setProductFilter = (key: string, value: any) => {
         const updatedFilters = { ...state.filters, [key]: value };
         const updatedState = { ...state, filters: updatedFilters };
         saveProductStoreToStorage(updatedState);
-        return updatedState;
+        return { ...state, filters: updatedFilters };
     });
 };
 

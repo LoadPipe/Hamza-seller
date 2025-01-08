@@ -145,13 +145,13 @@ export function ProductTable({
         (state) => state.preferred_currency_code
     );
 
-    const handleFilterChange = (selected: string[] | null) => {
-        if (selected) {
-            setProductFilter('categories', selected);
-        } else {
-            clearProductFilter('categories');
-        }
-    };
+    // const handleFilterChange = (selected: string[] | null) => {
+    //     if (selected) {
+    //         setProductFilter('categories', { isLoading: selected });
+    //     } else {
+    //         clearProductFilter('categories');
+    //     }
+    // };
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -177,7 +177,16 @@ export function ProductTable({
                             title="Filter By Category"
                             optionsEnum={ProductCategory} // Pass the enum directly
                             selectedFilters={selectedFilters} // Your filters from the store
-                            onFilterChange={handleFilterChange} // Update the store or parent state
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setProductFilter('categories', {
+                                        in: values,
+                                    }); // Apply filter
+                                } else {
+                                    clearProductFilter('categories'); // Clear filter if no values
+                                }
+                                setPageIndex(0); // Reset to the first page
+                            }}
                         />
                     </div>
                     <div className="ml-auto flex flex-row relative w-[376px]">

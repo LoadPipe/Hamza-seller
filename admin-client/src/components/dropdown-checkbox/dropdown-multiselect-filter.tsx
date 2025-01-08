@@ -13,10 +13,16 @@ export default function DropdownMultiselectFilter({
     title,
     optionsEnum,
     onFilterChange,
-    selectedFilters,
+    selectedFilters = [],
 }: DropdownMultiselectFilterProps) {
-    const [temporarySelection, setTemporarySelection] =
-        React.useState<string[]>(selectedFilters);
+    const [temporarySelection, setTemporarySelection] = React.useState<
+        string[]
+    >(selectedFilters || []);
+    console.log(
+        `DUCK DUCK: ${title} \n ENUM: ${JSON.stringify(optionsEnum)} \n FILTER FUNC 
+        ${onFilterChange} \n\n SELECTED FILTERS${JSON.stringify(selectedFilters)}`
+    );
+
     const [isOpen, setIsOpen] = React.useState(false);
     const options = Object.values(optionsEnum);
 
@@ -94,22 +100,23 @@ export default function DropdownMultiselectFilter({
                                 </label>
                             </div>
                         ))}
-
-                        {/* Buttons */}
-                        <div className="flex gap-2 mt-4">
-                            <button
-                                className="px-4 py-2 text-sm font-medium rounded bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
-                                onClick={applyFilter}
-                            >
-                                Apply
-                            </button>
-                            <button
-                                className="px-4 py-2 text-sm font-medium rounded bg-transparent  border-primary-purple-90 hover:bg-red-600 hover:border-none"
-                                onClick={clearFilter}
-                            >
-                                Clear Filters
-                            </button>
-                        </div>
+                        <DropdownMenu.Item>
+                            {/* Buttons */}
+                            <div className="flex gap-2 mt-4">
+                                <button
+                                    className="px-4 py-2 text-sm font-medium rounded bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
+                                    onClick={applyFilter}
+                                >
+                                    Apply
+                                </button>
+                                <button
+                                    className="px-4 py-2 text-sm font-medium rounded bg-transparent  border-primary-purple-90 hover:bg-red-600 hover:border-none"
+                                    onClick={clearFilter}
+                                >
+                                    Clear Filters
+                                </button>
+                            </div>
+                        </DropdownMenu.Item>
                     </DropdownMenu.Content>
                 </DropdownMenu.Portal>
             </DropdownMenu.Root>
