@@ -227,8 +227,9 @@ export function ProductTable({
                                 ))}
                             </DropdownMenuContent>
                             <div className="text-sm text-white">
-                                of {table.getFilteredRowModel().rows.length}{' '}
-                                entries.
+                                of {filteredProductsCount} filtered entries.{' '}
+                                {''}
+                                {totalRecords} total entries.
                             </div>
                         </DropdownMenu>
                     </div>
