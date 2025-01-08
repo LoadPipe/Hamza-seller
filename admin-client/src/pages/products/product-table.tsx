@@ -176,7 +176,7 @@ export function ProductTable({
                         <DropdownMultiselectFilter
                             title="Filter By Category"
                             optionsEnum={ProductCategory} // Pass the enum directly
-                            selectedFilters={selectedFilters} // Your filters from the store
+                            selectedFilters={getFilterValues('categories')} // Extract `in` property as an array
                             onFilterChange={(values) => {
                                 if (values) {
                                     setProductFilter('categories', {

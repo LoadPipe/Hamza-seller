@@ -35,6 +35,8 @@ export default function DropdownMultiselectFilter({
     };
 
     const applyFilter = () => {
+        console.log(`Applying filter: ${JSON.stringify(temporarySelection)}`);
+
         if (temporarySelection.length > 0) {
             onFilterChange(temporarySelection);
             setIsOpen(false);
