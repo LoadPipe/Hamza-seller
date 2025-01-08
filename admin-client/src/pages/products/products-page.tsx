@@ -10,16 +10,36 @@ import { SortingState } from '@tanstack/react-table';
 
 type Product = z.infer<typeof ProductSchema>;
 
-async function getProducts(): Promise<{
-    products: Product[];
-    totalRecords: number;
-}> {
+async function getSellerProducts(
+    pageIndex = 0,
+    pageSize = 10,
+    filters: Record<string, any>,
+    sorting: SortingState = []
+): Promise<{ products: Product[]; totalRecords: number }> {
     try {
-        const response = await getSecure('/seller/product/seller-products', {
+        // Construct sorting parameters
+        const sort = sorting[0]
+            ? `${sorting[0].id}:${sorting[0].desc ? 'DESC' : 'ASC'}`
+            : 'created_at:ASC';
+
+        // Prepare query parameters
+        const params = {
             store_id: getJwtStoreId(),
-        });
+            page: pageIndex,
+            products_per_page: pageSize,
+            sort,
+            filter: filters, // Pass filters directly
+        };
+
+        // Use getSecure with parameters
+        const response = await getSecure(
+            '/seller/product/seller-products',
+            params
+        );
+
+        // Parse and return the response
         return {
-            products: ProductSchema.array().parse(response),
+            products: ProductSchema.array().parse(response.products),
             totalRecords: response.totalRecords ?? 0,
         };
     } catch (error) {
@@ -38,7 +58,7 @@ export default function ProductsPage() {
         Error
     >({
         queryKey: ['products', pageIndex, pageSize],
-        queryFn: () => getProducts(),
+        queryFn: () => getSellerProducts(),
     });
 
     if (error instanceof Error) {
