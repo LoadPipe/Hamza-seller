@@ -40,6 +40,8 @@ import fs from 'fs';
 import csv from 'csv-parser';
 import * as readline from 'readline';
 
+const DEFAULT_PAGE_COUNT = 10;
+
 export type BulkImportProductInput = CreateProductInput;
 
 export type UpdateProductProductVariantDTO = {
@@ -823,6 +825,8 @@ class ProductService extends MedusaProductService {
     ): Promise<StoreProductsDTO> {
         const where: any = { store_id: storeId };
 
+        console.log(`$$$$ ${productsPerPage} ${page}`);
+
         // Total product count for pagination
         const totalRecords = await this.productRepository_.count({ where });
 
@@ -846,20 +850,34 @@ class ProductService extends MedusaProductService {
                 )
                 .map((category) => category.id);
 
-            where.categories = { id: In(categoryIds) };
+            if (categoryIds.length > 0) {
+                where.categories = { id: In(categoryIds) };
+            } else {
+                // If no matching category IDs, return no results for filtered count
+                where.categories = { id: In([]) };
+            }
         }
 
         const params = {
             where,
-            take: productsPerPage,
-            skip: page * productsPerPage,
-            order: sort?.field ? { [sort.field]: sort.direction } : undefined,
+            // take: productsPerPage,
+            // skip: page * productsPerPage,
+            take: 50,
+            skip: 0,
+            order:
+                sort?.field &&
+                sort.field !== 'title' &&
+                sort.field !== 'price' &&
+                sort.field !== 'currency_code'
+                    ? {
+                          [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
+                      }
+                    : undefined,
             relations: ['variants', 'variants.prices', 'categories'], // Include necessary relations
         };
 
-        const filteredProductsCount = await this.productRepository_.count({
-            where,
-        });
+        const filteredProductsCount =
+            await this.productRepository_.count(params);
 
         const filteredProducts = await this.productRepository_.find(params);
 

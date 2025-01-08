@@ -10,7 +10,6 @@ import { SortingState } from '@tanstack/react-table';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { productStore } from '@/stores/product-filter/product-filter-store.tsx';
 import { useStore } from '@tanstack/react-store';
-import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -104,6 +103,7 @@ export default function ProductsPage() {
             },
             replace: true,
         });
+        alert(pageSize);
     }, [pageIndex, pageSize, sorting, filters, navigate]);
 
     // Fetch products with the query
