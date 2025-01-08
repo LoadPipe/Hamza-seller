@@ -362,6 +362,8 @@ export default class StoreOrderService extends TransactionBaseService {
             relations: ['payments'],
         });
 
+        if (!order) return null;
+
         return await this.getEscrowPaymentForOrder(order);
     }
 
