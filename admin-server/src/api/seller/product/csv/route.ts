@@ -1,17 +1,23 @@
 import { MedusaRequest, MedusaResponse, ProductStatus, Store } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
-import ProductService, { csvProductData } from '../../../../services/product';
+import ProductService, { csvProductData, UpdateProductProductVariantDTO } from '../../../../services/product';
 import StoreService from '../../../../services/store';
 import { Product } from '../../../../models/product';
 import {
     CreateProductProductOption,
     CreateProductProductVariantInput,
     CreateProductInput as MedusaCreateProductInput,
+    UpdateProductInput as MedusaUpdateProductInput,
 } from '@medusajs/medusa/dist/types/product';
 import multer from 'multer';
 
 type CreateProductInput = MedusaCreateProductInput & {
+    id?: string;
     store_id: string;
+};
+
+type UpdateProductInput = MedusaUpdateProductInput & {
+    id?: string;
 };
 
 type CreateProductProductOption_ = CreateProductProductOption & {
@@ -20,8 +26,9 @@ type CreateProductProductOption_ = CreateProductProductOption & {
 
 type ProductDetails = {
     productInfo: {
-        name: string;
-        baseCurrency: string;
+        productId?: string;
+        name?: string;
+        baseCurrency?: string;
     };
     variants: csvProductData[];
 };
@@ -203,6 +210,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             // console.log('options: ' + JSON.stringify(options));
 
             variants.push({
+                id: variant.variant_id || null,
                 title: options.map((option) => option.value).join(' | '),
                 inventory_quantity: variant.variant_inventory_quantity,
                 allow_backorder:
@@ -233,8 +241,6 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
      *
      * @param rowData - product row data
      * @param csvData - all csv data
-     * @param requiredCsvHeadersForProduct - product headers
-     * @param requiredCsvHeadersForVariant - variant headers
      * @returns
      */
     const convertRowDataToProductDetails = async (
@@ -242,27 +248,82 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         csvData: csvProductData[],
         store: Store
     ): Promise<ProductDetails> => {
+
         //get all variant rows with same handle
         let variants = [];
-        variants.push(rowData);
+        
+        //usually, product row data contains variant data as well
+        const isVariant = await productService.csvRowIsVariant(rowData, requiredCsvHeadersForVariant, requiredCsvHeadersForProduct);
+
+        if (isVariant) {
+            variants.push(rowData);
+        }
+        
+        //grabbing all variants that are the same handle
         variants.push(
             ...csvData.filter(
-                (row) => rowData !== row && row.handle === rowData.handle
+                (row) => rowData !== row && row.handle && rowData.handle && row.handle === rowData.handle
             )
         );
+
         // console.log('variants: ' + JSON.stringify(variants));
 
-        const productDetails: ProductDetails = {
+        //if product_id is present, we're updating a product        
+        let productDetails: ProductDetails = {
             productInfo: {
-                name: rowData['title'],
+                productId: rowData['product_id'] || null,
+                name: rowData['title'] || null,
                 baseCurrency: store.default_currency_code,
             },
             variants: variants,
         };
+        // console.log('productDetails2: ' + JSON.stringify(productDetails));
         return productDetails;
     };
 
-    const convertCsvDataToCreateDataInput = async (
+    // generate option names from variantData
+    // const optionNames: extractOptionNames[] = [
+    //     { title: 'color', values: ['Black', 'White'] },
+    //     { title: 'size', values: ['L', 'XL'] },
+    //     { title: 'gender', values: ['Male', 'Female'] },
+    // ];
+    const extractOptionNames = async (
+        variants: csvProductData[]
+    ): Promise<CreateProductProductOption_[]> => {
+        const optionMap: { [key: string]: Set<string> } = {};
+
+        variants.forEach((variant) => {
+            const options = variant.variant.includes('|')
+                ? variant.variant.split('|').map((option) => option.trim())
+                : [variant.variant.trim()];
+            options.forEach((option) => {
+                const [key, value] = option.split('[');
+                const cleanValue = value.replace(']', '');
+                if (!optionMap[key]) {
+                    optionMap[key] = new Set();
+                }
+                optionMap[key].add(cleanValue);
+            });
+        });
+
+        return Object.entries(optionMap).map(([title, values]) => ({
+            title,
+            values: Array.from(values),
+        }));
+    }
+
+    const extractImages = async (images: string, baseImageUrl: string): Promise<string[]> => {
+        const images_ = images.split('|').map((option) => {
+            if (option.trim().startsWith('http')) {
+                return option.trim();
+            } else {
+                return baseImageUrl + option.trim();
+            }
+        });
+        return images_;
+    }
+
+    const convertCsvDataToCreateProductInput = async (
         rowData: csvProductData,
         csvData: csvProductData[],
         store: Store,
@@ -295,55 +356,13 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         const productDetails: ProductDetails =
             await convertRowDataToProductDetails(rowData, csvData, store);
 
-        // generate option names from variantData
-        // const optionNames: extractOptionNames[] = [
-        //     { title: 'color', values: ['Black', 'White'] },
-        //     { title: 'size', values: ['L', 'XL'] },
-        //     { title: 'gender', values: ['Male', 'Female'] },
-        // ];
-        const extractOptionNames = async (
-            variants: csvProductData[]
-        ): Promise<CreateProductProductOption_[]> => {
-            const optionMap: { [key: string]: Set<string> } = {};
-
-            variants.forEach((variant) => {
-                const options = variant.variant.includes('|')
-                    ? variant.variant.split('|').map((option) => option.trim())
-                    : [variant.variant.trim()];
-                options.forEach((option) => {
-                    const [key, value] = option.split('[');
-                    const cleanValue = value.replace(']', '');
-                    if (!optionMap[key]) {
-                        optionMap[key] = new Set();
-                    }
-                    optionMap[key].add(cleanValue);
-                });
-            });
-
-            return Object.entries(optionMap).map(([title, values]) => ({
-                title,
-                values: Array.from(values),
-            }));
-        };
-
-        const extractImages = async (images: string): Promise<string[]> => {
-            const images_ = images.split('|').map((option) => {
-                if (option.trim().startsWith('http')) {
-                    return option.trim();
-                } else {
-                    return baseImageUrl + option.trim();
-                }
-            });
-            return images_;
-        }
-
         const optionNames = await extractOptionNames(productDetails.variants);
         // console.log('optionNames: ' + JSON.stringify(optionNames));
 
         const variants = await mapVariants(productDetails);
         // console.log('variants: ' + JSON.stringify(variants));
 
-        const images = await extractImages(rowData['images']);
+        const images = await extractImages(rowData['images'], baseImageUrl);
         // console.log('images: ' + JSON.stringify(images));
 
         const thumbnail = rowData['thumbnail'].startsWith('http')
@@ -383,14 +402,96 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         return output;
     };
 
-    const convertCsvData = async (
+    const convertCsvDataToUpdateProductInput = async (
+        rowData: csvProductData,
+        csvData: csvProductData[],
+        store: Store,
+        collectionId: string,
+        salesChannelIds: string[],
+        baseImageUrl: string
+    ): Promise<UpdateProductInput> => {
+        let optionNames: CreateProductProductOption_[] = [];
+        let variants: UpdateProductProductVariantDTO[] = [];
+        let images: string[] = [];
+        let thumbnail: string = '';
+
+        // const productDetails: {
+        //     productInfo: {
+        //         productId: string;
+        //         name: string;
+        //         baseCurrency: string;
+        //     };
+        //     variants: { variantId: string; variantData: string; price: number }[];
+        // } = {
+        //     productInfo: {
+        //         productId: rowData['product_id']
+        //         name: rowData['title'],
+        //         baseCurrency: 'cny',
+        //     },
+        //     variants: [
+        //         { variantid: rowData['variant_id'], variantData: 'Size[L]|Color[Black] | Gender[Female]', price: rowData['variant_price'] },
+        //         { variantid: rowData['variant_id'], variantData: 'Size[L] | Color[Black]|Gender[Male]', price: rowData['variant_price'] },
+        //     ],
+        // };
+
+        
+
+        const productDetails: ProductDetails =
+            await convertRowDataToProductDetails(rowData, csvData, store);
+        
+        console.log('productDetails: ' + JSON.stringify(productDetails));
+
+        if (productDetails.variants.length > 0) {
+            const optionNames = await extractOptionNames(productDetails.variants);
+            // console.log('optionNames: ' + JSON.stringify(optionNames));
+
+            const variants = await mapVariants(productDetails);
+            // console.log('variants: ' + JSON.stringify(variants));
+        }
+        
+        if (rowData['images'] && rowData['images'].trim() !== '') {
+            const images = await extractImages(rowData['images'], baseImageUrl);
+            // console.log('images: ' + JSON.stringify(images));
+        }
+
+        if (rowData['thumbnail'] && rowData['thumbnail'].trim() !== '') {
+            const thumbnail = rowData['thumbnail'].startsWith('http')
+                ? rowData['thumbnail']
+                : baseImageUrl + rowData['thumbnail'];
+        }
+        
+        const output: UpdateProductInput = {
+            ...(rowData['product_id'] && { id: rowData['product_id'].trim() }),
+            ...(rowData['title'] && { title: rowData['title'] }),
+            ...(rowData['subtitle'] && { subtitle: rowData['subtitle'] }),
+            ...(rowData['handle'] && { handle: rowData['handle'] }),
+            ...(rowData['description'] && { description: rowData['description'] }),
+            is_giftcard: false,
+            ...(rowData['status'] && { status: rowData['status'] as ProductStatus }),
+            ...(thumbnail && thumbnail.trim() !== '' && { thumbnail: thumbnail }),
+            ...(images && images.length > 0 && { images: images }),
+            collection_id: collectionId,
+            ...(rowData['weight'] && { weight: Math.round(Number(rowData['weight'])) }),
+            ...(rowData['discountable'] && { discountable: rowData['discountable'] === '1' ? true : false }),
+            ...(rowData['category_id'] && { categories: [{ id: rowData['category_id'] }] }),
+            ...(salesChannelIds && salesChannelIds.length > 0 && { sales_channels: salesChannelIds.map((sc) => { return { id: sc }; }) }),
+            ...(optionNames && optionNames.length > 0 && { options: optionNames }),
+            ...(variants && variants.length > 0 && { variants: variants }),
+        };
+
+        // console.log('Converting data to UpdateProductInput2:', JSON.stringify(output));
+        // console.log('Converting data to Variants:', JSON.stringify(variants));
+        // console.log('Converting data to optionNames:', JSON.stringify(optionNames));
+
+        return output;
+    };
+
+    const convertCreateCsvData = async (
         store: Store,
         collectionId: string,
         salesChannelId: string,
         baseImageUrl: string,
-        data: csvProductData[],
-        requiredCsvHeadersForProduct: string[],
-        requiredCsvHeadersForVariant: string[]
+        data: csvProductData[]
     ): Promise<{
         success: boolean;
         message: string;
@@ -402,17 +503,19 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         // const collectionId = 'pcol_01HRVF8HCVY8B00RF5S54THTPC';
         // const salesChannelId = 'sc_01JE2GP93F1P0621E4ZCKK1AYR';
 
-        //get all product rows to loop through
+        /**
+         * Validate the see if there are product rows.
+         * This is only for create instance.
+         */
         const productRows = await productService.filterCsvProductRows(
             data,
             requiredCsvHeadersForProduct,
             requiredCsvHeadersForVariant
         );
-
         if (productRows.length === 0) {
             return {
                 success: false,
-                message: 'No product rows were detected',
+                message: 'Your spreadsheet does not contain any create product rows',
             };
         }
 
@@ -420,7 +523,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         for (let p of productRows) {
             // console.log('p: ' + JSON.stringify(p));
             productInputs.push(
-                await convertCsvDataToCreateDataInput(
+                await convertCsvDataToCreateProductInput(
                     p,
                     data,
                     store,
@@ -437,6 +540,181 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             jsonData: productInputs,
         };
     };
+
+    const convertUpdateCsvData = async (
+        store: Store,
+        collectionId: string,
+        salesChannelId: string,
+        baseImageUrl: string,
+        data: csvProductData[]
+    ): Promise<{
+        success: boolean;
+        message: string;
+        variantOnly: boolean;
+        jsonData?: (UpdateProductInput | UpdateProductProductVariantDTO)[];
+    }> => {
+        let productInputs: UpdateProductInput[] = [];
+        let variantInputs: UpdateProductProductVariantDTO[] = [];
+
+        // TODO: get collectionId and salesChannelId from database
+        // const collectionId = 'pcol_01HRVF8HCVY8B00RF5S54THTPC';
+        // const salesChannelId = 'sc_01JE2GP93F1P0621E4ZCKK1AYR';
+
+        /**
+         * Validate the see if there are product rows.
+         * This is only for create instance.
+         */
+        const productRows = await productService.filterCsvProductRows(
+            data,
+            requiredCsvHeadersForProduct,
+            requiredCsvHeadersForVariant
+        );
+
+        // if update is only a bunch of variants, we'll need to update variants only, not the product
+        if (productRows.length === 0) {
+            
+            for (let d of data) {
+                //TODO: handle variant only update
+                variantInputs.push(
+                    // await convertCsvDataToUpdateVariantInput(d)
+                );
+            }
+            return {
+                success: true,
+                message: 'data converted successfully',
+                variantOnly: true,
+                jsonData: variantInputs,
+            };
+        }
+
+        // convert row to CreateDataInput
+        // console.log('productRows: ' + JSON.stringify(productRows));
+
+        for (let p of productRows) {
+            // console.log('p: ' + JSON.stringify(p));
+            productInputs.push(
+                await convertCsvDataToUpdateProductInput(
+                    p,
+                    data,
+                    store,
+                    collectionId,
+                    salesChannelId ? [salesChannelId] : null,
+                    baseImageUrl
+                )
+            );
+        }
+
+        // console.log('productInputs: ' + JSON.stringify(productInputs));
+        
+        return {
+            success: productInputs.length > 0,
+            message: productInputs.length > 0 ? 'data converted successfully' : 'No data converted',
+            variantOnly: true,
+            jsonData: productInputs,
+        };
+    };
+
+    const createProducts = async (
+        store: Store,
+        collection_id: string,
+        sales_channel_id: string,
+        baseImageUrl: string,
+        productInputs: csvProductData[]
+    ): Promise<{
+        success: boolean;
+        message: string;
+        products?: Product[];
+    }> => {
+        const convertCreateCsvDataOutput: {
+            success: boolean;
+            message: string;
+            jsonData?: CreateProductInput[];
+        } = await convertCreateCsvData(
+            store,
+            collection_id,
+            sales_channel_id,
+            baseImageUrl,
+            productInputs
+        );
+        // console.log('convertCsvDataOutput: ' + JSON.stringify(convertCsvDataOutput));
+
+        if (!convertCreateCsvDataOutput.success) {
+            return {
+                success: false,
+                message: convertCreateCsvDataOutput.message,
+            };
+        }
+
+        const products: Product[] =
+            await productService.bulkImportProducts(
+                store.id,
+                convertCreateCsvDataOutput.jsonData
+            );
+
+        if (products.length === 0) {
+            return {
+                success: false,
+                message: 'No products were imported',
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Products imported successfully',
+            products: products
+        };
+    }
+
+    const updateProducts = async (
+        store: Store,
+        collection_id: string,
+        sales_channel_id: string,
+        baseImageUrl: string,
+        productInputs: csvProductData[]
+    ): Promise<{
+        success: boolean;
+        message: string;
+        products?: Product[];
+    }> => { 
+        const convertUpdateCsvDataOutput: {
+            success: boolean;
+            message: string;
+            jsonData?: (UpdateProductInput | UpdateProductProductVariantDTO)[];
+        } = await convertUpdateCsvData(
+            store,
+            collection_id,
+            sales_channel_id,
+            baseImageUrl,
+            productInputs
+        );
+        // console.log('convertCsvDataOutput2: ' + JSON.stringify(convertUpdateCsvDataOutput));
+
+        if (!convertUpdateCsvDataOutput.success) {
+            return {
+                success: false,
+                message: convertUpdateCsvDataOutput.message,
+            };
+        }
+
+        const products: Product[] =
+            await productService.bulkUpdateProducts(
+                store.id,
+                convertUpdateCsvDataOutput.jsonData as UpdateProductInput[]
+            );
+
+        if (products.length === 0) {
+            return {
+                success: false,
+                message: 'No products were updated',
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Products updated successfully',
+            products: products
+        };
+    }
 
     upload.single('file')(req, res, async (err) => {
         if (err) {
@@ -462,17 +740,17 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     });
                 }
 
-                if (!collection_id) {
-                    return handler.returnStatus(400, {
-                        message: 'collection_id is required',
-                    });
-                }
+                // if (!collection_id) {
+                //     return handler.returnStatus(400, {
+                //         message: 'collection_id is required',
+                //     });
+                // }
 
-                if (!sales_channel_id) {
-                    return handler.returnStatus(400, {
-                        message: 'sales_channel_id is required',
-                    });
-                }
+                // if (!sales_channel_id) {
+                //     return handler.returnStatus(400, {
+                //         message: 'sales_channel_id is required',
+                //     });
+                // }
 
                 const baseImageUrl = (base_image_url) ? base_image_url : 'https://static.hamza.market/stores/';
 
@@ -506,61 +784,93 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 );
 
                 const validateCsvDataOutput: {
-                    success: boolean;
-                    message: string;
-                    validData: csvProductData[];
-                    invalidData: csvProductData[];
+                    createSuccess: boolean;
+                    createMessage: string;
+                    createValidData: csvProductData[];
+                    createInvalidData: csvProductData[];
+                    updateSuccess: boolean;
+                    updateMessage: string;
+                    updateValidData: csvProductData[];
+                    updateInvalidData: csvProductData[];
                 } = await productService.validateCsvData(
                     fileData,
                     requiredCsvHeadersForProduct,
                     requiredCsvHeadersForVariant
                 );
 
-                if (!validateCsvDataOutput.success) {
+                if (!validateCsvDataOutput.createSuccess && !validateCsvDataOutput.updateSuccess) {
                     return handler.returnStatus(400, {
-                        message: validateCsvDataOutput.message,
-                        invalidData: validateCsvDataOutput.invalidData,
+                        createMessage: validateCsvDataOutput.createMessage,
+                        createInvalidData: validateCsvDataOutput.createInvalidData,
+                        updateMessage: validateCsvDataOutput.updateMessage,
+                        updateInvalidData: validateCsvDataOutput.updateInvalidData,
                     });
                 }
                 // console.log('validateCsvDataOutput: ' + JSON.stringify(validateCsvDataOutput));
 
-                const convertCsvDataOutput: {
+                //create product code
+                let createProductsOutput: {
                     success: boolean;
                     message: string;
-                    jsonData?: CreateProductInput[];
-                } = await convertCsvData(
-                    store,
-                    collection_id,
-                    sales_channel_id,
-                    baseImageUrl,
-                    validateCsvDataOutput.validData,
-                    requiredCsvHeadersForProduct,
-                    requiredCsvHeadersForVariant
-                );
-                // console.log('convertCsvDataOutput: ' + JSON.stringify(convertCsvDataOutput));
+                    products?: Product[];
+                } = {
+                    success: validateCsvDataOutput.createSuccess,
+                    message: validateCsvDataOutput.createMessage,
+                    products: []
+                };
 
-                if (!convertCsvDataOutput.success) {
-                    return handler.returnStatus(400, {
-                        message: convertCsvDataOutput.message,
-                    });
-                }
-
-                const products: Product[] =
-                    await productService.bulkImportProducts(
-                        store.id,
-                        convertCsvDataOutput.jsonData
+                if (validateCsvDataOutput.createSuccess) {
+                    createProductsOutput = await createProducts(
+                        store,
+                        collection_id,
+                        sales_channel_id,
+                        baseImageUrl,
+                        validateCsvDataOutput.createValidData
                     );
 
-                if (products.length === 0) {
-                    return handler.returnStatus(400, {
-                        message: 'No products were imported',
-                    });
+                    if (!createProductsOutput.success) {
+                        return handler.returnStatus(400, {
+                            message: createProductsOutput.message,
+                        });
+                    }
+                }
+
+                //update product code
+                let updateProductsOutput: {
+                    success: boolean;
+                    message: string;
+                    products?: Product[];
+                } = {
+                    success: validateCsvDataOutput.updateSuccess,
+                    message: validateCsvDataOutput.updateMessage,
+                    products: []
+                };
+
+                if (validateCsvDataOutput.updateSuccess) {
+                    updateProductsOutput = await updateProducts(
+                        store,
+                        collection_id,
+                        sales_channel_id,
+                        baseImageUrl,
+                        validateCsvDataOutput.updateValidData
+                    );
+
+                    if (!updateProductsOutput.success) {
+                        return handler.returnStatus(400, {
+                            message: updateProductsOutput.message,
+                        });
+                    }
                 }
 
                 res.status(200).json({
-                    message: 'Products imported successfully',
-                    products: products,
-                    invalidProducts: validateCsvDataOutput.invalidData,
+                    createSuccess: createProductsOutput.success,
+                    createMessage: createProductsOutput.message,
+                    createdProducts: createProductsOutput.products,
+                    invalidCreatedProducts: validateCsvDataOutput.createInvalidData,
+                    updateSuccess: updateProductsOutput.success,
+                    updateMessage: updateProductsOutput.message,
+                    updatedProducts: updateProductsOutput.products,
+                    invalidUpdatedProducts: validateCsvDataOutput.updateInvalidData,
                 });
             } catch (error) {
                 return handler.returnStatus(400, {

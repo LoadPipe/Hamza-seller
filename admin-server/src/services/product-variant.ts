@@ -6,6 +6,11 @@ import { ProductVariant } from '@medusajs/medusa';
 import { Lifetime } from 'awilix';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import { createLogger, ILogger } from '../utils/logging/logger';
+import { UpdateProductVariantInput as MedusaUpdateProductVariantInput } from '@medusajs/medusa/dist/types/product-variant';
+
+export type UpdateProductVariantInput = MedusaUpdateProductVariantInput & {
+    variant_id: string;
+}
 
 class ProductVariantService extends MedusaProductVariantService {
     static LIFE_TIME = Lifetime.SCOPED;
@@ -70,6 +75,19 @@ class ProductVariantService extends MedusaProductVariantService {
         }
     }
 
+    async getVariantById(variantId: string): Promise<ProductVariant | null> {
+        try {
+            const productVariant = await this.productVariantRepository_.findOne({
+                where: { id: variantId },
+            });
+
+            return productVariant || null;
+        } catch (error) {
+            this.logger.error('Error fetching product variant by id:', error);
+            throw new Error('Failed to fetch product variant by id.');
+        }
+    }
+
     async getVariantBySku(sku: string): Promise<ProductVariant | null> {
         try {
             const productVariant = await this.productVariantRepository_.findOne({
@@ -119,6 +137,28 @@ class ProductVariantService extends MedusaProductVariantService {
         } catch (error) {
             this.logger.error('Error fetching product variant by ean:', error);
             throw new Error('Failed to fetch product variant by ean.');
+        }
+    }
+
+    async updateVariants(variantInputs: UpdateProductVariantInput[]): Promise<ProductVariant[]> {
+        const updatedVariants: ProductVariant[] = [];
+        try {
+            // Update the variant
+            for (let variantInput of variantInputs) {
+                
+                const existingVariant = await this.retrieve(variantInput.variant_id);
+                if (existingVariant) {
+                    const updatedVariant = await this.update(variantInput.variant_id, variantInput);
+                    updatedVariants.push(updatedVariant);
+                } else {
+                    this.logger.warn(`Variant with id ${variantInput.variant_id} does not exist.`);
+                }
+            }
+
+            return updatedVariants;
+        } catch (error) {
+            this.logger.error('Error updating variants:', error);
+            throw new Error('Failed to update variants.');
         }
     }
 }
