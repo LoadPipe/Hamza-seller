@@ -1,30 +1,13 @@
-import { getJwtWalletAddress } from '@/utils/authentication';
-import { PaymentDefinition } from '@/web3/contracts/escrow';
+import { get } from '@/api/apiService';
+import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
 
-export const validateSeller = async (
-    escrowPayment: PaymentDefinition | null,
-    toast: (options: any) => void
-): Promise<boolean> => {
-    const sellerAddress = escrowPayment?.receiver;
-    const walletAddress = getJwtWalletAddress();
-
-    if (!escrowPayment) {
-        toast({
-            variant: 'destructive',
-            title: 'Validation Error',
-            description: `Escrow payment for order not found.`,
-        });
-        return false;
-    }
-
-    if (sellerAddress !== walletAddress) {
-        toast({
-            variant: 'destructive',
-            title: 'Validation Error',
-            description: `Only the owner of wallet ${sellerAddress} may modify this escrow.`,
-        });
-        return false;
-    }
-
-    return true;
-};
+export async function getEscrowPaymentData(
+    order_id: string,
+    validate_refund: boolean = false,
+    validate_release: boolean = false,
+    wallet_address: string = ''
+): Promise<EscrowPaymentDefinitionWithError> {
+    return get('/seller/order/escrow/status', {
+        params: { order_id, validate_refund, validate_release, wallet_address },
+    });
+}
