@@ -25,7 +25,6 @@ export async function getAmountPaidForOrder(
 ): Promise<bigint> {
     const switchClient = new LiteSwitchClient(chainId);
     const events = await switchClient.findPaymentEvents(orderId, transactionId);
-    //console.log('events: ', events);
 
     let total: bigint = BigInt(0);
     if (events.length) {
@@ -42,10 +41,7 @@ export async function getEscrowPayment(
 ): Promise<PaymentDefinition> {
     try {
         const escrow = new EscrowClient(chainId, escrowAddress);
-        const payment = await escrow.getEscrowPayment(
-            ethers.keccak256(ethers.toUtf8Bytes(orderId))
-        );
-        console.log('PAYMENT IS ', payment);
+        const payment = await escrow.getEscrowPayment(orderId);
 
         return paymentIsValid(payment) ? payment : null;
     } catch (e: any) {

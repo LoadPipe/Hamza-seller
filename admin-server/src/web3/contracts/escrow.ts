@@ -1,12 +1,12 @@
-import { ethers } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 import { escrowAbi } from '../abi/escrow-abi';
 
 export type PaymentDefinition = {
     id: string;
     payer: string;
     receiver: string;
-    amount: number;
-    amountRefunded: number;
+    amount: BigNumberish;
+    amountRefunded: BigNumberish;
     payerReleased: boolean;
     receiverReleased: boolean;
     released: boolean;
@@ -32,7 +32,6 @@ export class EscrowClient {
      * @param address Address of the LiteSwitch contract
      */
     constructor(chainId: number, address: string) {
-        console.log(process.env[`ETHERS_RPC_PROVIDER_URL_${chainId}`]);
         this.provider = new ethers.JsonRpcProvider(
             process.env[`ETHERS_RPC_PROVIDER_URL_${chainId}`]
         );
@@ -54,8 +53,8 @@ export class EscrowClient {
             id: output[0],
             payer: output[1],
             receiver: output[2],
-            amount: output[3],
-            amountRefunded: output[4],
+            amount: output[3].toString(),
+            amountRefunded: output[4].toString(),
             payerReleased: output[5],
             receiverReleased: output[6],
             released: output[7],

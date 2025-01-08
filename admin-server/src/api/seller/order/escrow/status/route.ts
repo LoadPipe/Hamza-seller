@@ -38,10 +38,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         //if caller is not the receiver, then nothing will work
         if (handler.inputParams.wallet_address?.length) {
             if (
-                handler.inputParams.wallet_address.trim().toLowercase() !==
+                handler.inputParams.wallet_address.trim().toLowerCase() !==
                 payment.payment.receiver.trim().toLowerCase()
             ) {
-                return `A payment escrow for order ${orderId} in escrow ${payment.escrow_address} on chain ${payment.chain_id} has already been released.`;
+                return `Only the owner of wallet ${payment.payment.receiver} can modify the escrow.`;
             }
         }
 
@@ -62,6 +62,13 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         if (!handler.requireParam('order_id')) {
             return;
         }
+
+        handler.onError = (err: any) => {
+            handler.logger.error('Error in getting escrow', err);
+            return handler.returnStatus(200, {
+                error: 'An unknown error occurred',
+            });
+        };
 
         const orderId = handler.inputParams.order_id;
 
