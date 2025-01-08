@@ -103,7 +103,6 @@ export default function ProductsPage() {
             },
             replace: true,
         });
-        alert(pageSize);
     }, [pageIndex, pageSize, sorting, filters, navigate]);
 
     // Fetch products with the query

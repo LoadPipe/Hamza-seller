@@ -897,7 +897,16 @@ class ProductService extends MedusaProductService {
 
     // Simple function, just list product categories
     // TODO: Just return all from categories repo?
-    async queryAllCategories() {} // await this.productCategoryRepository_.
+    async queryAllCategories() {
+        try {
+            const queryCategories =
+                await this.productCategoryRepository_.find();
+            console.log(`queryCategory ${queryCategories}`);
+            return queryCategories;
+        } catch (e) {
+            throw new e();
+        }
+    } // await this.productCategoryRepository_.
 
     async getCategoryByHandle(
         categoryHandle: string
