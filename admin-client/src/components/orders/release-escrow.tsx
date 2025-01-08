@@ -13,16 +13,13 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Rocket } from 'lucide-react';
-import {
-    findEscrowDataFromOrder,
-    getEscrowPayment,
-    releaseEscrowPayment,
-} from '@/utils/order-escrow.ts';
+import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { validateSeller } from '@/utils/validation-functions/validate-seller';
+import { getEscrowPaymentData } from '@/utils/validation-functions/validate-seller';
 import { useSwitchChain } from 'wagmi';
-import { providers } from 'ethers';
+import { getChainId, getWalletAddress } from '@/web3';
+import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
 
 export function ReleaseEscrow() {
     const { isOpen, order } = useStore(orderEscrowStore);
@@ -54,17 +51,10 @@ export function ReleaseEscrow() {
     });
 
     const handleConfirm = async () => {
-        //switch the chain if necessary
-        const provider: providers.Web3Provider = new providers.Web3Provider(
-            window.ethereum
-        );
-
-        const escrowData = findEscrowDataFromOrder(order);
-        const { chainId } = await provider.getNetwork();
-        if (escrowData.chain_id != chainId)
-            await switchChain({ chainId: escrowData.chain_id });
-
-        const payment = await getEscrowPayment(order);
+        const address = await getWalletAddress();
+        const chainId = await getChainId();
+        const payment: EscrowPaymentDefinitionWithError =
+            await getEscrowPaymentData(order, false, true, address);
         if (!payment) {
             toast({
                 variant: 'destructive',
@@ -72,17 +62,19 @@ export function ReleaseEscrow() {
                 description: `Escrow payment for order ${order?.id} not found`,
             });
         } else {
-            if (payment.receiverReleased) {
+            if (payment.error?.length) {
                 toast({
                     variant: 'destructive',
                     title: 'Validation Error',
-                    description: `Escrow payment for order ${order?.id} has already been released`,
+                    description: payment.error,
                 });
-            }
-            const isValid = await validateSeller(payment, toast);
-            closeOrderEscrowDialog();
+            } else {
+                //switch chain id if necessary
+                if (payment.chain_id != chainId) {
+                    switchChain({ chainId: payment.chain_id });
+                }
 
-            if (isValid) {
+                closeOrderEscrowDialog();
                 releaseEscrowMutation.mutate(order);
             }
         }

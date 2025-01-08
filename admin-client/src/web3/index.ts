@@ -37,3 +37,13 @@ export async function getChainId(): Promise<number> {
     const { chainId } = await provider.getNetwork();
     return chainId;
 }
+
+/**
+ * Gets the address of the current signed in wallet.
+ */
+export async function getWalletAddress(): Promise<string> {
+    const provider: providers.Web3Provider = new providers.Web3Provider(
+        window.ethereum
+    );
+    return await provider.getSigner().getAddress();
+}

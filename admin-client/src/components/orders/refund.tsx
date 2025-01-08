@@ -15,7 +15,10 @@ import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
 import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
 import { getCurrencyPrecision } from '@/currency.config';
 import { formatStatus } from '@/utils/format-data';
-import { validateSeller } from '@/utils/validation-functions/validate-seller';
+import { getEscrowPaymentData } from '@/utils/validation-functions/validate-seller';
+import { getChainId, getWalletAddress } from '@/web3';
+import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
+import { useSwitchChain } from 'wagmi';
 
 type RefundProps = {
     refundAmount?: number;
@@ -26,6 +29,7 @@ type RefundProps = {
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
 const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
+    const { switchChain } = useSwitchChain();
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
@@ -204,7 +208,11 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     };
 
     const handleRefundSubmit = async () => {
-        const payment = await getEscrowPayment(order);
+        const address = await getWalletAddress();
+        const userChainId = await getChainId();
+
+        const payment: EscrowPaymentDefinitionWithError =
+            await getEscrowPaymentData(order, true, false, address);
         if (!payment) {
             toast({
                 variant: 'destructive',
@@ -212,9 +220,21 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                 description: `Escrow payment for order ${order?.id} not found`,
             });
         } else {
-            const isValid = await validateSeller(payment, toast);
-            if (validateForm() && isValid) {
-                refundMutation.mutate();
+            if (payment.error?.length) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Validation Error',
+                    description: payment.error,
+                });
+            } else {
+                //switch chain id if necessary
+                if (payment.chain_id != userChainId) {
+                    switchChain({ chainId: payment.chain_id });
+                }
+
+                if (validateForm()) {
+                    refundMutation.mutate();
+                }
             }
         }
     };
