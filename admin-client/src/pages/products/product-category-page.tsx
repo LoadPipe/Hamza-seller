@@ -80,38 +80,6 @@ export default function ProductCategoryPage() {
                 </Button>
             ),
         },
-        {
-            accessorKey: 'rank',
-            header: 'Rank',
-        },
-        {
-            accessorKey: 'description',
-            header: 'Description',
-        },
-        {
-            id: 'actions',
-            cell: ({ row }) => (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            ...
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            onClick={() => console.log('Edit', row.original)}
-                        >
-                            Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => console.log('Delete', row.original)}
-                        >
-                            Delete
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            ),
-        },
     ];
 
     // Initialize the table without pagination
@@ -143,12 +111,15 @@ export default function ProductCategoryPage() {
                 ) : error ? (
                     <p>Error loading categories.</p>
                 ) : (
-                    <Table className="table-fixed w-full bg-[#1A1A1A] rounded-lg">
+                    <Table className="table-fixed w-full bg-[#1A1A1A] rounded-lg p-4">
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
+                                <TableRow className="h-10" key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id}>
+                                        <TableHead
+                                            className="px-4 py-2"
+                                            key={header.id}
+                                        >
                                             {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext()
@@ -163,7 +134,10 @@ export default function ProductCategoryPage() {
                                 table.getRowModel().rows.map((row) => (
                                     <TableRow key={row.id}>
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
+                                            <TableCell
+                                                className="px-4 py-2"
+                                                key={cell.id}
+                                            >
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()
@@ -173,10 +147,10 @@ export default function ProductCategoryPage() {
                                     </TableRow>
                                 ))
                             ) : (
-                                <TableRow>
+                                <TableRow className="h-10">
                                     <TableCell
                                         colSpan={columns.length}
-                                        className="text-center"
+                                        className="text-center px-4 py-2"
                                     >
                                         No categories found.
                                     </TableCell>
