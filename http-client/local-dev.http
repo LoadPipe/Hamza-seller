@@ -131,9 +131,10 @@ Content-Type: application/json
 }
 
 
-### Get Products By Store
-GET http://localhost:9000/seller/product/seller-products/?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W
+### Seller Products
+GET http://localhost:9000/seller/product/seller-products?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W&page=0&products_per_page=10&sort_field=name&sort_direction=ASC&filter[categories][in]=Board Games,Toys
 Content-Type: application/json
+
 
 ### Get Dashboard DTO {orderCounts, customer name}
 GET http://localhost:9000/seller/dashboard?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W&wallet_address=0xb975bf5ca0b09e17834d0b5a526f8315f82986d4

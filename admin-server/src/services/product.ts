@@ -16,12 +16,21 @@ import {
 } from '@medusajs/medusa/dist/types/product';
 import { ProductVariant } from '@medusajs/medusa';
 import { StoreRepository } from '../repositories/store';
+import ProductCategoryRepository from '@medusajs/medusa/dist/repositories/product-category';
 import { CachedExchangeRateRepository } from '../repositories/cached-exchange-rate';
 import PriceSelectionStrategy from '../strategies/price-selection';
 import CustomerService from './customer';
 import ProductVariantService from './product-variant';
 import { ProductVariantRepository } from '../repositories/product-variant';
-import { In, IsNull, Not } from 'typeorm';
+import {
+    In,
+    IsNull,
+    LessThan,
+    LessThanOrEqual,
+    MoreThan,
+    MoreThanOrEqual,
+    Not,
+} from 'typeorm';
 import { createLogger, ILogger } from '../utils/logging/logger';
 import { SeamlessCache } from '../utils/cache/seamless-cache';
 import { filterDuplicatesById } from '../utils/filter-duplicates';
@@ -93,6 +102,28 @@ export type csvProductData = {
     invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
 };
 
+interface FilterProducts {
+    name?: { in?: string[]; eq?: string; ne?: string };
+    price?: { lt?: number; gt?: number; lte?: number; gte?: number };
+    categories?: { in?: string[]; eq?: string; ne?: string };
+    created_at?: { gte?: string; lte?: string }; // Dates as ISO strings
+}
+
+interface StoreProductsDTO {
+    pageIndex: number;
+    pageCount: number;
+    rowsPerPage: number;
+    sortedBy: string | null;
+    sortDirection: 'ASC' | 'DESC';
+    filtering: FilterProducts | null;
+    products: Product[];
+    totalRecords: number;
+    availableCategories: Array<{
+        id: string;
+        name: string;
+    }>;
+}
+
 export type Price = {
     currency_code: string;
     amount: number;
@@ -111,11 +142,13 @@ class ProductService extends MedusaProductService {
     protected readonly customerService_: CustomerService;
     protected readonly productVariantService_: ProductVariantService;
     protected readonly priceConverter_: PriceConverter;
+    protected readonly productCategoryRepository_: typeof ProductCategoryRepository;
 
     constructor(container) {
         super(container);
         this.logger = createLogger(container, 'ProductService');
         this.storeRepository_ = container.storeRepository;
+        this.productCategoryRepository_ = container.productCategoryRepository;
         this.productVariantRepository_ = container.productVariantRepository;
         this.cacheExchangeRateRepository =
             container.cachedExchangeRateRepository;
@@ -780,16 +813,62 @@ class ProductService extends MedusaProductService {
 
     // Were getting products from the store for the /products page..
     // TODO: We really need to add the filters and totalCount ot this, and we will do this after the skeleton Products Panel
-    async getProductsForAdmin(
-        storeId: string
-        // sort: any,
-        // page: number,
-        // ordersPerPage: number
-    ): Promise<Product[]> {
-        return await this.productRepository_.find({
-            where: { store_id: storeId },
-            relations: ['variants', 'variants.prices', 'categories'],
-        });
+    async querySellerAllProducts(
+        storeId: string,
+        filter: { categories?: { in: string[] } }, // Simplified filter for categories
+        sort: any, // Sorting structure
+        page: number, // Pagination page index
+        productsPerPage: number // Number of products per page
+    ): Promise<StoreProductsDTO> {
+        const where: any = { store_id: storeId };
+
+        // Fetch all available categories
+        const availableCategories = await this.productCategoryRepository_
+            .find({
+                select: ['id', 'name'], // Fetch only the necessary fields
+            })
+            .then((categories) =>
+                categories.map((category) => ({
+                    id: category.id,
+                    name: category.name,
+                }))
+            );
+
+        // Handle category filtering
+        if (filter?.categories?.in) {
+            const categoryIds = availableCategories
+                .filter((category) =>
+                    filter.categories.in.includes(category.name)
+                )
+                .map((category) => category.id);
+
+            where.categories = { id: In(categoryIds) };
+        }
+
+        // Total product count for pagination
+        const totalRecords = await this.productRepository_.count({ where });
+
+        const params = {
+            where,
+            take: productsPerPage,
+            skip: page * productsPerPage,
+            order: sort?.field ? { [sort.field]: sort.direction } : undefined,
+            relations: ['variants', 'variants.prices', 'categories'], // Include necessary relations
+        };
+
+        const allProducts = await this.productRepository_.find(params);
+
+        return {
+            pageIndex: page,
+            pageCount: Math.ceil(totalRecords / productsPerPage),
+            rowsPerPage: productsPerPage,
+            sortedBy: sort?.field ?? null,
+            sortDirection: sort?.direction ?? 'ASC',
+            filtering: filter,
+            products: allProducts,
+            totalRecords,
+            availableCategories, // Pass available categories to the client
+        };
     }
 
     // Simple function, just list product categories

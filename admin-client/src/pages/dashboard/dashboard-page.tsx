@@ -27,7 +27,9 @@ import { getJwtStoreId } from '@/utils/authentication';
 import { getSecure } from '@/utils/api-calls.ts';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button.tsx';
-import { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
+import { FilePlus } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 
 async function getDashboardData(store_id: string, wallet_address: string) {
     try {
@@ -158,6 +160,8 @@ export default function DashboardPage() {
         setCustomerPreferredCurrency(value); // Update the store
         console.log(`Preferred Currency updated to: ${value}`); // Log for debugging
     };
+
+    const navigate = useNavigate();
 
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
@@ -365,9 +369,18 @@ export default function DashboardPage() {
                     <Card className="flex items-center justify-center h-32 bg-primary-black-90">
                         <CardContent className="text-center">
                             <p className="text-lg">Add your first product</p>
-                            <p className="text-sm text-muted-foreground">
-                                Add your first product to your store.
-                            </p>
+                            <Button
+                                variant="outline"
+                                className="mt-2 hover:text-primary-purple-90 border-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] hover:bg-primary-green-900 text-white"
+                                onClick={() =>
+                                    navigate({
+                                        to: '/add-product',
+                                    })
+                                }
+                            >
+                                Add new product
+                                <FilePlus />
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>

@@ -9,7 +9,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         req,
         res,
         'GET',
-        '/seller/product/seller-products'
+        '/seller/product/seller-products',
+        ['store_id', 'productsPerPage', 'page', 'sort', 'filter']
     );
 
     await handler.handle(async () => {
@@ -18,12 +19,28 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             return;
         }
 
-        // Return the updated order details in the response
-        return handler.returnStatus(
-            200,
-            await productService.getProductsForAdmin(
-                handler.inputParams.store_id
-            )
+        const storeId = handler.inputParams.store_id;
+        const filter: any = handler.hasParam('filter')
+            ? handler.inputParams.filter
+            : {};
+        const sort: any = handler.hasParam('sort')
+            ? handler.inputParams.sort
+            : null;
+        const page: number = handler.hasParam('page')
+            ? parseInt(handler.inputParams.page.toString(), 10)
+            : 0;
+        const productsPerPage: number = handler.hasParam('productsPerPage')
+            ? parseInt(handler.inputParams.productsPerPage.toString(), 10)
+            : 20; // Default value
+
+        const products = await productService.querySellerAllProducts(
+            storeId,
+            filter,
+            sort,
+            page,
+            productsPerPage
         );
+
+        return handler.returnStatus(200, products);
     });
 };
