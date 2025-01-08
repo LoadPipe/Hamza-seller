@@ -857,8 +857,10 @@ class ProductService extends MedusaProductService {
             relations: ['variants', 'variants.prices', 'categories'], // Include necessary relations
         };
 
-        const filteredProductsCount =
-            await this.productRepository_.count(params);
+        const filteredProductsCount = await this.productRepository_.count({
+            where,
+        });
+
         const filteredProducts = await this.productRepository_.find(params);
 
         return {
@@ -877,9 +879,7 @@ class ProductService extends MedusaProductService {
 
     // Simple function, just list product categories
     // TODO: Just return all from categories repo?
-    async queryAllCategories() // await this.productCategoryRepository_.
-
-    {}
+    async queryAllCategories() {} // await this.productCategoryRepository_.
 
     async getCategoryByHandle(
         categoryHandle: string

@@ -69,7 +69,7 @@ export default function DropdownMultiselectFilter({
 
                 <DropdownMenu.Portal>
                     <DropdownMenu.Content
-                        className="min-w-[240px] p-2 mt-2 bg-secondary-charcoal-69 rounded text-white border border-primary-purple-90"
+                        className="min-w-[240px] max-h-[300px] p-2 mt-2 bg-secondary-charcoal-69 rounded text-white border border-primary-purple-90 overflow-y-auto"
                         sideOffset={5}
                     >
                         {options.map((option) => (
