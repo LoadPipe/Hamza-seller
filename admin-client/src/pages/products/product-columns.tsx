@@ -20,7 +20,9 @@ export type Product = z.infer<typeof ProductSchema>;
 
 // Function to generate productColumns
 export const generateColumns = (
-    includeColumns: Array<keyof Product | 'actions' | 'price'>
+    includeColumns: Array<
+        keyof Product | 'actions' | 'price' | 'inventory_quantity'
+    >
 ): ColumnDef<Product>[] => {
     const baseColumns: ColumnDef<Product>[] = includeColumns.map((column) => {
         switch (column) {
@@ -312,7 +314,7 @@ export const productColumns = generateColumns([
     'categories',
     'created_at',
     'price',
-    'inventory',
+    'inventory_quantity',
     'variants',
     'actions',
 ]);

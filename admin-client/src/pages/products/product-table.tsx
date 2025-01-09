@@ -40,43 +40,7 @@ import {
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 
-interface Product {
-    id: string;
-    name: string;
-    category: string;
-    price: number;
-    stock: number;
-    sku: string;
-    variants: Variant[];
-}
-interface Variant {
-    id: string;
-    title: string;
-    created_at: string; // Use camelCase for consistency
-    sku: string | null;
-    inventory_quantity: number;
-    variantRank: number;
-    allowBackorder: boolean;
-    manageInventory: boolean;
-    prices: Price[]; // Array of price objects
-    externalSource?: string | null; // Optional
-    externalMetadata?: any | null; // Optional
-    buckyMetadata?: any | null; // Optional
-    updatedAt: string;
-    deletedAt?: string | null; // Optional
-    barcode?: string | null; // Optional
-    ean?: string | null; // Optional
-    upc?: string | null; // Optional
-    hsCode?: string | null; // Optional
-    originCountry?: string | null; // Optional
-    midCode?: string | null; // Optional
-    material?: string | null; // Optional
-    weight?: number | null; // Optional
-    length?: number | null; // Optional
-    height?: number | null; // Optional
-    width?: number | null; // Optional
-    metadata?: Record<string, any> | null; // Optional
-}
+type Product = z.infer<typeof ProductSchema>;
 
 interface Price {
     id: string;
@@ -90,6 +54,8 @@ interface Price {
 
 import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
 import { ProductCategory } from '@/utils/status-enum.ts';
+import { z } from 'zod';
+import { ProductSchema } from '@/pages/products/product-schema.ts';
 
 interface ProductTableProps {
     columns: ColumnDef<Product, any>[];
@@ -103,6 +69,14 @@ interface ProductTableProps {
     sorting: SortingState;
     setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
     isLoading: boolean;
+}
+
+interface Variant {
+    id: string;
+    title: string;
+    prices?: Price[]; // Ensure this is an array or optional array
+    inventory_quantity?: number;
+    created_at: string;
 }
 
 export function ProductTable({
