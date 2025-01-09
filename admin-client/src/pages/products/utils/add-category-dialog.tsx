@@ -25,11 +25,13 @@ export default function AddCategoryDialog() {
         <div>
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                    <Button className="bg-green-600">+ Add New Category</Button>
+                    <Button className="bg-green-600">
+                        + Add Product to Category
+                    </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#1A1A1A] text-white max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>Add New Category</DialogTitle>
+                        <DialogTitle>Add Product to Category</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>

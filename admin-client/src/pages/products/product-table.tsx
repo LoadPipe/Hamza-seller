@@ -191,6 +191,7 @@ export function ProductTable({
                         />
                     </div>
                     <div className="ml-auto flex flex-row relative w-[376px]">
+                        {/*TODO: Improve this search.... yarn add [algoliasearch || @meilisearch/instant-meilisearch] pkgs. */}
                         <Input
                             placeholder="Search Products..."
                             value={

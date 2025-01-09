@@ -31,7 +31,7 @@ export const generateColumns = (
                     cell: ({ row }) => {
                         const thumbnail = row.original.thumbnail; // Access thumbnail directly
                         return (
-                            <div className="w-[100px] h-[100px] px-[15px] flex items-center justify-center">
+                            <div className="w-[56px] h-[56px] px-[2px] flex items-center justify-center">
                                 {thumbnail ? (
                                     <img
                                         src={thumbnail}
@@ -97,7 +97,28 @@ export const generateColumns = (
             case 'categories':
                 return {
                     accessorKey: 'categories',
-                    header: 'Category',
+                    header: ({ column }) => (
+                        <Button
+                            variant="ghost"
+                            className="text-white hover:text-opacity-70"
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Category
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                        </Button>
+                    ),
                     cell: ({ row }) => {
                         const categories = row.getValue('categories');
 
