@@ -13,17 +13,18 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Rocket } from 'lucide-react';
-import {
-    getEscrowPayment,
-    releaseEscrowPayment,
-} from '@/utils/order-escrow.ts';
+import { releaseEscrowPayment } from '@/utils/order-escrow.ts';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { validateSeller } from '@/utils/validation-functions/validate-seller';
+import { getEscrowPaymentData } from '@/api/get-escrow-payment';
+import { useSwitchChain } from 'wagmi';
+import { getChainId, getWalletAddress } from '@/web3';
+import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
 
 export function ReleaseEscrow() {
     const { isOpen, order } = useStore(orderEscrowStore);
     const { toast } = useToast();
+    const { switchChain } = useSwitchChain();
 
     const releaseEscrowMutation = useMutation({
         mutationFn: async (order: any) => {
@@ -50,11 +51,32 @@ export function ReleaseEscrow() {
     });
 
     const handleConfirm = async () => {
-        const payment = await getEscrowPayment(order);
-        const isValid = await validateSeller(payment, toast);
+        const address = await getWalletAddress();
+        const chainId = await getChainId();
+        const payment: EscrowPaymentDefinitionWithError =
+            await getEscrowPaymentData(order?.id, false, true, address);
         closeOrderEscrowDialog();
-        if (isValid) {
-            releaseEscrowMutation.mutate(order);
+        if (!payment) {
+            toast({
+                variant: 'destructive',
+                title: 'Validation Error',
+                description: `Escrow payment for order ${order?.id} not found`,
+            });
+        } else {
+            if (payment.error?.length) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Validation Error',
+                    description: payment.error,
+                });
+            } else {
+                //switch chain id if necessary
+                if (payment.chain_id != chainId) {
+                    switchChain({ chainId: payment.chain_id });
+                }
+
+                releaseEscrowMutation.mutate(order);
+            }
         }
     };
 
@@ -74,7 +96,7 @@ export function ReleaseEscrow() {
                         Release Escrow
                     </DialogTitle>
                     <DialogDescription className="text-center text-white">
-                        Are you sure you want to release escrow for order{' '}
+                        Are you SURE you want to release escrow for order{' '}
                         <strong>{order.id}</strong>?
                     </DialogDescription>
                 </DialogHeader>
