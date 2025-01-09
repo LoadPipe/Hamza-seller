@@ -143,15 +143,15 @@ export const generateColumns = (
                     accessorKey: 'categories',
                     header: ({ column }) => (
                         <Button
-                            variant="ghost"
-                            className="text-white hover:text-opacity-70"
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
                                     column.getIsSorted() === 'asc'
                                 )
                             }
                         >
-                            Category
+                            Categories
                             {column.getIsSorted() === 'asc' && (
                                 <ArrowUp className="ml-2 h-4 w-4" />
                             )}

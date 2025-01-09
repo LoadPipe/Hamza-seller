@@ -825,8 +825,6 @@ class ProductService extends MedusaProductService {
     ): Promise<StoreProductsDTO> {
         const where: any = { store_id: storeId };
 
-        console.log(`$$$$ ${productsPerPage} ${page}`);
-
         // Total product count for pagination
         const totalRecords = await this.productRepository_.count({ where });
 
@@ -858,14 +856,10 @@ class ProductService extends MedusaProductService {
             }
         }
 
-        console.log(`$$$$ SORT FIELD ${sort?.field}`);
-
         const params = {
             where,
-            // take: productsPerPage,
-            // skip: page * productsPerPage,
-            take: 50,
-            skip: 0,
+            take: productsPerPage || 20,
+            skip: page * productsPerPage,
             order:
                 sort?.field && sort.field !== 'price'
                     ? { [sort.field]: sort.direction }
@@ -886,10 +880,22 @@ class ProductService extends MedusaProductService {
             });
         }
 
-        // Other sorting fields (e.g., created_at)
-        if (sort?.field && sort.field !== 'price') {
-            params.order[sort.field] = sort.direction;
+        if (sort?.field === 'categories') {
+            filteredProducts.sort((a, b) => {
+                const categoryA = a.categories[0]?.name || '';
+                const categoryB = b.categories[0]?.name || '';
+
+                return sort.direction === 'ASC'
+                    ? categoryA.localeCompare(categoryB)
+                    : categoryB.localeCompare(categoryA);
+            });
         }
+
+        if (sort?.field === '')
+            if (sort?.field && sort.field !== 'price') {
+                // Other sorting fields (e.g., created_at)
+                params.order[sort.field] = sort.direction;
+            }
 
         const filteredProductsCount =
             await this.productRepository_.count(params);

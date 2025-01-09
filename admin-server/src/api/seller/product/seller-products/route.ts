@@ -10,7 +10,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         res,
         'GET',
         '/seller/product/seller-products',
-        ['store_id', 'productsPerPage', 'page', 'sort', 'filter']
+        ['store_id', 'page', 'count', 'sort', 'filter']
     );
 
     await handler.handle(async () => {
@@ -31,6 +31,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             sortParam
                 ? (() => {
                       const [field, direction] = sortParam.split(':');
+                      console.log('Sort Field:', field); // Log sort field
+                      console.log('Sort Direction:', direction); // Log sort direction
                       return {
                           field,
                           direction: direction?.toUpperCase() as 'ASC' | 'DESC',
@@ -38,11 +40,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                   })()
                 : null;
 
+        console.log('Filter:', filter); // Log filter parameters
+        console.log('Page:', handler.inputParams.page); // Log pagination values
+        console.log('Products Per Page:', handler.inputParams.count); // Log
+
         const page: number = handler.hasParam('page')
             ? parseInt(handler.inputParams.page.toString(), 10)
             : 0;
-        const productsPerPage: number = handler.hasParam('productsPerPage')
-            ? parseInt(handler.inputParams.productsPerPage.toString(), 10)
+        const count: number = handler.hasParam('count')
+            ? parseInt(handler.inputParams.count.toString(), 10)
             : 20; // Default value
 
         const products = await productService.querySellerAllProducts(
@@ -50,7 +56,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             filter,
             sort,
             page,
-            productsPerPage
+            count
         );
 
         return handler.returnStatus(200, products);

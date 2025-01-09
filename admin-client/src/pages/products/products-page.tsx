@@ -34,7 +34,7 @@ async function sellerAllProductsQuery(
         const params = {
             store_id: getJwtStoreId(),
             page: pageIndex,
-            products_per_page: pageSize,
+            count: pageSize,
             sort,
             filter: filters, // Pass filters directly
         };
