@@ -53,7 +53,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             const storeId: string = handler.inputParams.store_id;
             const store: Store = await storeService.getStoreById(storeId);
             const products: Product[] = await fetchProductsWithCategories(productService, store);
-
             if (products.length === 0) {
                 return handler.returnStatus(400, {
                     message: 'No products found for the given store',
@@ -88,7 +87,8 @@ const fetchProductsWithCategories = async (productService: ProductService, store
 }
 
 const generateCsvContent = (products: Product[], store: Store) => {
-    const headers = 'category,images,title,subtitle,description,status,thumbnail,weight,discountable,store_default_currency_code,handle,variant,variant_price,variant_inventory_quantity,variant_allow_backorder,variant_manage_inventory,variant_sku,variant_barcode,variant_ean,variant_upc,variant_hs_code,variant_origin_country,variant_mid_code,variant_material,variant_weight,variant_length,variant_height,variant_width\n';
+    // console.log('products: ' + JSON.stringify(products));
+    const headers = 'product_id,category,images,title,subtitle,description,status,thumbnail,weight,discountable,store_default_currency_code,handle,variant_id,variant_title,variant_price,variant_inventory_quantity,variant_allow_backorder,variant_manage_inventory,variant_sku,variant_barcode,variant_ean,variant_upc,variant_hs_code,variant_origin_country,variant_mid_code,variant_material,variant_weight,variant_length,variant_height,variant_width\n';
     let csvContent = headers;
 
     products.forEach((product) => {
@@ -98,19 +98,33 @@ const generateCsvContent = (products: Product[], store: Store) => {
         });
     });
 
+    console.log('csvContent: ' + csvContent);
+
+
     return csvContent;
 }
 
 const formatCsvRow = (product: Product, variant: ProductVariant, variantPrice: number, store: Store, index: number) => {
-    const handleCommas = (field: string) => field.includes(',') ? `"${field}"` : field;
-    const handleNulls = (field: any) => field === null ? '' : field;
-    const handleBoolean = (field: boolean) => field ? 1 : 0;
-
-    if (index === 0) {
-        return `${product.categories[0].handle},,${handleNulls(product.title)},${handleNulls(product.subtitle)},${handleCommas(product.description)},${product.status},${handleNulls(product.thumbnail)},${handleNulls(product.weight)},${handleBoolean(product.discountable)},${store.default_currency_code},${handleNulls(product.handle)},${variant.title},${variantPrice},${variant.inventory_quantity},${handleBoolean(variant.allow_backorder)},${handleBoolean(variant.manage_inventory)},${handleNulls(variant.sku)},${handleNulls(variant.barcode)},${handleNulls(variant.ean)},${handleNulls(variant.upc)},${handleNulls(variant.hs_code)},${handleNulls(variant.origin_country)},${handleNulls(variant.mid_code)},${handleNulls(variant.material)},${handleNulls(variant.weight)},${handleNulls(variant.length)},${handleNulls(variant.height)},${handleNulls(variant.width)}\n`;
-    } else {
-        return `,,,,,,,,,,${handleNulls(product.handle)},${variant.title},${variantPrice},${variant.inventory_quantity},${handleBoolean(variant.allow_backorder)},${handleBoolean(variant.manage_inventory)},${handleNulls(variant.sku)},${handleNulls(variant.barcode)},${handleNulls(variant.ean)},${handleNulls(variant.upc)},${handleNulls(variant.hs_code)},${handleNulls(variant.origin_country)},${handleNulls(variant.mid_code)},${handleNulls(variant.material)},${handleNulls(variant.weight)},${handleNulls(variant.length)},${handleNulls(variant.height)},${handleNulls(variant.width)}\n`;
+    const handleCommasAndQuotes = (field: string) => handleCommas(handleQuotes(field));
+    const handleCommas = (field: string) => field && field.includes(',') ? `"${field}"` : field;
+    const handleQuotes = (field: string) => field && field.includes('"') ? field.replace(/"/g, '""') : field;
+    const handleNulls = (field: any) => {
+        if (typeof field == 'object' && field === null) {
+            return '';
+        }
+        if (typeof field == 'object' && field === undefined) {
+            return '';
+        }
+        return field;
     }
+    const handleBoolean = (field: boolean) => field && field ? 1 : 0;
+    let row = '';
+    if (index === 0) {
+        row = `${product.id},${product.categories[0].handle},,${handleNulls(handleCommasAndQuotes(product.title))},${handleNulls(handleCommasAndQuotes(product.subtitle))},${handleCommasAndQuotes(product.description)},${product.status},${handleNulls(product.thumbnail)},${handleNulls(product.weight)},${handleBoolean(product.discountable)},${store.default_currency_code},${handleNulls(product.handle)},${variant.id},${variant.title},${variantPrice},${variant.inventory_quantity},${handleBoolean(variant.allow_backorder)},${handleBoolean(variant.manage_inventory)},${handleNulls(variant.sku)},${handleNulls(variant.barcode)},${handleNulls(variant.ean)},${handleNulls(variant.upc)},${handleNulls(variant.hs_code)},${handleNulls(variant.origin_country)},${handleNulls(variant.mid_code)},${handleNulls(variant.material)},${handleNulls(variant.weight)},${handleNulls(variant.length)},${handleNulls(variant.height)},${handleNulls(variant.width)}\n`;
+    } else {
+        row = `,,,,,,,,,,,${handleNulls(product.handle)},${variant.id},${variant.title},${variantPrice},${variant.inventory_quantity},${handleBoolean(variant.allow_backorder)},${handleBoolean(variant.manage_inventory)},${handleNulls(variant.sku)},${handleNulls(variant.barcode)},${handleNulls(variant.ean)},${handleNulls(variant.upc)},${handleNulls(variant.hs_code)},${handleNulls(variant.origin_country)},${handleNulls(variant.mid_code)},${handleNulls(variant.material)},${handleNulls(variant.weight)},${handleNulls(variant.length)},${handleNulls(variant.height)},${handleNulls(variant.width)}\n`;
+    }
+    return row;
 }
 
 const sendCsvResponse = (res: MedusaResponse, csvContent: string) => {

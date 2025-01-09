@@ -217,9 +217,9 @@ class ProductService extends MedusaProductService {
             // URL of the Meilisearch API
             const url = 'http://localhost:7700/indexes/products/documents';
 
-            console.log(
-                `Sending ${cleanProducts.length} products to be indexed.`
-            );
+            // console.log(
+            //     `Sending ${cleanProducts.length} products to be indexed.`
+            // );
 
             // Send products to be indexed
             const indexResponse = await axios.post(url, cleanProducts, config);
@@ -379,7 +379,7 @@ class ProductService extends MedusaProductService {
                     }))
             );
             
-            console.log('existingProducts: ' + JSON.stringify(existingProducts));
+            // console.log('existingProducts: ' + JSON.stringify(existingProducts));
 
             const updatedProducts = await Promise.all(
                 productData.map((product) => {
@@ -998,7 +998,9 @@ class ProductService extends MedusaProductService {
     async validateCsvData(
         data: csvProductData[],
         requiredCsvHeadersForProduct: string[],
-        requiredCsvHeadersForVariant: string[]
+        requiredCsvHeadersForVariant: string[],
+        requiredCsvHeadersForVariantUpdate: string[],
+        requiredCsvHeadersForProductUpdate: string[]
     ): Promise<{
         createSuccess: boolean;
         createMessage: string;
@@ -1020,7 +1022,13 @@ class ProductService extends MedusaProductService {
         const createRows = [];
         const updateRows = [];
         for (const row of data) {
-            const isVariant = await this.csvRowIsVariant(row, requiredCsvHeadersForVariant, requiredCsvHeadersForProduct);
+            const isVariant = this.csvRowIsVariantOnly(
+                row,
+                requiredCsvHeadersForVariant,
+                requiredCsvHeadersForProduct,
+                requiredCsvHeadersForVariantUpdate,
+                requiredCsvHeadersForProductUpdate
+            );
             if (isVariant) {
                 if (!fieldHasData(row['variant_id'])) {
                     createRows.push(row);
@@ -1048,6 +1056,8 @@ class ProductService extends MedusaProductService {
                     row,
                     requiredCsvHeadersForProduct,
                     requiredCsvHeadersForVariant,
+                    requiredCsvHeadersForVariantUpdate,
+                    requiredCsvHeadersForProductUpdate,
                     true
                 );
                 if (validationError) {
@@ -1067,6 +1077,8 @@ class ProductService extends MedusaProductService {
                     row,
                     requiredCsvHeadersForProduct,
                     requiredCsvHeadersForVariant,
+                    requiredCsvHeadersForVariantUpdate,
+                    requiredCsvHeadersForProductUpdate,
                     false
                 );
                 if (validationError) {
@@ -1115,25 +1127,51 @@ class ProductService extends MedusaProductService {
     }
 
     /**
-     * determines if a row is a variant
-     * @param row 
-     * @param requiredCsvHeadersForVariant 
-     * @param requiredCsvHeadersForProduct 
-     * @returns 
+     * Determines if a row is a variant. This means it ONLY contains variant content and NO product content.
+     * @param row - The CSV row data to check.
+     * @param requiredCsvHeadersForVariant - The required CSV headers for a variant.
+     * @param requiredCsvHeadersForProduct - The required CSV headers for a product.
+     * @param requiredCsvHeadersForVariantUpdate - The required CSV headers for a variant update.
+     * @param requiredCsvHeadersForProductUpdate - The required CSV headers for a product update.
+     * @returns {boolean} - Returns true if the row is a variant only, otherwise false.
      */
-    async csvRowIsVariant(
+    csvRowIsVariantOnly(
         row: csvProductData,
         requiredCsvHeadersForVariant: string[],
-        requiredCsvHeadersForProduct: string[]
-    ): Promise<boolean> {
-        const isVariant =
-            requiredCsvHeadersForVariant.every((header) => row[header]) &&
-            requiredCsvHeadersForProduct.every(
+        requiredCsvHeadersForProduct: string[],
+        requiredCsvHeadersForVariantUpdate: string[],
+        requiredCsvHeadersForProductUpdate: string[]
+    ): boolean {
+        const headerForVariant = row['variant_id'] ? requiredCsvHeadersForVariantUpdate : requiredCsvHeadersForVariant;
+        const headerForProduct = row['product_id'] ? requiredCsvHeadersForProductUpdate : requiredCsvHeadersForProduct;
+
+        // console.log('START--------------------------------');
+        // console.log('variantTEST: ' + headerForVariant.every((header) => row[header]));
+        // console.log('productTEST: ' + headerForProduct.every(
+        //     (header) =>
+        //         !row[header] || headerForVariant.includes(header)));
+        // console.log('END--------------------------------');
+
+        return headerForVariant.every((header) => row[header]) &&
+            headerForProduct.every(
                 (header) =>
-                    !row[header] ||
-                    requiredCsvHeadersForVariant.includes(header)
-            );
-        return isVariant;
+                    !row[header] || headerForVariant.includes(header));
+    }
+
+    /**
+     * Determines if a row has variant data. This checks if the row contains variant data, but not necessarily variant only.
+     * @param row - The CSV row data to check.
+     * @param requiredCsvHeadersForVariant - The required CSV headers for a variant.
+     * @param requiredCsvHeadersForVariantUpdate - The required CSV headers for a variant update.
+     * @returns {boolean} - Returns true if the row has variant data, otherwise false.
+     */
+    csvRowHasVariant(
+        row: csvProductData,
+        requiredCsvHeadersForVariant: string[],
+        requiredCsvHeadersForVariantUpdate: string[],
+    ): boolean {
+        const headerForVariant = row['variant_id'] ? requiredCsvHeadersForVariantUpdate : requiredCsvHeadersForVariant;
+        return headerForVariant.every((header) => row[header]);
     }
 
     /**
@@ -1146,16 +1184,20 @@ class ProductService extends MedusaProductService {
     async filterCsvProductRows(
         data: csvProductData[],
         requiredCsvHeadersForProduct: string[],
-        requiredCsvHeadersForVariant: string[]
+        requiredCsvHeadersForVariant: string[],
+        requiredCsvHeadersForProductUpdate: string[],
+        requiredCsvHeadersForVariantUpdate: string[]
     ): Promise<csvProductData[]> {
-        return data.filter((item) => item['product_id'] || (
-            requiredCsvHeadersForProduct.every((header) => item[header]) &&
-            requiredCsvHeadersForVariant.every(
-                (header) =>
-                    !item[header] ||
-                    requiredCsvHeadersForProduct.includes(header)
-            )
-        ));
+        return data.filter(
+            (item) =>
+                !this.csvRowIsVariantOnly(
+                    item,
+                    requiredCsvHeadersForVariant,
+                    requiredCsvHeadersForProduct,
+                    requiredCsvHeadersForVariantUpdate,
+                    requiredCsvHeadersForProductUpdate
+                )
+        );
     }
 
     /**
@@ -1172,14 +1214,18 @@ class ProductService extends MedusaProductService {
         row: csvProductData,
         requiredCsvHeadersForProduct: string[],
         requiredCsvHeadersForVariant: string[],
+        requiredCsvHeadersForVariantUpdate: string[],
+        requiredCsvHeadersForProductUpdate: string[],
         isCreate: boolean
     ): Promise<string | null> {
         // determine if this is a product row or variant
         // then, validate accordingly.
-        const isVariant = await this.csvRowIsVariant(
+        const isVariant = this.csvRowIsVariantOnly(
             row,
             requiredCsvHeadersForVariant,
-            requiredCsvHeadersForProduct
+            requiredCsvHeadersForProduct,
+            requiredCsvHeadersForVariantUpdate,
+            requiredCsvHeadersForProductUpdate
         );
         // console.log('isVariant: ' + isVariant);
 
@@ -1198,7 +1244,6 @@ class ProductService extends MedusaProductService {
             }
 
             if (isCreate && requiredCsvHeadersForProduct.some((header) => !row[header])) {
-                console.log('test');
                 const missingHeader = requiredCsvHeadersForProduct.find((header) => !row[header]);
                 return 'required product fields missing data: ' + missingHeader;
             }
@@ -1208,6 +1253,8 @@ class ProductService extends MedusaProductService {
                 data,
                 requiredCsvHeadersForProduct,
                 requiredCsvHeadersForVariant,
+                requiredCsvHeadersForProductUpdate,
+                requiredCsvHeadersForVariantUpdate,
                 isCreate
             );
         }
@@ -1226,6 +1273,8 @@ class ProductService extends MedusaProductService {
         data: csvProductData[],
         requiredCsvHeadersForProduct: string[],
         requiredCsvHeadersForVariant: string[],
+        requiredCsvHeadersForProductUpdate: string[],
+        requiredCsvHeadersForVariantUpdate: string[],
         isCreate: boolean
     ): Promise<string | null> {
         //validate product_id
@@ -1298,7 +1347,9 @@ class ProductService extends MedusaProductService {
             const productRows = await this.filterCsvProductRows(
                 data,
                 requiredCsvHeadersForProduct,
-                requiredCsvHeadersForVariant
+                requiredCsvHeadersForVariant,
+                requiredCsvHeadersForProductUpdate,
+                requiredCsvHeadersForVariantUpdate
             );
             const handleExistsInProducts = productRows.some(
                 (item) => item !== row && item['handle'] === row['handle']
@@ -1588,7 +1639,7 @@ class ProductFilterCache extends SeamlessCache {
                     product.variants[0]?.prices.find(
                         (p) => p.currency_code === params.filterCurrencyCode
                     )?.amount ?? 0;
-                console.log(params.lowerPrice, price, params.upperPrice);
+                // console.log(params.lowerPrice, price, params.upperPrice);
                 return price >= params.lowerPrice && price <= params.upperPrice;
             });
 
@@ -1612,7 +1663,7 @@ class ProductFilterCache extends SeamlessCache {
     protected async getData(params: any): Promise<any> {
         let products: Product[] = [];
 
-        console.log('params', params);
+        // console.log('params', params);
         //get categories from cache
         const productCategories = await categoryCache.retrieve(
             params.categoryRepository

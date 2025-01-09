@@ -10,6 +10,7 @@ import {
     UpdateProductInput as MedusaUpdateProductInput,
 } from '@medusajs/medusa/dist/types/product';
 import multer from 'multer';
+import { json } from 'body-parser';
 
 type CreateProductInput = MedusaCreateProductInput & {
     id?: string;
@@ -41,7 +42,6 @@ const upload = multer({ dest: 'uploads/csvs/' });
 
 const requiredCsvHeadersForProduct = [
     'category',
-    'images',
     'title',
     'subtitle',
     'description',
@@ -64,6 +64,16 @@ const requiredCsvHeadersForVariant = [
     'variant_inventory_quantity',
     'variant_allow_backorder',
     'variant_manage_inventory',
+];
+
+const requiredCsvHeadersForVariantUpdate = [
+    ...requiredCsvHeadersForVariant.filter(header => header !== 'variant'),
+    'variant_id',
+];
+
+const requiredCsvHeadersForProductUpdate = [
+    ...requiredCsvHeadersForProduct.filter(header => header !== 'variant'),
+    'product_id'
 ];
 
 /**
@@ -167,7 +177,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
     */
     const mapVariants = async (
         productDetails: ProductDetails
-    ): Promise<CreateProductProductVariantInput[]> => {
+    ): Promise<(CreateProductProductVariantInput | UpdateProductProductVariantDTO)[]> => {
         const variants = [];
         const currencies = [
             { code: 'eth', symbol: 'ETH' },
@@ -175,15 +185,20 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             { code: 'usdt', symbol: 'USDT' },
         ];
 
+        // console.log('POSTCheck5.1.3.1');
+
         //extracts option values from variantData
         //const option = [ { "value":"L" }, { "value":"Black" }, { "value":"Female" } ]
-        const extractOptions = (variantString: string): { value: string }[] => {
+        const extractOptions = (variantString: string): { value: string; option_id: string }[] => {
             const options = variantString.includes('|') ? variantString.split('|') : [variantString];
             return options.map(option => {
                 const value = option.trim().split('[')[1].replace(']', '');
-                return { value };
+                const option_id = "opt_" + value;
+                return { value, option_id };
             });
         };
+
+        // console.log('POSTCheck5.1.3.2.3');
 
         for (const variant of productDetails.variants) {
             //get price
@@ -192,6 +207,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 baseAmount,
                 productDetails.productInfo.baseCurrency
             );
+
+            // console.log('POSTCheck5.1.3.2.4');
             // console.log('convertedPrices: ' + JSON.stringify(convertedPrices));
             //TODO: get from someplace global
             const prices = [];
@@ -206,12 +223,16 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 });
             }
 
-            const options = extractOptions(variant.variant);
+            // console.log('POSTCheck5.1.3.2.5');
+
+            const options = variant.variant ? extractOptions(variant.variant) : null;
             // console.log('options: ' + JSON.stringify(options));
+
+            // console.log('POSTCheck5.1.3.2.6');
 
             variants.push({
                 id: variant.variant_id || null,
-                title: options.map((option) => option.value).join(' | '),
+                ...(options && { title: options.map((option) => option.value).join(' | ') }),
                 inventory_quantity: variant.variant_inventory_quantity,
                 allow_backorder:
                     variant.variant_allow_backorder === '1' ? true : false,
@@ -229,9 +250,11 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 length: variant.variant_length || null,
                 width: variant.variant_width || null,
                 height: variant.variant_height || null,
-                prices,
-                options: options,
+                ...(prices.length > 0 && { prices }),
+                ...(options && { options: options }),
             });
+
+            // console.log('POSTCheck5.1.3.2.7');
         }
         // console.log('variants: ' + JSON.stringify(variants));
         return variants;
@@ -253,9 +276,13 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         let variants = [];
         
         //usually, product row data contains variant data as well
-        const isVariant = await productService.csvRowIsVariant(rowData, requiredCsvHeadersForVariant, requiredCsvHeadersForProduct);
-
-        if (isVariant) {
+        const hasVariant = productService.csvRowHasVariant(
+            rowData,
+            requiredCsvHeadersForVariant,
+            requiredCsvHeadersForVariantUpdate
+        );
+        
+        if (hasVariant) {
             variants.push(rowData);
         }
         
@@ -266,7 +293,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             )
         );
 
-        // console.log('variants: ' + JSON.stringify(variants));
+        // console.log('variantsConvertRowDataToProductDetails: ' + JSON.stringify(variants));
 
         //if product_id is present, we're updating a product        
         let productDetails: ProductDetails = {
@@ -289,10 +316,15 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
     // ];
     const extractOptionNames = async (
         variants: csvProductData[]
-    ): Promise<CreateProductProductOption_[]> => {
+    ): Promise<CreateProductProductOption_[] | null> => {
         const optionMap: { [key: string]: Set<string> } = {};
 
+        // console.log('POSTCheck5.1.3.2.1');
+
         variants.forEach((variant) => {
+            if (!variant.variant) {
+                return;
+            }
             const options = variant.variant.includes('|')
                 ? variant.variant.split('|').map((option) => option.trim())
                 : [variant.variant.trim()];
@@ -305,6 +337,12 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 optionMap[key].add(cleanValue);
             });
         });
+
+        // console.log('POSTCheck5.1.3.2.2');
+
+        if (Object.entries(optionMap).length === 0) {
+            return null;
+        }
 
         return Object.entries(optionMap).map(([title, values]) => ({
             title,
@@ -410,8 +448,6 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         salesChannelIds: string[],
         baseImageUrl: string
     ): Promise<UpdateProductInput> => {
-        let optionNames: CreateProductProductOption_[] = [];
-        let variants: UpdateProductProductVariantDTO[] = [];
         let images: string[] = [];
         let thumbnail: string = '';
 
@@ -434,31 +470,39 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         //     ],
         // };
 
-        
+        // console.log('POSTCheck5.1.3.1');
 
         const productDetails: ProductDetails =
             await convertRowDataToProductDetails(rowData, csvData, store);
         
-        console.log('productDetails: ' + JSON.stringify(productDetails));
+        // console.log('POSTCheck5.1.3.2');
+        
+        // console.log('productDetails: ' + JSON.stringify(productDetails));
 
-        if (productDetails.variants.length > 0) {
-            const optionNames = await extractOptionNames(productDetails.variants);
-            // console.log('optionNames: ' + JSON.stringify(optionNames));
+        const optionNames: (CreateProductProductOption_[] | null) = await extractOptionNames(productDetails.variants);
+        // console.log('optionNames: ' + JSON.stringify(optionNames));
 
-            const variants = await mapVariants(productDetails);
-            // console.log('variants: ' + JSON.stringify(variants));
-        }
+        // console.log('POSTCheck5.1.3.3');
+
+        const variants: UpdateProductProductVariantDTO[] = (await mapVariants(productDetails)) as UpdateProductProductVariantDTO[];
+        // console.log('variants: ' + JSON.stringify(variants));
+
+        // console.log('POSTCheck5.1.3.4');
         
         if (rowData['images'] && rowData['images'].trim() !== '') {
             const images = await extractImages(rowData['images'], baseImageUrl);
             // console.log('images: ' + JSON.stringify(images));
         }
 
+        // console.log('POSTCheck5.1.3.5');
+
         if (rowData['thumbnail'] && rowData['thumbnail'].trim() !== '') {
             const thumbnail = rowData['thumbnail'].startsWith('http')
                 ? rowData['thumbnail']
                 : baseImageUrl + rowData['thumbnail'];
         }
+
+        // console.log('POSTCheck5.1.3.6');
         
         const output: UpdateProductInput = {
             ...(rowData['product_id'] && { id: rowData['product_id'].trim() }),
@@ -478,8 +522,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             ...(optionNames && optionNames.length > 0 && { options: optionNames }),
             ...(variants && variants.length > 0 && { variants: variants }),
         };
+        
+        // console.log('POSTCheck5.1.3.7');
 
-        // console.log('Converting data to UpdateProductInput2:', JSON.stringify(output));
+        // console.log('Converting data to UpdateProductInput:', JSON.stringify(output));
         // console.log('Converting data to Variants:', JSON.stringify(variants));
         // console.log('Converting data to optionNames:', JSON.stringify(optionNames));
 
@@ -510,7 +556,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         const productRows = await productService.filterCsvProductRows(
             data,
             requiredCsvHeadersForProduct,
-            requiredCsvHeadersForVariant
+            requiredCsvHeadersForVariant,
+            requiredCsvHeadersForProductUpdate,
+            requiredCsvHeadersForVariantUpdate
         );
         if (productRows.length === 0) {
             return {
@@ -560,6 +608,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         // const collectionId = 'pcol_01HRVF8HCVY8B00RF5S54THTPC';
         // const salesChannelId = 'sc_01JE2GP93F1P0621E4ZCKK1AYR';
 
+        // console.log('data: ' + JSON.stringify(data));
+        // console.log('POSTCheck5.1.1');
+
         /**
          * Validate the see if there are product rows.
          * This is only for create instance.
@@ -567,8 +618,14 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         const productRows = await productService.filterCsvProductRows(
             data,
             requiredCsvHeadersForProduct,
-            requiredCsvHeadersForVariant
+            requiredCsvHeadersForVariant,
+            requiredCsvHeadersForProductUpdate,
+            requiredCsvHeadersForVariantUpdate
         );
+
+        // console.log('productRows: ' + JSON.stringify(productRows));
+
+        // console.log('POSTCheck5.1.2');
 
         // if update is only a bunch of variants, we'll need to update variants only, not the product
         if (productRows.length === 0) {
@@ -579,6 +636,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     // await convertCsvDataToUpdateVariantInput(d)
                 );
             }
+
+            // console.log('variantInputs: ' + JSON.stringify(variantInputs));
+
             return {
                 success: true,
                 message: 'data converted successfully',
@@ -586,6 +646,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 jsonData: variantInputs,
             };
         }
+
+        // console.log('POSTCheck5.1.3');
 
         // convert row to CreateDataInput
         // console.log('productRows: ' + JSON.stringify(productRows));
@@ -604,12 +666,14 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             );
         }
 
-        // console.log('productInputs: ' + JSON.stringify(productInputs));
+        // console.log('POSTCheck5.1.4');
+
+        // console.log('productInputs2: ' + JSON.stringify(productInputs));
         
         return {
             success: productInputs.length > 0,
             message: productInputs.length > 0 ? 'data converted successfully' : 'No data converted',
-            variantOnly: true,
+            variantOnly: false,
             jsonData: productInputs,
         };
     };
@@ -676,6 +740,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         message: string;
         products?: Product[];
     }> => { 
+
+        // console.log('POSTCheck5.1');
+
         const convertUpdateCsvDataOutput: {
             success: boolean;
             message: string;
@@ -687,7 +754,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             baseImageUrl,
             productInputs
         );
-        // console.log('convertCsvDataOutput2: ' + JSON.stringify(convertUpdateCsvDataOutput));
+        // console.log('convertCsvDataOutput: ' + JSON.stringify(convertUpdateCsvDataOutput));
+
+        // console.log('POSTCheck5.2');
 
         if (!convertUpdateCsvDataOutput.success) {
             return {
@@ -708,6 +777,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 message: 'No products were updated',
             };
         }
+
+        // console.log('POSTCheck5.3');
 
         return {
             success: true,
@@ -767,6 +838,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 // TODO: validate collection_id
                 // TODO: validate sales_channel_id
 
+                // console.log('POSTCheck1');
+
                 const validateCsvOutput: { success: boolean; message: string } =
                     await productService.validateCsv(
                         file.path,
@@ -783,6 +856,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     file.path
                 );
 
+                // console.log('POSTCheck2');
+
                 const validateCsvDataOutput: {
                     createSuccess: boolean;
                     createMessage: string;
@@ -795,8 +870,12 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 } = await productService.validateCsvData(
                     fileData,
                     requiredCsvHeadersForProduct,
-                    requiredCsvHeadersForVariant
+                    requiredCsvHeadersForVariant,
+                    requiredCsvHeadersForVariantUpdate,
+                    requiredCsvHeadersForProductUpdate
                 );
+
+                // console.log('POSTCheck3');
 
                 if (!validateCsvDataOutput.createSuccess && !validateCsvDataOutput.updateSuccess) {
                     return handler.returnStatus(400, {
@@ -835,6 +914,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     }
                 }
 
+                // console.log('POSTCheck4');
+
                 //update product code
                 let updateProductsOutput: {
                     success: boolean;
@@ -861,6 +942,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                         });
                     }
                 }
+
+                // console.log('POSTCheck5');
 
                 res.status(200).json({
                     createSuccess: createProductsOutput.success,
