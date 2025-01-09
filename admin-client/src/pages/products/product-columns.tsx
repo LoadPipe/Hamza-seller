@@ -122,7 +122,6 @@ export const generateColumns = (
                         </Button>
                     ),
                     cell: ({ row }) => {
-                        const variants = row.original.variants || [];
                         const createdAt = new Date(row.original.created_at);
                         return createdAt.toLocaleDateString();
                     },
@@ -141,46 +140,21 @@ export const generateColumns = (
             case 'categories':
                 return {
                     accessorKey: 'categories',
-                    header: ({ column }) => (
-                        <Button
-                            variant={'ghost'}
-                            className=" text-white hover:text-opacity-70 "
-                            onClick={() =>
-                                column.toggleSorting(
-                                    column.getIsSorted() === 'asc'
-                                )
-                            }
-                        >
-                            Categories
-                            {column.getIsSorted() === 'asc' && (
-                                <ArrowUp className="ml-2 h-4 w-4" />
-                            )}
-                            {column.getIsSorted() === 'desc' && (
-                                <ArrowDown className="ml-2 h-4 w-4" />
-                            )}
-                            {!column.getIsSorted() && (
-                                <ArrowUpDown className="ml-2 h-4 w-4" />
-                            )}
-                        </Button>
-                    ),
+                    header: 'Categories',
                     cell: ({ row }) => {
-                        const categories = row.getValue('categories');
-
-                        if (!categories) {
-                            return <div>Uncategorized</div>;
-                        }
-
-                        if (Array.isArray(categories)) {
-                            return (
-                                <div>
-                                    {categories
-                                        .map((cat) => cat.name)
-                                        .join(', ')}
-                                </div>
-                            );
-                        }
-
-                        return <div>{categories.name || 'Uncategorized'}</div>;
+                        const categories = row.original.categories || [];
+                        return categories.length
+                            ? categories.map((cat) => cat.name).join(', ')
+                            : 'Uncategorized';
+                    },
+                    accessorFn: (row) =>
+                        row.categories?.map((cat) => cat.name).join(', ') ||
+                        'Uncategorized',
+                    enableSorting: true,
+                    sortingFn: (rowA, rowB) => {
+                        const catA = rowA.original.categories?.[0]?.name || '';
+                        const catB = rowB.original.categories?.[0]?.name || '';
+                        return catA.localeCompare(catB);
                     },
                 };
 
@@ -255,29 +229,8 @@ export const generateColumns = (
 
             case 'inventory':
                 return {
-                    id: 'inventory',
-                    header: ({ column }) => (
-                        <Button
-                            variant={'ghost'}
-                            className=" text-white hover:text-opacity-70 "
-                            onClick={() =>
-                                column.toggleSorting(
-                                    column.getIsSorted() === 'asc'
-                                )
-                            }
-                        >
-                            Inventory
-                            {column.getIsSorted() === 'asc' && (
-                                <ArrowUp className="ml-2 h-4 w-4" />
-                            )}
-                            {column.getIsSorted() === 'desc' && (
-                                <ArrowDown className="ml-2 h-4 w-4" />
-                            )}
-                            {!column.getIsSorted() && (
-                                <ArrowUpDown className="ml-2 h-4 w-4" />
-                            )}
-                        </Button>
-                    ),
+                    id: 'inventory_quantity',
+                    header: 'Inventory Quantity',
                     cell: ({ row }) => {
                         const variants = row.original.variants || [];
                         if (variants.length > 1) return; // Inventory shown in dropdown for multi-variant products

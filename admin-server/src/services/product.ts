@@ -869,6 +869,20 @@ class ProductService extends MedusaProductService {
 
         const filteredProducts = await this.productRepository_.find(params);
 
+        try {
+            if (sort?.field === 'inventory_quantity') {
+                filteredProducts.sort((a, b) => {
+                    const qtyA = a.variants?.[0]?.inventory_quantity || 0;
+                    const qtyB = b.variants?.[0]?.inventory_quantity || 0;
+
+                    return sort.direction === 'ASC' ? qtyA - qtyB : qtyB - qtyA;
+                });
+            }
+        } catch (error) {
+            console.error('Error sorting by inventory_quantity:', error);
+            throw new Error('Failed to sort products by inventory');
+        }
+
         if (sort?.field === 'price') {
             filteredProducts.sort((a, b) => {
                 const priceA = a.variants[0]?.prices[0]?.amount || 0;
@@ -884,7 +898,6 @@ class ProductService extends MedusaProductService {
             filteredProducts.sort((a, b) => {
                 const categoryA = a.categories[0]?.name || '';
                 const categoryB = b.categories[0]?.name || '';
-
                 return sort.direction === 'ASC'
                     ? categoryA.localeCompare(categoryB)
                     : categoryB.localeCompare(categoryA);
