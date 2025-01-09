@@ -2,13 +2,13 @@ import type { MedusaRequest, MedusaResponse } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
 import ProductService from '../../../../services/product';
 
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const productService: ProductService = req.scope.resolve('productService');
 
     const handler = new RouteHandler(
         req,
         res,
-        'GET',
+        'POST',
         '/seller/product/seller-products',
         ['store_id', 'page', 'count', 'sort', 'filter']
     );

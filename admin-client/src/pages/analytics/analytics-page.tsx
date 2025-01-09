@@ -1,5 +1,3 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Select,
@@ -9,13 +7,11 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { LineChart, BarChart, Legend, Tooltip } from 'recharts';
 import { RevenueChart } from '@/pages/analytics/revenue-chart.tsx';
 import { TotalOrders } from '@/pages/analytics/total-orders.tsx';
 import { TotalRefunds } from '@/pages/analytics/total-refunds.tsx';
 import { OrderOverview } from '@/pages/analytics/order-overview.tsx';
 import { AverageOrderValue } from '@/pages/analytics/average-order-value.tsx';
-import { TopProducts } from '@/pages/analytics/top-products.tsx';
 
 export default function AnalyticsPage() {
     // Dummy data

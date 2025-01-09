@@ -27,7 +27,7 @@ import { getJwtStoreId } from '@/utils/authentication';
 import { getSecure } from '@/utils/api-calls.ts';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button.tsx';
-import React, { useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { FilePlus } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -68,6 +68,7 @@ export default function DashboardPage() {
         }
     }, [isAuthenticated, hasLoggedIn, setHasLoggedIn, showWelcomeToast]);
 
+    let store_id = getJwtStoreId() as string;
     const { data, isLoading, error } = useQuery<{
         name: string;
         newOrders: number;
@@ -83,7 +84,7 @@ export default function DashboardPage() {
             },
         ],
         queryFn: () =>
-            getDashboardData(getJwtStoreId(), userData.authData.wallet_address),
+            getDashboardData(store_id, userData.authData.wallet_address),
     });
 
     if (error) {
@@ -137,7 +138,13 @@ export default function DashboardPage() {
               ]
             : [{ name: 'No Data', value: 1, percentage: 1 }];
 
-    const COLOR_MAP = {
+    const COLOR_MAP: Record<
+        | 'New Orders'
+        | 'Pending Orders'
+        | 'Confirmed Orders'
+        | 'Canceled Orders',
+        { active: string; inactive: string }
+    > = {
         'New Orders': { active: '#94D42A', inactive: '#d3d3d3' },
         'Pending Orders': { active: '#F4A261', inactive: '#d3d3d3' },
         'Confirmed Orders': { active: '#2A9D8F', inactive: '#d3d3d3' },
@@ -193,9 +200,8 @@ export default function DashboardPage() {
                         Select Preferred Currency:
                     </label>
                     <Select
-                        id="preferredCurrency"
-                        onValueChange={handleCurrencyChange} // Sync to Zustand store
-                        defaultValue={preferred_currency_code || 'eth'} // Set default from store
+                        onValueChange={handleCurrencyChange}
+                        defaultValue={preferred_currency_code || 'eth'}
                     >
                         <SelectTrigger className="w-48 border-2 border-primary-purple-90 rounded-md animate-pulse-limited">
                             <SelectValue placeholder="Select Currency">
@@ -216,91 +222,100 @@ export default function DashboardPage() {
                 {/* Order Summary */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[
-                        { title: 'New Orders', value: data?.newOrders || 0 },
+                        { title: 'New Orders', value: data?.newOrders ?? 0 },
                         {
                             title: 'Pending Orders',
-                            value: data?.pendingOrders || 0,
+                            value: data?.pendingOrders ?? 0,
                         },
                         {
                             title: 'Confirmed Orders',
-                            value: data?.confirmedOrders || 0,
+                            value: data?.confirmedOrders ?? 0,
                         },
                         {
                             title: 'Canceled Orders',
-                            value: data?.canceledOrders || 0,
+                            value: data?.canceledOrders ?? 0,
                         },
-                    ].map(({ title, value }, index) => (
-                        <Card key={title} className="bg-primary-black-90">
-                            <CardContent className="text-center space-y-4">
-                                <ResponsiveContainer width="100%" height={120}>
-                                    <PieChart>
-                                        {pieChartData.map((entry, i) => {
-                                            const activeColor =
-                                                COLOR_MAP[entry.name]?.active ||
-                                                '#d3d3d3';
-                                            const inactiveColor =
-                                                COLOR_MAP[entry.name]
-                                                    ?.inactive || '#d3d3d3';
+                    ].map(({ title, value }, _: number) => {
+                        const totalOrders =
+                            (data?.newOrders ?? 0) +
+                            (data?.pendingOrders ?? 0) +
+                            (data?.confirmedOrders ?? 0) +
+                            (data?.canceledOrders ?? 0);
 
-                                            return (
-                                                <Pie
-                                                    key={`pie-${i}`}
-                                                    data={[
-                                                        {
-                                                            name: entry.name,
-                                                            value:
-                                                                entry.percentage *
-                                                                100,
-                                                        },
-                                                        {
-                                                            name: 'Remaining',
-                                                            value:
-                                                                100 -
-                                                                entry.percentage *
+                        const engagement =
+                            totalOrders > 0
+                                ? ((value / totalOrders) * 100).toFixed(1)
+                                : '0.0';
+
+                        return (
+                            <Card key={title} className="bg-primary-black-90">
+                                <CardContent className="text-center space-y-4">
+                                    <ResponsiveContainer
+                                        width="100%"
+                                        height={120}
+                                    >
+                                        <PieChart>
+                                            {pieChartData.map((entry, i) => {
+                                                const activeColor =
+                                                    COLOR_MAP[
+                                                        entry.name as keyof typeof COLOR_MAP
+                                                    ]?.active || '#d3d3d3';
+                                                const inactiveColor =
+                                                    COLOR_MAP[
+                                                        entry.name as keyof typeof COLOR_MAP
+                                                    ]?.inactive || '#d3d3d3';
+
+                                                return (
+                                                    <Pie
+                                                        key={`pie-${i}`}
+                                                        data={[
+                                                            {
+                                                                name: entry.name,
+                                                                value:
+                                                                    entry.percentage *
                                                                     100,
-                                                        },
-                                                    ]}
-                                                    dataKey="value"
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    innerRadius={40}
-                                                    outerRadius={50}
-                                                    paddingAngle={5}
-                                                    startAngle={90}
-                                                    endAngle={-270}
-                                                >
-                                                    <Cell
-                                                        key={`cell-active-${i}`}
-                                                        fill={activeColor}
-                                                    />
-                                                    <Cell
-                                                        key={`cell-inactive-${i}`}
-                                                        fill={inactiveColor}
-                                                    />
-                                                </Pie>
-                                            );
-                                        })}
-                                    </PieChart>
-                                </ResponsiveContainer>
-                                <p className="text-4xl font-semibold">
-                                    {value}
-                                </p>
-                                <p>{title}</p>
-                                <p className="text-sm text-muted-foreground">
-                                    Engagement:{' '}
-                                    {(
-                                        (value /
-                                            (data?.newOrders +
-                                                data?.pendingOrders +
-                                                data?.confirmedOrders +
-                                                data?.canceledOrders)) *
-                                            100 || 0
-                                    ).toFixed(1)}
-                                    %
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                                            },
+                                                            {
+                                                                name: 'Remaining',
+                                                                value:
+                                                                    100 -
+                                                                    entry.percentage *
+                                                                        100,
+                                                            },
+                                                        ]}
+                                                        dataKey="value"
+                                                        cx="50%"
+                                                        cy="50%"
+                                                        innerRadius={40}
+                                                        outerRadius={50}
+                                                        paddingAngle={5}
+                                                        startAngle={90}
+                                                        endAngle={-270}
+                                                    >
+                                                        <Cell
+                                                            key={`cell-active-${i}`}
+                                                            fill={activeColor}
+                                                        />
+                                                        <Cell
+                                                            key={`cell-inactive-${i}`}
+                                                            fill={inactiveColor}
+                                                        />
+                                                    </Pie>
+                                                );
+                                            })}
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                    <p className="text-4xl font-semibold">
+                                        {value}
+                                    </p>
+                                    <p>{title}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Engagement: {engagement}%
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
 
                 {/* Revenue Report */}

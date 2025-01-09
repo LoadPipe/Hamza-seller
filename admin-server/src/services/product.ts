@@ -856,12 +856,15 @@ class ProductService extends MedusaProductService {
             }
         }
 
+        console.log(`SORTING SORT SORT SKIP: ${page * productsPerPage}`);
+        console.log(`TAKE: ${productsPerPage}`);
         const params = {
             where,
             take: productsPerPage || 20,
             skip: page * productsPerPage,
             order:
-                sort?.field && sort.field !== 'price'
+                sort?.field &&
+                !['price', 'inventory_quantity'].includes(sort.field)
                     ? { [sort.field]: sort.direction }
                     : undefined,
             relations: ['variants', 'variants.prices', 'categories'], // Include necessary relations
@@ -869,21 +872,14 @@ class ProductService extends MedusaProductService {
 
         const filteredProducts = await this.productRepository_.find(params);
 
-        try {
-            if (sort?.field === 'inventory_quantity') {
-                filteredProducts.sort((a, b) => {
-                    const qtyA = a.variants?.[0]?.inventory_quantity || 0;
-                    const qtyB = b.variants?.[0]?.inventory_quantity || 0;
+        if (sort?.field === 'inventory_quantity') {
+            filteredProducts.sort((a, b) => {
+                const qtyA = a.variants?.[0]?.inventory_quantity || 0;
+                const qtyB = b.variants?.[0]?.inventory_quantity || 0;
 
-                    return sort.direction === 'ASC' ? qtyA - qtyB : qtyB - qtyA;
-                });
-            }
-        } catch (error) {
-            console.error('Error sorting by inventory_quantity:', error);
-            throw new Error('Failed to sort products by inventory');
-        }
-
-        if (sort?.field === 'price') {
+                return sort.direction === 'ASC' ? qtyA - qtyB : qtyB - qtyA;
+            });
+        } else if (sort?.field === 'price') {
             filteredProducts.sort((a, b) => {
                 const priceA = a.variants[0]?.prices[0]?.amount || 0;
                 const priceB = b.variants[0]?.prices[0]?.amount || 0;
@@ -913,6 +909,8 @@ class ProductService extends MedusaProductService {
         const filteredProductsCount =
             await this.productRepository_.count(params);
 
+        // console.log(JSON.stringify(filteredProducts));
+
         return {
             pageIndex: page,
             pageCount: Math.ceil(totalRecords / productsPerPage),
@@ -928,7 +926,6 @@ class ProductService extends MedusaProductService {
     }
 
     // Simple function, just list product categories
-    // TODO: Just return all from categories repo?
     async queryAllCategories() {
         try {
             const queryCategories =
@@ -938,7 +935,7 @@ class ProductService extends MedusaProductService {
         } catch (e) {
             throw new e();
         }
-    } // await this.productCategoryRepository_.
+    }
 
     async getCategoryByHandle(
         categoryHandle: string

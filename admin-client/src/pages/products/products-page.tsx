@@ -2,11 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import React from 'react';
 import { getJwtStoreId } from '@/utils/authentication';
-import { getSecure } from '@/utils/api-calls';
+import { postSecure } from '@/utils/api-calls';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { ProductTable } from '@/pages/products/product-table.tsx';
 import { productColumns } from '@/pages/products/product-columns.tsx';
 import { SortingState } from '@tanstack/react-table';
+import { ProductSearchSchema } from '@/routes.tsx';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { productStore } from '@/stores/product-filter/product-filter-store.tsx';
 import { useStore } from '@tanstack/react-store';
@@ -36,11 +37,11 @@ async function sellerAllProductsQuery(
             page: pageIndex,
             count: pageSize,
             sort,
-            filter: filters, // Pass filters directly
+            filter: filters,
         };
 
         // Use getSecure with parameters
-        const response = await getSecure(
+        const response = await postSecure(
             '/seller/product/seller-products',
             params
         );
@@ -72,7 +73,7 @@ export default function ProductsPage() {
     const search = useSearch({ from: '/products' });
 
     // Extract pagination, sorting, and filters from URL
-    const { page, count, sort, filter } = search || {};
+    const { page, count, sort, filter } = ProductSearchSchema.parse(search);
     const [sortField, sortDirection] = sort
         ? sort.split(':')
         : ['created_at', 'ASC'];
@@ -99,7 +100,7 @@ export default function ProductsPage() {
                 sort: sorting[0]
                     ? `${sorting[0].id}:${sorting[0].desc ? 'DESC' : 'ASC'}`
                     : 'created_at:ASC',
-                filter: JSON.stringify(filters),
+                filter: JSON.stringify(filters || filter),
             },
             replace: true,
         });
@@ -111,6 +112,7 @@ export default function ProductsPage() {
             products: Product[];
             totalRecords: number;
             categoryMap: Map<string, string>;
+            filteredProductsCount: number;
         },
         Error
     >({

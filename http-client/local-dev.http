@@ -132,7 +132,8 @@ Content-Type: application/json
 
 
 ### Seller Products
-GET http://localhost:9000/seller/product/seller-products?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W&page=0&products_per_page=40&sort_field=name&sort_direction=ASC&filter[categories][in]=Board Games,Toys
+POST http://localhost:9000/seller/product/seller-products?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W&page=2&count=5&sort=created_at:DESC
+
 Content-Type: application/json
 
 
