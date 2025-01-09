@@ -14,15 +14,13 @@ import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useNavigate } from '@tanstack/react-router';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
-import React from 'react';
-import { formatDate } from '@/utils/format-data.ts';
 
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
 
 // Function to generate productColumns
 export const generateColumns = (
-    includeColumns: Array<keyof Product | 'actions'>
+    includeColumns: Array<keyof Product | 'actions' | 'price'>
 ): ColumnDef<Product>[] => {
     const baseColumns: ColumnDef<Product>[] = includeColumns.map((column) => {
         switch (column) {
@@ -208,7 +206,9 @@ export const generateColumns = (
                                                     >
                                                         <span>
                                                             {formatCryptoPrice(
-                                                                price.amount,
+                                                                Number(
+                                                                    price.amount
+                                                                ),
                                                                 price.currency_code
                                                             )}
                                                         </span>
@@ -227,7 +227,7 @@ export const generateColumns = (
                     },
                 };
 
-            case 'inventory':
+            case 'inventory_quantity':
                 return {
                     id: 'inventory_quantity',
                     header: 'Inventory Quantity',
@@ -278,7 +278,7 @@ export const generateColumns = (
                                                 navigate({
                                                     to: '/edit-product',
                                                     state: {
-                                                        productId: product.id,
+                                                        // productId: product.id,
                                                     },
                                                 })
                                             }

@@ -47,6 +47,45 @@ interface Product {
     price: number;
     stock: number;
     sku: string;
+    variants: Variant[];
+}
+interface Variant {
+    id: string;
+    title: string;
+    created_at: string; // Use camelCase for consistency
+    sku: string | null;
+    inventory_quantity: number;
+    variantRank: number;
+    allowBackorder: boolean;
+    manageInventory: boolean;
+    prices: Price[]; // Array of price objects
+    externalSource?: string | null; // Optional
+    externalMetadata?: any | null; // Optional
+    buckyMetadata?: any | null; // Optional
+    updatedAt: string;
+    deletedAt?: string | null; // Optional
+    barcode?: string | null; // Optional
+    ean?: string | null; // Optional
+    upc?: string | null; // Optional
+    hsCode?: string | null; // Optional
+    originCountry?: string | null; // Optional
+    midCode?: string | null; // Optional
+    material?: string | null; // Optional
+    weight?: number | null; // Optional
+    length?: number | null; // Optional
+    height?: number | null; // Optional
+    width?: number | null; // Optional
+    metadata?: Record<string, any> | null; // Optional
+}
+
+interface Price {
+    id: string;
+    currency_code: string; // Use camelCase for consistency
+    amount: string; // Assuming amount is stored as a string
+    minQuantity?: number | null; // Optional
+    maxQuantity?: number | null; // Optional
+    priceListId?: string | null; // Optional
+    regionId?: string | null; // Optional
 }
 
 import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
@@ -93,8 +132,8 @@ export function ProductTable({
     const getFilterValues = (key: string) => filters?.[key]?.in || [];
 
     const table = useReactTable({
-        data,
         columns,
+        data,
         manualSorting: true,
         pageCount,
         onSortingChange: setSorting,
@@ -316,7 +355,7 @@ export function ProductTable({
                                         ))}
                                     </TableRow>
                                 ))
-                            ) : table.getRowModel().rows.length > 0 ? (
+                            ) : table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
                                     <React.Fragment key={row.id}>
                                         <TableRow>
@@ -416,7 +455,7 @@ export function ProductTable({
                                                                                         ? variant.prices
                                                                                               .filter(
                                                                                                   (
-                                                                                                      price
+                                                                                                      price: Price
                                                                                                   ) =>
                                                                                                       price.currency_code ===
                                                                                                       preferredCurrency
@@ -432,7 +471,9 @@ export function ProductTable({
                                                                                                           }
                                                                                                       >
                                                                                                           {formatCryptoPrice(
-                                                                                                              price.amount,
+                                                                                                              Number(
+                                                                                                                  price.amount
+                                                                                                              ),
                                                                                                               price.currency_code
                                                                                                           )}{' '}
                                                                                                           {price.currency_code.toUpperCase()}
@@ -442,15 +483,15 @@ export function ProductTable({
                                                                                         : variant.prices
                                                                                               .filter(
                                                                                                   (
-                                                                                                      price
+                                                                                                      price: any
                                                                                                   ) =>
                                                                                                       price.currency_code ===
                                                                                                       'eth'
                                                                                               )
                                                                                               .map(
                                                                                                   (
-                                                                                                      price,
-                                                                                                      idx
+                                                                                                      price: any,
+                                                                                                      idx: number
                                                                                                   ) => (
                                                                                                       <div
                                                                                                           key={
