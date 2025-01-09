@@ -23,9 +23,21 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         const filter: any = handler.hasParam('filter')
             ? handler.inputParams.filter
             : {};
-        const sort: any = handler.hasParam('sort')
+
+        const sortParam = handler.hasParam('sort')
             ? handler.inputParams.sort
             : null;
+        const sort: { field: string; direction: 'ASC' | 'DESC' } | null =
+            sortParam
+                ? (() => {
+                      const [field, direction] = sortParam.split(':');
+                      return {
+                          field,
+                          direction: direction?.toUpperCase() as 'ASC' | 'DESC',
+                      };
+                  })()
+                : null;
+
         const page: number = handler.hasParam('page')
             ? parseInt(handler.inputParams.page.toString(), 10)
             : 0;

@@ -819,7 +819,7 @@ class ProductService extends MedusaProductService {
     async querySellerAllProducts(
         storeId: string,
         filter: { categories?: { in: string[] } }, // Simplified filter for categories
-        sort: any, // Sorting structure
+        sort: { field: string; direction: 'ASC' | 'DESC' },
         page: number, // Pagination page index
         productsPerPage: number // Number of products per page
     ): Promise<StoreProductsDTO> {
@@ -858,6 +858,8 @@ class ProductService extends MedusaProductService {
             }
         }
 
+        console.log(`$$$$ SORT FIELD ${sort?.field}`);
+
         const params = {
             where,
             // take: productsPerPage,
@@ -865,21 +867,32 @@ class ProductService extends MedusaProductService {
             take: 50,
             skip: 0,
             order:
-                sort?.field &&
-                sort.field !== 'title' &&
-                sort.field !== 'price' &&
-                sort.field !== 'currency_code'
-                    ? {
-                          [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
-                      }
+                sort?.field && sort.field !== 'price'
+                    ? { [sort.field]: sort.direction }
                     : undefined,
             relations: ['variants', 'variants.prices', 'categories'], // Include necessary relations
         };
 
+        const filteredProducts = await this.productRepository_.find(params);
+
+        if (sort?.field === 'price') {
+            filteredProducts.sort((a, b) => {
+                const priceA = a.variants[0]?.prices[0]?.amount || 0;
+                const priceB = b.variants[0]?.prices[0]?.amount || 0;
+
+                return sort.direction === 'ASC'
+                    ? priceA - priceB
+                    : priceB - priceA;
+            });
+        }
+
+        // Other sorting fields (e.g., created_at)
+        if (sort?.field && sort.field !== 'price') {
+            params.order[sort.field] = sort.direction;
+        }
+
         const filteredProductsCount =
             await this.productRepository_.count(params);
-
-        const filteredProducts = await this.productRepository_.find(params);
 
         return {
             pageIndex: page,
