@@ -9,7 +9,6 @@ import ProductsPage from '@/pages/products/products-page.tsx';
 import RootComponent from '@/pages/RootComponent.tsx';
 import { z } from 'zod';
 import { zodValidator } from '@tanstack/zod-adapter';
-import HomePage from './pages/home/home-page.tsx';
 import AddProductPage from '@/pages/products/add-product-page.tsx';
 import EditProductPage from '@/pages/products/edit-product-page.tsx';
 import ProductCategoryPage from '@/pages/products/product-category-page.tsx';

@@ -14,6 +14,8 @@ import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useNavigate } from '@tanstack/react-router';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import React from 'react';
+import { formatDate } from '@/utils/format-data.ts';
 
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
@@ -94,6 +96,48 @@ export const generateColumns = (
                     },
                 };
 
+            case 'created_at':
+                return {
+                    accessorKey: 'created_at',
+                    header: ({ column }) => (
+                        <Button
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Date
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                        </Button>
+                    ),
+                    cell: ({ row }) => {
+                        const variants = row.original.variants || [];
+                        const createdAt = new Date(row.original.created_at);
+                        return createdAt.toLocaleDateString();
+                    },
+                    enableSorting: true,
+                    sortingFn: (rowA, rowB) => {
+                        const dateA = new Date(
+                            rowA.original.created_at
+                        ).getTime();
+                        const dateB = new Date(
+                            rowB.original.created_at
+                        ).getTime();
+                        return dateA - dateB;
+                    },
+                };
+
             case 'categories':
                 return {
                     accessorKey: 'categories',
@@ -140,31 +184,40 @@ export const generateColumns = (
                     },
                 };
 
-            case 'variants':
+            case 'price':
                 return {
-                    accessorKey: 'variants',
+                    accessorKey: 'price',
                     header: ({ column }) => (
-                        <div className="flex gap-4">
-                            <span>SKU</span>
-                            <span>Prices</span>
-                            <span>Inventory</span>
-                            <span>Backorder</span>
-                            <span>Created At</span>
-                        </div>
+                        <Button
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Price
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                        </Button>
                     ),
                     cell: ({ row }) => {
                         const variants = row.original.variants || [];
                         const preferredCurrency = useCustomerAuthStore(
                             (state) => state.preferred_currency_code
                         );
-
                         if (variants.length === 1) {
                             const variant = variants[0];
                             return (
                                 <div className="flex gap-4 items-center">
-                                    {/* SKU */}
-                                    <span>{variant.sku || 'N/A'}</span>
-
                                     {/* Prices */}
                                     <div className="space-y-1">
                                         {variant.prices?.length > 0 ? (
@@ -194,24 +247,43 @@ export const generateColumns = (
                                             <div>N/A</div>
                                         )}
                                     </div>
-
-                                    <span>{variant.inventory_quantity}</span>
-
-                                    <span>
-                                        {variant.allow_backorder ? 'Yes' : 'No'}
-                                    </span>
-
-                                    <span>
-                                        {new Date(
-                                            variant.created_at
-                                        ).toLocaleDateString()}
-                                    </span>
                                 </div>
                             );
                         }
-
-                        return null; // Multi-variant products don't render individual data in this column.
                     },
+                };
+
+            case 'inventory':
+                return {
+                    id: 'inventory',
+                    header: ({ column }) => (
+                        <Button
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Inventory
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                        </Button>
+                    ),
+                    cell: ({ row }) => {
+                        const variants = row.original.variants || [];
+                        if (variants.length > 1) return; // Inventory shown in dropdown for multi-variant products
+                        return variants[0]?.inventory_quantity || 'N/A';
+                    },
+                    enableSorting: false,
                 };
 
             case 'actions':
@@ -285,6 +357,9 @@ export const productColumns = generateColumns([
     'thumbnail',
     'title',
     'categories',
+    'created_at',
+    'price',
+    'inventory',
     'variants',
     'actions',
 ]);

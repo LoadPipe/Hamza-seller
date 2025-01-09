@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const ProductSchema = z.object({
     id: z.string(),
     title: z.string(),
+    created_at: z.string(),
     subtitle: z.string().optional().nullable(),
     description: z.string().optional(),
     thumbnail: z.string().optional(),
@@ -35,6 +36,7 @@ export const ProductSchema = z.object({
             z.object({
                 id: z.string(),
                 title: z.string(),
+                created_at: z.string(),
                 sku: z.string().nullable(),
                 inventory_quantity: z.number(),
                 variant_rank: z.number(),
@@ -55,7 +57,6 @@ export const ProductSchema = z.object({
                 external_source: z.string().nullable(),
                 external_metadata: z.any().nullable(),
                 bucky_metadata: z.any().nullable(),
-                created_at: z.string(),
                 updated_at: z.string(),
                 deleted_at: z.string().nullable(),
                 barcode: z.string().nullable(),

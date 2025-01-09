@@ -377,19 +377,14 @@ export function ProductTable({
                                                                         <th className="text-left p-2">
                                                                             Title
                                                                         </th>
-                                                                        <th className="text-left p-2">
-                                                                            SKU
-                                                                        </th>
+
                                                                         <th className="text-left p-2">
                                                                             Price
                                                                         </th>
                                                                         <th className="text-left p-2">
                                                                             Inventory
                                                                         </th>
-                                                                        <th className="text-left p-2">
-                                                                            Allow
-                                                                            Backorder
-                                                                        </th>
+
                                                                         <th className="text-left p-2">
                                                                             Created
                                                                             At
@@ -415,10 +410,7 @@ export function ProductTable({
                                                                                     {variant.title ||
                                                                                         'N/A'}
                                                                                 </td>
-                                                                                <td className="p-2">
-                                                                                    {variant.sku ||
-                                                                                        'N/A'}
-                                                                                </td>
+
                                                                                 <td className="p-2">
                                                                                     {variant.prices
                                                                                         ? variant.prices
@@ -477,11 +469,6 @@ export function ProductTable({
                                                                                 <td className="p-2">
                                                                                     {variant.inventory_quantity ||
                                                                                         'N/A'}
-                                                                                </td>
-                                                                                <td className="p-2">
-                                                                                    {variant.allow_backorder
-                                                                                        ? 'Yes'
-                                                                                        : 'No'}
                                                                                 </td>
                                                                                 <td className="p-2">
                                                                                     {new Date(
