@@ -123,13 +123,6 @@ export function ProductTable({
         },
     });
 
-    console.log(`PAGEINDEX: ${pageIndex} PAGESIZE: ${pageSize}`);
-    console.log('DT: ', JSON.stringify(data));
-    console.log('Pagination state:', { pageIndex, pageSize });
-    console.log('table:', table.getRowModel());
-    console.log('Rows in table:', table.getRowModel().rows);
-    console.log('Data:', data);
-
     useEffect(() => {
         console.log(table.getRowModel().rows);
     }, [table]);
