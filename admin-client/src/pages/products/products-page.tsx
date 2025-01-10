@@ -5,7 +5,7 @@ import { getJwtStoreId } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { ProductTable } from '@/pages/products/product-table.tsx';
-import { productColumns } from '@/pages/products/product-columns.tsx';
+import { columns } from '@/pages/products/product-columns.tsx';
 import { SortingState } from '@tanstack/react-table';
 import { ProductSearchSchema } from '@/routes.tsx';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -36,7 +36,7 @@ async function sellerAllProductsQuery(
             store_id: getJwtStoreId(),
             page: pageIndex,
             count: pageSize,
-            sort,
+            sort: sort,
             filter: filters,
         };
 
@@ -46,8 +46,6 @@ async function sellerAllProductsQuery(
             params
         );
 
-        console.log(`$$$$ RESPONSE ${JSON.stringify(response)}`);
-
         const categoryMap = response.availableCategories.reduce(
             (map: Record<string, string>, cat: any) => {
                 map[cat.id] = cat.name;
@@ -56,8 +54,10 @@ async function sellerAllProductsQuery(
             {}
         );
 
+        const data: object = response.products as object;
+
         return {
-            products: ProductSchema.array().parse(response.products),
+            products: ProductSchema.array().parse(data),
             totalRecords: response.totalRecords ?? 0,
             filteredProductsCount: response.filteredProductsCount,
             categoryMap,
@@ -104,7 +104,7 @@ export default function ProductsPage() {
             },
             replace: true,
         });
-    }, [pageIndex, pageSize, sorting, filters, navigate]);
+    }, [pageIndex, pageSize, sorting, JSON.stringify(filters), navigate]);
 
     // Fetch products with the query
     const { data, isLoading, error } = useQuery<
@@ -121,6 +121,10 @@ export default function ProductsPage() {
             sellerAllProductsQuery(pageIndex, pageSize, filters, sorting),
     });
 
+    // console.log('Fetched data:', data);
+
+    // console.log(`$$$ ${JSON.stringify(data?.products)}`);
+
     if (error instanceof Error) {
         return <div>Error: {error.message}</div>;
     }
@@ -128,7 +132,7 @@ export default function ProductsPage() {
     return (
         <>
             <ProductTable
-                columns={productColumns}
+                columns={columns}
                 data={data?.products ?? []}
                 pageIndex={pageIndex}
                 pageSize={pageSize}

@@ -14,6 +14,7 @@ import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useNavigate } from '@tanstack/react-router';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import { Checkbox } from '@/components/ui/checkbox.tsx';
 
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
@@ -21,11 +22,46 @@ export type Product = z.infer<typeof ProductSchema>;
 // Function to generate productColumns
 export const generateColumns = (
     includeColumns: Array<
-        keyof Product | 'actions' | 'price' | 'inventory_quantity'
+        keyof Product | 'actions' | 'price' | 'inventory_quantity' | 'select'
     >
 ): ColumnDef<Product>[] => {
     const baseColumns: ColumnDef<Product>[] = includeColumns.map((column) => {
         switch (column) {
+            case 'select':
+                return {
+                    id: 'select',
+                    header: ({ table }) => (
+                        <div className="flex ">
+                            <Checkbox
+                                checked={
+                                    table.getIsAllPageRowsSelected() ||
+                                    (table.getIsSomePageRowsSelected() &&
+                                        'indeterminate')
+                                }
+                                onCheckedChange={(value) =>
+                                    table.toggleAllPageRowsSelected(!!value)
+                                }
+                                aria-label="Select all"
+                                className="order-table-checkbox"
+                            />
+                        </div>
+                    ),
+                    cell: ({ row }) => (
+                        <div className="flex">
+                            <Checkbox
+                                checked={row.getIsSelected()}
+                                onCheckedChange={(value) =>
+                                    row.toggleSelected(!!value)
+                                }
+                                aria-label="Select row"
+                                className="order-table-checkbox"
+                            />
+                        </div>
+                    ),
+                    enableSorting: false,
+                    enableHiding: false,
+                    size: 40, // Fix column size
+                };
             case 'thumbnail':
                 return {
                     accessorKey: 'thumbnail',
@@ -158,9 +194,48 @@ export const generateColumns = (
                     },
                 };
 
+            case 'id':
+                return {
+                    accessorKey: 'id',
+                    header: ({ column }) => (
+                        <Button
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() =>
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                )
+                            }
+                        >
+                            Product
+                            {column.getIsSorted() === 'asc' && (
+                                <ArrowUp className="ml-2 h-4 w-4" />
+                            )}
+                            {column.getIsSorted() === 'desc' && (
+                                <ArrowDown className="ml-2 h-4 w-4" />
+                            )}
+                            {!column.getIsSorted() && (
+                                <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                        </Button>
+                    ),
+                    cell: ({ row }) => {
+                        const orderId: string = row.getValue('id');
+                        // Truncate after 11 characters and add ellipsis
+                        // Truncate to show the end of the string and add ellipsis
+                        const cleanedId = orderId.replace(/^products_/, '#');
+                        const truncatedId =
+                            cleanedId.length > 11
+                                ? `...${cleanedId.slice(-11)}` // Show the last 11 characters
+                                : cleanedId;
+                        return <div>{truncatedId}</div>;
+                    },
+                };
+
             case 'price':
                 return {
                     accessorKey: 'price',
+                    accessorFn: (row) => row.variants?.[0]?.prices || 'N/A',
                     header: ({ column }) => (
                         <Button
                             variant={'ghost'}
@@ -233,6 +308,8 @@ export const generateColumns = (
                 return {
                     id: 'inventory_quantity',
                     header: 'Inventory Quantity',
+                    accessorFn: (row) =>
+                        row.variants?.[0]?.inventory_quantity || 'N/A',
                     cell: ({ row }) => {
                         const variants = row.original.variants || [];
                         if (variants.length > 1) return; // Inventory shown in dropdown for multi-variant products
@@ -308,8 +385,10 @@ export const generateColumns = (
 };
 
 // Usage
-export const productColumns = generateColumns([
+export const columns = generateColumns([
+    'select',
     'thumbnail',
+    'id',
     'title',
     'categories',
     'created_at',

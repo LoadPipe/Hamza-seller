@@ -18,10 +18,10 @@ export default function DropdownMultiselectFilter({
     const [temporarySelection, setTemporarySelection] = React.useState<
         string[]
     >(selectedFilters || []);
-    console.log(
-        `DUCK DUCK: ${title} \n ENUM: ${JSON.stringify(optionsEnum)} \n FILTER FUNC 
-       \n SELECTED FILTERS${JSON.stringify(selectedFilters)}`
-    );
+    // console.log(
+    //     `DUCK DUCK: ${title} \n ENUM: ${JSON.stringify(optionsEnum)} \n FILTER FUNC
+    //    \n SELECTED FILTERS${JSON.stringify(selectedFilters)}`
+    // );
 
     const [isOpen, setIsOpen] = React.useState(false);
     const options = Object.values(optionsEnum);

@@ -72,14 +72,6 @@ interface ProductTableProps {
     isLoading: boolean;
 }
 
-// interface Variant {
-//     id: string;
-//     title: string;
-//     prices?: Price[]; // Ensure this is an array or optional array
-//     inventory_quantity?: number;
-//     created_at: string;
-// }
-
 export function ProductTable({
     columns,
     data,
@@ -107,14 +99,15 @@ export function ProductTable({
     const getFilterValues = (key: string) => filters?.[key]?.in || [];
 
     const table = useReactTable({
-        columns,
         data,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
         manualSorting: true,
+        manualPagination: true,
         pageCount,
         onSortingChange: setSorting,
         getPaginationRowModel: getPaginationRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
-        getCoreRowModel: getCoreRowModel(),
         onColumnFiltersChange: setColumnFilters,
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
@@ -130,12 +123,22 @@ export function ProductTable({
         },
     });
 
+    console.log(`PAGEINDEX: ${pageIndex} PAGESIZE: ${pageSize}`);
+    console.log('DT: ', JSON.stringify(data));
+    console.log('Pagination state:', { pageIndex, pageSize });
+    console.log('table:', table.getRowModel());
+    console.log('Rows in table:', table.getRowModel().rows);
+    console.log('Data:', data);
+
+    useEffect(() => {
+        console.log(table.getRowModel().rows);
+    }, [table]);
     const navigate = useNavigate();
-    const localStorageColumnSettingsKey = 'productTableColumnVisibility';
+    const localStorageProductColumnSettingsKey = 'productTableColumnVisibility';
 
     useEffect(() => {
         const savedVisibility = JSON.parse(
-            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
+            localStorage.getItem(localStorageProductColumnSettingsKey) || '{}'
         );
         if (savedVisibility) {
             table.getAllColumns().forEach((column) => {
@@ -298,7 +301,7 @@ export function ProductTable({
                 </div>
 
                 {/* Table */}
-                <div className="overflow-auto px-6">
+                <div className="rounded-md mt-9 overflow-x-auto">
                     <Table className="table-fixed w-full">
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
@@ -320,6 +323,7 @@ export function ProductTable({
                             ))}
                         </TableHeader>
                         <TableBody>
+                            {/*{console.log('Table Rows:', table.getRowModel().rows)}*/}
                             {isLoading ? (
                                 [...Array(pageSize)].map((_, idx) => (
                                     <TableRow key={idx}>
@@ -330,7 +334,7 @@ export function ProductTable({
                                         ))}
                                     </TableRow>
                                 ))
-                            ) : table.getRowModel().rows?.length ? (
+                            ) : table.getRowModel().rows?.length > 0 ? (
                                 table.getRowModel().rows.map((row) => (
                                     <React.Fragment key={row.id}>
                                         <TableRow>
