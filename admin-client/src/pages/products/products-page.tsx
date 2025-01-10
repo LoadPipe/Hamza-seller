@@ -132,7 +132,11 @@ export default function ProductsPage() {
                 data={data?.products ?? []}
                 pageIndex={pageIndex}
                 pageSize={pageSize}
-                productCategories={data?.categoryMap ?? {}}
+                productCategories={
+                    data?.categoryMap instanceof Map
+                        ? Object.fromEntries(data.categoryMap)
+                        : {}
+                }
                 filteredProductsCount={data?.filteredProductsCount ?? 0}
                 setPageIndex={setPageIndex}
                 setPageSize={setPageSize}

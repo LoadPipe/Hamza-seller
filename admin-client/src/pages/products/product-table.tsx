@@ -62,6 +62,7 @@ interface ProductTableProps {
     data: Product[];
     pageIndex: number;
     pageSize: number;
+    productCategories: Record<string, string>;
     setPageIndex: React.Dispatch<React.SetStateAction<number>>;
     setPageSize: React.Dispatch<React.SetStateAction<number>>;
     totalRecords: number;
@@ -71,13 +72,13 @@ interface ProductTableProps {
     isLoading: boolean;
 }
 
-interface Variant {
-    id: string;
-    title: string;
-    prices?: Price[]; // Ensure this is an array or optional array
-    inventory_quantity?: number;
-    created_at: string;
-}
+// interface Variant {
+//     id: string;
+//     title: string;
+//     prices?: Price[]; // Ensure this is an array or optional array
+//     inventory_quantity?: number;
+//     created_at: string;
+// }
 
 export function ProductTable({
     columns,
@@ -454,7 +455,7 @@ export function ProductTable({
                                                                                                       </div>
                                                                                                   )
                                                                                               )
-                                                                                        : variant.prices
+                                                                                        : [] // Replace this with an empty array or another logic
                                                                                               .filter(
                                                                                                   (
                                                                                                       price: any
@@ -481,6 +482,7 @@ export function ProductTable({
                                                                                                   )
                                                                                               )}
                                                                                 </td>
+
                                                                                 <td className="p-2">
                                                                                     {variant.inventory_quantity ||
                                                                                         'N/A'}

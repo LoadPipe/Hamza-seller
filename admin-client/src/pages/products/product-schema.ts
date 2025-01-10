@@ -31,18 +31,18 @@ export const ProductSchema = z.object({
         )
         .optional()
         .nullable(), // Ensure categories can be optional and nullable
-    variants: z
-        .array(
-            z.object({
-                id: z.string(),
-                title: z.string(),
-                created_at: z.string(),
-                sku: z.string().nullable(),
-                inventory_quantity: z.number(),
-                variant_rank: z.number(),
-                allow_backorder: z.boolean(),
-                manage_inventory: z.boolean(),
-                prices: z.array(
+    variants: z.array(
+        z.object({
+            id: z.string(),
+            title: z.string(),
+            created_at: z.string(),
+            sku: z.string().nullable(),
+            inventory_quantity: z.number(),
+            variant_rank: z.number(),
+            allow_backorder: z.boolean(),
+            manage_inventory: z.boolean(),
+            prices: z
+                .array(
                     z.object({
                         id: z.string(),
                         currency_code: z.string(),
@@ -52,29 +52,29 @@ export const ProductSchema = z.object({
                         price_list_id: z.string().nullable(),
                         region_id: z.string().nullable(),
                     })
-                ),
-                // Optional fields
-                external_source: z.string().nullable(),
-                external_metadata: z.any().nullable(),
-                bucky_metadata: z.any().nullable(),
-                updated_at: z.string(),
-                deleted_at: z.string().nullable(),
-                barcode: z.string().nullable(),
-                ean: z.string().nullable(),
-                upc: z.string().nullable(),
-                hs_code: z.string().nullable(),
-                origin_country: z.string().nullable(),
-                mid_code: z.string().nullable(),
-                material: z.string().nullable(),
-                weight: z.number().nullable(),
-                length: z.number().nullable(),
-                height: z.number().nullable(),
-                width: z.number().nullable(),
-                metadata: z.any().nullable(),
-            })
-        )
-        .optional()
-        .nullable(), // Ensure optional/nullable for edge cases
+                )
+                .optional()
+                .default([]),
+            // Optional fields
+            external_source: z.string().nullable(),
+            external_metadata: z.any().nullable(),
+            bucky_metadata: z.any().nullable(),
+            updated_at: z.string(),
+            deleted_at: z.string().nullable(),
+            barcode: z.string().nullable(),
+            ean: z.string().nullable(),
+            upc: z.string().nullable(),
+            hs_code: z.string().nullable(),
+            origin_country: z.string().nullable(),
+            mid_code: z.string().nullable(),
+            material: z.string().nullable(),
+            weight: z.number().nullable(),
+            length: z.number().nullable(),
+            height: z.number().nullable(),
+            width: z.number().nullable(),
+            metadata: z.any().nullable(),
+        })
+    ),
 });
 
 // Generate TypeScript type from Zod schema
