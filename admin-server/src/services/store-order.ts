@@ -22,8 +22,11 @@ import {
     FulfillmentStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
-import { findEscrowAddressFromOrder, getEscrowPayment } from '../web3';
-import { PaymentDefinition } from '../web3/contracts/escrow';
+import { findEscrowDataFromOrder, getEscrowPayment } from '../web3';
+import {
+    EscrowPaymentDefinition,
+    PaymentDefinition,
+} from '../web3/contracts/escrow';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -103,6 +106,8 @@ export default class StoreOrderService extends TransactionBaseService {
                     where[prop] = In(filter[prop].in);
                 } else if (filter[prop].ne) {
                     where[prop] = Not(filter[prop].ne);
+                } else if (filter[prop].notIn) {
+                    where[prop] = Not(In(filter[prop].notIn));
                 } else if (filter[prop].eq) {
                     where[prop] = filter[prop].eq;
                 } else if (filter[prop].lt) {
@@ -414,11 +419,13 @@ export default class StoreOrderService extends TransactionBaseService {
         return await this.syncEscrowPaymentForOrder(order);
     }
 
-    async getEscrowPayment(orderId: string): Promise<PaymentDefinition> {
+    async getEscrowPayment(orderId: string): Promise<EscrowPaymentDefinition> {
         const order: Order = await this.orderRepository_.findOne({
             where: { id: orderId },
             relations: ['payments'],
         });
+
+        if (!order) return null;
 
         return await this.getEscrowPaymentForOrder(order);
     }
@@ -468,10 +475,12 @@ export default class StoreOrderService extends TransactionBaseService {
             //is payment status in sync?
             let inSync = false;
 
-            const buyerReleased = payment?.payerReleased;
-            const sellerReleased = payment?.receiverReleased;
-            const bothReleased = payment?.released;
-            const fullyRefunded = payment?.amountRefunded >= payment?.amount;
+            //get payment properties
+            const buyerReleased = payment?.payment?.payerReleased;
+            const sellerReleased = payment?.payment?.receiverReleased;
+            const bothReleased = payment?.payment?.released;
+            const fullyRefunded =
+                payment?.payment?.amountRefunded >= payment?.payment?.amount;
 
             //if no status, it's in sync if also no payment
             if (!order.escrow_status) inSync = !payment;
@@ -540,11 +549,23 @@ export default class StoreOrderService extends TransactionBaseService {
 
     private async getEscrowPaymentForOrder(
         order: Order
-    ): Promise<PaymentDefinition> {
-        const address: string = findEscrowAddressFromOrder(order);
-        if (address) {
-            return await getEscrowPayment(address, order.id);
+    ): Promise<EscrowPaymentDefinition> {
+        const escrowData = findEscrowDataFromOrder(order);
+        const output = {
+            order_id: order?.id,
+            chain_id: escrowData.chain_id,
+            escrow_address: escrowData.address,
+            payment: null,
+        };
+
+        if (escrowData) {
+            output.payment = await getEscrowPayment(
+                escrowData.chain_id,
+                escrowData.address,
+                order.id
+            );
         }
-        return null;
+
+        return output;
     }
 }

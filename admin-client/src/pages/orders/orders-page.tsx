@@ -32,7 +32,7 @@ async function getSellerOrders(
                   field: sorting[0].id,
                   direction: sorting[0].desc ? 'DESC' : 'ASC',
               }
-            : { field: 'created_at', direction: 'ASC' };
+            : { field: 'created_at', direction: 'DESC' };
 
         const response = await postSecure('/seller/order', {
             store_id: getJwtStoreId(),
@@ -69,7 +69,7 @@ export default function OrdersPage() {
     // Parse sort into field and direction
     const [sortField, sortDirection] = sort
         ? sort.split(':')
-        : ['created_at', 'ASC'];
+        : ['created_at', 'DESC'];
 
     // Initialize filters from URL or store
     React.useEffect(() => {
@@ -100,7 +100,7 @@ export default function OrdersPage() {
                 count: pageSize,
                 sort: sorting[0]
                     ? `${sorting[0].id}:${sorting[0].desc ? 'DESC' : 'ASC'}`
-                    : 'created_at:ASC',
+                    : 'created_at:DESC',
                 filter: JSON.stringify(filters),
             },
             replace: true,

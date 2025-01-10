@@ -35,8 +35,6 @@ export default function DropdownMultiselectFilter({
     };
 
     const applyFilter = () => {
-        console.log(`Applying filter: ${JSON.stringify(temporarySelection)}`);
-
         if (temporarySelection.length > 0) {
             onFilterChange(temporarySelection);
             setIsOpen(false);
@@ -45,6 +43,12 @@ export default function DropdownMultiselectFilter({
             setTemporarySelection([]);
             setIsOpen(false);
         }
+    };
+
+    const selectAllFilters = () => {
+        onFilterChange(options);
+        setTemporarySelection(options);
+        setIsOpen(true);
     };
 
     const clearFilter = () => {
@@ -78,6 +82,7 @@ export default function DropdownMultiselectFilter({
                 <DropdownMenu.Portal>
                     <DropdownMenu.Content
                         className="min-w-[240px] max-h-[300px] p-2 mt-2 bg-secondary-charcoal-69 rounded text-white border border-primary-purple-90 overflow-y-auto"
+                        align="start"
                         sideOffset={5}
                     >
                         {options.map((option) => (
@@ -102,23 +107,28 @@ export default function DropdownMultiselectFilter({
                                 </label>
                             </div>
                         ))}
-                        <DropdownMenu.Item>
-                            {/* Buttons */}
-                            <div className="flex gap-2 mt-4">
-                                <button
-                                    className="px-4 py-2 text-sm font-medium rounded bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
-                                    onClick={applyFilter}
-                                >
-                                    Apply
-                                </button>
-                                <button
-                                    className="px-4 py-2 text-sm font-medium rounded bg-transparent  border-primary-purple-90 hover:bg-red-600 hover:border-none"
-                                    onClick={clearFilter}
-                                >
-                                    Clear Filters
-                                </button>
-                            </div>
-                        </DropdownMenu.Item>
+
+                        {/* Buttons */}
+                        <div className="flex gap-2 mt-4">
+                            <button
+                                className="px-4 py-2 text-sm font-medium rounded bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
+                                onClick={applyFilter}
+                            >
+                                Apply
+                            </button>
+                            <button
+                                className="px-4 py-2 text-sm font-medium rounded bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none"
+                                onClick={selectAllFilters}
+                            >
+                                Select All
+                            </button>
+                            <button
+                                className="px-4 py-2 text-sm font-medium rounded bg-transparent  border-primary-purple-90 hover:bg-red-600 hover:border-none"
+                                onClick={clearFilter}
+                            >
+                                Clear Filters
+                            </button>
+                        </div>
                     </DropdownMenu.Content>
                 </DropdownMenu.Portal>
             </DropdownMenu.Root>
