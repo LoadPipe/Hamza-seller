@@ -146,7 +146,7 @@ GET http://localhost:9000/seller/product/categories
 Content-Type: application/json
 
 ### Get Product W/ Variants && Categories
-GET http://localhost:9000/seller/product/edit-product?id=prod_01JHF7KWQT3VZ80AH0Y1E2D8Z3&store_id=store_01JHF7NG1ZJWV5V6565TQFX2B4
+GET http://localhost:9000/seller/product/edit-product?id=prod_01JHF7KVQWTDGED30S1VMV5EVV&store_id=store_01JHF7NG1ZJWV5V6565TQFX2B4
 Content-Type: application/json
 
 ### PUT Product W/ Variants && Categories
