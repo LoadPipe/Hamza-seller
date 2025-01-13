@@ -295,7 +295,7 @@ export function ProductTable({
 
                 {/* Table */}
                 <div className="rounded-md mt-9 overflow-x-auto">
-                    <Table className="table-fixed w-full">
+                    <Table className="min-w-full">
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
