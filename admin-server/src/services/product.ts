@@ -925,6 +925,33 @@ class ProductService extends MedusaProductService {
         };
     }
 
+    // We need to get the specific product w/ variants
+    // Fetch a specific product with its variants
+    async querySellerProductById(
+        productId: string,
+        storeId: string
+    ): Promise<Product | null> {
+        try {
+            const where: any = { store_id: storeId, id: productId };
+
+            const product = await this.productRepository_.findOne({
+                where: where,
+                relations: ['variants', 'variants.prices', 'categories'],
+            });
+
+            if (!product) {
+                throw new Error(
+                    `Product with ID ${productId} not found for store ${storeId}`
+                );
+            }
+
+            return product;
+        } catch (e) {
+            console.error(`Error querying product by ID: ${e.message}`);
+            throw e; // Rethrow the error for the caller to handle
+        }
+    }
+
     // Simple function, just list product categories
     async queryAllCategories() {
         try {
