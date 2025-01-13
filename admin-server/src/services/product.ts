@@ -127,6 +127,11 @@ interface StoreProductsDTO {
     }>;
 }
 
+interface QuerySellerProductByIdResponse {
+    product: Product;
+    availableCategories: Array<{ id: string; name: string }>;
+}
+
 export type Price = {
     currency_code: string;
     amount: number;
@@ -930,7 +935,7 @@ class ProductService extends MedusaProductService {
     async querySellerProductById(
         productId: string,
         storeId: string
-    ): Promise<Product | null> {
+    ): Promise<QuerySellerProductByIdResponse> {
         try {
             const where: any = { store_id: storeId, id: productId };
 
@@ -939,13 +944,28 @@ class ProductService extends MedusaProductService {
                 relations: ['variants', 'variants.prices', 'categories'],
             });
 
+            // Fetch all available categories
+            const availableCategories = await this.productCategoryRepository_
+                .find({
+                    select: ['id', 'name'], // Fetch only the necessary fields
+                })
+                .then((categories) =>
+                    categories.map((category) => ({
+                        id: category.id,
+                        name: category.name,
+                    }))
+                );
+
             if (!product) {
                 throw new Error(
                     `Product with ID ${productId} not found for store ${storeId}`
                 );
             }
 
-            return product;
+            return {
+                product: product,
+                availableCategories: availableCategories,
+            };
         } catch (e) {
             console.error(`Error querying product by ID: ${e.message}`);
             throw e; // Rethrow the error for the caller to handle
