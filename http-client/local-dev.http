@@ -144,3 +144,11 @@ Content-Type: application/json
 ### Query Product Categories
 GET http://localhost:9000/seller/product/categories
 Content-Type: application/json
+
+### Get Product W/ Variants && Categories
+GET http://localhost:9000/seller/product/edit-product?id=prod_01JHF7KW49DZHG7BANRTK7TKX8&store_id=store_01JHF7NG1ZJWV5V6565TQFX2B4
+Content-Type: application/json
+
+### PUT Product W/ Variants && Categories
+PUT http://localhost:9000/seller/product/edit-product
+Content-Type: application/json

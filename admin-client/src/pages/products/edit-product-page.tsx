@@ -8,6 +8,7 @@ import {
     SelectItem,
 } from '@/components/ui/select';
 import { useNavigate } from '@tanstack/react-router';
+import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
 
 export default function EditProductPage() {
     const navigate = useNavigate();
