@@ -131,37 +131,37 @@ export default function EditProductPage() {
                                 </div>
 
                                 {/* Discount and SKU Section */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label>Discount Percentage (%):</Label>
-                                        <Input
-                                            placeholder="Enter Discount"
-                                            defaultValue={
-                                                product?.discount_percentage ||
-                                                ''
-                                            }
-                                            className="mb-4"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>Discount Type:</Label>
-                                        <Select>
-                                            <SelectTrigger className="w-full">
-                                                <Button variant="outline">
-                                                    Percentage Discount
-                                                </Button>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="percentage">
-                                                    Percentage Discount
-                                                </SelectItem>
-                                                <SelectItem value="fixed">
-                                                    Fixed Amount
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
+                                {/*<div className="grid grid-cols-2 gap-4">*/}
+                                {/*    <div>*/}
+                                {/*        <Label>Discount Percentage (%):</Label>*/}
+                                {/*        <Input*/}
+                                {/*            placeholder="Enter Discount"*/}
+                                {/*            defaultValue={*/}
+                                {/*                product?.discount_percentage ||*/}
+                                {/*                ''*/}
+                                {/*            }*/}
+                                {/*            className="mb-4"*/}
+                                {/*        />*/}
+                                {/*    </div>*/}
+                                {/*    <div>*/}
+                                {/*        <Label>Discount Type:</Label>*/}
+                                {/*        <Select>*/}
+                                {/*            <SelectTrigger className="w-full">*/}
+                                {/*                <Button variant="outline">*/}
+                                {/*                    Percentage Discount*/}
+                                {/*                </Button>*/}
+                                {/*            </SelectTrigger>*/}
+                                {/*            <SelectContent>*/}
+                                {/*                <SelectItem value="percentage">*/}
+                                {/*                    Percentage Discount*/}
+                                {/*                </SelectItem>*/}
+                                {/*                <SelectItem value="fixed">*/}
+                                {/*                    Fixed Amount*/}
+                                {/*                </SelectItem>*/}
+                                {/*            </SelectContent>*/}
+                                {/*        </Select>*/}
+                                {/*    </div>*/}
+                                {/*</div>*/}
 
                                 {/* Additional Variant Details */}
                                 <div className="grid grid-cols-3 gap-4">
@@ -251,7 +251,7 @@ export default function EditProductPage() {
 
                     {/* Variants Panel */}
                     {product?.variants && product.variants.length > 0 ? (
-                        <div className="border rounded-lg p-4 bg-gray-800">
+                        <div className="border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-4">
                                 <Button variant="outline" size="sm">
                                     Add Manually
