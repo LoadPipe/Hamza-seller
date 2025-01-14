@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { Label } from '@/components/ui/label.tsx';
 import { useForm } from '@tanstack/react-form';
+import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -36,16 +37,10 @@ export default function EditProductPage() {
         queryKey: ['edit-product', productId],
         queryFn: () => fetchProductById(productId),
     });
-
-    if (isLoading) return <div>Loading...</div>;
-    if (error) return <div>Error loading product data</div>;
-
-    // const { product, availableCategories } = data ?? {
     const { product } = data ?? {
         product: undefined,
         availableCategories: [],
     };
-
     const form = useForm({
         defaultValues: {
             title: product?.title || '',
@@ -60,11 +55,7 @@ export default function EditProductPage() {
         onSubmit: async ({ value }) => {
             console.log('Submitted data:', value);
             try {
-                await fetch(`/api/products/${productId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(value),
-                });
+                await updateProductById(productId, JSON.stringify(value));
                 navigate({ to: '/products' });
             } catch (err) {
                 console.error('Failed to update product:', err);
@@ -75,6 +66,11 @@ export default function EditProductPage() {
         //     return result.success ? {} : result.error.format();
         // },
     });
+
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>Error loading product data</div>;
+
+    // const { product, availableCategories } = data ?? {
 
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
@@ -208,6 +204,7 @@ export default function EditProductPage() {
                                         <AccordionContent>
                                             <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
                                                 <div>
+                                                    <Label>Title</Label>
                                                     <Input
                                                         placeholder="Variant Title"
                                                         defaultValue={
@@ -216,6 +213,7 @@ export default function EditProductPage() {
                                                     />
                                                 </div>
                                                 <div>
+                                                    <Label>SKU</Label>
                                                     <Input
                                                         placeholder="SKU"
                                                         defaultValue={
@@ -224,6 +222,7 @@ export default function EditProductPage() {
                                                     />
                                                 </div>
                                                 <div>
+                                                    <Label>Price</Label>
                                                     <Input
                                                         placeholder="Price"
                                                         defaultValue={
@@ -243,6 +242,7 @@ export default function EditProductPage() {
                                                 </div>
 
                                                 <div>
+                                                    <Label>Quantity</Label>
                                                     <Input
                                                         placeholder="Quantity"
                                                         defaultValue={
