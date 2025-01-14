@@ -991,7 +991,7 @@ class ProductService extends MedusaProductService {
         try {
             // Fetch the product to ensure it exists and belongs to the store
             const product = await this.productRepository_.findOne({
-                where: { id: productId, store_id: storeId, deleted_at: null },
+                where: { id: productId, store_id: storeId },
             });
 
             if (!product) {
