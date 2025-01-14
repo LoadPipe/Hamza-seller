@@ -1,6 +1,6 @@
 import { patchSecure } from '@/utils/api-calls.ts';
 
-export const updateProductById = async (id: string, data: ProductForm) => {
+export const updateProductById = async (id: string, data: any) => {
     const response = await patchSecure(`/api/products/${id}`, {
         method: 'PATCH',
         headers: {
