@@ -563,6 +563,7 @@ export const generateColumns = (
 
 // Usage
 export const columns = generateColumns([
+    'actions',
     'select',
     'id',
     'customer_id',
@@ -573,5 +574,4 @@ export const columns = generateColumns([
     'currency_code',
     'email',
     'fulfillment_status',
-    'actions',
 ]);
