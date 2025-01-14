@@ -972,6 +972,53 @@ class ProductService extends MedusaProductService {
         }
     }
 
+    // We need to edit the specific product w/ variants
+    async querySellerProductByIdForEdit(
+        productId: string,
+        storeId: string,
+        updates: {
+            title?: string;
+            subtitle?: string;
+            description?: string;
+            handle?: string;
+            thumbnail?: string;
+            weight?: number;
+            length?: number;
+            height?: number;
+            width?: number;
+        }
+    ): Promise<Product | null> {
+        try {
+            // Fetch the product to ensure it exists and belongs to the store
+            const product = await this.productRepository_.findOne({
+                where: { id: productId, store_id: storeId, deleted_at: null },
+            });
+
+            if (!product) {
+                throw new Error(
+                    `Product with ID ${productId} not found for store ${storeId}`
+                );
+            }
+
+            // Apply updates only for the provided fields
+            const updatedProduct = {
+                ...product, // Keep existing fields
+                ...updates, // Merge in updates
+                updated_at: new Date(), // Update the timestamp
+            };
+
+            // Save the updated product
+            await this.productRepository_.save(updatedProduct);
+
+            return updatedProduct; // Return the updated product
+        } catch (error) {
+            console.error(
+                `Error updating product ${productId} for store ${storeId}: ${error.message}`
+            );
+            throw error; // Rethrow the error for the caller to handle
+        }
+    }
+
     // Simple function, just list product categories
     async queryAllCategories() {
         try {

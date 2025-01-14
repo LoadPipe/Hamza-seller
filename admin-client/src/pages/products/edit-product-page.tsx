@@ -104,6 +104,7 @@ export default function EditProductPage() {
                                 />
                             )}
                         </div>
+                        <Button>Update Thumbnail Image</Button>
                     </div>
 
                     {/* Pricing */}
@@ -230,6 +231,9 @@ export default function EditProductPage() {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Button className="my-2">
+                            Add Product to Category
+                        </Button>
                     </div>
                 </div>
 
