@@ -187,6 +187,34 @@ export default function EditProductPage() {
                         </div>
                     </div>
 
+                    {/* Base Product Dimensions */}
+                    <div className="grid grid-cols-4 gap-4 mt-4">
+                        {[
+                            { name: 'weight', label: 'Weight' },
+                            { name: 'length', label: 'Length' },
+                            { name: 'height', label: 'Height' },
+                            { name: 'width', label: 'Width' },
+                        ].map(({ name, label }) => (
+                            <form.Field key={name} name={name}>
+                                {(field) => (
+                                    <>
+                                        <Label>{label}:</Label>
+                                        <Input
+                                            type="number"
+                                            placeholder={label}
+                                            value={field.state.value}
+                                            onChange={(e) =>
+                                                field.handleChange(
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                        />
+                                    </>
+                                )}
+                            </form.Field>
+                        ))}
+                    </div>
+
                     {product?.variants && product.variants.length > 0 && (
                         <div className="mt-8">
                             <h2 className="text-lg font-medium mb-4">
