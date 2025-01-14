@@ -3,6 +3,12 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
@@ -244,131 +250,75 @@ export default function EditProductPage() {
                                                     </Button>
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <div className="p-4">
-                                                        <form.Field
-                                                            name={`variant-${index}-weight`}
-                                                        >
-                                                            {(field) => (
-                                                                <>
-                                                                    <Label>
-                                                                        Weight:
-                                                                    </Label>
+                                                    <div className="p-4 space-y-4">
+                                                        {[
+                                                            'weight',
+                                                            'length',
+                                                            'height',
+                                                            'width',
+                                                        ].map((dim) => (
+                                                            <div key={dim}>
+                                                                <Label>
+                                                                    {dim
+                                                                        .charAt(
+                                                                            0
+                                                                        )
+                                                                        .toUpperCase() +
+                                                                        dim.slice(
+                                                                            1
+                                                                        )}
+                                                                    :
+                                                                </Label>
+                                                                <div className="flex items-center gap-2">
                                                                     <Input
                                                                         type="number"
-                                                                        placeholder="Weight"
-                                                                        value={
-                                                                            field
-                                                                                .state
-                                                                                .value
+                                                                        placeholder={
+                                                                            dim
                                                                         }
-                                                                        onChange={(
-                                                                            e
-                                                                        ) =>
-                                                                            field.handleChange(
-                                                                                Number(
-                                                                                    e
-                                                                                        .target
-                                                                                        .value
-                                                                                )
-                                                                            )
+                                                                        defaultValue={
+                                                                            variant[
+                                                                                dim
+                                                                            ] ||
+                                                                            ''
                                                                         }
                                                                     />
-                                                                </>
-                                                            )}
-                                                        </form.Field>
-                                                        <form.Field
-                                                            name={`variant-${index}-length`}
-                                                        >
-                                                            {(field) => (
-                                                                <>
-                                                                    <Label>
-                                                                        Length:
-                                                                    </Label>
-                                                                    <Input
-                                                                        type="number"
-                                                                        placeholder="Length"
-                                                                        value={
-                                                                            field
-                                                                                .state
-                                                                                .value
-                                                                        }
-                                                                        onChange={(
-                                                                            e
-                                                                        ) =>
-                                                                            field.handleChange(
-                                                                                Number(
-                                                                                    e
-                                                                                        .target
-                                                                                        .value
-                                                                                )
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                </>
-                                                            )}
-                                                        </form.Field>
-                                                        <form.Field
-                                                            name={`variant-${index}-height`}
-                                                        >
-                                                            {(field) => (
-                                                                <>
-                                                                    <Label>
-                                                                        Height:
-                                                                    </Label>
-                                                                    <Input
-                                                                        type="number"
-                                                                        placeholder="Height"
-                                                                        value={
-                                                                            field
-                                                                                .state
-                                                                                .value
-                                                                        }
-                                                                        onChange={(
-                                                                            e
-                                                                        ) =>
-                                                                            field.handleChange(
-                                                                                Number(
-                                                                                    e
-                                                                                        .target
-                                                                                        .value
-                                                                                )
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                </>
-                                                            )}
-                                                        </form.Field>
-                                                        <form.Field
-                                                            name={`variant-${index}-width`}
-                                                        >
-                                                            {(field) => (
-                                                                <>
-                                                                    <Label>
-                                                                        Width:
-                                                                    </Label>
-                                                                    <Input
-                                                                        type="number"
-                                                                        placeholder="Width"
-                                                                        value={
-                                                                            field
-                                                                                .state
-                                                                                .value
-                                                                        }
-                                                                        onChange={(
-                                                                            e
-                                                                        ) =>
-                                                                            field.handleChange(
-                                                                                Number(
-                                                                                    e
-                                                                                        .target
-                                                                                        .value
-                                                                                )
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                </>
-                                                            )}
-                                                        </form.Field>
+                                                                    {dim ===
+                                                                    'weight' ? (
+                                                                        <Select>
+                                                                            <SelectTrigger>
+                                                                                <Button variant="outline">
+                                                                                    kg
+                                                                                </Button>
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="kg">
+                                                                                    kg
+                                                                                </SelectItem>
+                                                                                <SelectItem value="lb">
+                                                                                    lb
+                                                                                </SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    ) : (
+                                                                        <Select>
+                                                                            <SelectTrigger>
+                                                                                <Button variant="outline">
+                                                                                    cm
+                                                                                </Button>
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="cm">
+                                                                                    cm
+                                                                                </SelectItem>
+                                                                                <SelectItem value="inch">
+                                                                                    inch
+                                                                                </SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </SelectContent>
                                             </Select>
