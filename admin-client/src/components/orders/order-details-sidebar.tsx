@@ -240,6 +240,9 @@ export function OrderDetailsSidebar() {
                                             <option value="Refunded">
                                                 Refunded
                                             </option>
+                                            <option value="Archived">
+                                                Archived
+                                            </option>
                                         </select>
                                     ) : (
                                         <div>Loading status...</div>

@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
-import StoreOrderService from '../../../../services/store-order';
+import StoreOrderService, { validStatuses } from '../../../../services/store-order';
 
 /**
  * Updates the statuses of a specific order (status, fulfillment, payment) and optionally adds a note.
@@ -21,14 +21,6 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
         'status',
         'note',
     ]);
-
-    const validStatuses = [
-        'Processing',
-        'Shipped',
-        'Delivered',
-        'Cancelled',
-        'Refunded',
-    ];
 
     await handler.handle(async () => {
         // Ensure required parameters are provided
@@ -53,7 +45,7 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
         // Call the service to update the order statuses
         const updatedOrder = await orderService.changeOrderStatus(
             order_id,
-            status.toLowerCase(),
+            status,
             note
         );
 
