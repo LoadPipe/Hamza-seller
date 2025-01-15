@@ -990,6 +990,7 @@ class ProductService extends MedusaProductService {
         }
     ): Promise<QuerySellerProductByIdResponse> {
         try {
+            console.log(`UPDATES ${JSON.stringify(updates)}`);
             // 1. Make sure the product belongs to this store
             const product = await this.productRepository_.findOne({
                 where: { id: productId, store_id: storeId },

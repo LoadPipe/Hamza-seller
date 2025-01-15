@@ -51,7 +51,12 @@ export default function EditProductPage() {
     const updateEditForm = useMutation({
         // This is your update function
         mutationFn: async (payload: any) => {
+            if (!payload || Object.keys(payload).length === 0) {
+                console.log('Empty payload; skipping mutation.');
+                throw new Error('No changes detected to update.');
+            }
             // If your backend requires store_id, pass it here too
+            console.log(`WTF IS THE PAYLOAD ${JSON.stringify(payload)}`);
             return updateProductById(productId, payload);
         },
         onSuccess: () => {
@@ -115,10 +120,6 @@ export default function EditProductPage() {
                     width: variant.width || 0,
                 };
             }),
-        },
-        onSubmit: async ({ value }) => {
-            // Fire off the mutation
-            updateEditForm.mutate(value);
         },
         // validate: (values) => {
         //   const result = ProductSchema.safeParse(values)
@@ -523,7 +524,12 @@ export default function EditProductPage() {
                             {({ dirtyFields, canSubmit, isSubmitting }) => {
                                 const handleSubmit = async () => {
                                     if (Object.keys(dirtyFields).length === 0) {
-                                        alert('No fields changed');
+                                        toast({
+                                            variant: 'default',
+                                            title: 'No Changes!',
+                                            description: 'No Changes to submit',
+                                        });
+                                        // navigate({ to: '/products' });
                                         return;
                                     }
 
