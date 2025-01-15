@@ -989,9 +989,6 @@ class ProductService extends MedusaProductService {
             width?: number;
         }
     ): Promise<QuerySellerProductByIdResponse> {
-        console.log(
-            `STARTING update for productId: ${productId}, storeId: ${storeId}`
-        );
         console.log(`Incoming Updates: ${JSON.stringify(updates)}`);
 
         try {
