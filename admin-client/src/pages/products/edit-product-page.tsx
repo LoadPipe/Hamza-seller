@@ -11,19 +11,20 @@ import {
     AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
-import {
-    Select,
-    SelectTrigger,
-    SelectContent,
-    SelectItem,
-    SelectValue,
-} from '@/components/ui/select';
+// import {
+//     Select,
+//     SelectTrigger,
+//     SelectContent,
+//     SelectItem,
+//     SelectValue,
+// } from '@/components/ui/select';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { Label } from '@/components/ui/label.tsx';
 import { useForm } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
+import { useToast } from '@/hooks/use-toast.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -39,6 +40,8 @@ export default function EditProductPage() {
     const preferredCurrency = useCustomerAuthStore(
         (state) => state.preferred_currency_code
     );
+    const { toast } = useToast();
+
     // 1. Fetch your data
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
         queryKey: ['view-product-form', productId],
@@ -55,16 +58,26 @@ export default function EditProductPage() {
             // Invalidate or refetch to keep cache in sync
             queryClient.invalidateQueries({ queryKey: ['view-product-form'] });
             // Optionally navigate away
+            toast({
+                variant: 'default',
+                title: 'Success!',
+                description: 'Submitted product changes successfully.',
+            });
             navigate({ to: '/products' });
         },
         onError: (err: unknown) => {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to update product.',
+            });
             console.error('Failed to update product:', err);
         },
     });
 
     // 3. Prepare default form values
     const product = data?.product;
-    const form = useForm({
+    const editProductForm = useForm({
         defaultValues: {
             title: product?.title || '',
             subtitle: product?.subtitle || '',
@@ -131,7 +144,7 @@ export default function EditProductPage() {
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        form.handleSubmit();
+                        editProductForm.handleSubmit();
                     }}
                 >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -141,7 +154,7 @@ export default function EditProductPage() {
                                 General Information
                             </h2>
 
-                            <form.Field name="title">
+                            <editProductForm.Field name="title">
                                 {(field) => (
                                     <>
                                         <Label>Product Name:</Label>
@@ -164,9 +177,9 @@ export default function EditProductPage() {
                                         )}
                                     </>
                                 )}
-                            </form.Field>
+                            </editProductForm.Field>
 
-                            <form.Field name="subtitle">
+                            <editProductForm.Field name="subtitle">
                                 {(field) => (
                                     <>
                                         <Label>Product Information:</Label>
@@ -181,9 +194,9 @@ export default function EditProductPage() {
                                         />
                                     </>
                                 )}
-                            </form.Field>
+                            </editProductForm.Field>
 
-                            <form.Field name="description">
+                            <editProductForm.Field name="description">
                                 {(field) => (
                                     <>
                                         <Label>Description:</Label>
@@ -199,7 +212,7 @@ export default function EditProductPage() {
                                         />
                                     </>
                                 )}
-                            </form.Field>
+                            </editProductForm.Field>
                         </div>
 
                         {/* Right side fields */}
@@ -207,7 +220,7 @@ export default function EditProductPage() {
                             <h2 className="text-lg font-medium mb-4">
                                 Product Media
                             </h2>
-                            <form.Field name="thumbnail">
+                            <editProductForm.Field name="thumbnail">
                                 {(field) => (
                                     <>
                                         <Label>Thumbnail URL:</Label>
@@ -229,7 +242,7 @@ export default function EditProductPage() {
                                         )}
                                     </>
                                 )}
-                            </form.Field>
+                            </editProductForm.Field>
                             {/* Show current categories & an "Add Category" button */}
                             <div className="mt-6 flex flex-col gap-4">
                                 <div className="flex justify-end">
@@ -281,7 +294,7 @@ export default function EditProductPage() {
                             {preferredCurrency?.toUpperCase() ?? 'ETH'}
                         </div>
                         <div>
-                            <form.Field name="basePrice">
+                            <editProductForm.Field name="basePrice">
                                 {(field) => (
                                     <>
                                         <Label>
@@ -301,7 +314,7 @@ export default function EditProductPage() {
                                         />
                                     </>
                                 )}
-                            </form.Field>
+                            </editProductForm.Field>
                         </div>
                     </div>
 
@@ -313,7 +326,7 @@ export default function EditProductPage() {
                             { name: 'height', label: 'Height (cm)' },
                             { name: 'width', label: 'Width (cm)' },
                         ].map(({ name, label }) => (
-                            <form.Field key={name} name={name}>
+                            <editProductForm.Field key={name} name={name}>
                                 {(field) => (
                                     <div className="space-y-1">
                                         <Label className="block text-sm font-medium">
@@ -332,7 +345,7 @@ export default function EditProductPage() {
                                         />
                                     </div>
                                 )}
-                            </form.Field>
+                            </editProductForm.Field>
                         ))}
                     </div>
 
@@ -461,7 +474,7 @@ export default function EditProductPage() {
                                                                     onChange={(
                                                                         e
                                                                     ) =>
-                                                                        form.setValue(
+                                                                        editProductForm.setValue(
                                                                             `variants[${index}].${key}`,
                                                                             Number(
                                                                                 e
@@ -484,20 +497,55 @@ export default function EditProductPage() {
                     )}
 
                     <div className="flex justify-end mt-8">
-                        <form.Subscribe
-                            selector={(state) => [
-                                state.canSubmit,
-                                state.isSubmitting,
-                            ]}
+                        <editProductForm.Subscribe
+                            selector={(formState) => {
+                                const dirtyFields: Record<string, unknown> = {};
+
+                                // Iterate through fieldMeta to check for dirty fields
+                                for (const [
+                                    fieldName,
+                                    fieldMeta,
+                                ] of Object.entries(formState.fieldMeta)) {
+                                    if (fieldMeta.isDirty) {
+                                        // Add the dirty field and its current value
+                                        dirtyFields[fieldName] =
+                                            formState.values[fieldName];
+                                    }
+                                }
+
+                                return {
+                                    dirtyFields,
+                                    canSubmit: formState.canSubmit,
+                                    isSubmitting: formState.isSubmitting,
+                                };
+                            }}
                         >
-                            {([canSubmit, isSubmitting]) => (
-                                <Button type="submit" disabled={!canSubmit}>
-                                    {isSubmitting
-                                        ? 'Saving...'
-                                        : 'Save Changes'}
-                                </Button>
-                            )}
-                        </form.Subscribe>
+                            {({ dirtyFields, canSubmit, isSubmitting }) => {
+                                const handleSubmit = async () => {
+                                    if (Object.keys(dirtyFields).length === 0) {
+                                        alert('No fields changed');
+                                        return;
+                                    }
+
+                                    console.log(
+                                        'Dirty Fields only:',
+                                        dirtyFields
+                                    );
+
+                                    // Submit only the dirty fields
+                                    updateEditForm.mutate(dirtyFields);
+                                };
+
+                                return (
+                                    <Button
+                                        onClick={handleSubmit}
+                                        disabled={!canSubmit || isSubmitting}
+                                    >
+                                        Save Changes
+                                    </Button>
+                                );
+                            }}
+                        </editProductForm.Subscribe>
                     </div>
                 </form>
             </div>
