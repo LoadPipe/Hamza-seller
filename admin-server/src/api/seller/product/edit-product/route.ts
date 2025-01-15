@@ -43,7 +43,7 @@ export const PATCH = async (req: MedusaRequest, res: MedusaResponse) => {
         res,
         'PATCH',
         '/seller/product/edit-product',
-        ['id', 'store_id', '']
+        ['id', 'store_id']
     );
 
     await handler.handle(async () => {
@@ -55,13 +55,16 @@ export const PATCH = async (req: MedusaRequest, res: MedusaResponse) => {
             return;
         }
 
+        const updates = req.body;
+
         const storeId = handler.inputParams.store_id;
 
         const id = handler.inputParams.id;
 
         const products = await productService.querySellerProductByIdForEdit(
             id,
-            storeId
+            storeId,
+            updates
         );
 
         return handler.returnStatus(200, products);

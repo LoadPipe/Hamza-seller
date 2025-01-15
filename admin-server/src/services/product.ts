@@ -973,6 +973,7 @@ class ProductService extends MedusaProductService {
     }
 
     // We need to edit the specific product w/ variants
+    // We need to edit the specific product w/ variants
     async querySellerProductByIdForEdit(
         productId: string,
         storeId: string,
@@ -987,9 +988,9 @@ class ProductService extends MedusaProductService {
             height?: number;
             width?: number;
         }
-    ): Promise<Product | null> {
+    ): Promise<QuerySellerProductByIdResponse> {
         try {
-            // Fetch the product to ensure it exists and belongs to the store
+            // 1. Make sure the product belongs to this store
             const product = await this.productRepository_.findOne({
                 where: { id: productId, store_id: storeId },
             });
@@ -1000,22 +1001,51 @@ class ProductService extends MedusaProductService {
                 );
             }
 
-            // Apply updates only for the provided fields
+            // 2. Merge top-level updates (ignore variants for now)
             const updatedProduct = {
                 ...product, // Keep existing fields
-                ...updates, // Merge in updates
-                updated_at: new Date(), // Update the timestamp
+                ...updates, // Merge in updates from the body
+                updated_at: new Date(), // Update timestamp
             };
 
-            // Save the updated product
+            // 3. Save updated product
             await this.productRepository_.save(updatedProduct);
 
-            return updatedProduct; // Return the updated product
+            // 4. Re-fetch to include relations (like variants, categories, etc.)
+            const refreshedProduct = await this.productRepository_.findOne({
+                where: { id: productId, store_id: storeId },
+                relations: ['variants', 'variants.prices', 'categories'],
+            });
+
+            if (!refreshedProduct) {
+                // Technically shouldn't happen if just saved, but in case
+                throw new Error(
+                    `Failed to re-fetch updated product with ID ${productId}`
+                );
+            }
+
+            // 5. Also fetch all available categories (like in querySellerProductById)
+            const availableCategories = await this.productCategoryRepository_
+                .find({
+                    select: ['id', 'name'], // Only the fields we actually need
+                })
+                .then((categories) =>
+                    categories.map((cat) => ({
+                        id: cat.id,
+                        name: cat.name,
+                    }))
+                );
+
+            // 6. Return the same shape: { product, availableCategories }
+            return {
+                product: refreshedProduct,
+                availableCategories,
+            };
         } catch (error) {
             console.error(
                 `Error updating product ${productId} for store ${storeId}: ${error.message}`
             );
-            throw error; // Rethrow the error for the caller to handle
+            throw error;
         }
     }
 
