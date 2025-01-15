@@ -1,56 +1,5 @@
-import { getCurrencyPrecision } from '@/currency.config';
 import { EscrowClient, PaymentDefinition } from '@/web3/contracts/escrow';
-import { BigNumber, BigNumberish, ethers, providers, Signer } from 'ethers';
-
-/**
- * Converts any number decimal number (expressed as string or number) to an appropriate
- * number of wei units, given the currency.
- *
- * @param amount Amount as decimal
- * @param currencyCode usdc, usdt, eth
- * @returns The value converted to smallest units of the currency (as BigNumber)
- */
-export function convertToWei(
-    amount: string | number,
-    currencyCode: string
-): BigNumber {
-    try {
-        const precision = getCurrencyPrecision(currencyCode);
-        return convertToUnits(amount, precision.native);
-    } catch (e) {
-        console.log(e);
-    }
-
-    return BigNumber.from(0);
-}
-
-/**
- * Converts any number decimal number (expressed as string or number) to a given number
- * of units.
- * Example: convertToUnits(3.21, 3) will return 3210.
- *
- * @param amount Amount as decimal
- * @param units Number of units
- * @param currencyCode usdc, usdt, eth
- * @returns The value converted to given number of units of the currency (as BigNumber)
- */
-export function convertToUnits(
-    amount: string | number,
-    units: number
-): BigNumber {
-    try {
-        const amt = amount.toString();
-        const decimalPlaces = amt.includes('.') ? amt.split('.')[1].length : 0;
-
-        return ethers.utils
-            .parseUnits(amt, decimalPlaces)
-            .mul(BigNumber.from(10).pow(units - decimalPlaces));
-    } catch (e) {
-        console.log(e);
-    }
-
-    return BigNumber.from(0);
-}
+import { BigNumberish, ethers, providers, Signer } from 'ethers';
 
 /**
  * Releases a payment in escrow, from the seller side, on the escrow contract on the blockchain.
@@ -114,7 +63,7 @@ export async function refundEscrowPayment(
 
             if (escrow) {
                 const payment = await getEscrowPayment(order);
-                console.log('payments yoooo', payment);
+                console.log(payment);
                 //validate before refunding
                 validatePaymentExists(payment, order.id);
                 validatePaymentNotReleased(payment, order.id);
@@ -143,9 +92,15 @@ export async function refundEscrowPayment(
  * @param order Any Order object with payments.
  * @returns Address of escrow contract.
  */
-export function findEscrowAddressFromOrder(order: any): string {
+export function findEscrowDataFromOrder(order: any): {
+    address: string;
+    chain_id: number;
+} {
     order?.payments?.sort((a: any, b: any) => a.created_at < b.created_at);
-    return order?.payments[0]?.blockchain_data?.escrow_address;
+    return {
+        address: order?.payments[0]?.blockchain_data?.escrow_address,
+        chain_id: order?.payments[0]?.blockchain_data?.chain_id ?? 0,
+    };
 }
 
 /**
@@ -161,11 +116,16 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
 
     const signer: Signer = await provider.getSigner();
 
-    const address: string = findEscrowAddressFromOrder(order);
-    if (!address) {
+    const escrowData = findEscrowDataFromOrder(order);
+    if (!escrowData) {
         throw new Error('No escrow address found in order');
     }
-    const escrow: EscrowClient = new EscrowClient(provider, signer, address);
+
+    const escrow: EscrowClient = new EscrowClient(
+        provider,
+        signer,
+        escrowData.address
+    );
 
     return escrow;
 }

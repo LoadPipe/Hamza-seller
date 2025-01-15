@@ -6,8 +6,8 @@ POST http://localhost:9000/seller/order
 Content-Type: application/json
 
 {
-    "store_id": "store_01JE8YPNX7QFSQF4T0RHR6V2BE",
-    "wallet_address": "0xb975Bf5ca0b09E17834d0b5A526F8315F82986D4"
+    "store_id": "store_01JFF3P95PSW8S730S00653HVJ",
+    "wallet_address": "0xc4968b973c6f346C8627f5935eE636Ea56764862"
 }
 
 #### Login Admin User
@@ -83,7 +83,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6I
 }
 
 ### Get Seller Order Details
-GET http://localhost:9000/seller/order/detail?order_id=order_01JENFNJ3AM7M7EDBQ7JQMXD83
+GET http://localhost:9000/seller/order/detail?order_id=order_01JFHN02KH5F61X9786RVCSY63
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6ImN1c18wMUpDSFo5Uks3WktEMk42MzVWWjZTWUFDRiIsImRvbWFpbiI6InN0b3JlIiwiaWF0IjoxNzMyMTEyNzU2LCJleHAiOjE3MzQ3MDQ3NTZ9.y5nV3A0w1H1q5GVVYZnJWzGPaODiurCGjpUhdWFmhgM
 
@@ -129,3 +129,18 @@ Content-Type: application/json
 {
   "product_id": "prod_01JFCJBKQCEW6EPP1CTPWCXT53"
 }
+
+
+### Seller Products
+POST http://localhost:9000/seller/product/seller-products?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W&page=2&count=5&sort=created_at:DESC
+
+Content-Type: application/json
+
+
+### Get Dashboard DTO {orderCounts, customer name}
+GET http://localhost:9000/seller/dashboard?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W&wallet_address=0xb975bf5ca0b09e17834d0b5a526f8315f82986d4
+Content-Type: application/json
+
+### Query Product Categories
+GET http://localhost:9000/seller/product/categories
+Content-Type: application/json

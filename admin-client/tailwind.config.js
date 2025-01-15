@@ -202,7 +202,25 @@ module.exports = {
                 },
             },
             animation: {
-                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'pulse-fast': 'pulseFast 1s ease-in-out infinite',
+                'pulse-limited': 'pulseLimited 2s ease-in-out forwards', // Limited pulse, fills white after animation
+            },
+            keyframes: {
+                pulseFast: {
+                    '0%, 100%': { borderColor: '#FF00FF' }, // Bright magenta
+                    '50%': { borderColor: '#00FFFF' }, // Bright cyan
+                },
+                pulseLimited: {
+                    '0%': {
+                        borderColor: '#FF6347',
+                    }, // Initial tomato red
+                    '50%': {
+                        borderColor: '#FFD700',
+                    }, // Gold at midpoint
+                    '100%': {
+                        borderColor: '#FFFFFF',
+                    }, // Final white border and background
+                },
             },
         },
     },

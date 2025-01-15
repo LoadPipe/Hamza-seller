@@ -16,12 +16,21 @@ import {
 } from '@medusajs/medusa/dist/types/product';
 import { ProductVariant } from '@medusajs/medusa';
 import { StoreRepository } from '../repositories/store';
+import ProductCategoryRepository from '@medusajs/medusa/dist/repositories/product-category';
 import { CachedExchangeRateRepository } from '../repositories/cached-exchange-rate';
 import PriceSelectionStrategy from '../strategies/price-selection';
 import CustomerService from './customer';
 import ProductVariantService from './product-variant';
 import { ProductVariantRepository } from '../repositories/product-variant';
-import { In, IsNull, Not } from 'typeorm';
+import {
+    In,
+    IsNull,
+    LessThan,
+    LessThanOrEqual,
+    MoreThan,
+    MoreThanOrEqual,
+    Not,
+} from 'typeorm';
 import { createLogger, ILogger } from '../utils/logging/logger';
 import { SeamlessCache } from '../utils/cache/seamless-cache';
 import { filterDuplicatesById } from '../utils/filter-duplicates';
@@ -30,6 +39,10 @@ import { getCurrencyPrecision } from '../currency.config';
 import fs from 'fs';
 import csv from 'csv-parser';
 import * as readline from 'readline';
+
+const DEFAULT_PAGE_COUNT = 10;
+
+export type BulkImportProductInput = CreateProductInput;
 
 export type UpdateProductProductVariantDTO = {
     id?: string;
@@ -93,6 +106,29 @@ export type csvProductData = {
     invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
 };
 
+interface FilterProducts {
+    name?: { in?: string[]; eq?: string; ne?: string };
+    price?: { lt?: number; gt?: number; lte?: number; gte?: number };
+    categories?: { in?: string[]; eq?: string; ne?: string };
+    created_at?: { gte?: string; lte?: string }; // Dates as ISO strings
+}
+
+interface StoreProductsDTO {
+    pageIndex: number;
+    pageCount: number;
+    rowsPerPage: number;
+    sortedBy: string | null;
+    sortDirection: 'ASC' | 'DESC';
+    filtering: FilterProducts | null;
+    products: Product[];
+    totalRecords: number;
+    filteredProductsCount: number;
+    availableCategories: Array<{
+        id: string;
+        name: string;
+    }>;
+}
+
 export type Price = {
     currency_code: string;
     amount: number;
@@ -116,11 +152,13 @@ class ProductService extends MedusaProductService {
     protected readonly customerService_: CustomerService;
     protected readonly productVariantService_: ProductVariantService;
     protected readonly priceConverter_: PriceConverter;
+    protected readonly productCategoryRepository_: typeof ProductCategoryRepository;
 
     constructor(container) {
         super(container);
         this.logger = createLogger(container, 'ProductService');
         this.storeRepository_ = container.storeRepository;
+        this.productCategoryRepository_ = container.productCategoryRepository;
         this.productVariantRepository_ = container.productVariantRepository;
         this.cacheExchangeRateRepository =
             container.cachedExchangeRateRepository;
@@ -860,9 +898,158 @@ class ProductService extends MedusaProductService {
         return variant;
     }
 
-
     async deleteProductById(productId: string): Promise<void> {
         await this.delete(productId);
+    }
+
+    // Were getting products from the store for the /products page..
+    // TODO: We really need to add the filters and totalCount ot this, and we will do this after the skeleton Products Panel
+    async querySellerAllProducts(
+        storeId: string,
+        filter: { categories?: { in: string[] } }, // Simplified filter for categories
+        sort: { field: string; direction: 'ASC' | 'DESC' },
+        page: number, // Pagination page index
+        productsPerPage: number // Number of products per page
+    ): Promise<StoreProductsDTO> {
+        const where: any = { store_id: storeId };
+
+        // Total product count for pagination
+        const totalRecords = await this.productRepository_.count({ where });
+
+        // Fetch all available categories
+        const availableCategories = await this.productCategoryRepository_
+            .find({
+                select: ['id', 'name'], // Fetch only the necessary fields
+            })
+            .then((categories) =>
+                categories.map((category) => ({
+                    id: category.id,
+                    name: category.name,
+                }))
+            );
+
+        // Handle category filtering
+        if (filter?.categories?.in) {
+            const categoryIds = availableCategories
+                .filter((category) =>
+                    filter.categories.in.includes(category.name)
+                )
+                .map((category) => category.id);
+
+            if (categoryIds.length > 0) {
+                where.categories = { id: In(categoryIds) };
+            } else {
+                // If no matching category IDs, return no results for filtered count
+                where.categories = { id: In([]) };
+            }
+        }
+
+        console.log(`SORTING SORT SORT SKIP: ${page * productsPerPage}`);
+        console.log(`TAKE: ${productsPerPage}`);
+        const params = {
+            where,
+            take: productsPerPage || 20,
+            skip: page * productsPerPage,
+            order:
+                sort?.field &&
+                !['price', 'inventory_quantity'].includes(sort.field)
+                    ? { [sort.field]: sort.direction }
+                    : undefined,
+            relations: ['variants', 'variants.prices', 'categories'], // Include necessary relations
+        };
+
+        const filteredProducts = await this.productRepository_.find(params);
+
+        if (sort?.field === 'inventory_quantity') {
+            filteredProducts.sort((a, b) => {
+                const qtyA = a.variants?.[0]?.inventory_quantity || 0;
+                const qtyB = b.variants?.[0]?.inventory_quantity || 0;
+
+                return sort.direction === 'ASC' ? qtyA - qtyB : qtyB - qtyA;
+            });
+        } else if (sort?.field === 'price') {
+            filteredProducts.sort((a, b) => {
+                const priceA = a.variants[0]?.prices[0]?.amount || 0;
+                const priceB = b.variants[0]?.prices[0]?.amount || 0;
+
+                return sort.direction === 'ASC'
+                    ? priceA - priceB
+                    : priceB - priceA;
+            });
+        }
+
+        if (sort?.field === 'categories') {
+            filteredProducts.sort((a, b) => {
+                const categoryA = a.categories[0]?.name || '';
+                const categoryB = b.categories[0]?.name || '';
+                return sort.direction === 'ASC'
+                    ? categoryA.localeCompare(categoryB)
+                    : categoryB.localeCompare(categoryA);
+            });
+        }
+
+        if (sort?.field === '')
+            if (sort?.field && sort.field !== 'price') {
+                // Other sorting fields (e.g., created_at)
+                params.order[sort.field] = sort.direction;
+            }
+
+        const filteredProductsCount =
+            await this.productRepository_.count(params);
+
+        // console.log(JSON.stringify(filteredProducts));
+
+        return {
+            pageIndex: page,
+            pageCount: Math.ceil(totalRecords / productsPerPage),
+            rowsPerPage: productsPerPage,
+            sortedBy: sort?.field ?? null,
+            sortDirection: sort?.direction ?? 'ASC',
+            filtering: filter,
+            products: filteredProducts,
+            filteredProductsCount: filteredProductsCount,
+            totalRecords,
+            availableCategories,
+        };
+    }
+
+    // We need to get the specific product w/ variants
+    // Fetch a specific product with its variants
+    async querySellerProductById(
+        productId: string,
+        storeId: string
+    ): Promise<Product | null> {
+        try {
+            const where: any = { store_id: storeId, id: productId };
+
+            const product = await this.productRepository_.findOne({
+                where: where,
+                relations: ['variants', 'variants.prices', 'categories'],
+            });
+
+            if (!product) {
+                throw new Error(
+                    `Product with ID ${productId} not found for store ${storeId}`
+                );
+            }
+
+            return product;
+        } catch (e) {
+            console.error(`Error querying product by ID: ${e.message}`);
+            throw e; // Rethrow the error for the caller to handle
+        }
+    }
+
+    // Simple function, just list product categories
+    async queryAllCategories() {
+        try {
+            const queryCategories =
+                await this.productCategoryRepository_.find();
+            console.log(`queryCategory ${queryCategories}`);
+            return queryCategories;
+        } catch (e) {
+            throw new e();
+        }
     }
 
     async getCategoryByHandle(
@@ -875,7 +1062,10 @@ class ProductService extends MedusaProductService {
 
             return category || null;
         } catch (error) {
-            this.logger.error('Error fetching product category by handle:', error);
+            this.logger.error(
+                'Error fetching product category by handle:',
+                error
+            );
             throw new Error('Failed to fetch product category by handle.');
         }
     }

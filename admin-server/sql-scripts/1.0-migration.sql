@@ -28,5 +28,17 @@ ALTER TABLE "product" ADD "external_source" character varying;
 ALTER TABLE "product_variant" ADD "external_source" character varying;
 
 
+ALTER TABLE "refund" ADD "confirmed" BOOLEAN DEFAULT false;
 
--- add amount_adjustment to order_history
+ALTER TABLE "line_item" ADD "external_order_id" integer GENERATED ALWAYS AS IDENTITY;
+
+CREATE TABLE "external_api_logs"(
+                "id" character varying NOT NULL,
+                "api_source" character varying NOT NULL,
+                "endpoint" character varying NOT NULL,
+                "input" jsonb,
+                "output" jsonb,
+                "context" jsonb, 
+                "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_EXTERNAL_API_LOGS" PRIMARY KEY ("id"));

@@ -50,13 +50,14 @@ import { ChevronDown } from 'lucide-react';
 import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
 import { Order } from '@/components/orders/columns';
 import { useEffect } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
 }
 
-// Localstorage key for storing the user's preferred columns
+// Localstorage key for storing the user's preferred productColumns
 
 export function DataTable<TData, TValue>({
     columns,
@@ -81,11 +82,14 @@ export function DataTable<TData, TValue>({
 }) {
     // const { setSort } = useSortStore();
     const [columnFilters, setColumnFilters] =
-        React.useState<ColumnFiltersState>([]);
+        React.useState<ColumnFiltersState>([
+            { id: 'status', value: { notIn: ['archived'] } },
+        ]);
 
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const [isChecked, setIsChecked] = React.useState(false);
     const { filters } = useStore(filterStore); // Subscribe to filter store
 
     const pageCount = Math.ceil(totalRecords / pageSize);
@@ -117,6 +121,9 @@ export function DataTable<TData, TValue>({
     const localStorageColumnSettingsKey = 'tableColumnVisibility';
 
     useEffect(() => {
+        // Ensure the filter for ARCHIVED is applied on mount
+        setFilter('status', { notIn: ['archived'] });
+
         const savedVisibility = JSON.parse(
             localStorage.getItem(localStorageColumnSettingsKey) || '{}'
         );
@@ -162,7 +169,7 @@ export function DataTable<TData, TValue>({
             .filter((key): key is string => !!key); // Ensure keys are non-null strings
 
         if (headers.length === 0) {
-            console.error('No valid columns available for CSV export.');
+            console.error('No valid productColumns available for CSV export.');
             return;
         }
 
@@ -201,7 +208,24 @@ export function DataTable<TData, TValue>({
 
     const handleClearFilters = () => {
         clearAllFilters();
+        handleCheckboxChange(false);
         console.log(`Clearing all the filters.`);
+    };
+
+    const handleCheckboxChange = (checked: boolean) => {
+        if (checked) {
+            setFilter('status', {
+                in: ['archived'],
+            });
+            setIsChecked(true);
+        } else {
+            clearFilter('status');
+            setFilter('status', {
+                notIn: ['archived'],
+            });
+            setIsChecked(false);
+        }
+        setPageIndex(0); // Reset to the first page
     };
 
     return (
@@ -227,7 +251,12 @@ export function DataTable<TData, TValue>({
 
                         <DropdownMultiselectFilter
                             title="Order Status"
-                            optionsEnum={OrderStatus}
+                            optionsEnum={Object.fromEntries(
+                                Object.entries(OrderStatus).filter(
+                                    ([key]) => key !== 'ARCHIVED'
+                                )
+                            )}
+                            // optionsEnum={OrderStatus}
                             selectedFilters={getFilterValues('status')}
                             onFilterChange={(values) => {
                                 if (values) {
@@ -278,6 +307,21 @@ export function DataTable<TData, TValue>({
                                 }
                             }}
                         />
+                    </div>
+
+                    <div className="ml-auto flex flex-row relative mt-2">
+                        <Checkbox
+                            id="archived-status"
+                            className="mt-1 order-table-checkbox"
+                            checked={isChecked}
+                            onCheckedChange={handleCheckboxChange}
+                        />
+                        <label
+                            htmlFor="archived-status"
+                            className="ml-2 text-white"
+                        >
+                            Archived
+                        </label>
                     </div>
 
                     <div className="ml-auto flex flex-row relative w-[376px]">
@@ -401,7 +445,6 @@ export function DataTable<TData, TValue>({
                                         .map((column) => (
                                             <DropdownMenuCheckboxItem
                                                 key={column.id}
-                                                className="capitalize"
                                                 checked={column.getIsVisible()}
                                                 onCheckedChange={(value) => {
                                                     column.toggleVisibility(

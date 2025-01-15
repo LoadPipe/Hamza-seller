@@ -11,24 +11,57 @@ import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
-import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow.ts';
+import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
+import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
 import { getCurrencyPrecision } from '@/currency.config';
+import { formatStatus } from '@/utils/format-data';
+import { getEscrowPaymentData } from '@/api/get-escrow-payment';
+import { getChainId, getWalletAddress } from '@/web3';
+import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
+import { useSwitchChain } from 'wagmi';
 
 type RefundProps = {
-    customerId: string;
     refundAmount?: number;
-    orderId: string;
     order: any;
+    chainId: number;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
+const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
+    const { switchChain } = useSwitchChain();
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
         note: '',
     });
+
+    const payment = order?.escrow_payment;
+    let refundableAmount: BigInt = BigInt(0);
+    let refundedAmount: BigInt = BigInt(0);
+
+    if (payment) {
+        refundedAmount = BigInt(payment.amountRefunded?.toString() ?? '0');
+        refundableAmount =
+            BigInt(payment.amount?.toString() ?? '0') -
+            BigInt(payment.amountRefunded?.toString() ?? '0');
+    }
+
+    const refundableAmountToDisplay = convertFromWeiToDisplay(
+        refundableAmount.toString(),
+        order?.currency_code,
+        chainId
+    );
+
+    const refundedAmountToDisplay = convertFromWeiToDisplay(
+        refundedAmount.toString(),
+        order?.currency_code,
+        chainId
+    );
+
+    //get order id
+    const orderId = order?.id ?? '';
+
     const [errors, setErrors] = useState({
         refundAmount: '',
         note: '',
@@ -37,7 +70,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
 
     //get the currency code & precision
     const currencyCode = order?.payments[0]?.currency_code ?? 'usdc';
-    const precision = getCurrencyPrecision(currencyCode);
+    const precision = getCurrencyPrecision(currencyCode, chainId);
 
     //convert the amount to db units
     const getDbAmount = (amount: string | number) => {
@@ -47,12 +80,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
     //convert the amount to wei for blockchain use
     const getBlockchainAmount = (amount: string | number) => {
         const dbAmount = getDbAmount(amount);
-        const bcAmount = dbAmount
-            .toString()
-            .padEnd(
-                dbAmount.toString().length + (precision.native - precision.db),
-                '0'
-            );
+        const bcAmount =
+            dbAmount.toString() +
+            ''.padEnd(precision.native - precision.db, '0');
         return bcAmount;
     };
 
@@ -103,6 +133,13 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                         title: 'Escrow Refund',
                         description: 'The escrow refund was successful.',
                     });
+
+                    //clear fields on success to prevent duplicate submissions
+                    setFormData({
+                        ...formData,
+                        refundAmount: '',
+                        note: '',
+                    });
                 } else {
                     toast({
                         variant: 'destructive',
@@ -124,11 +161,11 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
             }
         },
         onError: (error: any) => {
+            console.error(error);
             toast({
                 variant: 'destructive',
                 title: 'Refund Error',
-                description: `Refund amount exceeds the refundable amount.
-                ${error}`,
+                description: `Failed to process the refund; rejected by contract.`,
             });
         },
     });
@@ -170,13 +207,37 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
         return !newErrors.refundAmount && !newErrors.note;
     };
 
-    const handleRefundSubmit = () => {
-        if (validateForm()) {
-            refundMutation.mutate();
+    const handleRefundSubmit = async () => {
+        const address = await getWalletAddress();
+        const userChainId = await getChainId();
+
+        const payment: EscrowPaymentDefinitionWithError =
+            await getEscrowPaymentData(order?.id, true, false, address);
+        if (!payment) {
+            toast({
+                variant: 'destructive',
+                title: 'Validation Error',
+                description: `Escrow payment for order ${order?.id} not found`,
+            });
+        } else {
+            if (payment.error?.length) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Validation Error',
+                    description: payment.error,
+                });
+            } else {
+                //switch chain id if necessary
+                if (payment.chain_id != userChainId) {
+                    switchChain({ chainId: payment.chain_id });
+                }
+
+                if (validateForm()) {
+                    refundMutation.mutate();
+                }
+            }
         }
     };
-
-    const isSubmitDisabled = !!errors.refundAmount || !!errors.note;
 
     return (
         <div>
@@ -192,23 +253,33 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                 type="single"
                 defaultValue="refund-details"
                 collapsible
-                className="mt-4"
+                className="mt-4 "
             >
                 <AccordionItem value="refund-details">
                     <AccordionTrigger>Refund Details</AccordionTrigger>
                     <AccordionContent>
                         <div>
-                            <div className="mt-2">
+                            <div className="flex flex-col mt-4 gap-3">
                                 <label className="block text-sm font-medium">
                                     Refund Amount
                                 </label>
                                 <Input
+                                    style={{
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                        border: 'none',
+                                    }}
                                     type="number"
                                     step="0.01"
                                     min="0"
                                     name="refundAmount"
                                     value={formData.refundAmount}
                                     onChange={handleInputChange}
+                                    disabled={
+                                        order.payment_status === 'refunded' ||
+                                        order.payment_status === 'canceled' ||
+                                        order.payment_status === 'not_paid'
+                                    }
                                 />
                                 {errors.refundAmount && (
                                     <p className="text-red-500 text-sm mt-1">
@@ -222,33 +293,55 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                                 <label className="block text-sm font-medium">
                                     Reason
                                 </label>
-                                <select
-                                    name="reason"
-                                    value={formData.reason}
-                                    onChange={handleSelectChange}
-                                    className="block w-full mt-2 p-2 rounded text-white  bg-primary-black-90"
-                                >
-                                    {reasonOptions.map((reason) => (
-                                        <option key={reason} value={reason}>
-                                            {reason}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        style={{
+                                            backgroundColor: '#242424',
+                                            height: '40px',
+                                            backgroundImage:
+                                                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E\")",
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: '10px center',
+                                            backgroundSize: '12px',
+                                            borderRadius: '6px',
+                                        }}
+                                        name="reason"
+                                        value={formData.reason}
+                                        onChange={handleSelectChange}
+                                        className="block w-full mt-2 pl-10 rounded text-white appearance-none"
+                                    >
+                                        {reasonOptions.map((reason) => (
+                                            <option key={reason} value={reason}>
+                                                {reason}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             {/* Note */}
-                            <div className="mt-2">
+                            <div className="flex flex-col mt-2 gap-3">
                                 <label className="block text-sm font-medium">
                                     Note
                                 </label>
                                 <Input
                                     type="text"
                                     name="note"
+                                    style={{
+                                        border: 'none',
+                                        backgroundColor: '#242424',
+                                        height: '40px',
+                                    }}
                                     placeholder={
                                         'Enter your note about this order refund.'
                                     }
                                     value={formData.note}
                                     onChange={handleInputChange}
+                                    disabled={
+                                        order.payment_status === 'refunded' ||
+                                        order.payment_status === 'canceled' ||
+                                        order.payment_status === 'not_paid'
+                                    }
                                 />
                                 {errors.note && (
                                     <p className="text-red-500 text-sm mt-1">
@@ -257,22 +350,49 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, orderId, order }) => {
                                 )}
                             </div>
 
+                            <div className="flex flex-row my-5 justify-evenly">
+                                <label className="block text-sm font-medium">
+                                    Amount Refunded:{' '}
+                                    <span className="text-[#94d42a]">
+                                        {refundedAmountToDisplay}
+                                    </span>
+                                </label>
+
+                                <label className="block text-sm font-medium ">
+                                    Refundable Amount:{' '}
+                                    <span className="text-[#94d42a]">
+                                        {refundableAmountToDisplay}
+                                    </span>
+                                </label>
+                            </div>
+
                             {/* Submit Button */}
                             <div className="mt-4">
-                                <Button
-                                    className={`w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none ${
-                                        refundMutation.isPending
-                                            ? 'animate-pulse cursor-not-allowed'
-                                            : 'hover:cursor-pointer'
-                                    }`}
-                                    onClick={handleRefundSubmit}
-                                    disabled={
-                                        isSubmitDisabled &&
-                                        refundMutation.isPending
-                                    }
-                                >
-                                    Submit Refund
-                                </Button>
+                                {order.payment_status === 'refunded' ||
+                                order.payment_status === 'canceled' ||
+                                order.payment_status === 'not_paid' ? (
+                                    <div
+                                        className="bg-sky-600 border border-sky-900 text-black px-4 py-3 rounded relative text-center"
+                                        role="alert"
+                                    >
+                                        Cannot refund this payment status: (
+                                        {formatStatus(order.payment_status)})
+                                    </div>
+                                ) : (
+                                    <Button
+                                        className={`w-full bg-primary-purple-90 hover:bg-primary-green-900 text-white border-none ${
+                                            refundMutation.isPending
+                                                ? 'animate-pulse cursor-not-allowed'
+                                                : 'hover:cursor-pointer'
+                                        }`}
+                                        onClick={handleRefundSubmit}
+                                        disabled={refundMutation.isPending}
+                                    >
+                                        {refundMutation.isPending
+                                            ? 'Processing refund...'
+                                            : 'Submit Refund'}
+                                    </Button>
+                                )}
                             </div>
                             {showSuccessMessage && (
                                 <p className="text-green-600 font-medium mt-2">

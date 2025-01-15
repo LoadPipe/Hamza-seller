@@ -22,8 +22,11 @@ import {
     FulfillmentStatus,
     PaymentStatus,
 } from '@medusajs/medusa';
-import { findEscrowAddressFromOrder, getEscrowPayment } from '../web3';
-import { PaymentDefinition } from '../web3/contracts/escrow';
+import { findEscrowDataFromOrder, getEscrowPayment } from '../web3';
+import {
+    EscrowPaymentDefinition,
+    PaymentDefinition,
+} from '../web3/contracts/escrow';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -55,6 +58,13 @@ export interface StoreOrdersDTO {
     orders: any[]; //TODO: actually should be type Order[]
     totalRecords: number;
     statusCount: {};
+}
+
+export interface DashboardDTO {
+    newOrders: number;
+    pendingOrders: number;
+    confirmedOrders: number;
+    canceledOrders: number;
 }
 
 export default class StoreOrderService extends TransactionBaseService {
@@ -96,6 +106,8 @@ export default class StoreOrderService extends TransactionBaseService {
                     where[prop] = In(filter[prop].in);
                 } else if (filter[prop].ne) {
                     where[prop] = Not(filter[prop].ne);
+                } else if (filter[prop].notIn) {
+                    where[prop] = Not(In(filter[prop].notIn));
                 } else if (filter[prop].eq) {
                     where[prop] = filter[prop].eq;
                 } else if (filter[prop].lt) {
@@ -342,6 +354,62 @@ export default class StoreOrderService extends TransactionBaseService {
         }
     }
 
+    async dashboardDTO(storeId: string): Promise<DashboardDTO> {
+        // Fetch counts for the specified categories
+        const categoryCounts = {
+            newOrders: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.PENDING,
+                    fulfillment_status: FulfillmentStatus.NOT_FULFILLED,
+                    payment_status: PaymentStatus.AWAITING,
+                },
+            }),
+            pendingOrders: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.REQUIRES_ACTION,
+                    fulfillment_status: In([
+                        FulfillmentStatus.PARTIALLY_FULFILLED,
+                        FulfillmentStatus.REQUIRES_ACTION,
+                    ]),
+                    payment_status: In([
+                        PaymentStatus.PARTIALLY_REFUNDED,
+                        PaymentStatus.REQUIRES_ACTION,
+                    ]),
+                },
+            }),
+            confirmedOrders: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.COMPLETED,
+                    fulfillment_status: In([
+                        FulfillmentStatus.FULFILLED,
+                        FulfillmentStatus.SHIPPED,
+                    ]),
+                    payment_status: PaymentStatus.CAPTURED,
+                },
+            }),
+            canceledOrders: await this.orderRepository_.count({
+                where: {
+                    store_id: storeId,
+                    status: OrderStatus.CANCELED,
+                    fulfillment_status: In([
+                        FulfillmentStatus.CANCELED,
+                        FulfillmentStatus.RETURNED,
+                        FulfillmentStatus.PARTIALLY_RETURNED,
+                    ]),
+                    payment_status: In([
+                        PaymentStatus.CANCELED,
+                        PaymentStatus.REFUNDED,
+                    ]),
+                },
+            }),
+        };
+
+        return categoryCounts;
+    }
+
     async syncEscrowPayment(orderId: string): Promise<Order> {
         const order: Order = await this.orderRepository_.findOne({
             where: { id: orderId },
@@ -351,11 +419,13 @@ export default class StoreOrderService extends TransactionBaseService {
         return await this.syncEscrowPaymentForOrder(order);
     }
 
-    async getEscrowPayment(orderId: string): Promise<PaymentDefinition> {
+    async getEscrowPayment(orderId: string): Promise<EscrowPaymentDefinition> {
         const order: Order = await this.orderRepository_.findOne({
             where: { id: orderId },
             relations: ['payments'],
         });
+
+        if (!order) return null;
 
         return await this.getEscrowPaymentForOrder(order);
     }
@@ -371,7 +441,10 @@ export default class StoreOrderService extends TransactionBaseService {
                     'items.variant.product',
                     'customer.walletAddresses',
                     'shipping_address',
+                    'shipping_methods',
                     'payments',
+                    'histories',
+                    'refunds',
                 ],
             });
 
@@ -380,6 +453,11 @@ export default class StoreOrderService extends TransactionBaseService {
             }
 
             await this.syncEscrowPaymentForOrder(order);
+
+            //filter out unconfirmed refunds
+            if (order.refunds) {
+                order.refunds = order.refunds.filter((r: any) => r.confirmed);
+            }
 
             return order;
         } catch (error) {
@@ -397,10 +475,12 @@ export default class StoreOrderService extends TransactionBaseService {
             //is payment status in sync?
             let inSync = false;
 
-            const buyerReleased = payment?.payerReleased;
-            const sellerReleased = payment?.receiverReleased;
-            const bothReleased = payment?.released;
-            const fullyRefunded = payment?.amountRefunded >= payment?.amount;
+            //get payment properties
+            const buyerReleased = payment?.payment?.payerReleased;
+            const sellerReleased = payment?.payment?.receiverReleased;
+            const bothReleased = payment?.payment?.released;
+            const fullyRefunded =
+                payment?.payment?.amountRefunded >= payment?.payment?.amount;
 
             //if no status, it's in sync if also no payment
             if (!order.escrow_status) inSync = !payment;
@@ -469,11 +549,23 @@ export default class StoreOrderService extends TransactionBaseService {
 
     private async getEscrowPaymentForOrder(
         order: Order
-    ): Promise<PaymentDefinition> {
-        const address: string = findEscrowAddressFromOrder(order);
-        if (address) {
-            return await getEscrowPayment(address, order.id);
+    ): Promise<EscrowPaymentDefinition> {
+        const escrowData = findEscrowDataFromOrder(order);
+        const output = {
+            order_id: order?.id,
+            chain_id: escrowData.chain_id,
+            escrow_address: escrowData.address,
+            payment: null,
+        };
+
+        if (escrowData) {
+            output.payment = await getEscrowPayment(
+                escrowData.chain_id,
+                escrowData.address,
+                order.id
+            );
         }
-        return null;
+
+        return output;
     }
 }

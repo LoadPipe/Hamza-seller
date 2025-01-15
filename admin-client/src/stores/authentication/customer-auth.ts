@@ -13,6 +13,7 @@ type State = {
         is_verified: boolean;
     };
     preferred_currency_code: string | null;
+    hasLoggedIn: boolean;
 };
 
 type Actions = {
@@ -22,6 +23,7 @@ type Actions = {
     setCustomerAuthData: (authData: State['authData']) => void;
     setCustomerPreferredCurrency: (currency: string) => void;
     setIsVerified: (isVerified: boolean) => void;
+    setHasLoggedIn: (value: boolean) => void;
     setStatus: (status: AuthenticationStatus) => void;
 };
 
@@ -40,6 +42,8 @@ export const useCustomerAuthStore = create<State & Actions>()(
 
             preferred_currency_code: null,
 
+            hasLoggedIn: false, // New flag for first-login tracking
+
             setStatus: (status: AuthenticationStatus) => {
                 set((state) => ({
                     authData: {
@@ -47,6 +51,10 @@ export const useCustomerAuthStore = create<State & Actions>()(
                         status,
                     },
                 }));
+            },
+
+            setHasLoggedIn: (value: boolean) => {
+                set({ hasLoggedIn: value });
             },
 
             // Correctly define setWalletAddress
