@@ -197,7 +197,7 @@ export default class StoreOrderService extends TransactionBaseService {
                           [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
                     : undefined,
-            relations: ['customer', 'payments'], // Fetch related payments and customers
+            relations: ['customer', 'payments', 'items'], // Fetch related payments and customers
         };
 
         const allOrders = await this.orderRepository_.find(params);
