@@ -13,6 +13,8 @@ import axios from 'axios';
 import {
     CreateProductInput as MedusaCreateProductInput,
     CreateProductProductVariantPriceInput,
+    CreateProductProductVariantInput,
+    CreateProductProductOption,
 } from '@medusajs/medusa/dist/types/product';
 import { ProductVariant } from '@medusajs/medusa';
 import { StoreRepository } from '../repositories/store';
@@ -106,6 +108,15 @@ export type csvProductData = {
     invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
 };
 
+type ProductDetails = {
+    productInfo: {
+        productId?: string;
+        name?: string;
+        baseCurrency?: string;
+    };
+    variants: csvProductData[];
+};
+
 interface FilterProducts {
     name?: { in?: string[]; eq?: string; ne?: string };
     price?: { lt?: number; gt?: number; lte?: number; gte?: number };
@@ -128,6 +139,41 @@ interface StoreProductsDTO {
         name: string;
     }>;
 }
+
+const requiredCsvHeadersForProduct = [
+    'category',
+    'title',
+    'subtitle',
+    'description',
+    'status',
+    'thumbnail',
+    'weight',
+    'discountable',
+    'handle',
+    'variant',
+    'variant_price',
+    'variant_inventory_quantity',
+    'variant_allow_backorder',
+    'variant_manage_inventory',
+];
+
+const requiredCsvHeadersForVariant = [
+    'handle',
+    'variant',
+    'variant_price',
+    'variant_inventory_quantity',
+    'variant_allow_backorder',
+    'variant_manage_inventory',
+];
+
+const requiredCsvHeadersForVariantUpdate = [
+    ...requiredCsvHeadersForVariant.filter(header => header !== 'variant'),
+    'variant_id',
+];
+
+type CreateProductProductOption_ = CreateProductProductOption & {
+    values: string[];
+};
 
 export type Price = {
     currency_code: string;
@@ -393,6 +439,352 @@ class ProductService extends MedusaProductService {
         }
     }
 
+    /**
+     *
+     * @param rowData - product row data
+     * @param csvData - all csv data
+     * @returns
+     */
+    public async convertRowDataToProductDetails (
+        rowData: csvProductData,
+        csvData: csvProductData[],
+        store: Store
+    ): Promise<ProductDetails> {
+
+        //get all variant rows with same handle
+        let variants = [];
+        
+        //usually, product row data contains variant data as well
+        const hasVariant = this.csvRowHasVariant(
+            rowData,
+            requiredCsvHeadersForVariant,
+            requiredCsvHeadersForVariantUpdate
+        );
+        
+        if (hasVariant) {
+            variants.push(rowData);
+        }
+        
+        //grabbing all variants that are the same handle
+        variants.push(
+            ...csvData.filter(
+                (row) => rowData !== row && row.handle && rowData.handle && row.handle === rowData.handle
+            )
+        );
+
+        // console.log('variantsConvertRowDataToProductDetails: ' + JSON.stringify(variants));
+
+        //if product_id is present, we're updating a product        
+        let productDetails: ProductDetails = {
+            productInfo: {
+                productId: rowData['product_id'] || null,
+                name: rowData['title'] || null,
+                baseCurrency: store.default_currency_code,
+            },
+            variants: variants,
+        };
+        // console.log('productDetails2: ' + JSON.stringify(productDetails));
+        return productDetails;
+    };
+
+    // generate option names from variantData
+    // const optionNames: extractOptionNames[] = [
+    //     { title: 'color', values: ['Black', 'White'] },
+    //     { title: 'size', values: ['L', 'XL'] },
+    //     { title: 'gender', values: ['Male', 'Female'] },
+    // ];
+    public async extractOptionNames (
+        variants: csvProductData[]
+    ): Promise<CreateProductProductOption_[] | null> {
+        const optionMap: { [key: string]: Set<string> } = {};
+
+        // console.log('POSTCheck5.1.3.2.1');
+
+        variants.forEach((variant) => {
+            if (!variant.variant) {
+                return;
+            }
+            const options = variant.variant.includes('|')
+                ? variant.variant.split('|').map((option) => option.trim())
+                : [variant.variant.trim()];
+            options.forEach((option) => {
+                const [key, value] = option.split('[');
+                const cleanValue = value.replace(']', '');
+                if (!optionMap[key]) {
+                    optionMap[key] = new Set();
+                }
+                optionMap[key].add(cleanValue);
+            });
+        });
+
+        // console.log('POSTCheck5.1.3.2.2');
+
+        if (Object.entries(optionMap).length === 0) {
+            return null;
+        }
+
+        return Object.entries(optionMap).map(([title, values]) => ({
+            title,
+            values: Array.from(values),
+        }));
+    }
+
+    /**
+     * optionNames: array of option names i.e. 
+     [
+        { title: 'color', values: ['Black', 'White'] },
+        { title: 'size', values: ['L', 'XL'] },
+     ]
+     
+     * productDetails: array of product items variant with name, price i.e. 
+     [
+        {
+            productInfo: {
+                name: 'Some product name',
+                baseCurrency: 'cny',
+            },
+            variants: [
+                {name: 'L', price: 100}, 
+                {name: 'XL', price: 200}
+            ]
+        }
+    ]
+    * @param productDetails 
+    * @param optionNames 
+    * @returns 
+    */
+    public async mapVariants (
+        productDetails: ProductDetails
+    ): Promise<(CreateProductProductVariantInput | UpdateProductProductVariantDTO)[]> {
+        const variants = [];
+        const currencies = [
+            { code: 'eth', symbol: 'ETH' },
+            { code: 'usdc', symbol: 'USDC' },
+            { code: 'usdt', symbol: 'USDT' },
+        ];
+
+        // console.log('POSTCheck5.1.3.1');
+
+        //extracts option values from variantData
+        //const option = [ { "value":"L" }, { "value":"Black" }, { "value":"Female" } ]
+        const extractOptions = (variantString: string): { value: string; option_id: string }[] => {
+            const options = variantString.includes('|') ? variantString.split('|') : [variantString];
+            return options.map(option => {
+                const value = option.trim().split('[')[1].replace(']', '');
+                const option_id = "opt_" + value;
+                return { value, option_id };
+            });
+        };
+
+        // console.log('POSTCheck5.1.3.2.3');
+
+        for (const variant of productDetails.variants) {
+            //get price
+            const baseAmount = variant.variant_price;
+            const convertedPrices = await this.getPricesForVariant(
+                baseAmount,
+                productDetails.productInfo.baseCurrency
+            );
+
+            // console.log('POSTCheck5.1.3.2.4');
+            // console.log('convertedPrices: ' + JSON.stringify(convertedPrices));
+            //TODO: get from someplace global
+            const prices = [];
+            for (const currency of currencies) {
+                const price = convertedPrices.find(
+                    (p) => p.currency_code === currency.code
+                );
+                // console.log('price: ' + JSON.stringify(price));
+                prices.push({
+                    currency_code: currency.code,
+                    amount: Number(price.amount) * 100,
+                });
+            }
+
+            // console.log('POSTCheck5.1.3.2.5');
+
+            const options = variant.variant ? extractOptions(variant.variant) : null;
+            // console.log('options: ' + JSON.stringify(options));
+
+            // console.log('POSTCheck5.1.3.2.6');
+
+            variants.push({
+                id: variant.variant_id || null,
+                ...(options && { title: options.map((option) => option.value).join(' | ') }),
+                inventory_quantity: variant.variant_inventory_quantity,
+                allow_backorder:
+                    variant.variant_allow_backorder === '1' ? true : false,
+                manage_inventory:
+                    variant.variant_manage_inventory === '1' ? true : false,
+                sku: variant.variant_sku || null,
+                barcode: variant.variant_barcode || null,
+                ean: variant.variant_ean || null,
+                upc: variant.variant_upc || null,
+                hs_code: variant.variant_hs_code || null,
+                origin_country: variant.variant_origin_country || null,
+                mid_code: variant.variant_mid_code || null,
+                material: variant.variant_material || null,
+                weight: variant.variant_weight || null,
+                length: variant.variant_length || null,
+                width: variant.variant_width || null,
+                height: variant.variant_height || null,
+                ...(prices.length > 0 && { prices }),
+                ...(options && { options: options }),
+            });
+
+            // console.log('POSTCheck5.1.3.2.7');
+        }
+        // console.log('variants: ' + JSON.stringify(variants));
+        return variants;
+    };
+
+    /**
+     * Extracts and formats image URLs from a given string of image paths.
+     * 
+     * @param {string} images - A string containing image paths separated by '|'.
+     * @param {string} baseImageUrl - The base URL to prepend to image paths that do not start with 'http'.
+     * @returns {Promise<string[]>} A promise that resolves to an array of formatted image URLs.
+     * 
+     * @example
+     * const images = "image1.jpg|http://example.com/image2.jpg|image3.png";
+     * const baseImageUrl = "http://mybaseurl.com/";
+     * extractImages(images, baseImageUrl).then((result) => {
+     *     console.log(result);
+     *     // Output: [
+     *     //   "http://mybaseurl.com/image1.jpg",
+     *     //   "http://example.com/image2.jpg",
+     *     //   "http://mybaseurl.com/image3.png"
+     *     // ]
+     * });
+     */
+    public async extractImages (images: string, baseImageUrl: string): Promise<string[]> {
+        const images_ = images.split('|').map((option) => {
+            if (option.trim().startsWith('http')) {
+                return option.trim();
+            } else {
+                return baseImageUrl + option.trim();
+            }
+        });
+        return images_;
+    }
+    
+    public async convertCsvDataToUpdateProductInput (
+        rowData: csvProductData,
+        csvData: csvProductData[],
+        store: Store,
+        collectionId: string,
+        salesChannelIds: string[],
+        baseImageUrl: string
+    ): Promise<UpdateProductInput> {
+        let images: string[] = [];
+        let thumbnail: string = '';
+
+        // const productDetails: {
+        //     productInfo: {
+        //         productId: string;
+        //         name: string;
+        //         baseCurrency: string;
+        //     };
+        //     variants: { variantId: string; variantData: string; price: number }[];
+        // } = {
+        //     productInfo: {
+        //         productId: rowData['product_id']
+        //         name: rowData['title'],
+        //         baseCurrency: 'cny',
+        //     },
+        //     variants: [
+        //         { variantid: rowData['variant_id'], variantData: 'Size[L]|Color[Black] | Gender[Female]', price: rowData['variant_price'] },
+        //         { variantid: rowData['variant_id'], variantData: 'Size[L] | Color[Black]|Gender[Male]', price: rowData['variant_price'] },
+        //     ],
+        // };
+
+        // console.log('POSTCheck5.1.3.1');
+
+        const productDetails: ProductDetails =
+            await this.convertRowDataToProductDetails(rowData, csvData, store);
+        
+        // console.log('POSTCheck5.1.3.2');
+        
+        // console.log('productDetails: ' + JSON.stringify(productDetails));
+
+        const optionNames: (CreateProductProductOption_[] | null) = await this.extractOptionNames(productDetails.variants);
+        // console.log('optionNames: ' + JSON.stringify(optionNames));
+
+        // console.log('POSTCheck5.1.3.3');
+
+        const variants: UpdateProductProductVariantDTO[] = (await this.mapVariants(productDetails)) as UpdateProductProductVariantDTO[];
+        // console.log('variants: ' + JSON.stringify(variants));
+
+        // console.log('POSTCheck5.1.3.4');
+        
+        if (rowData['images'] && rowData['images'].trim() !== '') {
+            const images = await this.extractImages(rowData['images'], baseImageUrl);
+            // console.log('images: ' + JSON.stringify(images));
+        }
+
+        // console.log('POSTCheck5.1.3.5');
+
+        if (rowData['thumbnail'] && rowData['thumbnail'].trim() !== '') {
+            const thumbnail = rowData['thumbnail'].startsWith('http')
+                ? rowData['thumbnail']
+                : baseImageUrl + rowData['thumbnail'];
+        }
+
+        // console.log('POSTCheck5.1.3.6');
+        
+        const output: UpdateProductInput = {
+            ...(rowData['product_id'] && { id: rowData['product_id'].trim() }),
+            ...(rowData['title'] && { title: rowData['title'] }),
+            ...(rowData['subtitle'] && { subtitle: rowData['subtitle'] }),
+            ...(rowData['handle'] && { handle: rowData['handle'] }),
+            ...(rowData['description'] && { description: rowData['description'] }),
+            is_giftcard: false,
+            ...(rowData['status'] && { status: rowData['status'] as ProductStatus }),
+            ...(thumbnail && thumbnail.trim() !== '' && { thumbnail: thumbnail }),
+            ...(images && images.length > 0 && { images: images }),
+            collection_id: collectionId,
+            ...(rowData['weight'] && { weight: Math.round(Number(rowData['weight'])) }),
+            ...(rowData['discountable'] && { discountable: rowData['discountable'] === '1' ? true : false }),
+            ...(rowData['category_id'] && { categories: [{ id: rowData['category_id'] }] }),
+            ...(salesChannelIds && salesChannelIds.length > 0 && { sales_channels: salesChannelIds.map((sc) => { return { id: sc }; }) }),
+            ...(optionNames && optionNames.length > 0 && { options: optionNames }),
+            ...(variants && variants.length > 0 && { variants: variants }),
+        };
+        
+        // console.log('POSTCheck5.1.3.7');
+
+        // console.log('Converting data to UpdateProductInput:', JSON.stringify(output));
+        // console.log('Converting data to Variants:', JSON.stringify(variants));
+        // console.log('Converting data to optionNames:', JSON.stringify(optionNames));
+
+        return output;
+    };
+
+    public async processProductUpdate(product: UpdateProductInput, existingProducts: Product[]): Promise<Product | null> {
+        const productId = product.id;
+
+        try {
+            // Check if the product already exists by product ID
+            const existingProduct = existingProducts.find(
+                (p) => p.id === productId
+            );
+
+            // Update existing product
+            if (existingProduct) {
+                this.updateProduct(existingProduct.id, product as UpdateProductInput);
+                this.logger.info(`Updated product with product ID: ${productId}`);
+                return existingProduct;
+            }
+
+            // If the product does not exist, create a new one
+            this.logger.info(`Product with ID: ${productId} does not exist, creating new product.`);
+            return null;
+        } catch (error) {
+            this.logger.error(`Error processing product with product ID: ${productId}`, error);
+            return null;
+        }
+    }
+
     async bulkUpdateProducts(
         storeId: string,
         productData: UpdateProductInput[]
@@ -416,40 +808,9 @@ class ProductService extends MedusaProductService {
                         relations: ['variants'],
                     }))
             );
-            
-            // console.log('existingProducts: ' + JSON.stringify(existingProducts));
 
             const updatedProducts = await Promise.all(
-                productData.map((product) => {
-                    return new Promise<Product>(async (resolve, reject) => {
-                        const productId = product.id;
-
-                        try {
-                            // Check if the product already exists by product ID
-                            const existingProduct = existingProducts.find(
-                                (p) => p.id === productId
-                            );
-
-                            //delete existing product
-                            if (existingProduct) {
-                                //lets do the update
-                                await super.update(existingProduct.id, product as UpdateProductInput);
-                            }
-
-                            // If the product does not exist, create a new one
-                            this.logger.info(
-                                `Updated new product with product ID: ${productId}`
-                            );
-                            resolve(existingProduct);
-                        } catch (error) {
-                            this.logger.error(
-                                `Error processing product with product ID: ${productId}`,
-                                error
-                            );
-                            resolve(null);
-                        }
-                    });
-                })
+                productData.map((product) => this.processProductUpdate(product, existingProducts))
             );
 
             // Ensure all products are non-null and have valid IDs

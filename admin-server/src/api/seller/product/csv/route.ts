@@ -350,6 +350,25 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         }));
     }
 
+    /**
+     * Extracts and formats image URLs from a given string of image paths.
+     * 
+     * @param {string} images - A string containing image paths separated by '|'.
+     * @param {string} baseImageUrl - The base URL to prepend to image paths that do not start with 'http'.
+     * @returns {Promise<string[]>} A promise that resolves to an array of formatted image URLs.
+     * 
+     * @example
+     * const images = "image1.jpg|http://example.com/image2.jpg|image3.png";
+     * const baseImageUrl = "http://mybaseurl.com/";
+     * extractImages(images, baseImageUrl).then((result) => {
+     *     console.log(result);
+     *     // Output: [
+     *     //   "http://mybaseurl.com/image1.jpg",
+     *     //   "http://example.com/image2.jpg",
+     *     //   "http://mybaseurl.com/image3.png"
+     *     // ]
+     * });
+     */
     const extractImages = async (images: string, baseImageUrl: string): Promise<string[]> => {
         const images_ = images.split('|').map((option) => {
             if (option.trim().startsWith('http')) {
