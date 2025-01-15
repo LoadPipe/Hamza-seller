@@ -14,10 +14,15 @@ export type StatusCount = {
 const LOCAL_STORAGE_KEY = 'filter_store';
 const STATUS_COUNT_KEY = 'status_count_store';
 
+// Default filter to exclude archived items
+const DEFAULT_FILTERS = {
+    status: { notIn: ['archived'] },
+};
+
 // Load initial filters from local storage
 const loadFiltersFromStorage = (): Record<string, any> => {
     const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return savedFilters ? JSON.parse(savedFilters) : {};
+    return savedFilters ? JSON.parse(savedFilters) : { ...DEFAULT_FILTERS };
 };
 
 // Save filters to local storage
@@ -102,7 +107,8 @@ export const clearFilter = (key: string) => {
 // Function to clear all filters
 export const clearAllFilters = () => {
     filterStore.setState(() => {
-        saveFiltersToStorage({}); // Clear local storage
-        return { filters: {} };
+        const clearedFilters = { ...DEFAULT_FILTERS }; // Retain default filters
+        saveFiltersToStorage(clearedFilters); // Persist changes to local storage
+        return { filters: clearedFilters };
     });
 };

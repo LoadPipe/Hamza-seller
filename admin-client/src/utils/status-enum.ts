@@ -37,3 +37,25 @@ export enum DateOptions {
     LAST_YEAR = 'Last Year',
     CUSTOM_DATE_RANGE = 'Custom Date Range',
 }
+
+// TODO: Not sure if this should be an enum or I should be mapping it from products.categoryMap
+export enum ProductCategory {
+    BOARD_GAMES = 'Board Games',
+    GAMING = 'Gaming',
+    FITNESS = 'Fitness',
+    GADGETS = 'Gadgets',
+    HOBBIES = 'Hobbies',
+    ELECTRONICS = 'Electronics',
+    HOME = 'Home',
+    FEATURED = 'Featured',
+    FASHION = 'Fashion',
+    TOYS = 'Toys',
+    BEAUTY = 'Beauty',
+    SPORTS_OUTDOORS = 'Sports & Outdoors',
+    HEALTH = 'Health',
+    AUTOMOTIVE = 'Automotive',
+    BOOKS = 'Books',
+    OFFICE = 'Office',
+    PETS = 'Pets',
+    GIFT_CARDS = 'Gift Cards',
+}

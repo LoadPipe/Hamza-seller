@@ -240,6 +240,9 @@ export function OrderDetailsSidebar() {
                                             <option value="Refunded">
                                                 Refunded
                                             </option>
+                                            <option value="Archived">
+                                                Archived
+                                            </option>
                                         </select>
                                     ) : (
                                         <div>Loading status...</div>
@@ -370,20 +373,20 @@ export function OrderDetailsSidebar() {
                                 {orderDetails.items.map(
                                     (item: any, index: number) => (
                                         <div
-                                            key={item.id}
+                                            key={item?.id}
                                             className="flex flex-col"
                                         >
                                             <Item
-                                                name={item.title}
-                                                variants={item.variant.title}
-                                                quantity={item.quantity.toString()}
-                                                unitPrice={item.unit_price}
+                                                name={item?.title}
+                                                variants={item?.variant?.title}
+                                                quantity={item?.quantity?.toString()}
+                                                unitPrice={item?.unit_price}
                                                 discount={0} // Adjust as needed
                                                 currencyCode={currencyCode}
-                                                image={item.thumbnail}
+                                                image={item?.thumbnail}
                                             />
                                             {index !==
-                                                orderDetails.items.length -
+                                                orderDetails?.items?.length -
                                                     1 && (
                                                 <div className="border-t border-dashed border-primary-black-60 my-[16px]"></div>
                                             )}

@@ -92,9 +92,15 @@ export async function refundEscrowPayment(
  * @param order Any Order object with payments.
  * @returns Address of escrow contract.
  */
-export function findEscrowAddressFromOrder(order: any): string {
+export function findEscrowDataFromOrder(order: any): {
+    address: string;
+    chain_id: number;
+} {
     order?.payments?.sort((a: any, b: any) => a.created_at < b.created_at);
-    return order?.payments[0]?.blockchain_data?.escrow_address;
+    return {
+        address: order?.payments[0]?.blockchain_data?.escrow_address,
+        chain_id: order?.payments[0]?.blockchain_data?.chain_id ?? 0,
+    };
 }
 
 /**
@@ -110,11 +116,16 @@ async function createEscrowContract(order: any): Promise<EscrowClient> {
 
     const signer: Signer = await provider.getSigner();
 
-    const address: string = findEscrowAddressFromOrder(order);
-    if (!address) {
+    const escrowData = findEscrowDataFromOrder(order);
+    if (!escrowData) {
         throw new Error('No escrow address found in order');
     }
-    const escrow: EscrowClient = new EscrowClient(provider, signer, address);
+
+    const escrow: EscrowClient = new EscrowClient(
+        provider,
+        signer,
+        escrowData.address
+    );
 
     return escrow;
 }

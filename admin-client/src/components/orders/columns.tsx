@@ -15,7 +15,12 @@ import {
 import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 import { formatStatus, formatDate, customerName } from '@/utils/format-data.ts';
 import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
-// Define the Zod schema for the columns you want to display
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
+// Define the Zod schema for the productColumns you want to display
 export const OrderSchema = z.object({
     id: z.string(),
     customer_id: z.string(),
@@ -76,6 +81,15 @@ export const OrderSchema = z.object({
                 .nullable()
         )
         .optional(), // Add payments as an optional array
+    items: z
+        .array(
+            z.object({
+                id: z.string(),
+                title: z.string(),
+                quantity: z.number(),
+            })
+        )
+        .optional(), // Add items as an optional array
 });
 import {
     convertCryptoPrice,
@@ -86,7 +100,7 @@ import React from 'react';
 // Generate TypeScript type from Zod schema
 export type Order = z.infer<typeof OrderSchema>;
 
-// Pure Function; We aren't using sideEffects here, the purpose of this function is to generate columns
+// Pure Function; We aren't using sideEffects here, the purpose of this function is to generate productColumns
 export const generateColumns = (
     includeColumns: Array<keyof Order | 'select' | 'actions'>
 ): ColumnDef<Order>[] => {
@@ -163,6 +177,57 @@ export const generateColumns = (
                                 ? `...${cleanedId.slice(-11)}` // Show the last 11 characters
                                 : cleanedId;
                         return <div>{truncatedId}</div>;
+                    },
+                };
+            case 'items':
+                return {
+                    accessorKey: 'items',
+                    header: ({ column }) => (
+                        <Button
+                            variant={'ghost'}
+                            className=" text-white hover:text-opacity-70 "
+                            onClick={() => {
+                                column.toggleSorting(
+                                    column.getIsSorted() === 'asc'
+                                );
+                            }}
+                        >
+                            Items
+                        </Button>
+                    ),
+                    cell: ({ row }) => {
+                        const items = row.getValue('items') as Order['items'];
+                        return (
+                            <div>
+                                {items && items.length === 1 ? (
+                                    <span title={items[0].title}>
+                                        {items[0].quantity} x{' '}
+                                        {items[0].title
+                                            .split(' ')
+                                            .slice(0, 4)
+                                            .join(' ') + ' ...'}
+                                    </span>
+                                ) : items && items.length > 1 ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span>{`${items.length} items ordered`}</span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <ul className="list-disc pl-4">
+                                                {items.map((item, index) => (
+                                                    <li key={index}>
+                                                        {item.quantity} x{' '}
+                                                        {item.title}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : (
+                                    '0 items ordered'
+                                )}
+                            </div>
+                        );
                     },
                 };
             case 'customer':
@@ -563,8 +628,10 @@ export const generateColumns = (
 
 // Usage
 export const columns = generateColumns([
+    'actions',
     'select',
     'id',
+    'items',
     'customer_id',
     'customer',
     'created_at',
@@ -573,5 +640,4 @@ export const columns = generateColumns([
     'currency_code',
     'email',
     'fulfillment_status',
-    'actions',
 ]);
