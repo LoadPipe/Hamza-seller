@@ -100,24 +100,10 @@ import React from 'react';
 // Generate TypeScript type from Zod schema
 export type Order = z.infer<typeof OrderSchema>;
 
-const TitleQIcon: React.FC = () => (
-    <HelpCircle
-        className="mr-1 h-4 w-4 inline"
-        style={{ color: 'mediumslateblue' }}
-    />
-);
-
 // Pure Function; We aren't using sideEffects here, the purpose of this function is to generate productColumns
 export const generateColumns = (
     includeColumns: Array<keyof Order | 'select' | 'actions'>
 ): ColumnDef<Order>[] => {
-    const titleQIcon = (
-        <HelpCircle
-            className="mr-1 h-4 w-4 inline"
-            style={{ color: 'mediumslateblue' }}
-        />
-    );
-
     const baseColumns: ColumnDef<Order>[] = includeColumns.map((column) => {
         switch (column) {
             case 'select':
@@ -196,7 +182,7 @@ export const generateColumns = (
             case 'items':
                 return {
                     accessorKey: 'items',
-                    header: ({ column }) => (
+                    header: () => (
                         <Button
                             variant={'ghost'}
                             className=" text-white hover:text-opacity-70 w-40" // Added width to make the column wider
@@ -216,18 +202,13 @@ export const generateColumns = (
                                 {items && items.length === 1 ? (
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            {/* <span>
-                                                <TitleQIcon />
-                                                <span title={items[0].title}>
-                                                    {items[0].quantity} x{' '}
-                                                    {items[0].title.slice(
-                                                        0,
-                                                        10
-                                                    ) + ' ...'}
-                                                </span>
-                                            </span> */}
                                             <span>
-                                                <TitleQIcon />
+                                                <HelpCircle
+                                                    className="mr-1 h-4 w-4 inline"
+                                                    style={{
+                                                        color: 'mediumslateblue',
+                                                    }}
+                                                />
                                                 <span>{`${items.length} item ordered`}</span>
                                             </span>
                                         </TooltipTrigger>
@@ -240,7 +221,12 @@ export const generateColumns = (
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <span>
-                                                <TitleQIcon />
+                                                <HelpCircle
+                                                    className="mr-1 h-4 w-4 inline"
+                                                    style={{
+                                                        color: 'mediumslateblue',
+                                                    }}
+                                                />
                                                 <span>{`${items.length} items ordered`}</span>
                                             </span>
                                         </TooltipTrigger>
