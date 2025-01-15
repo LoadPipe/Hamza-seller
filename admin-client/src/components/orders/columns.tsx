@@ -86,6 +86,7 @@ export const OrderSchema = z.object({
             z.object({
                 id: z.string(),
                 title: z.string(),
+                quantity: z.number(),
             })
         )
         .optional(), // Add items as an optional array
@@ -200,6 +201,7 @@ export const generateColumns = (
                             <div>
                                 {items && items.length === 1 ? (
                                     <span title={items[0].title}>
+                                        {items[0].quantity} x{' '}
                                         {items[0].title
                                             .split(' ')
                                             .slice(0, 4)
@@ -214,6 +216,7 @@ export const generateColumns = (
                                             <ul className="list-disc pl-4">
                                                 {items.map((item, index) => (
                                                     <li key={index}>
+                                                        {item.quantity} x{' '}
                                                         {item.title}
                                                     </li>
                                                 ))}
