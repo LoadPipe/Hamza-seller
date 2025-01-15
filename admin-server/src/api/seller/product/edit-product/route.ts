@@ -55,9 +55,8 @@ export const PATCH = async (req: MedusaRequest, res: MedusaResponse) => {
             return;
         }
 
-        const updates =
-            typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        console.log(`UPDATES ARE ${JSON.stringify(updates)}`);
+        const data = req.body;
+        const updates = data || req.body;
 
         const storeId = handler.inputParams.store_id;
 

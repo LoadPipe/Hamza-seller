@@ -42,21 +42,18 @@ export default function EditProductPage() {
     );
     const { toast } = useToast();
 
-    // 1. Fetch your data
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
         queryKey: ['view-product-form', productId],
         queryFn: () => fetchProductById(productId),
     });
 
     const updateEditForm = useMutation({
-        // This is your update function
         mutationFn: async (payload: any) => {
             if (!payload || Object.keys(payload).length === 0) {
                 console.log('Empty payload; skipping mutation.');
                 throw new Error('No changes detected to update.');
             }
-            // If your backend requires store_id, pass it here too
-            console.log(`WTF IS THE PAYLOAD ${JSON.stringify(payload)}`);
+            // console.log(`THIS IS THE PAYLOAD ${JSON.stringify(payload)}`);
             return updateProductById(productId, payload);
         },
         onSuccess: () => {
@@ -99,7 +96,7 @@ export default function EditProductPage() {
                 );
                 return matchingPrice
                     ? formatCryptoPrice(
-                          Number(matchingPrice.amount) / 100,
+                          Number(matchingPrice.amount),
                           preferredCurrency ?? 'eth'
                       )
                     : '';
@@ -365,8 +362,7 @@ export default function EditProductPage() {
                                     );
                                     const formattedPrice = matchingPrice
                                         ? formatCryptoPrice(
-                                              Number(matchingPrice.amount) /
-                                                  100,
+                                              Number(matchingPrice.amount),
                                               preferredCurrency ?? 'eth'
                                           )
                                         : 'N/A';
@@ -502,20 +498,19 @@ export default function EditProductPage() {
                             selector={(formState) => {
                                 const dirtyFields: Record<string, unknown> = {};
 
-                                // Iterate through fieldMeta to check for dirty fields
+                                // Iterate through fieldMeta to check for dirty (modified) fields
                                 for (const [
                                     fieldName,
                                     fieldMeta,
                                 ] of Object.entries(formState.fieldMeta)) {
                                     if (fieldMeta.isDirty) {
-                                        // Add the dirty field and its current value
                                         dirtyFields[fieldName] =
                                             formState.values[fieldName];
                                     }
                                 }
 
                                 return {
-                                    dirtyFields,
+                                    dirtyFields, // Return dirty fields separately
                                     canSubmit: formState.canSubmit,
                                     isSubmitting: formState.isSubmitting,
                                 };
@@ -529,7 +524,6 @@ export default function EditProductPage() {
                                             title: 'No Changes!',
                                             description: 'No Changes to submit',
                                         });
-                                        // navigate({ to: '/products' });
                                         return;
                                     }
 
@@ -538,8 +532,12 @@ export default function EditProductPage() {
                                         dirtyFields
                                     );
 
-                                    // Submit only the dirty fields
-                                    updateEditForm.mutate(dirtyFields);
+                                    // Ensure payload structure
+                                    const payload = {
+                                        ...dirtyFields, // Flatten dirty fields into the payload
+                                    };
+
+                                    updateEditForm.mutate(payload); // Send structured payload
                                 };
 
                                 return (

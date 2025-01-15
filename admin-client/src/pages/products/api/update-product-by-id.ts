@@ -5,7 +5,7 @@ export const updateProductById = async (id: string, data: any) => {
     const response = await patchSecure(`/seller/product/edit-product`, {
         id: id,
         store_id: getJwtStoreId(),
-        body: JSON.stringify(data),
+        ...data,
     });
     if (!response.ok) {
         throw new Error('Failed to update product');

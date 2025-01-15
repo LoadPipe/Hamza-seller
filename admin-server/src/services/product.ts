@@ -989,46 +989,76 @@ class ProductService extends MedusaProductService {
             width?: number;
         }
     ): Promise<QuerySellerProductByIdResponse> {
+        console.log(
+            `STARTING update for productId: ${productId}, storeId: ${storeId}`
+        );
+        console.log(`Incoming Updates: ${JSON.stringify(updates)}`);
+
         try {
-            console.log(`UPDATES ${JSON.stringify(updates)}`);
-            // 1. Make sure the product belongs to this store
+            // 1. Check if the product exists in this store
+            console.log('Checking if product exists...');
             const product = await this.productRepository_.findOne({
                 where: { id: productId, store_id: storeId },
             });
 
             if (!product) {
+                console.error(
+                    `Product with ID ${productId} not found for store ${storeId}`
+                );
                 throw new Error(
                     `Product with ID ${productId} not found for store ${storeId}`
                 );
             }
 
-            // 2. Merge top-level updates (ignore variants for now)
+            console.log('Product found. Current product details:', product);
+
+            // 2. Filter out any `undefined` updates to avoid accidental overwrites
+            const filteredUpdates = Object.fromEntries(
+                Object.entries(updates).filter(
+                    ([_, value]) => value !== undefined
+                )
+            );
+
+            console.log('Filtered Updates to apply:', filteredUpdates);
+
+            // 3. Merge top-level updates
             const updatedProduct = {
                 ...product, // Keep existing fields
-                ...updates, // Merge in updates from the body
+                ...filteredUpdates, // Apply updates from the client
                 updated_at: new Date(), // Update timestamp
             };
 
-            // 3. Save updated product
+            console.log('Product after applying updates:', updatedProduct);
+
+            // 4. Save updated product
+            console.log('Saving updated product to the database...');
             await this.productRepository_.save(updatedProduct);
 
-            // 4. Re-fetch to include relations (like variants, categories, etc.)
+            console.log('Product successfully saved.');
+
+            // 5. Re-fetch the updated product with relations
+            console.log('Re-fetching updated product with relations...');
             const refreshedProduct = await this.productRepository_.findOne({
                 where: { id: productId, store_id: storeId },
                 relations: ['variants', 'variants.prices', 'categories'],
             });
 
             if (!refreshedProduct) {
-                // Technically shouldn't happen if just saved, but in case
+                console.error(
+                    `Failed to re-fetch updated product with ID ${productId}`
+                );
                 throw new Error(
                     `Failed to re-fetch updated product with ID ${productId}`
                 );
             }
 
-            // 5. Also fetch all available categories (like in querySellerProductById)
+            console.log('Refetched product details:', refreshedProduct);
+
+            // 6. Fetch available categories
+            console.log('Fetching available categories...');
             const availableCategories = await this.productCategoryRepository_
                 .find({
-                    select: ['id', 'name'], // Only the fields we actually need
+                    select: ['id', 'name'], // Only fetch the fields we actually need
                 })
                 .then((categories) =>
                     categories.map((cat) => ({
@@ -1037,7 +1067,9 @@ class ProductService extends MedusaProductService {
                     }))
                 );
 
-            // 6. Return the same shape: { product, availableCategories }
+            console.log('Available categories fetched:', availableCategories);
+
+            // 7. Return the updated product and available categories
             return {
                 product: refreshedProduct,
                 availableCategories,
