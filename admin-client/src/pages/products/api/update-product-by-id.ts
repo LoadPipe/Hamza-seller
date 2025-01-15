@@ -1,11 +1,10 @@
 import { patchSecure } from '@/utils/api-calls.ts';
+import { getJwtStoreId } from '@/utils/authentication';
 
 export const updateProductById = async (id: string, data: any) => {
-    const response = await patchSecure(`/api/products/${id}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+    const response = await patchSecure(`/seller/product/edit-product`, {
+        id: id,
+        store_id: getJwtStoreId(),
         body: JSON.stringify(data),
     });
     if (!response.ok) {

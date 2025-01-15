@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
+import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,12 +16,12 @@ import {
     SelectTrigger,
     SelectContent,
     SelectItem,
+    SelectValue,
 } from '@/components/ui/select';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { Label } from '@/components/ui/label.tsx';
 import { useForm } from '@tanstack/react-form';
-import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -30,17 +31,35 @@ type FetchProductResponse = {
 };
 
 export default function EditProductPage() {
+    const queryClient = useQueryClient();
     const { id: productId } = useParams({ from: '/products/$id/edit' });
     const navigate = useNavigate();
 
+    // 1. Fetch your data
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
-        queryKey: ['edit-product', productId],
+        queryKey: ['view-product-form', productId],
         queryFn: () => fetchProductById(productId),
     });
-    const { product } = data ?? {
-        product: undefined,
-        availableCategories: [],
-    };
+
+    const updateEditForm = useMutation({
+        // This is your update function
+        mutationFn: async (payload: any) => {
+            // If your backend requires store_id, pass it here too
+            return updateProductById(productId, payload);
+        },
+        onSuccess: () => {
+            // Invalidate or refetch to keep cache in sync
+            queryClient.invalidateQueries({ queryKey: ['view-product-form'] });
+            // Optionally navigate away
+            navigate({ to: '/products' });
+        },
+        onError: (err: unknown) => {
+            console.error('Failed to update product:', err);
+        },
+    });
+
+    // 3. Prepare default form values
+    const product = data?.product;
     const form = useForm({
         defaultValues: {
             title: product?.title || '',
@@ -51,26 +70,34 @@ export default function EditProductPage() {
             length: product?.variants?.[0]?.length || 0,
             height: product?.variants?.[0]?.height || 0,
             width: product?.variants?.[0]?.width || 0,
+            variants:
+                product?.variants?.map((variant) => ({
+                    id: variant.id,
+                    title: variant.title || '',
+                    sku: variant.sku || '',
+                    price:
+                        typeof variant?.prices?.[0]?.amount === 'number'
+                            ? (variant.prices[0].amount / 100).toFixed(2)
+                            : '',
+                    quantity: variant.inventory_quantity || 0,
+                    weight: variant.weight || 0,
+                    length: variant.length || 0,
+                    height: variant.height || 0,
+                    width: variant.width || 0,
+                })) || [],
         },
         onSubmit: async ({ value }) => {
-            console.log('Submitted data:', value);
-            try {
-                await updateProductById(productId, JSON.stringify(value));
-                navigate({ to: '/products' });
-            } catch (err) {
-                console.error('Failed to update product:', err);
-            }
+            // Fire off the mutation
+            updateEditForm.mutate(value);
         },
         // validate: (values) => {
-        //     const result = ProductSchema.safeParse(values);
-        //     return result.success ? {} : result.error.format();
+        //   const result = ProductSchema.safeParse(values)
+        //   return result.success ? {} : result.error.format()
         // },
     });
 
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error loading product data</div>;
-
-    // const { product, availableCategories } = data ?? {
 
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
@@ -91,6 +118,7 @@ export default function EditProductPage() {
                     }}
                 >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {/* Left side fields */}
                         <div>
                             <h2 className="text-lg font-medium mb-4">
                                 General Information
@@ -157,6 +185,7 @@ export default function EditProductPage() {
                             </form.Field>
                         </div>
 
+                        {/* Right side fields */}
                         <div>
                             <h2 className="text-lg font-medium mb-4">
                                 Product Media
@@ -184,11 +213,52 @@ export default function EditProductPage() {
                                     </>
                                 )}
                             </form.Field>
+                            {/* Show current categories & an "Add Category" button */}
+                            <div className="mt-6 flex flex-col gap-4">
+                                <div className="flex justify-end">
+                                    <Label className="text-lg font-medium">
+                                        Categories:
+                                    </Label>
+                                </div>
+
+                                {/* Show the product's existing categories (if your `product` object has them) */}
+                                <div className="flex justify-end">
+                                    {product?.categories?.length ? (
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {product.categories.map((cat) => (
+                                                <span
+                                                    key={cat.id}
+                                                    className="px-2 py-1 rounded bg-gray-700 text-white"
+                                                >
+                                                    {cat.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="mt-2 text-gray-400">
+                                            No categories yet.
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-end">
+                                    <Button
+                                        className="mt-2"
+                                        onClick={() => {
+                                            alert(
+                                                'TODO: Add Category flow here.'
+                                            );
+                                        }}
+                                    >
+                                        Add New Category
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Base Product Dimensions */}
-                    <div className="grid grid-cols-4 gap-4 mt-4">
+                    <div className="grid grid-cols-4 gap-4 my-16">
                         {[
                             { name: 'weight', label: 'Weight' },
                             { name: 'length', label: 'Length' },
@@ -215,6 +285,7 @@ export default function EditProductPage() {
                         ))}
                     </div>
 
+                    {/* Variants */}
                     {product?.variants && product.variants.length > 0 && (
                         <div className="mt-8">
                             <h2 className="text-lg font-medium mb-4">
@@ -268,7 +339,6 @@ export default function EditProductPage() {
                                                         }
                                                     />
                                                 </div>
-
                                                 <div>
                                                     <Label>Quantity</Label>
                                                     <Input
@@ -280,8 +350,6 @@ export default function EditProductPage() {
                                                     />
                                                 </div>
                                             </div>
-                                            {/* Inside the AccordionContent */}
-                                            {/* Inside the AccordionContent */}
                                             <div className="grid grid-cols-4 gap-4 mt-4">
                                                 {[
                                                     'weight',
@@ -303,7 +371,6 @@ export default function EditProductPage() {
                                                                 placeholder={
                                                                     dim
                                                                 }
-                                                                // Prefer ?? so that 0 remains 0
                                                                 defaultValue={
                                                                     variant[
                                                                         dim
