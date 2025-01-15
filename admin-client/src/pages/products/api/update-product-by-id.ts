@@ -7,8 +7,9 @@ export const updateProductById = async (id: string, data: any) => {
         store_id: getJwtStoreId(),
         ...data,
     });
-    if (!response.ok) {
-        throw new Error('Failed to update product');
-    }
-    return await response.json();
+
+    // Log the response for debugging purposes
+    console.log('Update Product Response:', response);
+
+    return response; // Response is already parsed JSON in your setup
 };
