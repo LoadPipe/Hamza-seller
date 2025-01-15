@@ -18,10 +18,12 @@ import {
     SelectItem,
     SelectValue,
 } from '@/components/ui/select';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { Label } from '@/components/ui/label.tsx';
 import { useForm } from '@tanstack/react-form';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -34,7 +36,9 @@ export default function EditProductPage() {
     const queryClient = useQueryClient();
     const { id: productId } = useParams({ from: '/products/$id/edit' });
     const navigate = useNavigate();
-
+    const preferredCurrency = useCustomerAuthStore(
+        (state) => state.preferred_currency_code
+    );
     // 1. Fetch your data
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
         queryKey: ['view-product-form', productId],
@@ -66,25 +70,38 @@ export default function EditProductPage() {
             subtitle: product?.subtitle || '',
             description: product?.description || '',
             thumbnail: product?.thumbnail || '',
-            weight: product?.variants?.[0]?.weight || 0,
-            length: product?.variants?.[0]?.length || 0,
-            height: product?.variants?.[0]?.height || 0,
-            width: product?.variants?.[0]?.width || 0,
-            variants:
-                product?.variants?.map((variant) => ({
+            weight: product?.weight || 0,
+            length: product?.length || 0,
+            height: product?.height || 0,
+            width: product?.width || 0,
+            basePrice: (() => {
+                const firstVariant = product?.variants?.[0];
+                const matchingPrice = firstVariant?.prices?.find(
+                    (p) => p.currency_code === preferredCurrency
+                );
+                return matchingPrice
+                    ? formatCryptoPrice(
+                          Number(matchingPrice.amount) / 100,
+                          preferredCurrency ?? 'eth'
+                      )
+                    : '';
+            })(),
+            variants: product?.variants?.map((variant) => {
+                const matchingPrice = variant.prices?.find(
+                    (p) => p.currency_code === preferredCurrency
+                );
+                return {
                     id: variant.id,
                     title: variant.title || '',
                     sku: variant.sku || '',
-                    price:
-                        typeof variant?.prices?.[0]?.amount === 'number'
-                            ? (variant.prices[0].amount / 100).toFixed(2)
-                            : '',
+                    price: matchingPrice ? Number(matchingPrice.amount) : '',
                     quantity: variant.inventory_quantity || 0,
                     weight: variant.weight || 0,
                     length: variant.length || 0,
                     height: variant.height || 0,
                     width: variant.width || 0,
-                })) || [],
+                };
+            }),
         },
         onSubmit: async ({ value }) => {
             // Fire off the mutation
@@ -257,18 +274,51 @@ export default function EditProductPage() {
                         </div>
                     </div>
 
+                    {/* Preferred Currency && Base Price */}
+                    <div>
+                        <div className="mb-4">
+                            Preferred Currency:{' '}
+                            {preferredCurrency?.toUpperCase() ?? 'ETH'}
+                        </div>
+                        <div>
+                            <form.Field name="basePrice">
+                                {(field) => (
+                                    <>
+                                        <Label>
+                                            Base Price in{' '}
+                                            {preferredCurrency.toUpperCase() ??
+                                                'ETH'}
+                                        </Label>
+                                        <Input
+                                            className="w-1/2"
+                                            placeholder="basePrice"
+                                            value={field.state.value}
+                                            onChange={(e) =>
+                                                field.handleChange(
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                        />
+                                    </>
+                                )}
+                            </form.Field>
+                        </div>
+                    </div>
+
                     {/* Base Product Dimensions */}
-                    <div className="grid grid-cols-4 gap-4 my-16">
+                    <div className="grid grid-cols-4 gap-2 my-8">
                         {[
-                            { name: 'weight', label: 'Weight' },
-                            { name: 'length', label: 'Length' },
-                            { name: 'height', label: 'Height' },
-                            { name: 'width', label: 'Width' },
+                            { name: 'weight', label: 'Weight (g)' },
+                            { name: 'length', label: 'Length (cm)' },
+                            { name: 'height', label: 'Height (cm)' },
+                            { name: 'width', label: 'Width (cm)' },
                         ].map(({ name, label }) => (
                             <form.Field key={name} name={name}>
                                 {(field) => (
-                                    <>
-                                        <Label>{label}:</Label>
+                                    <div className="space-y-1">
+                                        <Label className="block text-sm font-medium">
+                                            {label}
+                                        </Label>
                                         <Input
                                             type="number"
                                             placeholder={label}
@@ -278,8 +328,9 @@ export default function EditProductPage() {
                                                     Number(e.target.value)
                                                 )
                                             }
+                                            className="block w-full"
                                         />
-                                    </>
+                                    </div>
                                 )}
                             </form.Field>
                         ))}
@@ -292,134 +343,142 @@ export default function EditProductPage() {
                                 Variants
                             </h2>
                             <Accordion type="single" collapsible>
-                                {product.variants.map((variant, index) => (
-                                    <AccordionItem
-                                        key={variant.id}
-                                        value={`variant-${index}`}
-                                    >
-                                        <AccordionTrigger>
-                                            Variant #{index + 1}
-                                        </AccordionTrigger>
-                                        <AccordionContent>
-                                            <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
-                                                <div>
-                                                    <Label>Title</Label>
-                                                    <Input
-                                                        placeholder="Variant Title"
-                                                        defaultValue={
-                                                            variant.title || ''
-                                                        }
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label>SKU</Label>
-                                                    <Input
-                                                        placeholder="SKU"
-                                                        defaultValue={
-                                                            variant.sku || ''
-                                                        }
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label>Price</Label>
-                                                    <Input
-                                                        placeholder="Price"
-                                                        defaultValue={
-                                                            typeof variant
-                                                                ?.prices?.[0]
-                                                                ?.amount ===
-                                                            'number'
-                                                                ? (
-                                                                      variant
-                                                                          .prices[0]
-                                                                          .amount /
-                                                                      100
-                                                                  ).toFixed(2)
-                                                                : ''
-                                                        }
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label>Quantity</Label>
-                                                    <Input
-                                                        placeholder="Quantity"
-                                                        defaultValue={
-                                                            variant.inventory_quantity ||
-                                                            ''
-                                                        }
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-4 gap-4 mt-4">
-                                                {[
-                                                    'weight',
-                                                    'length',
-                                                    'height',
-                                                    'width',
-                                                ].map((dim) => (
-                                                    <div key={dim}>
-                                                        <Label>
-                                                            {dim
-                                                                .charAt(0)
-                                                                .toUpperCase() +
-                                                                dim.slice(1)}
-                                                            :
-                                                        </Label>
-                                                        <div className="flex items-center gap-2">
-                                                            <Input
-                                                                type="number"
-                                                                placeholder={
-                                                                    dim
-                                                                }
-                                                                defaultValue={
-                                                                    variant[
-                                                                        dim
-                                                                    ] ?? 0
-                                                                }
-                                                            />
-                                                            {dim ===
-                                                            'weight' ? (
-                                                                <Select /* possibly defaultValue="kg" */
-                                                                >
-                                                                    <SelectTrigger>
-                                                                        <Button variant="outline">
-                                                                            kg
-                                                                        </Button>
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="kg">
-                                                                            kg
-                                                                        </SelectItem>
-                                                                        <SelectItem value="lb">
-                                                                            lb
-                                                                        </SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            ) : (
-                                                                <Select /* possibly defaultValue="cm" */
-                                                                >
-                                                                    <SelectTrigger>
-                                                                        <Button variant="outline">
-                                                                            cm
-                                                                        </Button>
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="cm">
-                                                                            cm
-                                                                        </SelectItem>
-                                                                        <SelectItem value="inch">
-                                                                            inch
-                                                                        </SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            )}
-                                                        </div>
+                                {product.variants.map((variant, index) => {
+                                    const matchingPrice = variant.prices?.find(
+                                        (p) =>
+                                            p.currency_code ===
+                                            preferredCurrency
+                                    );
+                                    const formattedPrice = matchingPrice
+                                        ? formatCryptoPrice(
+                                              Number(matchingPrice.amount) /
+                                                  100,
+                                              preferredCurrency ?? 'eth'
+                                          )
+                                        : 'N/A';
+
+                                    return (
+                                        <AccordionItem
+                                            key={variant.id}
+                                            value={`variant-${index}`}
+                                        >
+                                            <AccordionTrigger>
+                                                Variant #{index + 1}
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
+                                                    <div>
+                                                        <Label>Title</Label>
+                                                        <Input
+                                                            placeholder="Variant Title"
+                                                            defaultValue={
+                                                                variant.title ||
+                                                                ''
+                                                            }
+                                                        />
                                                     </div>
-                                                ))}
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
+                                                    <div>
+                                                        <Label>SKU</Label>
+                                                        <Input
+                                                            placeholder="SKU"
+                                                            defaultValue={
+                                                                variant.sku ||
+                                                                ''
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>
+                                                            Price in {''}
+                                                            {preferredCurrency.toUpperCase() ??
+                                                                'ETH'}
+                                                        </Label>
+                                                        <Input
+                                                            placeholder="Price"
+                                                            value={
+                                                                formattedPrice
+                                                            }
+                                                            disabled
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Quantity</Label>
+                                                        <Input
+                                                            placeholder="Quantity"
+                                                            defaultValue={
+                                                                variant.inventory_quantity ||
+                                                                ''
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-4 gap-4 mt-4">
+                                                    {[
+                                                        {
+                                                            key: 'weight',
+                                                            label: 'Weight (g)',
+                                                            placeholder:
+                                                                'Weight in grams',
+                                                        },
+                                                        {
+                                                            key: 'length',
+                                                            label: 'Length (cm)',
+                                                            placeholder:
+                                                                'Length in cm',
+                                                        },
+                                                        {
+                                                            key: 'height',
+                                                            label: 'Height (cm)',
+                                                            placeholder:
+                                                                'Height in cm',
+                                                        },
+                                                        {
+                                                            key: 'width',
+                                                            label: 'Width (cm)',
+                                                            placeholder:
+                                                                'Width in cm',
+                                                        },
+                                                    ].map(
+                                                        ({
+                                                            key,
+                                                            label,
+                                                            placeholder,
+                                                        }) => (
+                                                            <div key={key}>
+                                                                <Label>
+                                                                    {label}
+                                                                </Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    placeholder={
+                                                                        placeholder
+                                                                    }
+                                                                    defaultValue={
+                                                                        variant[
+                                                                            key
+                                                                        ] ?? 0
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        form.setValue(
+                                                                            `variants[${index}].${key}`,
+                                                                            Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                />
+                                                            </div>
+                                                        )
+                                                    )}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    );
+                                })}
                             </Accordion>
                         </div>
                     )}
