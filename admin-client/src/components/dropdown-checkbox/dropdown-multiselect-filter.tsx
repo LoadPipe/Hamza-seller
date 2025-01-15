@@ -46,7 +46,7 @@ export default function DropdownMultiselectFilter({
     };
 
     const selectAllFilters = () => {
-        onFilterChange(options);
+        //onFilterChange(options);
         setTemporarySelection(options);
         setIsOpen(true);
     };
