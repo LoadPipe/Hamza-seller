@@ -116,6 +116,14 @@ class SmtpNotificationService extends AbstractNotificationService {
 
                 return null;
 
+            case 'giftcard.order':
+                await this.smtpMailService.sendMail(data);
+                return {
+                    to: toEmail,
+                    status: 'success',
+                    data: data,
+                };
+
             default:
                 return null;
         }

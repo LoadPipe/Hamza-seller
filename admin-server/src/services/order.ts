@@ -580,22 +580,6 @@ export default class OrderService extends MedusaOrderService {
         return output;
     }
 
-    async getBuckyProductVariantsFromOrder(
-        order: Order
-    ): Promise<{ variants: ProductVariant[]; quantities: number[] }> {
-        const orders: Order[] = await this.getOrdersWithItems([order]);
-        const relevantItems: LineItem[] = orders[0].cart.items.filter(
-            (i) => i.variant.product.bucky_metadata
-        );
-
-        return relevantItems?.length
-            ? {
-                  variants: relevantItems.map((i) => i.variant),
-                  quantities: relevantItems.map((i) => i.quantity),
-              }
-            : { variants: [], quantities: [] };
-    }
-
     async getOrdersWithUnverifiedPayments() {
         return this.orderRepository_.find({
             where: {
@@ -1149,26 +1133,6 @@ export default class OrderService extends MedusaOrderService {
             ...update,
         });
         return result;
-    }
-
-    private async processBuckydropOrders(
-        cartId: string,
-        orders: Order[]
-    ): Promise<void> {
-        try {
-            for (const order of orders) {
-                const { variants, quantities } =
-                    await this.getBuckyProductVariantsFromOrder(order);
-                if (variants?.length) {
-                    order.bucky_metadata = { status: 'pending' };
-                    await this.orderRepository_.save(order);
-
-                    this.logger.debug('BUCKY CREATED ORDER');
-                }
-            }
-        } catch (e) {
-            this.logger.error(`Failed to create buckydrop order for ${cartId}`);
-        }
     }
 
     private async getCustomerOrdersByStatus(

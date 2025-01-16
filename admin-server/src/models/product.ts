@@ -12,7 +12,6 @@ import {
 } from '@medusajs/medusa';
 import { Store } from './store';
 import { ProductReview } from './product-review';
-import { ProductVariant } from './product-variant';
 
 @Entity()
 export class Product extends MedusaProduct {
@@ -21,9 +20,6 @@ export class Product extends MedusaProduct {
 
     @OneToMany(() => ProductReview, (review) => review.product)
     reviews: ProductReview[];
-
-    @OneToMany(() => ProductVariant, (variant) => variant.product)
-    variants: ProductVariant[];
 
     @ManyToOne(() => Store)
     @JoinColumn({ name: 'store_id', referencedColumnName: 'id' })
@@ -38,6 +34,6 @@ export class Product extends MedusaProduct {
     @Column('jsonb')
     external_metadata?: Record<string, unknown>;
 
-    @Column('jsonb')
-    bucky_metadata?: Record<string, unknown>;
+    @Column()
+    display_rank: number;
 }
