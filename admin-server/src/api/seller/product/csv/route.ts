@@ -189,12 +189,11 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
         //extracts option values from variantData
         //const option = [ { "value":"L" }, { "value":"Black" }, { "value":"Female" } ]
-        const extractOptions = (variantString: string): { value: string; option_id: string }[] => {
+        const extractOptions = (variantString: string): { value: string }[] => {
             const options = variantString.includes('|') ? variantString.split('|') : [variantString];
             return options.map(option => {
                 const value = option.trim().split('[')[1].replace(']', '');
-                const option_id = "opt_" + value;
-                return { value, option_id };
+                return { value };
             });
         };
 
