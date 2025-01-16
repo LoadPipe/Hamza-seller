@@ -30,6 +30,15 @@ import {
 
 const DEFAULT_PAGE_COUNT = 10;
 
+export const validStatuses = [
+    'Processing',
+    'Shipped',
+    'Delivered',
+    'Cancelled',
+    'Refunded',
+    'Archived',
+];
+
 interface FilterOrders {
     orderStatus?: OrderStatus;
     fulfillmentStatus?: FulfillmentStatus;
@@ -197,7 +206,7 @@ export default class StoreOrderService extends TransactionBaseService {
                           [sort.field]: sort.direction, // Sort directly if not 'customer' or 'price'
                       }
                     : undefined,
-            relations: ['customer', 'payments'], // Fetch related payments and customers
+            relations: ['customer', 'payments', 'items'], // Fetch related payments and customers
         };
 
         const allOrders = await this.orderRepository_.find(params);
@@ -273,13 +282,6 @@ export default class StoreOrderService extends TransactionBaseService {
         note?: Record<string, any>
     ) {
         try {
-            const validStatuses = [
-                'processing',
-                'shipped',
-                'delivered',
-                'cancelled',
-                'refunded',
-            ];
 
             if (!validStatuses.includes(newStatus)) {
                 throw new Error(`Invalid order status: ${newStatus}`);
@@ -299,31 +301,35 @@ export default class StoreOrderService extends TransactionBaseService {
             let newPaymentStatus: PaymentStatus = order.payment_status;
 
             switch (newStatus) {
-                case 'processing':
+                case 'Processing':
                     newFulfillmentStatus = FulfillmentStatus.NOT_FULFILLED;
                     newOrderStatus = OrderStatus.PENDING;
                     break;
 
-                case 'shipped':
+                case 'Shipped':
                     newFulfillmentStatus = FulfillmentStatus.SHIPPED;
                     newPaymentStatus = PaymentStatus.CAPTURED;
                     break;
 
-                case 'delivered':
+                case 'Delivered':
                     newFulfillmentStatus = FulfillmentStatus.FULFILLED;
                     newOrderStatus = OrderStatus.COMPLETED;
                     break;
 
-                case 'cancelled':
+                case 'Cancelled':
                     newOrderStatus = OrderStatus.CANCELED;
                     newFulfillmentStatus = FulfillmentStatus.CANCELED;
                     break;
 
-                case 'refunded':
+                case 'Refunded':
                     newPaymentStatus = PaymentStatus.REFUNDED;
                     // either canceled or returned...
                     newFulfillmentStatus = FulfillmentStatus.CANCELED;
                     // order.status = OrderStatus.RETURNED;
+                    break;
+
+                case 'Archived':
+                    newOrderStatus = OrderStatus.ARCHIVED;
                     break;
 
                 default:

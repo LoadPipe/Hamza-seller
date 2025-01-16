@@ -718,7 +718,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             baseImageUrl,
             productInputs
         );
-        console.log('convertCreateCsvDataOutput: ' + JSON.stringify(convertCreateCsvDataOutput));
+        // console.log('convertCsvDataOutput: ' + JSON.stringify(convertCsvDataOutput));
 
         if (!convertCreateCsvDataOutput.success) {
             return {
@@ -856,7 +856,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 // TODO: validate collection_id
                 // TODO: validate sales_channel_id
 
-                console.log('POSTCheck1');
+                // console.log('POSTCheck1');
 
                 const validateCsvOutput: { success: boolean; message: string } =
                     await productService.validateCsv(
@@ -874,7 +874,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     file.path
                 );
 
-                console.log('POSTCheck2');
+                // console.log('POSTCheck2');
 
                 const validateCsvDataOutput: {
                     createSuccess: boolean;
@@ -893,7 +893,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     requiredCsvHeadersForProductUpdate
                 );
 
-                console.log('POSTCheck3');
+                // console.log('POSTCheck3');
 
                 if (!validateCsvDataOutput.createSuccess && !validateCsvDataOutput.updateSuccess) {
                     return handler.returnStatus(400, {
@@ -932,7 +932,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     }
                 }
 
-                console.log('POSTCheck4');
+                // console.log('POSTCheck4');
 
                 //update product code
                 let updateProductsOutput: {
@@ -961,7 +961,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     }
                 }
 
-                console.log('POSTCheck5');
+                // console.log('POSTCheck5');
 
                 res.status(200).json({
                     createSuccess: createProductsOutput.success,

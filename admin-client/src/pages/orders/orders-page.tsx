@@ -122,6 +122,8 @@ export default function OrdersPage() {
         return <div>{error.message}</div>;
     }
 
+    console.log('orders: ', data);
+    // console.log('columns: ' + JSON.stringify(columns));
     return (
         <>
             <DataTable
