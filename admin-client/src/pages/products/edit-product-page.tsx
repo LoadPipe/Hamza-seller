@@ -101,22 +101,21 @@ export default function EditProductPage() {
                       )
                     : '';
             })(),
-            variants: product?.variants?.map((variant) => {
-                const matchingPrice = variant.prices?.find(
-                    (p) => p.currency_code === preferredCurrency
-                );
-                return {
+            variants:
+                product?.variants?.map((variant) => ({
                     id: variant.id,
-                    title: variant.title || '',
+                    variant_title: variant.title || '',
                     sku: variant.sku || '',
-                    price: matchingPrice ? Number(matchingPrice.amount) : '',
+                    price:
+                        variant.prices?.find(
+                            (p) => p.currency_code === preferredCurrency
+                        )?.amount || '',
                     quantity: variant.inventory_quantity || 0,
                     weight: variant.weight || 0,
                     length: variant.length || 0,
                     height: variant.height || 0,
                     width: variant.width || 0,
-                };
-            }),
+                })) || [],
         },
         // validate: (values) => {
         //   const result = ProductSchema.safeParse(values)
@@ -365,16 +364,18 @@ export default function EditProductPage() {
                                         <AccordionContent>
                                             <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
                                                 <editProductForm.Field
-                                                    name={`variants[${index}].title`}
+                                                    name={`variant`}
+                                                    key={variant.id}
                                                 >
                                                     {(field) => (
                                                         <div>
                                                             <Label>Title</Label>
                                                             <Input
-                                                                placeholder="Variant Title"
+                                                                placeholder={`${variant.title}`}
                                                                 value={
                                                                     field.state
-                                                                        .value
+                                                                        .value ||
+                                                                    ''
                                                                 }
                                                                 onChange={(e) =>
                                                                     field.handleChange(
@@ -383,6 +384,16 @@ export default function EditProductPage() {
                                                                     )
                                                                 }
                                                             />
+                                                            {field.state.meta
+                                                                .errors
+                                                                ?.length >
+                                                                0 && (
+                                                                <span className="text-red-500">
+                                                                    {field.state.meta.errors.join(
+                                                                        ', '
+                                                                    )}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </editProductForm.Field>
@@ -417,11 +428,14 @@ export default function EditProductPage() {
                                                     <Input
                                                         placeholder="Price"
                                                         value={
-                                                            variant.prices?.find(
-                                                                (p) =>
-                                                                    p.currency_code ===
-                                                                    preferredCurrency
-                                                            )?.amount ?? 'N/A'
+                                                            variant.prices
+                                                                ?.find(
+                                                                    (p) =>
+                                                                        p.currency_code ===
+                                                                        preferredCurrency
+                                                                )
+                                                                ?.amount?.toString() ||
+                                                            ''
                                                         }
                                                         disabled
                                                     />

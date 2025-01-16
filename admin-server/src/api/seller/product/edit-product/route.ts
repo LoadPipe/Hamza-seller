@@ -62,7 +62,7 @@ export const PATCH = async (req: MedusaRequest, res: MedusaResponse) => {
 
         const id = handler.inputParams.id;
 
-        const products = await productService.querySellerProductByIdForEdit(
+        const products = await productService.patchSellerProduct(
             id,
             storeId,
             updates
