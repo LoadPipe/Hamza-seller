@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { importProductsByCsv } from '@/pages/products/api/import-products-by-csv';
+import { FilePlus } from 'lucide-react';
 
 interface ProductImportDialogProps {
     open: boolean;
@@ -67,16 +68,16 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-black-90 bg-opacity-80">
-            <div className="bg-primary-black-90 rounded-lg p-8 w-96 ">
-                <h2 className="text-xl font-semibold py-4">Import Products</h2>
-                <p className="text-white mb-4">
-                    Drag and drop your CSV file here, or click to select a file.
-                </p>
+        <div className="m-4 fixed inset-0 z-50 flex items-center justify-center bg-primary-black-90 bg-opacity-40 ">
+            <div className="bg-primary-black-90 rounded-lg p-8 w-[600px] ">
+                <h2 className="text-xl font-semibold py-4">Upload CSV</h2>
+
                 <div
                     {...getRootProps()}
-                    className={`p-6 text-center rounded text-black ${
-                        isDragActive ? 'bg-gray-100' : 'bg-white'
+                    className={`p-6 text-center rounded-lg text-white border-2 border-dashed ${
+                        isDragActive
+                            ? 'bg-gray-100 border-primary-purple-90'
+                            : 'bg-primary-black-90 border-gray-400'
                     }`}
                 >
                     <input {...getInputProps()} />
@@ -85,10 +86,16 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
                     ) : isDragActive ? (
                         <p>Drop the file here...</p>
                     ) : (
-                        <p>Drag and drop a file here, or click to upload.</p>
+                        <div>
+                            <FilePlus className="mx-auto mb-4" size={28} />
+                            <p className="text-white my-4">
+                                Drag and drop your CSV file here, or click to
+                                select a file.
+                            </p>
+                        </div>
                     )}
                 </div>
-                <div className="mt-4 flex justify-end gap-2">
+                <div className="mt-8 flex justify-end gap-2">
                     <Button
                         onClick={onClose}
                         className="w-[200px] h-[52px] rounded-[53px] hover:border-none border-primary-purple-90 text-primary-purple-90 hover:bg-red-600"
