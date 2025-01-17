@@ -24,6 +24,8 @@ import PriceSelectionStrategy from '../strategies/price-selection';
 import CustomerService from './customer';
 import ProductVariantService from './product-variant';
 import { ProductVariantRepository } from '../repositories/product-variant';
+import SalesChannelRepository from '@medusajs/medusa/dist/repositories/sales-channel';
+import ProductCollectionRepository from '@medusajs/medusa/dist/repositories/product-collection';
 import {
     In,
     IsNull,
@@ -167,7 +169,7 @@ const requiredCsvHeadersForVariant = [
 ];
 
 const requiredCsvHeadersForVariantUpdate = [
-    ...requiredCsvHeadersForVariant.filter(header => header !== 'variant'),
+    ...requiredCsvHeadersForVariant.filter((header) => header !== 'variant'),
     'variant_id',
 ];
 
@@ -199,6 +201,8 @@ class ProductService extends MedusaProductService {
     protected readonly productVariantService_: ProductVariantService;
     protected readonly priceConverter_: PriceConverter;
     protected readonly productCategoryRepository_: typeof ProductCategoryRepository;
+    protected readonly salesChannelRepository_: typeof SalesChannelRepository;
+    protected readonly productCollectionRepository_: typeof ProductCollectionRepository;
 
     constructor(container) {
         super(container);
@@ -208,6 +212,9 @@ class ProductService extends MedusaProductService {
         this.productVariantRepository_ = container.productVariantRepository;
         this.cacheExchangeRateRepository =
             container.cachedExchangeRateRepository;
+        this.salesChannelRepository_ = container.salesChannelRepository;
+        this.productCollectionRepository_ =
+            container.productCollectionRepository;
         this.customerService_ = container.customerService;
         this.productVariantService_ = container.productVariantService;
         this.priceConverter_ = new PriceConverter(
@@ -445,36 +452,39 @@ class ProductService extends MedusaProductService {
      * @param csvData - all csv data
      * @returns
      */
-    public async convertRowDataToProductDetails (
+    public async convertRowDataToProductDetails(
         rowData: csvProductData,
         csvData: csvProductData[],
         store: Store
     ): Promise<ProductDetails> {
-
         //get all variant rows with same handle
         let variants = [];
-        
+
         //usually, product row data contains variant data as well
         const hasVariant = this.csvRowHasVariant(
             rowData,
             requiredCsvHeadersForVariant,
             requiredCsvHeadersForVariantUpdate
         );
-        
+
         if (hasVariant) {
             variants.push(rowData);
         }
-        
+
         //grabbing all variants that are the same handle
         variants.push(
             ...csvData.filter(
-                (row) => rowData !== row && row.handle && rowData.handle && row.handle === rowData.handle
+                (row) =>
+                    rowData !== row &&
+                    row.handle &&
+                    rowData.handle &&
+                    row.handle === rowData.handle
             )
         );
 
         // console.log('variantsConvertRowDataToProductDetails: ' + JSON.stringify(variants));
 
-        //if product_id is present, we're updating a product        
+        //if product_id is present, we're updating a product
         let productDetails: ProductDetails = {
             productInfo: {
                 productId: rowData['product_id'] || null,
@@ -485,7 +495,7 @@ class ProductService extends MedusaProductService {
         };
         // console.log('productDetails2: ' + JSON.stringify(productDetails));
         return productDetails;
-    };
+    }
 
     // generate option names from variantData
     // const optionNames: extractOptionNames[] = [
@@ -493,7 +503,7 @@ class ProductService extends MedusaProductService {
     //     { title: 'size', values: ['L', 'XL'] },
     //     { title: 'gender', values: ['Male', 'Female'] },
     // ];
-    public async extractOptionNames (
+    public async extractOptionNames(
         variants: csvProductData[]
     ): Promise<CreateProductProductOption_[] | null> {
         const optionMap: { [key: string]: Set<string> } = {};
@@ -530,32 +540,34 @@ class ProductService extends MedusaProductService {
     }
 
     /**
-     * optionNames: array of option names i.e. 
+     * optionNames: array of option names i.e.
      [
-        { title: 'color', values: ['Black', 'White'] },
-        { title: 'size', values: ['L', 'XL'] },
+     { title: 'color', values: ['Black', 'White'] },
+     { title: 'size', values: ['L', 'XL'] },
      ]
-     
-     * productDetails: array of product items variant with name, price i.e. 
+
+     * productDetails: array of product items variant with name, price i.e.
      [
-        {
-            productInfo: {
-                name: 'Some product name',
-                baseCurrency: 'cny',
-            },
-            variants: [
-                {name: 'L', price: 100}, 
-                {name: 'XL', price: 200}
-            ]
-        }
-    ]
-    * @param productDetails 
-    * @param optionNames 
-    * @returns 
-    */
-    public async mapVariants (
+     {
+     productInfo: {
+     name: 'Some product name',
+     baseCurrency: 'cny',
+     },
+     variants: [
+     {name: 'L', price: 100},
+     {name: 'XL', price: 200}
+     ]
+     }
+     ]
+     * @param productDetails
+     * @param optionNames
+     * @returns
+     */
+    public async mapVariants(
         productDetails: ProductDetails
-    ): Promise<(CreateProductProductVariantInput | UpdateProductProductVariantDTO)[]> {
+    ): Promise<
+        (CreateProductProductVariantInput | UpdateProductProductVariantDTO)[]
+    > {
         const variants = [];
         const currencies = [
             { code: 'eth', symbol: 'ETH' },
@@ -567,11 +579,15 @@ class ProductService extends MedusaProductService {
 
         //extracts option values from variantData
         //const option = [ { "value":"L" }, { "value":"Black" }, { "value":"Female" } ]
-        const extractOptions = (variantString: string): { value: string; option_id: string }[] => {
-            const options = variantString.includes('|') ? variantString.split('|') : [variantString];
-            return options.map(option => {
+        const extractOptions = (
+            variantString: string
+        ): { value: string; option_id: string }[] => {
+            const options = variantString.includes('|')
+                ? variantString.split('|')
+                : [variantString];
+            return options.map((option) => {
                 const value = option.trim().split('[')[1].replace(']', '');
-                const option_id = "opt_" + value;
+                const option_id = 'opt_' + value;
                 return { value, option_id };
             });
         };
@@ -603,14 +619,18 @@ class ProductService extends MedusaProductService {
 
             // console.log('POSTCheck5.1.3.2.5');
 
-            const options = variant.variant ? extractOptions(variant.variant) : null;
+            const options = variant.variant
+                ? extractOptions(variant.variant)
+                : null;
             // console.log('options: ' + JSON.stringify(options));
 
             // console.log('POSTCheck5.1.3.2.6');
 
             variants.push({
                 id: variant.variant_id || null,
-                ...(options && { title: options.map((option) => option.value).join(' | ') }),
+                ...(options && {
+                    title: options.map((option) => option.value).join(' | '),
+                }),
                 inventory_quantity: variant.variant_inventory_quantity,
                 allow_backorder:
                     variant.variant_allow_backorder === '1' ? true : false,
@@ -636,15 +656,15 @@ class ProductService extends MedusaProductService {
         }
         // console.log('variants: ' + JSON.stringify(variants));
         return variants;
-    };
+    }
 
     /**
      * Extracts and formats image URLs from a given string of image paths.
-     * 
+     *
      * @param {string} images - A string containing image paths separated by '|'.
      * @param {string} baseImageUrl - The base URL to prepend to image paths that do not start with 'http'.
      * @returns {Promise<string[]>} A promise that resolves to an array of formatted image URLs.
-     * 
+     *
      * @example
      * const images = "image1.jpg|http://example.com/image2.jpg|image3.png";
      * const baseImageUrl = "http://mybaseurl.com/";
@@ -657,7 +677,10 @@ class ProductService extends MedusaProductService {
      *     // ]
      * });
      */
-    public async extractImages (images: string, baseImageUrl: string): Promise<string[]> {
+    public async extractImages(
+        images: string,
+        baseImageUrl: string
+    ): Promise<string[]> {
         const images_ = images.split('|').map((option) => {
             if (option.trim().startsWith('http')) {
                 return option.trim();
@@ -667,8 +690,8 @@ class ProductService extends MedusaProductService {
         });
         return images_;
     }
-    
-    public async convertCsvDataToUpdateProductInput (
+
+    public async convertCsvDataToUpdateProductInput(
         rowData: csvProductData,
         csvData: csvProductData[],
         store: Store,
@@ -702,23 +725,30 @@ class ProductService extends MedusaProductService {
 
         const productDetails: ProductDetails =
             await this.convertRowDataToProductDetails(rowData, csvData, store);
-        
+
         // console.log('POSTCheck5.1.3.2');
-        
+
         // console.log('productDetails: ' + JSON.stringify(productDetails));
 
-        const optionNames: (CreateProductProductOption_[] | null) = await this.extractOptionNames(productDetails.variants);
+        const optionNames: CreateProductProductOption_[] | null =
+            await this.extractOptionNames(productDetails.variants);
         // console.log('optionNames: ' + JSON.stringify(optionNames));
 
         // console.log('POSTCheck5.1.3.3');
 
-        const variants: UpdateProductProductVariantDTO[] = (await this.mapVariants(productDetails)) as UpdateProductProductVariantDTO[];
+        const variants: UpdateProductProductVariantDTO[] =
+            (await this.mapVariants(
+                productDetails
+            )) as UpdateProductProductVariantDTO[];
         // console.log('variants: ' + JSON.stringify(variants));
 
         // console.log('POSTCheck5.1.3.4');
-        
+
         if (rowData['images'] && rowData['images'].trim() !== '') {
-            const images = await this.extractImages(rowData['images'], baseImageUrl);
+            const images = await this.extractImages(
+                rowData['images'],
+                baseImageUrl
+            );
             // console.log('images: ' + JSON.stringify(images));
         }
 
@@ -731,26 +761,43 @@ class ProductService extends MedusaProductService {
         }
 
         // console.log('POSTCheck5.1.3.6');
-        
+
         const output: UpdateProductInput = {
             ...(rowData['product_id'] && { id: rowData['product_id'].trim() }),
             ...(rowData['title'] && { title: rowData['title'] }),
             ...(rowData['subtitle'] && { subtitle: rowData['subtitle'] }),
             ...(rowData['handle'] && { handle: rowData['handle'] }),
-            ...(rowData['description'] && { description: rowData['description'] }),
+            ...(rowData['description'] && {
+                description: rowData['description'],
+            }),
             is_giftcard: false,
-            ...(rowData['status'] && { status: rowData['status'] as ProductStatus }),
-            ...(thumbnail && thumbnail.trim() !== '' && { thumbnail: thumbnail }),
+            ...(rowData['status'] && {
+                status: rowData['status'] as ProductStatus,
+            }),
+            ...(thumbnail &&
+                thumbnail.trim() !== '' && { thumbnail: thumbnail }),
             ...(images && images.length > 0 && { images: images }),
             collection_id: collectionId,
-            ...(rowData['weight'] && { weight: Math.round(Number(rowData['weight'])) }),
-            ...(rowData['discountable'] && { discountable: rowData['discountable'] === '1' ? true : false }),
-            ...(rowData['category_id'] && { categories: [{ id: rowData['category_id'] }] }),
-            ...(salesChannelIds && salesChannelIds.length > 0 && { sales_channels: salesChannelIds.map((sc) => { return { id: sc }; }) }),
-            ...(optionNames && optionNames.length > 0 && { options: optionNames }),
+            ...(rowData['weight'] && {
+                weight: Math.round(Number(rowData['weight'])),
+            }),
+            ...(rowData['discountable'] && {
+                discountable: rowData['discountable'] === '1' ? true : false,
+            }),
+            ...(rowData['category_id'] && {
+                categories: [{ id: rowData['category_id'] }],
+            }),
+            ...(salesChannelIds &&
+                salesChannelIds.length > 0 && {
+                    sales_channels: salesChannelIds.map((sc) => {
+                        return { id: sc };
+                    }),
+                }),
+            ...(optionNames &&
+                optionNames.length > 0 && { options: optionNames }),
             ...(variants && variants.length > 0 && { variants: variants }),
         };
-        
+
         // console.log('POSTCheck5.1.3.7');
 
         // console.log('Converting data to UpdateProductInput:', JSON.stringify(output));
@@ -758,9 +805,12 @@ class ProductService extends MedusaProductService {
         // console.log('Converting data to optionNames:', JSON.stringify(optionNames));
 
         return output;
-    };
+    }
 
-    public async processProductUpdate(product: UpdateProductInput, existingProducts: Product[]): Promise<Product | null> {
+    public async processProductUpdate(
+        product: UpdateProductInput,
+        existingProducts: Product[]
+    ): Promise<Product | null> {
         const productId = product.id;
 
         try {
@@ -771,16 +821,26 @@ class ProductService extends MedusaProductService {
 
             // Update existing product
             if (existingProduct) {
-                this.updateProduct(existingProduct.id, product as UpdateProductInput);
-                this.logger.info(`Updated product with product ID: ${productId}`);
+                this.updateProduct(
+                    existingProduct.id,
+                    product as UpdateProductInput
+                );
+                this.logger.info(
+                    `Updated product with product ID: ${productId}`
+                );
                 return existingProduct;
             }
 
             // If the product does not exist, create a new one
-            this.logger.info(`Product with ID: ${productId} does not exist, creating new product.`);
+            this.logger.info(
+                `Product with ID: ${productId} does not exist, creating new product.`
+            );
             return null;
         } catch (error) {
-            this.logger.error(`Error processing product with product ID: ${productId}`, error);
+            this.logger.error(
+                `Error processing product with product ID: ${productId}`,
+                error
+            );
             return null;
         }
     }
@@ -802,15 +862,19 @@ class ProductService extends MedusaProductService {
             //get existing products by handle
             const existingProducts: Product[] = await Promise.all(
                 productData
-                    .filter(product => product.id)
-                    .map(product => this.productRepository_.findOne({
-                        where: { id: product.id },
-                        relations: ['variants'],
-                    }))
+                    .filter((product) => product.id)
+                    .map((product) =>
+                        this.productRepository_.findOne({
+                            where: { id: product.id },
+                            relations: ['variants'],
+                        })
+                    )
             );
 
             const updatedProducts = await Promise.all(
-                productData.map((product) => this.processProductUpdate(product, existingProducts))
+                productData.map((product) =>
+                    this.processProductUpdate(product, existingProducts)
+                )
             );
 
             // Ensure all products are non-null and have valid IDs
@@ -827,10 +891,7 @@ class ProductService extends MedusaProductService {
             );
             return validProducts;
         } catch (error) {
-            this.logger.error(
-                'Error in updating products from CSV: ',
-                error
-            );
+            this.logger.error('Error in updating products from CSV: ', error);
             throw error;
         }
     }
@@ -1042,6 +1103,42 @@ class ProductService extends MedusaProductService {
                 product.store_id
         );
         return productCategory.products;
+    }
+
+    async getProductCollectionAndSalesChannelIds(): Promise<{
+        collectionId: string;
+        salesChannelId: string;
+    }> {
+        try {
+            // Fetch the single sales channel
+            const salesChannel = await this.salesChannelRepository_.findOne({
+                where: {}, // Empty where clause to find any sales channel
+                order: { created_at: 'ASC' }, // Sort by creation time, oldest first
+            });
+
+            // Fetch a random product collection
+            const collection = await this.productCollectionRepository_.findOne({
+                where: {}, // Empty where clause to find any sales channel
+                order: { created_at: 'ASC' }, // Sort by creation time, oldest first
+            });
+
+            if (!collection) {
+                throw new Error('No collections available.');
+            }
+
+            return {
+                collectionId: collection.id,
+                salesChannelId: salesChannel.id,
+            };
+        } catch (error) {
+            this.logger.error(
+                'Error fetching collection and sales channel IDs:',
+                error
+            );
+            throw new Error(
+                'Failed to fetch collection and sales channel IDs.'
+            );
+        }
     }
 
     /**
@@ -1459,8 +1556,8 @@ class ProductService extends MedusaProductService {
 
     /**
      * parses a csv file, and returns the rows as an array
-     * @param filePath 
-     * @returns 
+     * @param filePath
+     * @returns
      */
     async parseCsvFile(filePath: string): Promise<any[]> {
         return new Promise((resolve, reject) => {
@@ -1482,9 +1579,9 @@ class ProductService extends MedusaProductService {
 
     /**
      * validates a csv file, and returns an error message if the file is invalid
-     * @param filePath 
-     * @param requiredCsvHeadersForProduct 
-     * @returns 
+     * @param filePath
+     * @param requiredCsvHeadersForProduct
+     * @returns
      */
     async validateCsv(
         filePath: string,
@@ -1512,7 +1609,10 @@ class ProductService extends MedusaProductService {
             const headerRow = fileRows[0].split(',');
 
             // skip validation for header rows if this is an update csv
-            if (!headerRow.includes('product_id') && !headerRow.includes('variant_id')) {
+            if (
+                !headerRow.includes('product_id') &&
+                !headerRow.includes('variant_id')
+            ) {
                 const missingHeaders = requiredCsvHeadersForProduct.filter(
                     (header) => !headerRow.includes(header)
                 );
@@ -1531,8 +1631,8 @@ class ProductService extends MedusaProductService {
 
     /**
      * validates a category handle, and returns the category id if the category exists
-     * @param categoryHandle 
-     * @returns 
+     * @param categoryHandle
+     * @returns
      */
     async validateCategory(categoryHandle: string): Promise<string | null> {
         const category_ = await this.getCategoryByHandle(categoryHandle);
@@ -1541,10 +1641,10 @@ class ProductService extends MedusaProductService {
 
     /**
      * validates csv data, and returns an object with the validation results
-     * @param data 
-     * @param requiredCsvHeadersForProduct 
-     * @param requiredCsvHeadersForVariant 
-     * @returns 
+     * @param data
+     * @param requiredCsvHeadersForProduct
+     * @param requiredCsvHeadersForVariant
+     * @returns
      */
     async validateCsvData(
         data: csvProductData[],
@@ -1566,7 +1666,7 @@ class ProductService extends MedusaProductService {
         const createValidData: csvProductData[] = [];
         const updateInvalidData: csvProductData[] = [];
         const updateValidData: csvProductData[] = [];
-        
+
         const fieldHasData = (field: string) => field && field.trim() !== '';
 
         // split data into create rows and update rows
@@ -1619,7 +1719,7 @@ class ProductService extends MedusaProductService {
                 }
             }
         }
-        
+
         // validate update rows
         if (updateRows.length > 0) {
             for (const row of updateRows) {
@@ -1644,11 +1744,11 @@ class ProductService extends MedusaProductService {
         let createSuccess = false;
         let createMessage = '';
         if (createRows.length > 0) {
-        createSuccess = createValidData.length > 0;
-        createMessage =
-            createInvalidData.length > 0
-                ? 'Contains SOME valid data'
-                : 'Contains valid data';
+            createSuccess = createValidData.length > 0;
+            createMessage =
+                createInvalidData.length > 0
+                    ? 'Contains SOME valid data'
+                    : 'Contains valid data';
         } else {
             createMessage = 'There are no product rows to create.';
         }
@@ -1667,11 +1767,13 @@ class ProductService extends MedusaProductService {
 
         return {
             createSuccess,
-            createMessage: createMessage !== '' ? createMessage : 'Contains invalid data',
+            createMessage:
+                createMessage !== '' ? createMessage : 'Contains invalid data',
             createValidData,
             createInvalidData,
             updateSuccess,
-            updateMessage: updateMessage !== '' ? updateMessage : 'Contains invalid data',
+            updateMessage:
+                updateMessage !== '' ? updateMessage : 'Contains invalid data',
             updateValidData,
             updateInvalidData,
         };
@@ -1693,8 +1795,12 @@ class ProductService extends MedusaProductService {
         requiredCsvHeadersForVariantUpdate: string[],
         requiredCsvHeadersForProductUpdate: string[]
     ): boolean {
-        const headerForVariant = row['variant_id'] ? requiredCsvHeadersForVariantUpdate : requiredCsvHeadersForVariant;
-        const headerForProduct = row['product_id'] ? requiredCsvHeadersForProductUpdate : requiredCsvHeadersForProduct;
+        const headerForVariant = row['variant_id']
+            ? requiredCsvHeadersForVariantUpdate
+            : requiredCsvHeadersForVariant;
+        const headerForProduct = row['product_id']
+            ? requiredCsvHeadersForProductUpdate
+            : requiredCsvHeadersForProduct;
 
         // console.log('START--------------------------------');
         // console.log('variantTEST: ' + headerForVariant.every((header) => row[header]));
@@ -1703,10 +1809,12 @@ class ProductService extends MedusaProductService {
         //         !row[header] || headerForVariant.includes(header)));
         // console.log('END--------------------------------');
 
-        return headerForVariant.every((header) => row[header]) &&
+        return (
+            headerForVariant.every((header) => row[header]) &&
             headerForProduct.every(
-                (header) =>
-                    !row[header] || headerForVariant.includes(header));
+                (header) => !row[header] || headerForVariant.includes(header)
+            )
+        );
     }
 
     /**
@@ -1719,18 +1827,20 @@ class ProductService extends MedusaProductService {
     csvRowHasVariant(
         row: csvProductData,
         requiredCsvHeadersForVariant: string[],
-        requiredCsvHeadersForVariantUpdate: string[],
+        requiredCsvHeadersForVariantUpdate: string[]
     ): boolean {
-        const headerForVariant = row['variant_id'] ? requiredCsvHeadersForVariantUpdate : requiredCsvHeadersForVariant;
+        const headerForVariant = row['variant_id']
+            ? requiredCsvHeadersForVariantUpdate
+            : requiredCsvHeadersForVariant;
         return headerForVariant.every((header) => row[header]);
     }
 
     /**
      * filters out rows that don't have the required headers for product
-     * @param data 
-     * @param requiredCsvHeadersForProduct 
-     * @param requiredCsvHeadersForVariant 
-     * @returns 
+     * @param data
+     * @param requiredCsvHeadersForProduct
+     * @param requiredCsvHeadersForVariant
+     * @returns
      */
     async filterCsvProductRows(
         data: csvProductData[],
@@ -1753,12 +1863,12 @@ class ProductService extends MedusaProductService {
 
     /**
      * validates a row, and returns an error message if the row is invalid
-     * @param data 
-     * @param row 
-     * @param requiredCsvHeadersForProduct 
-     * @param requiredCsvHeadersForVariant 
+     * @param data
+     * @param row
+     * @param requiredCsvHeadersForProduct
+     * @param requiredCsvHeadersForVariant
      * @param isCreate - true if the row is a create row, false if the row is an update row
-     * @returns 
+     * @returns
      */
     async validateCsvRow(
         data: csvProductData[],
@@ -1785,7 +1895,10 @@ class ProductService extends MedusaProductService {
                 return 'required variant_id missing data';
             }
 
-            if (isCreate && requiredCsvHeadersForVariant.some((header) => !row[header])) {
+            if (
+                isCreate &&
+                requiredCsvHeadersForVariant.some((header) => !row[header])
+            ) {
                 return 'required variant fields missing data';
             }
             return await this.validateCsvVariantRow(row, data, isCreate);
@@ -1794,8 +1907,13 @@ class ProductService extends MedusaProductService {
                 return 'required product_id missing data';
             }
 
-            if (isCreate && requiredCsvHeadersForProduct.some((header) => !row[header])) {
-                const missingHeader = requiredCsvHeadersForProduct.find((header) => !row[header]);
+            if (
+                isCreate &&
+                requiredCsvHeadersForProduct.some((header) => !row[header])
+            ) {
+                const missingHeader = requiredCsvHeadersForProduct.find(
+                    (header) => !row[header]
+                );
                 return 'required product fields missing data: ' + missingHeader;
             }
 
@@ -1813,11 +1931,11 @@ class ProductService extends MedusaProductService {
 
     /**
      * validates a product row, and returns an error message if the row is invalid
-     * @param row 
-     * @param data 
-     * @param requiredCsvHeadersForProduct 
-     * @param requiredCsvHeadersForVariant 
-     * @returns 
+     * @param row
+     * @param data
+     * @param requiredCsvHeadersForProduct
+     * @param requiredCsvHeadersForVariant
+     * @returns
      */
     async validateCsvProductRow(
         row: csvProductData,
@@ -1847,7 +1965,11 @@ class ProductService extends MedusaProductService {
         }
 
         if (isCreate && row['status'] && row['status'].trim() !== '') {
-            if (![ProductStatus.DRAFT, ProductStatus.PUBLISHED].includes(row['status'])) {
+            if (
+                ![ProductStatus.DRAFT, ProductStatus.PUBLISHED].includes(
+                    row['status']
+                )
+            ) {
                 return 'status is not valid, status must be draft or published';
             }
         }
@@ -1858,31 +1980,51 @@ class ProductService extends MedusaProductService {
             }
         }
 
-        if (isCreate && row['discountable'] && row['discountable'].trim() !== '') {
+        if (
+            isCreate &&
+            row['discountable'] &&
+            row['discountable'].trim() !== ''
+        ) {
             if (!['0', '1'].includes(row['discountable'])) {
                 return 'discountable must be a 0 or 1';
             }
         }
 
-        if (isCreate && row['variant_price'] && row['variant_price'].trim() !== '') {
+        if (
+            isCreate &&
+            row['variant_price'] &&
+            row['variant_price'].trim() !== ''
+        ) {
             if (!Number.isInteger(Number(row['variant_price']))) {
                 return 'variant price must be a whole number';
             }
         }
 
-        if (isCreate && row['variant_inventory_quantity'] && row['variant_inventory_quantity'].trim() !== '') {
+        if (
+            isCreate &&
+            row['variant_inventory_quantity'] &&
+            row['variant_inventory_quantity'].trim() !== ''
+        ) {
             if (!Number.isInteger(Number(row['variant_inventory_quantity']))) {
                 return 'variant inventory quantity must be a whole number';
             }
         }
 
-        if (isCreate && row['variant_allow_backorder'] && row['variant_allow_backorder'].trim() !== '') {
+        if (
+            isCreate &&
+            row['variant_allow_backorder'] &&
+            row['variant_allow_backorder'].trim() !== ''
+        ) {
             if (!['0', '1'].includes(row['variant_allow_backorder'])) {
                 return 'variant allow backorder must be a 0 or 1';
             }
         }
 
-        if (isCreate && row['variant_manage_inventory'] && row['variant_manage_inventory'].trim() !== '') {
+        if (
+            isCreate &&
+            row['variant_manage_inventory'] &&
+            row['variant_manage_inventory'].trim() !== ''
+        ) {
             if (!['0', '1'].includes(row['variant_manage_inventory'])) {
                 return 'variant manage inventory must be a 0 or 1';
             }
@@ -1926,17 +2068,21 @@ class ProductService extends MedusaProductService {
         //     return 'thumbnail must be a valid image';
         // }
 
-        await this.validateCsvVariantRow(row, data, row['variant_id'] ? true : false);
+        await this.validateCsvVariantRow(
+            row,
+            data,
+            row['variant_id'] ? true : false
+        );
 
         return null;
     }
 
     /**
      * validates a variant row, and returns an error message if the row is invalid
-     * @param row 
-     * @param data 
-     * @param isCreate 
-     * @returns 
+     * @param row
+     * @param data
+     * @param isCreate
+     * @returns
      */
     async validateCsvVariantRow(
         row: csvProductData,
@@ -1945,7 +2091,10 @@ class ProductService extends MedusaProductService {
     ): Promise<string | null> {
         //if isCreate is true validate variant_id
         if (isCreate && row['variant_id'] && row['variant_id'].trim() !== '') {
-            const productVariant = await this.productVariantService_.getVariantById(row['variant_id']);
+            const productVariant =
+                await this.productVariantService_.getVariantById(
+                    row['variant_id']
+                );
             if (!productVariant) {
                 return 'variant id does not exist';
             }
@@ -1953,10 +2102,15 @@ class ProductService extends MedusaProductService {
 
         // START: check if barcode is unique
         if (
-            !isCreate || 
-            (isCreate && row['variant_barcode'] && row['variant_barcode'].trim() !== '')
+            !isCreate ||
+            (isCreate &&
+                row['variant_barcode'] &&
+                row['variant_barcode'].trim() !== '')
         ) {
-            if (row['variant_barcode'] && row['variant_barcode'].trim() !== '') {
+            if (
+                row['variant_barcode'] &&
+                row['variant_barcode'].trim() !== ''
+            ) {
                 const productVariantBarcode =
                     await this.productVariantService_.getVariantByBarcode(
                         row['variant_barcode']
@@ -1979,7 +2133,7 @@ class ProductService extends MedusaProductService {
 
         // START: check if sku is unique
         if (
-            !isCreate || 
+            !isCreate ||
             (isCreate && row['variant_sku'] && row['variant_sku'].trim() !== '')
         ) {
             if (row['variant_sku'] && row['variant_sku'].trim() !== '') {
@@ -1993,7 +2147,8 @@ class ProductService extends MedusaProductService {
 
                 const skuExistsInVariants = data.some(
                     (item) =>
-                        item !== row && item['variant_sku'] === row['variant_sku']
+                        item !== row &&
+                        item['variant_sku'] === row['variant_sku']
                 );
                 if (skuExistsInVariants) {
                     return 'sku must be unique from other rows';
@@ -2004,7 +2159,7 @@ class ProductService extends MedusaProductService {
 
         // START: check if upc is unique
         if (
-            !isCreate || 
+            !isCreate ||
             (isCreate && row['variant_upc'] && row['variant_upc'].trim() !== '')
         ) {
             if (row['variant_upc'] && row['variant_upc'].trim() !== '') {
@@ -2018,7 +2173,8 @@ class ProductService extends MedusaProductService {
 
                 const upcExistsInVariants = data.some(
                     (item) =>
-                        item !== row && item['variant_upc'] === row['variant_upc']
+                        item !== row &&
+                        item['variant_upc'] === row['variant_upc']
                 );
                 if (upcExistsInVariants) {
                     return 'upc must be unique from other rows';
@@ -2029,7 +2185,7 @@ class ProductService extends MedusaProductService {
 
         // START: check if ean is unique
         if (
-            !isCreate || 
+            !isCreate ||
             (isCreate && row['variant_ean'] && row['variant_ean'].trim() !== '')
         ) {
             if (row['variant_ean'] && row['variant_ean'].trim() !== '') {
@@ -2043,7 +2199,8 @@ class ProductService extends MedusaProductService {
 
                 const eanExistsInVariants = data.some(
                     (item) =>
-                        item !== row && item['variant_ean'] === row['variant_ean']
+                        item !== row &&
+                        item['variant_ean'] === row['variant_ean']
                 );
                 if (eanExistsInVariants) {
                     return 'ean must be unique from other rows';
@@ -2053,8 +2210,10 @@ class ProductService extends MedusaProductService {
         // END: check if ean is unique
 
         if (
-            !isCreate || 
-            (isCreate && row['variant_price'] && row['variant_price'].trim() !== '')
+            !isCreate ||
+            (isCreate &&
+                row['variant_price'] &&
+                row['variant_price'].trim() !== '')
         ) {
             if (!Number.isInteger(Number(row['variant_price']))) {
                 return 'variant price must be a whole number';
@@ -2062,17 +2221,21 @@ class ProductService extends MedusaProductService {
         }
 
         if (
-            !isCreate || 
-            (isCreate && row['variant_inventory_quantity'] && row['variant_inventory_quantity'].trim() !== '')
+            !isCreate ||
+            (isCreate &&
+                row['variant_inventory_quantity'] &&
+                row['variant_inventory_quantity'].trim() !== '')
         ) {
             if (!Number.isInteger(Number(row['variant_inventory_quantity']))) {
                 return 'variant inventory quantity must be a whole number';
             }
         }
-        
+
         if (
-            !isCreate || 
-            (isCreate && row['variant_allow_backorder'] && row['variant_allow_backorder'].trim() !== '')
+            !isCreate ||
+            (isCreate &&
+                row['variant_allow_backorder'] &&
+                row['variant_allow_backorder'].trim() !== '')
         ) {
             if (!['0', '1'].includes(row['variant_allow_backorder'])) {
                 return 'variant allow backorder must be a 0 or 1';
@@ -2080,8 +2243,10 @@ class ProductService extends MedusaProductService {
         }
 
         if (
-            !isCreate || 
-            (isCreate && row['variant_manage_inventory'] && row['variant_manage_inventory'].trim() !== '')
+            !isCreate ||
+            (isCreate &&
+                row['variant_manage_inventory'] &&
+                row['variant_manage_inventory'].trim() !== '')
         ) {
             if (!['0', '1'].includes(row['variant_manage_inventory'])) {
                 return 'variant manage inventory must be a 0 or 1';
@@ -2093,9 +2258,9 @@ class ProductService extends MedusaProductService {
 
     /**
      * gets the prices for a variant
-     * @param baseAmount 
-     * @param baseCurrency 
-     * @returns 
+     * @param baseAmount
+     * @param baseCurrency
+     * @returns
      */
     async getPricesForVariant(
         baseAmount: string,

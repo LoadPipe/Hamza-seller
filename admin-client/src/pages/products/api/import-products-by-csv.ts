@@ -17,7 +17,7 @@ export const importProductsByCsv = async (file: File) => {
 
         // Pass FormData directly to the postSecure function
         const response = await postSecure('seller/product/csv', formData);
-        return response;
+        return response.success;
     } catch (e: any) {
         const errorMessage =
             e?.response?.data?.message || 'Failed to import products by CSV.';

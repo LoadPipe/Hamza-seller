@@ -882,19 +882,35 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     });
                 }
                 console.log(`$$$$ file ${JSON.stringify(req.file)}`);
+                let collectionID;
+                let salesChannelID;
+                try {
+                    // Fetch default collection ID and sales channel ID
+                    const { collectionId, salesChannelId } =
+                        await productService.getProductCollectionAndSalesChannelIds();
 
-                if (!collection_id) {
-                    // TODO: use a default findOne for collection repo...
-                    return handler.returnStatus(400, {
-                        message: 'collection_id is required',
-                    });
-                }
+                    collectionID = collectionId;
+                    salesChannelID = salesChannelId;
+                    // Set defaults if not provided in inputParams
+                    if (!collection_id || !collectionID) {
+                        console.log(
+                            `Default Collection ID assigned: ${collection_id}`
+                        );
+                    }
 
-                if (!sales_channel_id) {
-                    // TODO: use a default findOne for sales_channel repo...
-
-                    return handler.returnStatus(400, {
-                        message: 'sales_channel_id is required',
+                    if (!sales_channel_id || !salesChannelId) {
+                        console.log(
+                            `Default Sales Channel ID assigned: ${sales_channel_id}`
+                        );
+                    }
+                } catch (error) {
+                    console.error(
+                        'Error fetching default collection or sales channel IDs:',
+                        error.message
+                    );
+                    return handler.returnStatus(500, {
+                        message:
+                            'Failed to fetch collection or sales channel IDs.',
                     });
                 }
 
@@ -983,8 +999,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 if (validateCsvDataOutput.createSuccess) {
                     createProductsOutput = await createProducts(
                         store,
-                        collection_id,
-                        sales_channel_id,
+                        collectionID,
+                        salesChannelID,
                         baseImageUrl,
                         validateCsvDataOutput.createValidData
                     );
