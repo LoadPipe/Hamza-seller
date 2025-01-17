@@ -282,7 +282,6 @@ export default class StoreOrderService extends TransactionBaseService {
         note?: Record<string, any>
     ) {
         try {
-
             if (!validStatuses.includes(newStatus)) {
                 throw new Error(`Invalid order status: ${newStatus}`);
             }
@@ -472,6 +471,21 @@ export default class StoreOrderService extends TransactionBaseService {
             );
             throw error;
         }
+    }
+
+    async setOrderTracking(
+        orderId: string,
+        trackNumber: string
+    ): Promise<Order> {
+        try {
+        } catch (e: any) {
+            this.logger.error(
+                `Error setting order tracking for order ${orderId}`,
+                e
+            );
+        }
+
+        return null;
     }
 
     private async syncEscrowPaymentForOrder(order: Order): Promise<Order> {
