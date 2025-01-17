@@ -144,3 +144,13 @@ Content-Type: application/json
 ### Query Product Categories
 GET http://localhost:9000/seller/product/categories
 Content-Type: application/json
+
+### Set Tracking Number
+POST http://localhost:9000/seller/order/tracking
+
+Content-Type: application/json
+
+{
+  "order_id": "xxxxx",
+  "tracking_number": "123"
+}
