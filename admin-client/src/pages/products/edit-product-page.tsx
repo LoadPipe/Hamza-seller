@@ -115,7 +115,7 @@ export default function EditProductPage() {
                     )?.amount || '0',
                     10
                 ),
-                quantity: variant.inventory_quantity || 0, // If you want to track quantity
+                inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
         // validators: (values) => {
@@ -364,6 +364,21 @@ export default function EditProductPage() {
                                         </AccordionTrigger>
                                         <AccordionContent>
                                             <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
+                                                {/* Variant ID HIDDEN*/}
+                                                <editProductForm.Field
+                                                    name={`variants[${index}].id`}
+                                                >
+                                                    {(field) => (
+                                                        <input
+                                                            type="hidden"
+                                                            value={
+                                                                field.state
+                                                                    .value
+                                                            }
+                                                        />
+                                                    )}
+                                                </editProductForm.Field>
+
                                                 {/* Variant Title */}
                                                 <editProductForm.Field
                                                     name={`variants[${index}].title`}
@@ -428,8 +443,8 @@ export default function EditProductPage() {
 
                                                 {/* Quantity */}
                                                 <editProductForm.Field
-                                                    name={`variants[${index}].quantity`}
-                                                    key={`quantity-${variant.id}`}
+                                                    name={`variants[${index}].inventory_quantity`}
+                                                    key={`inventory_quantity-${variant.id}`}
                                                 >
                                                     {(field) => (
                                                         <div>
@@ -525,39 +540,54 @@ export default function EditProductPage() {
                             selector={(formState) => {
                                 let dirtyFields: Record<string, unknown> = {};
 
-                                // Iterate through fieldMeta to check for dirty (modified) fields
+                                // Keep track of which variant indices are dirty
+                                const dirtyVariantIndices = new Set<number>();
+
+                                // 1) Build normal dirty fields
                                 for (const [
                                     fieldName,
                                     fieldMeta,
                                 ] of Object.entries(formState.fieldMeta)) {
-                                    if (fieldMeta.isDirty) {
-                                        const currentValue = getBy(
-                                            formState.values,
-                                            fieldName
-                                        );
+                                    if (!fieldMeta.isDirty) continue;
 
-                                        dirtyFields = setBy(
-                                            dirtyFields,
-                                            fieldName,
-                                            currentValue
-                                        );
-                                        console.log(
-                                            'fieldMeta:',
-                                            fieldName,
-                                            fieldMeta
+                                    // If this is something like "variants[0].title",
+                                    // we can parse out the "0" from the path.
+                                    const match =
+                                        fieldName.match(/^variants\[(\d+)\]/);
+                                    if (match) {
+                                        dirtyVariantIndices.add(
+                                            Number(match[1])
                                         );
                                     }
-                                    console.log(
-                                        'fieldMeta:',
-                                        fieldName,
-                                        fieldMeta
+
+                                    // Add the changed field
+                                    const currentValue = getBy(
+                                        formState.values,
+                                        fieldName
                                     );
-                                    // if (fieldMeta.isDirty) {
-                                    //     dirtyFields[fieldName] =
-                                    //         formState.values[fieldName];
-                                    // }
+                                    dirtyFields = setBy(
+                                        dirtyFields,
+                                        fieldName,
+                                        currentValue
+                                    );
                                 }
 
+                                // 2) For each variant index that is dirty, also inject the ID
+                                for (const index of dirtyVariantIndices) {
+                                    const idPath = `variants[${index}].id`;
+                                    const variantId = getBy(
+                                        formState.values,
+                                        idPath
+                                    );
+                                    // Only if there is an actual ID, of course
+                                    if (variantId) {
+                                        dirtyFields = setBy(
+                                            dirtyFields,
+                                            idPath,
+                                            variantId
+                                        );
+                                    }
+                                }
                                 return {
                                     dirtyFields, // Return dirty fields separately
                                     canSubmit: formState.canSubmit,
