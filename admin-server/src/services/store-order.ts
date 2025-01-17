@@ -1,5 +1,4 @@
 import {
-    FulfillmentItem,
     Payment,
     Store,
     TransactionBaseService,
@@ -32,8 +31,6 @@ import {
     EscrowPaymentDefinition,
     PaymentDefinition,
 } from '../web3/contracts/escrow';
-import FulfillmentRepository from '@medusajs/medusa/dist/repositories/fulfillment';
-import { FulfillmentService } from '@medusajs/medusa/dist/services';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -89,8 +86,6 @@ export default class StoreOrderService extends TransactionBaseService {
     protected orderRepository_: typeof StoreOrderRepository;
     protected paymentRepository_: typeof PaymentRepository;
     protected readonly storeRepository_: typeof StoreRepository;
-    protected readonly fulfillmentRepository_: typeof FulfillmentRepository;
-    protected readonly fulfillmentService_: FulfillmentService;
     protected readonly productVariantRepository_: typeof ProductVariantRepository;
     protected orderHistoryService_: OrderHistoryService;
     protected orderService_: OrderService;
@@ -100,12 +95,10 @@ export default class StoreOrderService extends TransactionBaseService {
         super(container);
         this.orderRepository_ = container.orderRepository;
         this.storeRepository_ = container.storeRepository;
-        this.fulfillmentRepository_ = container.fulfillmentRepository;
         this.paymentRepository_ = container.paymentRepository;
         this.productVariantRepository_ = container.productVariantRepository;
         this.orderHistoryService_ = container.orderHistoryService;
         this.orderService_ = container.orderService;
-        this.fulfillmentService_ = container.fulfillmentService;
         this.logger = createLogger(container, 'StoreOrderService');
     }
 
