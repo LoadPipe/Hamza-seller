@@ -1693,20 +1693,30 @@ class ProductService extends MedusaProductService {
         requiredCsvHeadersForVariantUpdate: string[],
         requiredCsvHeadersForProductUpdate: string[]
     ): boolean {
-        const headerForVariant = row['variant_id'] ? requiredCsvHeadersForVariantUpdate : requiredCsvHeadersForVariant;
-        const headerForProduct = row['product_id'] ? requiredCsvHeadersForProductUpdate : requiredCsvHeadersForProduct;
+        const headerForVariant = row['variant_id']
+            ? requiredCsvHeadersForVariantUpdate
+            : requiredCsvHeadersForVariant;
+        const headerForProduct = row['product_id']
+            ? requiredCsvHeadersForProductUpdate
+            : requiredCsvHeadersForProduct;
+        const productSpecificHeaders = headerForProduct.filter(
+                (header) => !headerForVariant.includes(header)
+            );
+        
+        // Check if all headers in headerForVariant are present in the row
+        const hasAllVariantHeaders = headerForVariant.every(
+            (header) => typeof row[header] === 'string' ? row[header].trim() !== "" : row[header] !== undefined
+        );
 
-        // console.log('START--------------------------------');
-        // console.log('variantTEST: ' + headerForVariant.every((header) => row[header]));
-        // console.log('productTEST: ' + headerForProduct.every(
-        //     (header) =>
-        //         !row[header] || headerForVariant.includes(header)));
-        // console.log('END--------------------------------');
+        // Check if none of the product-specific headers are present in the row
+        const hasNoProductSpecificHeaders = productSpecificHeaders.every(
+            (header) => typeof row[header] === 'string' ? row[header].trim() === "" : row[header] === undefined
+        );
 
-        return headerForVariant.every((header) => row[header]) &&
-            headerForProduct.every(
-                (header) =>
-                    !row[header] || headerForVariant.includes(header));
+        // The row is variant-only if it has all variant headers and no product-specific headers
+        // this.logger.debug('hasAllVariantHeaders: ' + hasAllVariantHeaders);
+        // this.logger.debug('hasNoProductSpecificHeaders: ' + hasNoProductSpecificHeaders);
+        return hasAllVariantHeaders && hasNoProductSpecificHeaders;
     }
 
     /**
@@ -1891,7 +1901,7 @@ class ProductService extends MedusaProductService {
         if (isCreate && row['handle'] && row['handle'].trim() !== '') {
             const product = await this.getProductByHandle(row['handle']);
             if (product) {
-                return 'product handle must be unique';
+                return 'database contains the same product handle (' + row['handle'] + '), please try a new one';
             }
 
             // check if handle is unique from other product rows
@@ -1906,7 +1916,8 @@ class ProductService extends MedusaProductService {
                 (item) => item !== row && item['handle'] === row['handle']
             );
             if (handleExistsInProducts) {
-                return 'handle must be unique from other product rows';
+                // this.logger.debug('productRows: ' + JSON.stringify(productRows));
+                return 'The handle (' + row['handle'] + ') must be unique from other product rows in the CSV.';
             }
         }
 

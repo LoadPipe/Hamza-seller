@@ -963,7 +963,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
                 // console.log('POSTCheck5');
 
-                res.status(200).json({
+                const responsePayload = {
                     createSuccess: createProductsOutput.success,
                     createMessage: createProductsOutput.message,
                     createdProducts: createProductsOutput.products,
@@ -972,7 +972,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     updateMessage: updateProductsOutput.message,
                     updatedProducts: updateProductsOutput.products,
                     invalidUpdatedProducts: validateCsvDataOutput.updateInvalidData,
-                });
+                };
+
+                // console.log('responsePayload: ' + JSON.stringify(responsePayload));
+                res.status(200).json(responsePayload);
             } catch (error) {
                 return handler.returnStatus(400, {
                     message: 'Error importing products: ' + error,
