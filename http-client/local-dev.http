@@ -141,12 +141,12 @@ Content-Type: application/json
 GET http://localhost:9000/seller/dashboard?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W&wallet_address=0xb975bf5ca0b09e17834d0b5a526f8315f82986d4
 Content-Type: application/json
 
-### Query Product Categories
+###  Get Product Categories
 GET http://localhost:9000/seller/product/categories
 Content-Type: application/json
 
 ### Get Product W/ Variants && Categories
-GET http://localhost:9000/seller/product/edit-product?id=prod_01JHF7KVQWTDGED30S1VMV5EVV&store_id=store_01JHF7NG1ZJWV5V6565TQFX2B4
+GET http://localhost:9000/seller/product/edit-product?id=prod_01JHF7KW0TSDF0566500HEQXME&store_id=store_01JHF7NG1ZJWV5V6565TQFX2B4
 Content-Type: application/json
 
 ### PUT Product W/ Variants && Categories

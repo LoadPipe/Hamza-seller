@@ -101,25 +101,25 @@ export default function EditProductPage() {
                       )
                     : '';
             })(),
-            variants:
-                product?.variants?.map((variant) => ({
-                    id: variant.id,
-                    variant_title: variant.title || '',
-                    sku: variant.sku || '',
-                    price:
-                        variant.prices?.find(
-                            (p) => p.currency_code === preferredCurrency
-                        )?.amount || '',
-                    quantity: variant.inventory_quantity || 0,
-                    weight: variant.weight || 0,
-                    length: variant.length || 0,
-                    height: variant.height || 0,
-                    width: variant.width || 0,
-                })) || [],
+            variants: product?.variants?.map((variant) => ({
+                id: variant.id,
+                title: variant.title || '',
+                sku: variant.sku || '',
+                weight: variant.weight || 0,
+                length: variant.length || 0,
+                height: variant.height || 0,
+                width: variant.width || 0,
+                price: parseInt(
+                    variant.prices?.find(
+                        (p) => p.currency_code === preferredCurrency
+                    )?.amount || '0',
+                    10
+                ),
+            })),
         },
-        // validate: (values) => {
-        //   const result = ProductSchema.safeParse(values)
-        //   return result.success ? {} : result.error.format()
+        // validators: (values) => {
+        //     const result = ProductSchema.safeParse(values);
+        //     return result.success ? {} : result.error.format();
         // },
     });
 
@@ -363,20 +363,22 @@ export default function EditProductPage() {
                                         </AccordionTrigger>
                                         <AccordionContent>
                                             <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
+                                                {/* Variant Title */}
                                                 <editProductForm.Field
-                                                    name={`variant`}
-                                                    key={variant.id}
+                                                    name={`variants[${index}].variant_title`} // Name scoped to the index
+                                                    key={`title-${variant}`}
                                                 >
                                                     {(field) => (
                                                         <div>
                                                             <Label>Title</Label>
                                                             <Input
-                                                                placeholder={`${variant.title}`}
+                                                                placeholder="Variant Title"
                                                                 value={
                                                                     field.state
                                                                         .value ||
+                                                                    variant.title ||
                                                                     ''
-                                                                }
+                                                                } // Tie to the correct value
                                                                 onChange={(e) =>
                                                                     field.handleChange(
                                                                         e.target
@@ -397,8 +399,11 @@ export default function EditProductPage() {
                                                         </div>
                                                     )}
                                                 </editProductForm.Field>
+
+                                                {/* Variant SKU */}
                                                 <editProductForm.Field
                                                     name={`variants[${index}].sku`}
+                                                    key={`sku-${variant.id}`}
                                                 >
                                                     {(field) => (
                                                         <div>
@@ -407,7 +412,9 @@ export default function EditProductPage() {
                                                                 placeholder="SKU"
                                                                 value={
                                                                     field.state
-                                                                        .value
+                                                                        .value ||
+                                                                    variant.sku ||
+                                                                    ''
                                                                 }
                                                                 onChange={(e) =>
                                                                     field.handleChange(
@@ -419,29 +426,11 @@ export default function EditProductPage() {
                                                         </div>
                                                     )}
                                                 </editProductForm.Field>
-                                                <div>
-                                                    <Label>
-                                                        Price in{' '}
-                                                        {preferredCurrency.toUpperCase() ??
-                                                            'ETH'}
-                                                    </Label>
-                                                    <Input
-                                                        placeholder="Price"
-                                                        value={
-                                                            variant.prices
-                                                                ?.find(
-                                                                    (p) =>
-                                                                        p.currency_code ===
-                                                                        preferredCurrency
-                                                                )
-                                                                ?.amount?.toString() ||
-                                                            ''
-                                                        }
-                                                        disabled
-                                                    />
-                                                </div>
+
+                                                {/* Quantity */}
                                                 <editProductForm.Field
                                                     name={`variants[${index}].quantity`}
+                                                    key={`quantity-${variant.id}`}
                                                 >
                                                     {(field) => (
                                                         <div>
@@ -449,10 +438,13 @@ export default function EditProductPage() {
                                                                 Quantity
                                                             </Label>
                                                             <Input
+                                                                type="number"
                                                                 placeholder="Quantity"
                                                                 value={
                                                                     field.state
-                                                                        .value
+                                                                        .value ||
+                                                                    variant.inventory_quantity ||
+                                                                    ''
                                                                 }
                                                                 onChange={(e) =>
                                                                     field.handleChange(
@@ -476,8 +468,8 @@ export default function EditProductPage() {
                                                     'width',
                                                 ].map((key) => (
                                                     <editProductForm.Field
-                                                        key={key}
                                                         name={`variants[${index}].${key}`}
+                                                        key={`${key}-${variant.id}`}
                                                     >
                                                         {(field) => (
                                                             <div>
@@ -499,7 +491,11 @@ export default function EditProductPage() {
                                                                     value={
                                                                         field
                                                                             .state
-                                                                            .value
+                                                                            .value ||
+                                                                        variant[
+                                                                            key
+                                                                        ] ||
+                                                                        ''
                                                                     }
                                                                     onChange={(
                                                                         e
