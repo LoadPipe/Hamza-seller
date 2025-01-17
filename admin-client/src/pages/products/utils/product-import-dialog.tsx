@@ -68,13 +68,13 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary-black-90 bg-opacity-80">
             <div className="bg-primary-black-90 rounded-lg p-8 w-96 ">
-                <h2 className="text-lg font-semibold">Import Products</h2>
+                <h2 className="text-xl font-semibold py-4">Import Products</h2>
                 <p className="text-white mb-4">
                     Drag and drop your CSV file here, or click to select a file.
                 </p>
                 <div
                     {...getRootProps()}
-                    className={`border-2 border-dashed p-6 text-center rounded-md text-black ${
+                    className={`p-6 text-center rounded text-black ${
                         isDragActive ? 'bg-gray-100' : 'bg-white'
                     }`}
                 >
