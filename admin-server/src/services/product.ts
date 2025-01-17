@@ -1714,9 +1714,12 @@ class ProductService extends MedusaProductService {
         );
 
         // The row is variant-only if it has all variant headers and no product-specific headers
+        // this.logger.debug('row: ' + JSON.stringify(row));
         // this.logger.debug('hasAllVariantHeaders: ' + hasAllVariantHeaders);
         // this.logger.debug('hasNoProductSpecificHeaders: ' + hasNoProductSpecificHeaders);
-        return hasAllVariantHeaders && hasNoProductSpecificHeaders;
+        // this.logger.debug('isVariantOnly: ' + (hasAllVariantHeaders && hasNoProductSpecificHeaders));
+        // this.logger.debug('--------------------------------');
+        return (hasAllVariantHeaders && hasNoProductSpecificHeaders);
     }
 
     /**
@@ -1749,16 +1752,18 @@ class ProductService extends MedusaProductService {
         requiredCsvHeadersForProductUpdate: string[],
         requiredCsvHeadersForVariantUpdate: string[]
     ): Promise<csvProductData[]> {
-        return data.filter(
-            (item) =>
-                !this.csvRowIsVariantOnly(
-                    item,
-                    requiredCsvHeadersForVariant,
-                    requiredCsvHeadersForProduct,
-                    requiredCsvHeadersForVariantUpdate,
-                    requiredCsvHeadersForProductUpdate
-                )
-        );
+        const filteredData = data.filter((row) => {
+            return !this.csvRowIsVariantOnly(
+                row,
+                requiredCsvHeadersForVariant,
+                requiredCsvHeadersForProduct,
+                requiredCsvHeadersForVariantUpdate,
+                requiredCsvHeadersForProductUpdate
+            );
+        });
+        // this.logger.debug('data: ' + JSON.stringify(data));
+        // this.logger.debug('filteredData: ' + JSON.stringify(filteredData));
+        return filteredData;
     }
 
     /**
