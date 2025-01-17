@@ -19,11 +19,10 @@ export const importProductsByCsv = async (file: File) => {
         const response = await postSecure('seller/product/csv', formData);
         return response;
     } catch (e: any) {
-        console.log(e.response.data.message);
-        console.error(
-            'Error importing products by CSV:',
-            e.response.data.message
-        );
-        throw new Error('Failed to import products by CSV.');
+        const errorMessage =
+            e?.response?.data?.message || 'Failed to import products by CSV.';
+        console.error('Error importing products by CSV:', errorMessage);
+        // Throw the error message
+        throw new Error(errorMessage);
     }
 };

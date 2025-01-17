@@ -53,10 +53,11 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
             });
             console.log(response);
             onClose(); // Close dialog on success
-        } catch (error) {
+        } catch (error: any) {
+            // Display the error message from the caught exception
             toast({
                 title: 'Upload Failed',
-                description: 'Unable to import products. Please try again.',
+                description: error.message || 'An unexpected error occurred.',
                 variant: 'destructive',
             });
             console.error(error);
