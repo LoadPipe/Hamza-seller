@@ -526,58 +526,121 @@ export default function EditProductPage() {
                                                 </editProductForm.Field>
                                             </div>
                                             <div className="grid grid-cols-4 gap-4 mt-4">
-                                                {[
-                                                    'weight',
-                                                    'length',
-                                                    'height',
-                                                    'width',
-                                                ].map((key) => (
-                                                    <editProductForm.Field
-                                                        name={`variants[${index}].${key}`}
-                                                        key={`${key}-${variant.id}`}
-                                                    >
-                                                        {(field) => (
-                                                            <div>
-                                                                <Label>
-                                                                    {key
-                                                                        .charAt(
-                                                                            0
+                                                <editProductForm.Field
+                                                    name={`variants[${index}].weight`}
+                                                    key={`weight-${variant.id}`}
+                                                >
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label className="block text-sm font-medium">
+                                                                Weight (g)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={
+                                                                    field.state
+                                                                        .value
+                                                                }
+                                                                onChange={(e) =>
+                                                                    field.handleChange(
+                                                                        Number(
+                                                                            e
+                                                                                .target
+                                                                                .value
                                                                         )
-                                                                        .toUpperCase() +
-                                                                        key.slice(
-                                                                            1
-                                                                        )}
-                                                                </Label>
-                                                                <Input
-                                                                    type="number"
-                                                                    placeholder={
-                                                                        key
-                                                                    }
-                                                                    value={
-                                                                        field
-                                                                            .state
-                                                                            .value ||
-                                                                        variant[
-                                                                            key as keyof typeof variant
-                                                                        ] ||
-                                                                        ''
-                                                                    }
-                                                                    onChange={(
-                                                                        e
-                                                                    ) =>
-                                                                        field.handleChange(
-                                                                            Number(
-                                                                                e
-                                                                                    .target
-                                                                                    .value
-                                                                            )
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </editProductForm.Field>
+
+                                                <editProductForm.Field
+                                                    name={`variants[${index}].length`}
+                                                    key={`length-${variant.id}`}
+                                                >
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label className="block text-sm font-medium">
+                                                                Length (cm)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={
+                                                                    field.state
+                                                                        .value
+                                                                }
+                                                                onChange={(e) =>
+                                                                    field.handleChange(
+                                                                        Number(
+                                                                            e
+                                                                                .target
+                                                                                .value
                                                                         )
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </editProductForm.Field>
-                                                ))}
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </editProductForm.Field>
+
+                                                <editProductForm.Field
+                                                    name={`variants[${index}].height`}
+                                                    key={`height-${variant.id}`}
+                                                >
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label className="block text-sm font-medium">
+                                                                Height (cm)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={
+                                                                    field.state
+                                                                        .value
+                                                                }
+                                                                onChange={(e) =>
+                                                                    field.handleChange(
+                                                                        Number(
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </editProductForm.Field>
+
+                                                <editProductForm.Field
+                                                    name={`variants[${index}].width`}
+                                                    key={`width-${variant.id}`}
+                                                >
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label className="block text-sm font-medium">
+                                                                Width (cm)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={
+                                                                    field.state
+                                                                        .value
+                                                                }
+                                                                onChange={(e) =>
+                                                                    field.handleChange(
+                                                                        Number(
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </editProductForm.Field>
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>
