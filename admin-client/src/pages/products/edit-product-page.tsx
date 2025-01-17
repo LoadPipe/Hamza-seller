@@ -22,7 +22,7 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { Label } from '@/components/ui/label.tsx';
-import { useForm, getBy } from '@tanstack/react-form';
+import { useForm, getBy, setBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
 
@@ -523,7 +523,7 @@ export default function EditProductPage() {
                     <div className="flex justify-end mt-8">
                         <editProductForm.Subscribe
                             selector={(formState) => {
-                                const dirtyFields: Record<string, unknown> = {};
+                                let dirtyFields: Record<string, unknown> = {};
 
                                 // Iterate through fieldMeta to check for dirty (modified) fields
                                 for (const [
@@ -531,20 +531,27 @@ export default function EditProductPage() {
                                     fieldMeta,
                                 ] of Object.entries(formState.fieldMeta)) {
                                     if (fieldMeta.isDirty) {
+                                        const currentValue = getBy(
+                                            formState.values,
+                                            fieldName
+                                        );
+
+                                        dirtyFields = setBy(
+                                            dirtyFields,
+                                            fieldName,
+                                            currentValue
+                                        );
+                                        console.log(
+                                            'fieldMeta:',
+                                            fieldName,
+                                            fieldMeta
+                                        );
                                     }
-
-                                    const currentValue = getBy(
-                                        formState.values,
-                                        fieldName
-                                    );
-
                                     console.log(
                                         'fieldMeta:',
                                         fieldName,
-                                        fieldMeta,
-                                        currentValue
+                                        fieldMeta
                                     );
-
                                     // if (fieldMeta.isDirty) {
                                     //     dirtyFields[fieldName] =
                                     //         formState.values[fieldName];
