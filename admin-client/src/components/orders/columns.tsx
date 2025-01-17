@@ -204,9 +204,10 @@ export const generateColumns = (
                                         <TooltipTrigger asChild>
                                             <span>
                                                 <HelpCircle
-                                                    className="mr-1 h-4 w-4 inline"
+                                                    className="mr-1 h-4 w-4 inline mb-1"
                                                     style={{
                                                         color: 'mediumslateblue',
+                                                        marginBottom: '1px',
                                                     }}
                                                 />
                                                 <span>{`${items.length} item ordered`}</span>
@@ -222,9 +223,10 @@ export const generateColumns = (
                                         <TooltipTrigger asChild>
                                             <span>
                                                 <HelpCircle
-                                                    className="mr-1 h-4 w-4 inline"
+                                                    className="mr-1 h-4 w-4 inline mb-1"
                                                     style={{
                                                         color: 'mediumslateblue',
+                                                        marginBottom: '3px',
                                                     }}
                                                 />
                                                 <span>{`${items.length} items ordered`}</span>
