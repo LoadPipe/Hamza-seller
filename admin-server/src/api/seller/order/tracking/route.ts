@@ -23,8 +23,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         const trackingNumber = handler.inputParams.tracking_number;
 
         //pass to storeOrderService
-        await storeOrderService.setOrderTracking(orderId, trackingNumber);
+        const result = await storeOrderService.setOrderTracking(orderId, trackingNumber);
 
-        return handler.returnStatus(200, { hello: 'hi' });
+        return handler.returnStatus(200, { result });
     });
 };

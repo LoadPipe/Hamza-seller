@@ -489,34 +489,18 @@ export default class StoreOrderService extends TransactionBaseService {
         trackingNumber: string
     ): Promise<Order> {
         try {
-            const order: Order = await this.orderService_.retrieve(orderId, {
-                relations: [
-                    'payments',
-                    'items',
-                    'billing_address',
-                    'shipping_methods',
-                ],
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
             });
+        
+            if (!order) {
+                throw new Error(`Order with ID ${orderId} not found`);
+            }
 
-            const createFulfillmentOrder = {
-                /*
-                is_claim: false,
-                payments: order.payments,
-                discounts: order.discounts,
-                currency_code: order.currency_code,
-                billing_address: order.billing_address,
-                items: order.items,
-                shipping_methods: order.shipping_methods,
-                no_notification: false,
-                payment_status: order.payment_status,
-                no_noti
-                */
-            };
+            order.tracking_number = trackingNumber;
+            const updatedOrder = await this.orderRepository_.save(order);
 
-            this.fulfillmentService_.createFulfillment(
-                createFulfillmentOrder,
-                []
-            );
+            return updatedOrder;
         } catch (e: any) {
             this.logger.error(
                 `Error setting order tracking for order ${orderId}`,
