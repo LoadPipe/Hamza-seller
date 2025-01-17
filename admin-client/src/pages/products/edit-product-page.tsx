@@ -103,6 +103,7 @@ export default function EditProductPage() {
             })(),
             variants: product?.variants?.map((variant) => ({
                 id: variant.id,
+                product_id: variant.product_id,
                 title: variant.title || '',
                 sku: variant.sku || '',
                 weight: variant.weight || 0,
@@ -297,8 +298,10 @@ export default function EditProductPage() {
                                     <>
                                         <Label>
                                             Base Price in{' '}
-                                            {preferredCurrency.toUpperCase() ??
-                                                'ETH'}
+                                            {typeof preferredCurrency ===
+                                            'string'
+                                                ? preferredCurrency.toUpperCase()
+                                                : 'ETH'}
                                         </Label>
                                         <Input
                                             className="w-1/2"
@@ -318,36 +321,84 @@ export default function EditProductPage() {
 
                     {/* Base Product Dimensions */}
                     <div className="grid grid-cols-4 gap-2 my-8">
-                        {[
-                            { name: 'weight', label: 'Weight (g)' },
-                            { name: 'length', label: 'Length (cm)' },
-                            { name: 'height', label: 'Height (cm)' },
-                            { name: 'width', label: 'Width (cm)' },
-                        ].map(({ name, label }) => (
-                            <editProductForm.Field key={name} name={name}>
-                                {(field) => (
-                                    <div className="space-y-1">
-                                        <Label className="block text-sm font-medium">
-                                            {label}
-                                        </Label>
-                                        <Input
-                                            type="number"
-                                            placeholder={label}
-                                            value={field.state.value}
-                                            onChange={(e) =>
-                                                field.handleChange(
-                                                    Number(e.target.value)
-                                                )
-                                            }
-                                            className="block w-full"
-                                        />
-                                    </div>
-                                )}
-                            </editProductForm.Field>
-                        ))}
+                        <editProductForm.Field name="weight">
+                            {(field) => (
+                                <div>
+                                    <Label className="block text-sm font-medium">
+                                        Weight (g)
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        value={field.state.value}
+                                        onChange={(e) =>
+                                            field.handleChange(
+                                                Number(e.target.value)
+                                            )
+                                        }
+                                    />
+                                </div>
+                            )}
+                        </editProductForm.Field>
+
+                        <editProductForm.Field name="length">
+                            {(field) => (
+                                <div>
+                                    <Label className="block text-sm font-medium">
+                                        Length (cm)
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        value={field.state.value}
+                                        onChange={(e) =>
+                                            field.handleChange(
+                                                Number(e.target.value)
+                                            )
+                                        }
+                                    />
+                                </div>
+                            )}
+                        </editProductForm.Field>
+
+                        <editProductForm.Field name="height">
+                            {(field) => (
+                                <div>
+                                    <Label className="block text-sm font-medium">
+                                        Height (cm)
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        value={field.state.value}
+                                        onChange={(e) =>
+                                            field.handleChange(
+                                                Number(e.target.value)
+                                            )
+                                        }
+                                    />
+                                </div>
+                            )}
+                        </editProductForm.Field>
+
+                        <editProductForm.Field name="width">
+                            {(field) => (
+                                <div>
+                                    <Label className="block text-sm font-medium">
+                                        Width (cm)
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        value={field.state.value}
+                                        onChange={(e) =>
+                                            field.handleChange(
+                                                Number(e.target.value)
+                                            )
+                                        }
+                                    />
+                                </div>
+                            )}
+                        </editProductForm.Field>
                     </div>
 
-                    {/* Variants */}
+                    {/* Dynamic Variant Fields */}
                     {product?.variants && product.variants.length > 0 && (
                         <div className="mt-8">
                             <h2 className="text-lg font-medium mb-4">
@@ -507,7 +558,7 @@ export default function EditProductPage() {
                                                                             .state
                                                                             .value ||
                                                                         variant[
-                                                                            key
+                                                                            key as keyof typeof variant
                                                                         ] ||
                                                                         ''
                                                                     }
@@ -551,16 +602,21 @@ export default function EditProductPage() {
                                     if (!fieldMeta.isDirty) continue;
 
                                     // If this is something like "variants[0].title",
-                                    // we can parse out the "0" from the path.
+                                    // we parse out the "0" from the path.
                                     const match =
                                         fieldName.match(/^variants\[(\d+)\]/);
                                     if (match) {
-                                        dirtyVariantIndices.add(
-                                            Number(match[1])
+                                        const variantIndex = Number(match[1]);
+                                        console.log(
+                                            'Detected dirty field for variant index:',
+                                            variantIndex,
+                                            'Field:',
+                                            fieldName
                                         );
+                                        dirtyVariantIndices.add(variantIndex);
                                     }
 
-                                    // Add the changed field
+                                    // Add the changed field to dirtyFields
                                     const currentValue = getBy(
                                         formState.values,
                                         fieldName
@@ -572,24 +628,75 @@ export default function EditProductPage() {
                                     );
                                 }
 
-                                // 2) For each variant index that is dirty, also inject the ID
-                                for (const index of dirtyVariantIndices) {
+                                console.log(
+                                    'Final dirtyVariantIndices:',
+                                    dirtyVariantIndices
+                                );
+
+                                // 2) For each variant index that is dirty, also inject the ID and product_id
+                                const dirtyArray =
+                                    Array.from(dirtyVariantIndices);
+
+                                for (const index of dirtyArray) {
+                                    console.log(
+                                        'Processing variant index:',
+                                        index
+                                    );
+
+                                    // Attach variant.id
                                     const idPath = `variants[${index}].id`;
                                     const variantId = getBy(
                                         formState.values,
                                         idPath
                                     );
-                                    // Only if there is an actual ID, of course
                                     if (variantId) {
+                                        console.log(
+                                            'Attaching variantId for index:',
+                                            index,
+                                            'Variant ID:',
+                                            variantId
+                                        );
                                         dirtyFields = setBy(
                                             dirtyFields,
                                             idPath,
                                             variantId
                                         );
+                                    } else {
+                                        console.log(
+                                            'No variantId found for index:',
+                                            index
+                                        );
+                                    }
+
+                                    // Attach variant.product_id
+                                    const productIdPath = `variants[${index}].product_id`;
+                                    const variantProductId = getBy(
+                                        formState.values,
+                                        productIdPath
+                                    );
+                                    if (variantProductId) {
+                                        console.log(
+                                            'Attaching productId for index:',
+                                            index,
+                                            'Product ID:',
+                                            variantProductId
+                                        );
+                                        dirtyFields = setBy(
+                                            dirtyFields,
+                                            productIdPath,
+                                            variantProductId
+                                        );
+                                    } else {
+                                        console.log(
+                                            'No product_id found for index:',
+                                            index
+                                        );
                                     }
                                 }
+
+                                // Return these so your handleSubmit can see them
                                 return {
-                                    dirtyFields, // Return dirty fields separately
+                                    dirtyFields,
                                     canSubmit: formState.canSubmit,
                                     isSubmitting: formState.isSubmitting,
                                 };
@@ -611,12 +718,19 @@ export default function EditProductPage() {
                                         dirtyFields
                                     );
 
-                                    // Ensure payload structure
+                                    // Your final payload will have e.g.:
+                                    // {
+                                    //   "variants[0].inventory_quantity": 102,
+                                    //   "variants[0].id": "variant_123",
+                                    //   "variants[0].product_id": "prod_123",
+                                    //   ...
+                                    // }
+
                                     const payload = {
-                                        ...dirtyFields, // Flatten dirty fields into the payload
+                                        ...dirtyFields,
                                     };
 
-                                    updateEditForm.mutate(payload); // Send structured payload
+                                    updateEditForm.mutate(payload);
                                 };
 
                                 return (

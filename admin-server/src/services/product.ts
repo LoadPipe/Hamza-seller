@@ -972,8 +972,6 @@ class ProductService extends MedusaProductService {
         }
     }
 
-    // We need to edit the specific product w/ variants
-    // We need to edit the specific product w/ variants
     async patchSellerProduct(
         productId: string,
         storeId: string,
