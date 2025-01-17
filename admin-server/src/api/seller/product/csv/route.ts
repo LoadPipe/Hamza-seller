@@ -686,7 +686,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
         // console.log('POSTCheck5.1.4');
 
-        // console.log('productInputs2: ' + JSON.stringify(productInputs));
+        // console.log('productInputs: ' + JSON.stringify(productInputs));
         
         return {
             success: productInputs.length > 0,
@@ -718,7 +718,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             baseImageUrl,
             productInputs
         );
-        // console.log('convertCsvDataOutput: ' + JSON.stringify(convertCsvDataOutput));
+        // console.log('convertCsvDataOutput: ' + JSON.stringify(convertCreateCsvDataOutput));
 
         if (!convertCreateCsvDataOutput.success) {
             return {
@@ -805,6 +805,68 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         };
     }
 
+    
+    /**
+     * Handles the file upload and processing for CSV product data.
+     * 
+     * Potential JSON Responses:
+     * 
+     * 1. File upload error:
+     *    Status: 400
+     *    Response: { type: 'fileValidationError', message: 'No file uploaded' }
+     * 
+     * 2. Missing store_id:
+     *    Status: 400
+     *    Response: { type: 'paramValidationError', message: 'store_id is required' }
+     * 
+     * 3. Missing collection_id:
+     *    Status: 400
+     *    Response: { type: 'paramValidationError', message: 'collection_id is required' }
+     * 
+     * 4. Missing sales_channel_id:
+     *    Status: 400
+     *    Response: { type: 'paramValidationError', message: 'sales_channel_id is required' }
+     * 
+     * 5. No file uploaded:
+     *    Status: 400
+     *    Response: { type: 'fileValidationError', message: 'No file uploaded' }
+     * 
+     * 6. CSV column validation error:
+     *    Status: 400
+     *    Response: { type: 'csvColumnValidationError', message: <validation error message> }
+     * 
+     * 7. CSV data validation error:
+     *    Status: 400
+     *    Response: {
+     *      type: 'csvDataValidationError',
+     *      createMessage: <create error message>,
+     *      createInvalidData: <invalid create data>,
+     *      updateMessage: <update error message>,
+     *      updateInvalidData: <invalid update data>
+     *    }
+     * 
+     * 8. Create products error:
+     *    Status: 400
+     *    Response: { type: 'createProductsError', message: <create error message> }
+     * 
+     * 9. Update products error:
+     *    Status: 400
+     *    Response: { type: 'updateProductsError', message: <update error message> }
+     * 
+     * 10. Successful response:
+     *     Status: 200
+     *     Response: {
+     *       type: 'csvDataResponse',
+     *       createSuccess: <boolean>,
+     *       createMessage: <create message>,
+     *       createdProducts: <created products>,
+     *       invalidCreatedProducts: <invalid created products>,
+     *       updateSuccess: <boolean>,
+     *       updateMessage: <update message>,
+     *       updatedProducts: <updated products>,
+     *       invalidUpdatedProducts: <invalid updated products>
+     *     }
+     */
     upload.single('file')(req, res, async (err) => {
         if (err) {
             return res.status(400).send({ message: 'File upload failed' });
@@ -825,27 +887,31 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
                 if (!store_id) {
                     return handler.returnStatus(400, {
+                        type: 'paramValidationError',
                         message: 'store_id is required',
                     });
                 }
 
-                // if (!collection_id) {
-                //     return handler.returnStatus(400, {
-                //         message: 'collection_id is required',
-                //     });
-                // }
+                if (!collection_id) {
+                    return handler.returnStatus(400, {
+                        type: 'paramValidationError',
+                        message: 'collection_id is required',
+                    });
+                }
 
-                // if (!sales_channel_id) {
-                //     return handler.returnStatus(400, {
-                //         message: 'sales_channel_id is required',
-                //     });
-                // }
+                if (!sales_channel_id) {
+                    return handler.returnStatus(400, {
+                        type: 'paramValidationError',
+                        message: 'sales_channel_id is required',
+                    });
+                }
 
                 const baseImageUrl = (base_image_url) ? base_image_url : 'https://static.hamza.market/stores/';
 
                 const file = req.file;
                 if (!file) {
                     return handler.returnStatus(400, {
+                        type: 'fileValidationError',
                         message: 'No file uploaded',
                     });
                 }
@@ -866,6 +932,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
                 if (!validateCsvOutput.success) {
                     return handler.returnStatus(400, {
+                        type: 'csvColumnValidationError',
                         message: validateCsvOutput.message,
                     });
                 }
@@ -893,10 +960,12 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     requiredCsvHeadersForProductUpdate
                 );
 
+                console.log('validateCsvDataOutput: ' + JSON.stringify(validateCsvDataOutput));
                 // console.log('POSTCheck3');
 
                 if (!validateCsvDataOutput.createSuccess && !validateCsvDataOutput.updateSuccess) {
                     return handler.returnStatus(400, {
+                        type: 'csvDataValidationError',
                         createMessage: validateCsvDataOutput.createMessage,
                         createInvalidData: validateCsvDataOutput.createInvalidData,
                         updateMessage: validateCsvDataOutput.updateMessage,
@@ -927,6 +996,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
                     if (!createProductsOutput.success) {
                         return handler.returnStatus(400, {
+                            type: 'createProductsError',
                             message: createProductsOutput.message,
                         });
                     }
@@ -956,6 +1026,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
                     if (!updateProductsOutput.success) {
                         return handler.returnStatus(400, {
+                            type: 'updateProductsError',
                             message: updateProductsOutput.message,
                         });
                     }
@@ -964,6 +1035,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 // console.log('POSTCheck5');
 
                 const responsePayload = {
+                    type: 'csvDataResponse',
                     createSuccess: createProductsOutput.success,
                     createMessage: createProductsOutput.message,
                     createdProducts: createProductsOutput.products,
