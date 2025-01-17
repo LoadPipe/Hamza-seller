@@ -975,17 +975,7 @@ class ProductService extends MedusaProductService {
     async patchSellerProduct(
         productId: string,
         storeId: string,
-        updates: {
-            title?: string;
-            subtitle?: string;
-            description?: string;
-            handle?: string;
-            thumbnail?: string;
-            weight?: number;
-            length?: number;
-            height?: number;
-            width?: number;
-        }
+        updates: any
     ): Promise<QuerySellerProductByIdResponse> {
         console.log(`Incoming Updates: ${JSON.stringify(updates)}`);
 
@@ -1007,27 +997,56 @@ class ProductService extends MedusaProductService {
 
             console.log('Product found. Current product details:', product);
 
-            // 2. Filter out any `undefined` updates to avoid accidental overwrites
-            const filteredUpdates = Object.fromEntries(
-                Object.entries(updates).filter(
-                    ([_, value]) => value !== undefined
-                )
-            );
+            // 2. Separate variants from top-level fields
+            const { variants, ...productUpdates } = updates;
 
-            console.log('Filtered Updates to apply:', filteredUpdates);
-
-            // 3. Merge top-level updates
+            // 3. Merge top-level changes
             const updatedProduct = {
-                ...product, // Keep existing fields
-                ...filteredUpdates, // Apply updates from the client
-                updated_at: new Date(), // Update timestamp
+                ...product,
+                ...productUpdates,
+                updated_at: new Date(),
             };
+            await this.productRepository_.save(updatedProduct);
 
             console.log('Product after applying updates:', updatedProduct);
 
-            // 4. Save updated product
-            console.log('Saving updated product to the database...');
-            await this.productRepository_.save(updatedProduct);
+            // 4. Update variants if present
+            if (Array.isArray(variants)) {
+                for (const variantUpdate of variants) {
+                    if (variantUpdate.id) {
+                        // a) Update existing variant
+                        const existingVariant =
+                            await this.productVariantRepository_.findOne({
+                                where: {
+                                    id: variantUpdate.id,
+                                    product_id: productId,
+                                },
+                            });
+                        if (!existingVariant) {
+                            // Maybe throw an error or skip
+                            continue;
+                        }
+                        existingVariant.title =
+                            variantUpdate.title ?? existingVariant.title;
+                        existingVariant.weight =
+                            variantUpdate.weight ?? existingVariant.weight;
+                        // etc...
+                        await this.productVariantRepository_.save(
+                            existingVariant
+                        );
+                    } else {
+                        // b) Create new variant
+                        const newVariant =
+                            this.productVariantRepository_.create({
+                                product_id: product.id, // from our DB product
+                                title: variantUpdate.title,
+                                weight: variantUpdate.weight,
+                                // etc...
+                            });
+                        await this.productVariantRepository_.save(newVariant);
+                    }
+                }
+            }
 
             console.log('Product successfully saved.');
 
