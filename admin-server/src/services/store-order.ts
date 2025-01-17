@@ -1,4 +1,9 @@
-import { Payment, Store, TransactionBaseService } from '@medusajs/medusa';
+import {
+    FulfillmentItem,
+    Payment,
+    Store,
+    TransactionBaseService,
+} from '@medusajs/medusa';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import StoreRepository from '../repositories/store';
@@ -27,6 +32,8 @@ import {
     EscrowPaymentDefinition,
     PaymentDefinition,
 } from '../web3/contracts/escrow';
+import FulfillmentRepository from '@medusajs/medusa/dist/repositories/fulfillment';
+import { FulfillmentService } from '@medusajs/medusa/dist/services';
 
 const DEFAULT_PAGE_COUNT = 10;
 
@@ -82,6 +89,8 @@ export default class StoreOrderService extends TransactionBaseService {
     protected orderRepository_: typeof StoreOrderRepository;
     protected paymentRepository_: typeof PaymentRepository;
     protected readonly storeRepository_: typeof StoreRepository;
+    protected readonly fulfillmentRepository_: typeof FulfillmentRepository;
+    protected readonly fulfillmentService_: FulfillmentService;
     protected readonly productVariantRepository_: typeof ProductVariantRepository;
     protected orderHistoryService_: OrderHistoryService;
     protected orderService_: OrderService;
@@ -91,10 +100,12 @@ export default class StoreOrderService extends TransactionBaseService {
         super(container);
         this.orderRepository_ = container.orderRepository;
         this.storeRepository_ = container.storeRepository;
+        this.fulfillmentRepository_ = container.fulfillmentRepository;
         this.paymentRepository_ = container.paymentRepository;
         this.productVariantRepository_ = container.productVariantRepository;
         this.orderHistoryService_ = container.orderHistoryService;
         this.orderService_ = container.orderService;
+        this.fulfillmentService_ = container.fulfillmentService;
         this.logger = createLogger(container, 'StoreOrderService');
     }
 
@@ -475,9 +486,37 @@ export default class StoreOrderService extends TransactionBaseService {
 
     async setOrderTracking(
         orderId: string,
-        trackNumber: string
+        trackingNumber: string
     ): Promise<Order> {
         try {
+            const order: Order = await this.orderService_.retrieve(orderId, {
+                relations: [
+                    'payments',
+                    'items',
+                    'billing_address',
+                    'shipping_methods',
+                ],
+            });
+
+            const createFulfillmentOrder = {
+                /*
+                is_claim: false,
+                payments: order.payments,
+                discounts: order.discounts,
+                currency_code: order.currency_code,
+                billing_address: order.billing_address,
+                items: order.items,
+                shipping_methods: order.shipping_methods,
+                no_notification: false,
+                payment_status: order.payment_status,
+                no_noti
+                */
+            };
+
+            this.fulfillmentService_.createFulfillment(
+                createFulfillmentOrder,
+                []
+            );
         } catch (e: any) {
             this.logger.error(
                 `Error setting order tracking for order ${orderId}`,
