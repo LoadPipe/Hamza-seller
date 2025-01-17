@@ -112,14 +112,6 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
         ['order_id']
     );
 
-    const validStatuses = [
-        'Processing',
-        'Shipped',
-        'Delivered',
-        'Cancelled',
-        'Refunded',
-    ];
-
     await handler.handle(async () => {
         // Ensure required parameters are provided
         if (!handler.requireParam('order_id')) {

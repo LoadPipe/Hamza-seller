@@ -1,10 +1,10 @@
 {
     "name": "admin-client",
     "private": true,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "type": "module",
     "description": "Hamza Seller admin frontend",
-    "author": "Garo Nazarian, Jonny Bajada, John R. Kosinski, Chris Li",
+    "author": "Garo Nazarian, Jonny Bajada, Chris Li, John R. Kosinski",
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
@@ -49,6 +49,7 @@
         "react": "^18.3.1",
         "react-day-picker": "8.10.1",
         "react-dom": "^18.3.1",
+        "react-dropzone": "^14.3.5",
         "react-hot-toast": "^2.4.1",
         "recharts": "^2.15.0",
         "shadcn": "^2.1.6",
