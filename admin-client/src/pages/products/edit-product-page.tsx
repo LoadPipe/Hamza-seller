@@ -22,7 +22,7 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { Label } from '@/components/ui/label.tsx';
-import { useForm } from '@tanstack/react-form';
+import { useForm, getBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
 
@@ -115,6 +115,7 @@ export default function EditProductPage() {
                     )?.amount || '0',
                     10
                 ),
+                quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
         // validators: (values) => {
@@ -365,7 +366,7 @@ export default function EditProductPage() {
                                             <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
                                                 {/* Variant Title */}
                                                 <editProductForm.Field
-                                                    name={`variants[${index}].variant_title`} // Name scoped to the index
+                                                    name={`variants[${index}].title`}
                                                     key={`title-${variant}`}
                                                 >
                                                     {(field) => (
@@ -375,10 +376,8 @@ export default function EditProductPage() {
                                                                 placeholder="Variant Title"
                                                                 value={
                                                                     field.state
-                                                                        .value ||
-                                                                    variant.title ||
-                                                                    ''
-                                                                } // Tie to the correct value
+                                                                        .value
+                                                                }
                                                                 onChange={(e) =>
                                                                     field.handleChange(
                                                                         e.target
@@ -531,15 +530,25 @@ export default function EditProductPage() {
                                     fieldName,
                                     fieldMeta,
                                 ] of Object.entries(formState.fieldMeta)) {
-                                    console.log(
-                                        `fieldMeta: ${fieldName}`,
-                                        fieldMeta,
-                                        formState.values[fieldName]
-                                    );
                                     if (fieldMeta.isDirty) {
-                                        dirtyFields[fieldName] =
-                                            formState.values[fieldName];
                                     }
+
+                                    const currentValue = getBy(
+                                        formState.values,
+                                        fieldName
+                                    );
+
+                                    console.log(
+                                        'fieldMeta:',
+                                        fieldName,
+                                        fieldMeta,
+                                        currentValue
+                                    );
+
+                                    // if (fieldMeta.isDirty) {
+                                    //     dirtyFields[fieldName] =
+                                    //         formState.values[fieldName];
+                                    // }
                                 }
 
                                 return {
