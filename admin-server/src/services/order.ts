@@ -9,14 +9,13 @@ import {
     ProductVariant,
     LineItem,
 } from '@medusajs/medusa';
-import { BuckyLogRepository } from '../repositories/bucky-log';
+import SalesChannelRepository from '@medusajs/medusa/dist/repositories/sales-channel';
+import RegionRepository from '@medusajs/medusa/dist/repositories/region';
+import AddressRepository from '@medusajs/medusa/dist/repositories/address';
 import OrderRepository from '@medusajs/medusa/dist/repositories/order';
 import LineItemRepository from '@medusajs/medusa/dist/repositories/line-item';
-import SalesChannelRepository from '@medusajs/medusa/dist/repositories/sales-channel';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
-import { CancellationRequestRepository } from 'src/repositories/cancellation-request';
 import { ProductVariantRepository } from '../repositories/product-variant';
-import { RefundRepository } from '../repositories/refund';
 import StoreRepository from '../repositories/store';
 import CustomerRepository from '../repositories/customer';
 import { LineItemService } from '@medusajs/medusa';
@@ -33,10 +32,16 @@ import CustomerNotificationService from './customer-notification';
 import { formatCryptoPrice } from '../utils/price-formatter';
 import OrderHistoryService from './order-history';
 import { OrderHistory } from 'src/models/order-history';
+import ShippingMethodRepository from '@medusajs/medusa/dist/repositories/shipping-method';
+import CartService from './cart';
 import CartRepository from '@medusajs/medusa/dist/repositories/cart';
-import RegionRepository from '@medusajs/medusa/dist/repositories/region';
+import { CartEmailRepository } from '../repositories/cart-email';
+import GlobetopperService from './globetopper';
 import { randomInt, randomUUID } from 'crypto';
+import { CancellationRequestRepository } from 'src/repositories/cancellation-request';
+import { RefundRepository } from '../repositories/refund';
 import { Refund } from 'src/models/refund';
+import { Store } from '../models/store';
 
 // Since {TO_PAY, TO_SHIP} are under the umbrella name {Processing} in FE, not sure if we should modify atm
 // In medusa we have these 5 DEFAULT order.STATUS's {PENDING, COMPLETED, ARCHIVED, CANCELED, REQUIRES_ACTION}
@@ -61,46 +66,53 @@ export default class OrderService extends MedusaOrderService {
     static LIFE_TIME = Lifetime.SINGLETON; // default, but just to show how to change it
 
     protected lineItemService: LineItemService;
-    protected refundRepository_: typeof RefundRepository;
+    protected cartService: CartService;
     protected customerRepository_: typeof CustomerRepository;
     protected orderRepository_: typeof OrderRepository;
     protected lineItemRepository_: typeof LineItemRepository;
-    protected cancellationRequestRepository_: typeof CancellationRequestRepository;
     protected productRepository_: typeof ProductRepository;
     protected paymentRepository_: typeof PaymentRepository;
     protected cartRepository_: typeof CartRepository;
     protected regionRepository_: typeof RegionRepository;
     protected salesChannelRepository_: typeof SalesChannelRepository;
+    protected addressRepository_: typeof AddressRepository;
     protected readonly storeRepository_: typeof StoreRepository;
     protected readonly productVariantRepository_: typeof ProductVariantRepository;
-    protected readonly buckyLogRepository_: typeof BuckyLogRepository;
+    protected readonly shippingMethodRepository_: typeof ShippingMethodRepository;
     protected customerNotificationService_: CustomerNotificationService;
     protected smtpMailService_: SmtpMailService = new SmtpMailService();
     protected orderHistoryService_: OrderHistoryService;
+    protected globetopperService_: GlobetopperService;
     protected readonly logger: ILogger;
     protected buckyClient: BuckyClient;
+    protected refundRepository_: typeof RefundRepository;
+    protected cancellationRequestRepository_: typeof CancellationRequestRepository;
+    protected readonly cartEmailRepository_: typeof CartEmailRepository;
 
     constructor(container) {
         super(container);
-        this.cancellationRequestRepository_ =
-            container.cancellationRequestRepository;
+        this.cartService = container.cartService;
+        this.cartRepository_ = container.cartRepository;
         this.orderRepository_ = container.orderRepository;
         this.customerRepository_ = container.customerRepository;
-        this.refundRepository_ = container.refundRepository;
         this.storeRepository_ = container.storeRepository;
+        this.refundRepository_ = container.refundRepository;
         this.regionRepository_ = container.regionRepository;
-        this.cartRepository_ = container.cartRepository;
         this.salesChannelRepository_ = container.salesChannelRepository;
         this.lineItemRepository_ = container.lineItemRepository;
         this.paymentRepository_ = container.paymentRepository;
         this.productRepository_ = container.productRepository;
+        this.shippingMethodRepository_ = container.shippingMethodRepository;
         this.productVariantRepository_ = container.productVariantRepository;
+        this.regionRepository_ = container.regionRepository;
+        this.salesChannelRepository_ = container.salesChannelRepository;
         this.customerNotificationService_ =
             container.customerNotificationService;
         this.orderHistoryService_ = container.orderHistoryService;
         this.logger = createLogger(container, 'OrderService');
-        this.buckyLogRepository_ = container.buckyLogRepository;
-        this.buckyClient = new BuckyClient(container.buckyLogRepository);
+        this.globetopperService_ = container.globetopperService;
+        this.buckyClient = new BuckyClient(container.externalApiLogRepository);
+        this.cartEmailRepository_ = container.cartEmailRepository;
     }
 
     async createFromPayment(
@@ -137,14 +149,16 @@ export default class OrderService extends MedusaOrderService {
             order.items = cart.items;
 
             const lineItemPromise = cart.items.map((item) => {
-                item.order_id = order.id;
-                return this.lineItemRepository_.save(item);
+                if (item.variant.product.store_id === storeId) {
+                    item.order_id = order.id;
+                    return this.lineItemRepository_.save(item);
+                }
             });
 
             await Promise.all([...lineItemPromise]);
 
             //update the cart
-            cart.completed_at = new Date();
+            //cart.completed_at = new Date();
             // await this.cartService_.update(cart.id, cart);
 
             return order;
@@ -155,19 +169,34 @@ export default class OrderService extends MedusaOrderService {
     }
 
     async getOrdersForCheckout(cartId: string): Promise<Order[]> {
-        return this.orderRepository_.find({
-            where: { cart_id: cartId, status: OrderStatus.REQUIRES_ACTION },
+        const orders = await this.orderRepository_.find({
+            where: { cart_id: cartId },
             relations: ['store.owner', 'payments'],
             skip: 0,
-            take: 1,
             order: { created_at: 'DESC' },
         });
+
+        //filter out the non-hackers
+        const output: Order[] = [];
+        for (let order of orders) {
+            if (order.status != OrderStatus.REQUIRES_ACTION) break;
+            output.push(order);
+        }
+
+        return output;
     }
 
     async getOrderWithStore(orderId: string): Promise<Order> {
         return this.orderRepository_.findOne({
             where: { id: orderId },
             relations: ['store.owner'],
+        });
+    }
+
+    async getOrderWithStoreAndItems(orderId: string): Promise<Order> {
+        return this.orderRepository_.findOne({
+            where: { id: orderId },
+            relations: ['store.owner', 'items'],
         });
     }
 
@@ -185,13 +214,6 @@ export default class OrderService extends MedusaOrderService {
     async getAllCancelledOrders(orders: string[]) {
         return this.cancellationRequestRepository_.find({
             where: { order_id: In(orders) },
-        });
-    }
-
-    async getOrderWithStoreAndItems(orderId: string): Promise<Order> {
-        return this.orderRepository_.findOne({
-            where: { id: orderId },
-            relations: ['store.owner', 'items'],
         });
     }
 
@@ -233,20 +255,28 @@ export default class OrderService extends MedusaOrderService {
         cartId: string,
         transactionId: string,
         payerAddress: string,
-        receiverAddress: string,
-        escrowContractAddress: string,
         chainId: number
     ): Promise<Order[]> {
-        //get orders & order ids
-        const orders: Order[] = await this.orderRepository_.find({
-            where: {
-                cart_id: cartId,
-                status: OrderStatus.REQUIRES_ACTION,
-            },
-            take: 1,
-            skip: 0,
-            order: { created_at: 'DESC' },
+        const cart = await this.cartRepository_.findOne({
+            where: { id: cartId },
+            relations: ['customer'],
         });
+
+        //reconconcile cart email address
+        if (cart) {
+            const cartEmail = await this.cartEmailRepository_.findOne({
+                where: { id: cartId },
+            });
+
+            //if cart email is not equal to cart email, make it so
+            if (cartEmail && cartEmail.email_address != cart.email) {
+                cart.email = cartEmail.email_address;
+                await this.cartRepository_.save(cart);
+            }
+        }
+
+        //get orders & order ids
+        const orders: Order[] = await this.getOrdersForCheckout(cartId);
         const orderIds = orders.map((order) => order.id);
 
         //get payments associated with orders
@@ -258,29 +288,50 @@ export default class OrderService extends MedusaOrderService {
         if (process.env.BUCKY_ENABLE_PURCHASE)
             await this.processBuckydropOrders(cartId, orders);
 
+        //do buckydrop order creation
+        if (process.env.GLOBETOPPER_ENABLE_PURCHASE)
+            await this.processGlobetopperOrders(cart, orders);
+
+        //pair orders with payments
+        const paymentOrders: { order: Order; payment: Payment }[] = [];
+        for (let p of payments) {
+            paymentOrders.push({
+                payment: p,
+                order: orders.find((o) => o.id == p.order_id),
+            });
+        }
+
         //calls to update inventory
         //const inventoryPromises =
         //    this.getPostCheckoutUpdateInventoryPromises(cartProductsJson);
 
         //calls to update payments
         const paymentPromises = this.getPostCheckoutUpdatePaymentPromises(
-            payments,
+            paymentOrders,
             transactionId,
             payerAddress,
-            receiverAddress,
-            escrowContractAddress,
             chainId
         );
 
         //calls to update orders
         const orderPromises = this.getPostCheckoutUpdateOrderPromises(orders);
 
-        await this.eventBus_.emit('order.placed', {
-            customerId: orders[0].customer_id,
-            orderIds: orderIds,
-            orderId: orderIds[0],
-            ...orders[0],
+        //TODO: all of the following should be in a transaction
+        const shippingMethods = await this.shippingMethodRepository_.find({
+            where: { cart_id: cartId },
         });
+
+        //apply shipping methods to orders
+        //TODO: the problem here is if there is 1 shipping method, but multiple orders
+        // then we'll need to create duplicate shipping methods, one for each order
+        let n = 0;
+        for (let shippingMethod of shippingMethods) {
+            shippingMethod.order_id =
+                orders[n >= orders.length ? orders.length - 1 : n].id;
+        }
+
+        //set cart completion date
+        cart.completed_at = new Date();
 
         //execute all promises
         try {
@@ -288,10 +339,21 @@ export default class OrderService extends MedusaOrderService {
                 //...inventoryPromises,
                 ...paymentPromises,
                 ...orderPromises,
+                this.shippingMethodRepository_.save(shippingMethods),
             ]);
+
+            await this.cartRepository_.save(cart);
         } catch (e) {
             this.logger.error(`Error updating orders/payments: ${e}`);
         }
+
+        //emit event
+        await this.eventBus_.emit('order.placed', {
+            customerId: orders[0].customer_id,
+            orderIds: orderIds,
+            orderId: orderIds[0],
+            ...orders[0],
+        });
 
         return orders;
     }
@@ -314,15 +376,6 @@ export default class OrderService extends MedusaOrderService {
             await this.orderRepository_.save(order);
         }
 
-        return order;
-    }
-
-    async changeFulfillmentStatus(orderId: string, status: FulfillmentStatus) {
-        const order = await this.orderRepository_.findOne({
-            where: { id: orderId },
-        });
-        order.fulfillment_status = status;
-        await this.orderRepository_.save(order);
         return order;
     }
 
@@ -359,6 +412,32 @@ export default class OrderService extends MedusaOrderService {
                 ),
             },
             relations: ['cart.items', 'cart', 'cart.items.variant.product'],
+        });
+    }
+
+    async getCustomerOrder(
+        customerId: string,
+        orderId: string,
+        includePayments: boolean = false
+    ): Promise<Order> {
+        return this.orderRepository_.findOne({
+            where: {
+                customer_id: customerId,
+                id: orderId,
+                status: Not(
+                    In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
+                ),
+            },
+            relations: includePayments
+                ? [
+                      'cart.items',
+                      'cart',
+                      'cart.items.variant.product',
+                      'payments',
+                      'shipping_methods',
+                      'store',
+                  ]
+                : ['cart.items', 'cart', 'cart.items.variant.product'],
         });
     }
 
@@ -580,12 +659,16 @@ export default class OrderService extends MedusaOrderService {
         return output;
     }
 
+    /**
+     * @deprecated This method is deprecated and will be removed in future versions.
+     * Transition to `getExternalProductItemsFromOrder`.
+     */
     async getBuckyProductVariantsFromOrder(
         order: Order
     ): Promise<{ variants: ProductVariant[]; quantities: number[] }> {
         const orders: Order[] = await this.getOrdersWithItems([order]);
         const relevantItems: LineItem[] = orders[0].cart.items.filter(
-            (i) => i.variant.product.bucky_metadata
+            (i) => i.variant.product.external_metadata
         );
 
         return relevantItems?.length
@@ -594,6 +677,25 @@ export default class OrderService extends MedusaOrderService {
                   quantities: relevantItems.map((i) => i.quantity),
               }
             : { variants: [], quantities: [] };
+    }
+    /**
+     * Retrieves a list of line items from the given order associated with the
+     * given external source
+     *
+     * @param {Order} order
+     * @param {string} externalSource - the external source label
+     * @returns {LineItem[]}
+     */
+    async getExternalProductItemsFromOrder(
+        order: Order,
+        externalSource: string
+    ): Promise<LineItem[]> {
+        const orders: Order[] = await this.getOrdersWithItems([order]);
+        const relevantItems: LineItem[] = orders[0].cart.items.filter(
+            (item) => item.variant.product.external_source == externalSource
+        );
+
+        return relevantItems ?? [];
     }
 
     async getOrdersWithUnverifiedPayments() {
@@ -793,10 +895,11 @@ export default class OrderService extends MedusaOrderService {
             }
 
             await this.refundRepository_.save(refund);
+
             await this.orderRepository_.save(order);
 
             // Optionally add notes or metadata to the order
-            //TODO: should probably add to an array, as multiple refunds are possible
+            //TODO: should add an array, as multiple refunds are allowed
             order.metadata = {
                 ...order.metadata,
                 refund_note: note || '',
@@ -857,203 +960,6 @@ export default class OrderService extends MedusaOrderService {
         } catch (error) {
             this.logger.error(`Error updating refund: ${error.message}`);
             throw error; // Let the caller handle errors
-        }
-    }
-
-    async createMockOrders(
-        count: number,
-        date: string = new Date().toDateString(),
-        store_id: string = null
-    ): Promise<Order[]> {
-        if (!count || count <= 0) {
-            count = 1;
-        }
-        const orders: Order[] = []; // To store all created orders
-
-        //if no specified store, do random stores
-        let allStores = [];
-        const randomStores = !store_id;
-        if (randomStores) {
-            allStores = await this.storeRepository_.find({});
-        }
-
-        //get all customers
-        const allCustomers = await this.customerRepository_.find({});
-
-        //create a customer if none exists
-        if (!allCustomers.length) {
-            const customer = this.customerRepository_.create({
-                first_name: `Reynaldo`, // Unique for each order
-                last_name: `Mocktavish`,
-                email: `customer${randomUUID()}@example.com`,
-                created_at: new Date(),
-            });
-
-            await this.customerRepository_.save(customer);
-            allCustomers.push(customer);
-        }
-
-        try {
-            let actualOrderCount = 0;
-            for (let i = 0; i < count; i++) {
-                // Step 1: Get the first customer
-                const customer = allCustomers[randomInt(allCustomers.length)];
-
-                if (!customer) {
-                    throw new Error('No customers found.');
-                }
-
-                // Step 2: Get the first region
-                const region = await this.regionRepository_
-                    .createQueryBuilder('region')
-                    .where('LOWER(region.name) = :name', { name: 'na' })
-                    .getOne();
-
-                if (!region) {
-                    throw new Error('No regions found.');
-                }
-
-                //get random store if necessary
-                if (randomStores) {
-                    store_id = allStores[randomInt(allStores.length)].id;
-                }
-
-                // Step 3: Get random products
-                const randomCount = randomInt(10) + 1; // Random between 1 and 10
-
-                const products = await this.productRepository_.query(
-                    `SELECT *
-                     FROM product
-                     WHERE store_id='${store_id}'
-                     ORDER BY RANDOM()
-                     LIMIT ${randomCount}`
-                );
-
-                if (products.length) {
-                    const variants = await Promise.all(
-                        products.map((product) =>
-                            this.productVariantRepository_.findOne({
-                                where: { product_id: product.id },
-                                order: { created_at: 'ASC' }, // Choose the first variant if multiple exist
-                            })
-                        )
-                    );
-
-                    // Validate that each product has at least one variant
-                    variants.forEach((variant, index) => {
-                        if (!variant) {
-                            throw new Error(
-                                `No variant found for product ${products[index].id}`
-                            );
-                        }
-                    });
-
-                    // Step 4: Store Id from params
-                    const storeId = store_id;
-
-                    // Grab the default sales channel... the first one
-                    const salesChannel =
-                        await this.salesChannelRepository_.findOne({
-                            where: {}, // Empty where clause to find any sales channel
-                            order: { created_at: 'ASC' }, // Sort by creation time, oldest first
-                        });
-
-                    if (!salesChannel) {
-                        throw new Error('No sales channels found.');
-                    }
-
-                    const sales_channel_id = salesChannel.id;
-
-                    // Step 5: Create a cart for the customer
-                    const cart = await this.cartRepository_.save(
-                        this.cartRepository_.create({
-                            customer_id: customer.id,
-                            email: customer.email,
-                            region_id: region.id,
-                            sales_channel_id: sales_channel_id,
-                            created_at: new Date(),
-                            updated_at: new Date(),
-                        })
-                    );
-
-                    // Step 6: Add line items to the cart
-                    let orderTotal = 0;
-                    const lineItems = [];
-                    for (let i = 0; i < products.length; i++) {
-                        const product = products[i];
-                        const variant = variants[i];
-
-                        const lineItem = this.lineItemRepository_.create({
-                            cart_id: cart.id,
-                            title: product.title,
-                            description: product.description,
-                            thumbnail: product.thumbnail,
-                            unit_price: variant.prices?.[0]?.amount || 1000,
-                            quantity: Math.floor(Math.random() * 5) + 1,
-                            currency_code: region.currency_code,
-                            variant_id: variant.id, // Add variant_id here
-                            created_at: new Date(),
-                            updated_at: new Date(),
-                        });
-                        orderTotal += lineItem.unit_price * lineItem.quantity;
-                        const savedLineItem =
-                            await this.lineItemRepository_.save(lineItem);
-                        lineItems.push(savedLineItem);
-                    }
-                    cart.items = lineItems;
-
-                    // Step 7: Create an order using the cart and product's store_id
-                    let order: Order = new Order();
-                    order.status = OrderStatus.PENDING;
-                    order.store_id = storeId; // Use store_id directly from the product
-                    order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
-                    order.payment_status = PaymentStatus.AWAITING;
-                    order.sales_channel_id = sales_channel_id;
-                    order.customer_id = customer.id;
-                    order.email = customer.email;
-                    order.cart_id = cart.id;
-                    order.region_id = cart.region_id;
-                    order.currency_code = 'usdt';
-                    order.created_at = new Date(date);
-
-                    order = await this.orderRepository_.save(order);
-
-                    //create a payment
-                    await this.paymentRepository_.save({
-                        id: order.id.replace('order_', 'payment_'),
-                        order_id: order.id,
-                        cart_id: cart.id,
-                        amount: orderTotal,
-                        currency_code: order.currency_code,
-                        provider_id: 'crypto',
-                        data: {},
-                        blockchain_data: {
-                            receiver_address: '',
-                            transaction_id: '',
-                            escrow_address:
-                                '0x77930414Ba3E8f8799A9e503d2E6A9CBC95F42B6',
-                        },
-                    });
-
-                    // Step 8: Link line items to the order
-                    order.items = cart.items;
-                    const lineItemPromises = cart.items.map((item) => {
-                        item.order_id = order.id;
-                        return this.lineItemRepository_.save(item);
-                    });
-
-                    await Promise.all(lineItemPromises);
-                    actualOrderCount++;
-
-                    orders.push(order); // Add the order to the array
-                }
-            }
-
-            return orders; // Return all created orders
-        } catch (error) {
-            console.error('Error during mock order creation:', error.message);
-            this.logger.error(`Error creating mock order: ${error.message}`);
-            throw error;
         }
     }
 
@@ -1156,10 +1062,9 @@ export default class OrderService extends MedusaOrderService {
                 const { variants, quantities } =
                     await this.getBuckyProductVariantsFromOrder(order);
                 if (variants?.length) {
-                    order.bucky_metadata = { status: 'pending' };
+                    order.external_source = 'buckydrop';
+                    order.external_metadata = { status: 'pending' };
                     await this.orderRepository_.save(order);
-
-                    this.logger.debug('BUCKY CREATED ORDER');
                 }
             }
         } catch (e) {
@@ -1167,24 +1072,72 @@ export default class OrderService extends MedusaOrderService {
         }
     }
 
-    private async getCustomerOrdersByStatus(
+    private async processGlobetopperOrders(
+        cart: Cart,
+        orders: Order[]
+    ): Promise<void> {
+        //TODO: optimize by multithreading
+        for (let order of orders) {
+            try {
+                const items: LineItem[] =
+                    await this.getExternalProductItemsFromOrder(
+                        order,
+                        GlobetopperService.EXTERNAL_SOURCE
+                    );
+
+                if (items.length) {
+                    const results: any[] =
+                        await this.globetopperService_.processPointOfSale(
+                            order.id,
+                            cart.customer.first_name,
+                            cart.customer.last_name,
+                            cart.email,
+                            items
+                        );
+
+                    order.external_source = 'globetopper';
+                    await this.orderRepository_.save(order);
+
+                    //set fulfillment status to delivered
+                    await this.setOrderStatus(
+                        order,
+                        null,
+                        FulfillmentStatus.FULFILLED,
+                        null,
+                        null,
+                        null
+                    );
+                }
+            } catch (e: any) {
+                this.logger.error(
+                    `Error processing globetopper orders for order ${order.id}`,
+                    e
+                );
+            }
+        }
+    }
+
+    public async getCustomerOrdersByStatus(
         customerId: string,
         statusParams: {
             orderStatus?: OrderStatus;
             paymentStatus?: PaymentStatus;
             fulfillmentStatus?: FulfillmentStatus;
-        }
+        },
+        orderId?: string
     ): Promise<Order[]> {
         const where: {
             customer_id: string;
             status?: any;
             payment_status?: any;
             fulfillment_status?: any;
+            id?: string;
         } = {
             customer_id: customerId,
             status: Not(
                 In([OrderStatus.ARCHIVED, OrderStatus.REQUIRES_ACTION])
             ),
+            id: orderId,
         };
 
         if (statusParams.orderStatus) {
@@ -1205,8 +1158,12 @@ export default class OrderService extends MedusaOrderService {
                 'items',
                 'store',
                 'shipping_address',
+                'shipping_methods',
+                'payments',
                 'customer',
                 'items.variant.product',
+                'histories',
+                'refunds',
             ],
             order: { created_at: 'DESC' },
         });
@@ -1217,24 +1174,29 @@ export default class OrderService extends MedusaOrderService {
     }
 
     private getPostCheckoutUpdatePaymentPromises(
-        payments: Payment[],
+        paymentOrders: { order: Order; payment: Payment }[],
         transactionId: string,
         payerAddress: string,
-        receiverAddress: string,
-        escrowAddress: string,
         chainId: number
     ): Promise<Order | Payment>[] {
         const promises: Promise<Order | Payment>[] = [];
 
         //update payments with transaction info
-        payments.forEach((p, i) => {
+        paymentOrders.forEach((po, i) => {
+            //get the appropriate metadata for the chain
+            let escrow_address = this.getEscrowAddressFromStore(
+                chainId,
+                po?.order?.store
+            );
+
             promises.push(
-                this.updatePaymentAfterTransaction(p.id, {
+                this.updatePaymentAfterTransaction(po.payment.id, {
                     blockchain_data: {
                         transaction_id: transactionId,
                         payer_address: payerAddress,
-                        escrow_address: escrowAddress,
-                        receiver_address: receiverAddress,
+                        escrow_address,
+                        receiver_address:
+                            po.order?.store?.owner?.wallet_address,
                         chain_id: chainId,
                     },
                 })
@@ -1244,6 +1206,21 @@ export default class OrderService extends MedusaOrderService {
         return promises;
     }
 
+    private getEscrowAddressFromStore(
+        chainId: number,
+        store: Store | undefined | null
+    ): string {
+        let address = null;
+        const escrow_metadata: any = store?.escrow_metadata;
+        if (escrow_metadata) {
+            if (escrow_metadata[chainId])
+                address = escrow_metadata[chainId]?.address;
+            if (!address) address = escrow_metadata.address;
+            if (!address) address = '0x0';
+        }
+        return address;
+    }
+
     private getPostCheckoutUpdateOrderPromises(
         orders: Order[]
     ): Promise<Order>[] {
@@ -1251,9 +1228,253 @@ export default class OrderService extends MedusaOrderService {
             return this.orderRepository_.save({
                 id: o.id,
                 status: OrderStatus.PENDING,
+                payment_status:
+                    o.external_source === 'buckydrop'
+                        ? PaymentStatus.AWAITING
+                        : PaymentStatus.CAPTURED,
                 escrow_status: EscrowStatus.IN_ESCROW,
-                payment_status: PaymentStatus.AWAITING,
             });
         });
+    }
+
+    async createMockOrders(
+        count: number,
+        date: string = new Date().toDateString(),
+        store_id: string = null
+    ): Promise<Order[]> {
+        console.log(
+            `Parameters - count: ${count}, date: ${date}, store_id: ${store_id}`
+        );
+        if (!count || count <= 0) {
+            count = 1;
+        }
+        const orders: Order[] = []; // To store all created orders
+
+        //if no specified store, do random stores
+        let allStores = [];
+        const randomStores = !store_id;
+        if (randomStores) {
+            console.log('doing random stores');
+            allStores = await this.storeRepository_.find({});
+            console.log('got', allStores.length, 'stores');
+        }
+
+        //get all customers
+        const allCustomers = await this.customerRepository_.find({});
+
+        //create a customer if none exists
+        if (!allCustomers.length) {
+            const customer = this.customerRepository_.create({
+                first_name: `Reynaldo`, // Unique for each order
+                last_name: `Mocktavish`,
+                email: `customer${randomUUID()}@example.com`,
+                created_at: new Date(),
+            });
+
+            await this.customerRepository_.save(customer);
+            allCustomers.push(customer);
+            console.log('New customer created:', customer);
+        }
+
+        try {
+            console.log('Starting mock order creation...');
+
+            let actualOrderCount = 0;
+            for (let i = 0; i < count; i++) {
+                console.log(`Creating mock order ${i + 1} of ${count}...`);
+
+                // Step 1: Get the first customer
+                const customer = allCustomers[randomInt(allCustomers.length)];
+
+                if (!customer) {
+                    throw new Error('No customers found.');
+                }
+                console.log('Customer found:', customer);
+
+                // Step 2: Get the first region
+                const region = await this.regionRepository_
+                    .createQueryBuilder('region')
+                    .where('LOWER(region.name) = :name', { name: 'na' })
+                    .getOne();
+
+                if (!region) {
+                    throw new Error('No regions found.');
+                }
+                console.log('Region found:', region);
+
+                //get random store if necessary
+                if (randomStores) {
+                    console.log(
+                        'getting random store from',
+                        allStores.length,
+                        'stores'
+                    );
+                    store_id = allStores[randomInt(allStores.length)].id;
+                }
+                console.log('store_id is', store_id);
+
+                // Step 3: Get random products
+                const randomCount = randomInt(10) + 1; // Random between 1 and 10
+
+                console.log('getting products');
+                const products = await this.productRepository_.query(
+                    `SELECT *
+                     FROM product
+                     WHERE store_id='${store_id}'
+                     ORDER BY RANDOM()
+                     LIMIT ${randomCount}`
+                );
+
+                console.log(
+                    `Retrieved ${products.length} random products`,
+                    products
+                );
+
+                if (products.length) {
+                    console.log('Products found:', products);
+
+                    const variants = await Promise.all(
+                        products.map((product) =>
+                            this.productVariantRepository_.findOne({
+                                where: { product_id: product.id },
+                                order: { created_at: 'ASC' }, // Choose the first variant if multiple exist
+                            })
+                        )
+                    );
+
+                    // Validate that each product has at least one variant
+                    variants.forEach((variant, index) => {
+                        if (!variant) {
+                            throw new Error(
+                                `No variant found for product ${products[index].id}`
+                            );
+                        }
+                    });
+
+                    console.log('Variants found:', variants);
+
+                    // Step 4: Store Id from params
+                    const storeId = store_id;
+
+                    // Grab the default sales channel... the first one
+                    const salesChannel =
+                        await this.salesChannelRepository_.findOne({
+                            where: {}, // Empty where clause to find any sales channel
+                            order: { created_at: 'ASC' }, // Sort by creation time, oldest first
+                        });
+
+                    if (!salesChannel) {
+                        throw new Error('No sales channels found.');
+                    }
+
+                    const sales_channel_id = salesChannel.id;
+                    console.log('Sales Channel ID:', sales_channel_id);
+
+                    console.log('Creating cart with:', {
+                        customer_id: customer.id,
+                        email: customer.email,
+                        region_id: region.id,
+                    });
+                    // Step 5: Create a cart for the customer
+                    const cart = await this.cartRepository_.save(
+                        this.cartRepository_.create({
+                            customer_id: customer.id,
+                            email: customer.email,
+                            region_id: region.id,
+                            sales_channel_id: sales_channel_id,
+                            created_at: new Date(),
+                            updated_at: new Date(),
+                        })
+                    );
+                    console.log('Cart created:', cart);
+
+                    // Step 6: Add line items to the cart
+                    let orderTotal = 0;
+                    const lineItems = [];
+                    for (let i = 0; i < products.length; i++) {
+                        const product = products[i];
+                        const variant = variants[i];
+
+                        const lineItem = this.lineItemRepository_.create({
+                            cart_id: cart.id,
+                            title: product.title,
+                            description: product.description,
+                            thumbnail: product.thumbnail,
+                            unit_price: variant.prices?.[0]?.amount || 1000,
+                            quantity: Math.floor(Math.random() * 5) + 1,
+                            currency_code: region.currency_code,
+                            variant_id: variant.id, // Add variant_id here
+                            created_at: new Date(),
+                            updated_at: new Date(),
+                        });
+                        orderTotal += lineItem.unit_price * lineItem.quantity;
+                        const savedLineItem =
+                            await this.lineItemRepository_.save(lineItem);
+                        lineItems.push(savedLineItem);
+                    }
+                    cart.items = lineItems;
+                    console.log('Line items added to cart:', cart.items);
+
+                    // Step 7: Create an order using the cart and product's store_id
+                    let order: Order = new Order();
+                    order.status = OrderStatus.PENDING;
+                    order.store_id = storeId; // Use store_id directly from the product
+                    order.fulfillment_status = FulfillmentStatus.NOT_FULFILLED;
+                    order.payment_status = PaymentStatus.AWAITING;
+                    order.sales_channel_id = sales_channel_id;
+                    order.customer_id = customer.id;
+                    order.email = customer.email;
+                    order.cart_id = cart.id;
+                    order.region_id = cart.region_id;
+                    order.currency_code = 'usdt';
+                    order.created_at = new Date(date);
+
+                    order = await this.orderRepository_.save(order);
+                    console.log('Order created successfully:', order);
+
+                    //create a payment
+                    await this.paymentRepository_.save({
+                        id: order.id.replace('order_', 'payment_'),
+                        order_id: order.id,
+                        cart_id: cart.id,
+                        amount: orderTotal,
+                        currency_code: order.currency_code,
+                        provider_id: 'crypto',
+                        data: {},
+                        blockchain_data: {
+                            receiver_address: '',
+                            transaction_id: '',
+                            escrow_address:
+                                '0xAb6a9e96E08d0ec6100016a308828B792f4da3fD',
+                        },
+                    });
+
+                    // Step 8: Link line items to the order
+                    order.items = cart.items;
+                    const lineItemPromises = cart.items.map((item) => {
+                        item.order_id = order.id;
+                        return this.lineItemRepository_.save(item);
+                    });
+
+                    await Promise.all(lineItemPromises);
+                    actualOrderCount++;
+
+                    console.log('Line items linked to order:', order.items);
+
+                    orders.push(order); // Add the order to the array
+
+                    console.log(`Order ${i + 1} created successfully:`, order);
+                }
+            }
+
+            console.log(
+                `${actualOrderCount} mock orders created successfully.`
+            );
+            return orders; // Return all created orders
+        } catch (error) {
+            console.error('Error during mock order creation:', error.message);
+            this.logger.error(`Error creating mock order: ${error.message}`);
+            throw error;
+        }
     }
 }
