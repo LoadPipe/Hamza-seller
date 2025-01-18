@@ -769,10 +769,6 @@ export default class OrderService extends MedusaOrderService {
                 );
             }
 
-            if (refundableAmount === totalOrderAmount - refundAmount) {
-                order.payment_status = PaymentStatus.REFUNDED;
-            }
-
             // Check for an existing unconfirmed refund
             let refund = await this.refundRepository_.findOne({
                 where: { order_id: orderId, confirmed: false },
@@ -797,10 +793,10 @@ export default class OrderService extends MedusaOrderService {
             }
 
             await this.refundRepository_.save(refund);
-
             await this.orderRepository_.save(order);
 
             // Optionally add notes or metadata to the order
+            //TODO: should probably add to an array, as multiple refunds are possible
             order.metadata = {
                 ...order.metadata,
                 refund_note: note || '',
