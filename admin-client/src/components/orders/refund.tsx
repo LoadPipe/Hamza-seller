@@ -89,6 +89,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     const refundMutation = useMutation({
         mutationFn: async () => {
             const escrowPayment = await getEscrowPayment(order);
+            console.log('escrow payment in mutation is', escrowPayment);
 
             if (escrowPayment === null) {
                 toast({
@@ -122,6 +123,8 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                     getBlockchainAmount(formData.refundAmount)
                 );
 
+                console.log('escrowRefundResult is', escrowRefundResult);
+
                 //if result successful, confirm the refund
                 if (escrowRefundResult) {
                     await putSecure('/seller/order/refund', {
@@ -150,6 +153,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                     console.error('Escrow refund failed');
                 }
             } catch (error) {
+                console.error(error);
                 toast({
                     variant: 'destructive',
                     title: 'Escrow Refund Error',
