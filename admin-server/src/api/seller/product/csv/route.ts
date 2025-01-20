@@ -1,6 +1,14 @@
-import { MedusaRequest, MedusaResponse, ProductStatus, Store } from '@medusajs/medusa';
+import {
+    MedusaRequest,
+    MedusaResponse,
+    ProductStatus,
+    Store,
+} from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
-import ProductService, { csvProductData, UpdateProductProductVariantDTO } from '../../../../services/product';
+import ProductService, {
+    csvProductData,
+    UpdateProductProductVariantDTO,
+} from '../../../../services/product';
 import StoreService from '../../../../services/store';
 import { Product } from '../../../../models/product';
 import {
@@ -67,13 +75,13 @@ const requiredCsvHeadersForVariant = [
 ];
 
 const requiredCsvHeadersForVariantUpdate = [
-    ...requiredCsvHeadersForVariant.filter(header => header !== 'variant'),
+    ...requiredCsvHeadersForVariant.filter((header) => header !== 'variant'),
     'variant_id',
 ];
 
 const requiredCsvHeadersForProductUpdate = [
-    ...requiredCsvHeadersForProduct.filter(header => header !== 'variant'),
-    'product_id'
+    ...requiredCsvHeadersForProduct.filter((header) => header !== 'variant'),
+    'product_id',
 ];
 
 /**
@@ -177,7 +185,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
     */
     const mapVariants = async (
         productDetails: ProductDetails
-    ): Promise<(CreateProductProductVariantInput | UpdateProductProductVariantDTO)[]> => {
+    ): Promise<
+        (CreateProductProductVariantInput | UpdateProductProductVariantDTO)[]
+    > => {
         const variants = [];
         const currencies = [
             { code: 'eth', symbol: 'ETH' },
@@ -190,8 +200,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         //extracts option values from variantData
         //const option = [ { "value":"L" }, { "value":"Black" }, { "value":"Female" } ]
         const extractOptions = (variantString: string): { value: string }[] => {
-            const options = variantString.includes('|') ? variantString.split('|') : [variantString];
-            return options.map(option => {
+            const options = variantString.includes('|')
+                ? variantString.split('|')
+                : [variantString];
+            return options.map((option) => {
                 const value = option.trim().split('[')[1].replace(']', '');
                 return { value };
             });
@@ -224,14 +236,18 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
             // console.log('POSTCheck5.1.3.2.5');
 
-            const options = variant.variant ? extractOptions(variant.variant) : null;
+            const options = variant.variant
+                ? extractOptions(variant.variant)
+                : null;
             // console.log('options: ' + JSON.stringify(options));
 
             // console.log('POSTCheck5.1.3.2.6');
 
             variants.push({
                 id: variant.variant_id || null,
-                ...(options && { title: options.map((option) => option.value).join(' | ') }),
+                ...(options && {
+                    title: options.map((option) => option.value).join(' | '),
+                }),
                 inventory_quantity: variant.variant_inventory_quantity,
                 allow_backorder:
                     variant.variant_allow_backorder === '1' ? true : false,
@@ -270,31 +286,34 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         csvData: csvProductData[],
         store: Store
     ): Promise<ProductDetails> => {
-
         //get all variant rows with same handle
         let variants = [];
-        
+
         //usually, product row data contains variant data as well
         const hasVariant = productService.csvRowHasVariant(
             rowData,
             requiredCsvHeadersForVariant,
             requiredCsvHeadersForVariantUpdate
         );
-        
+
         if (hasVariant) {
             variants.push(rowData);
         }
-        
+
         //grabbing all variants that are the same handle
         variants.push(
             ...csvData.filter(
-                (row) => rowData !== row && row.handle && rowData.handle && row.handle === rowData.handle
+                (row) =>
+                    rowData !== row &&
+                    row.handle &&
+                    rowData.handle &&
+                    row.handle === rowData.handle
             )
         );
 
         // console.log('variantsConvertRowDataToProductDetails: ' + JSON.stringify(variants));
 
-        //if product_id is present, we're updating a product        
+        //if product_id is present, we're updating a product
         let productDetails: ProductDetails = {
             productInfo: {
                 productId: rowData['product_id'] || null,
@@ -347,15 +366,15 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             title,
             values: Array.from(values),
         }));
-    }
+    };
 
     /**
      * Extracts and formats image URLs from a given string of image paths.
-     * 
+     *
      * @param {string} images - A string containing image paths separated by '|'.
      * @param {string} baseImageUrl - The base URL to prepend to image paths that do not start with 'http'.
      * @returns {Promise<string[]>} A promise that resolves to an array of formatted image URLs.
-     * 
+     *
      * @example
      * const images = "image1.jpg|http://example.com/image2.jpg|image3.png";
      * const baseImageUrl = "http://mybaseurl.com/";
@@ -368,7 +387,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
      *     // ]
      * });
      */
-    const extractImages = async (images: string, baseImageUrl: string): Promise<string[]> => {
+    const extractImages = async (
+        images: string,
+        baseImageUrl: string
+    ): Promise<string[]> => {
         const images_ = images.split('|').map((option) => {
             if (option.trim().startsWith('http')) {
                 return option.trim();
@@ -377,7 +399,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             }
         });
         return images_;
-    }
+    };
 
     const convertCsvDataToCreateProductInput = async (
         rowData: csvProductData,
@@ -492,21 +514,24 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
         const productDetails: ProductDetails =
             await convertRowDataToProductDetails(rowData, csvData, store);
-        
+
         // console.log('POSTCheck5.1.3.2');
-        
+
         // console.log('productDetails: ' + JSON.stringify(productDetails));
 
-        const optionNames: (CreateProductProductOption_[] | null) = await extractOptionNames(productDetails.variants);
+        const optionNames: CreateProductProductOption_[] | null =
+            await extractOptionNames(productDetails.variants);
         // console.log('optionNames: ' + JSON.stringify(optionNames));
 
         // console.log('POSTCheck5.1.3.3');
 
-        const variants: UpdateProductProductVariantDTO[] = (await mapVariants(productDetails)) as UpdateProductProductVariantDTO[];
+        const variants: UpdateProductProductVariantDTO[] = (await mapVariants(
+            productDetails
+        )) as UpdateProductProductVariantDTO[];
         // console.log('variants: ' + JSON.stringify(variants));
 
         // console.log('POSTCheck5.1.3.4');
-        
+
         if (rowData['images'] && rowData['images'].trim() !== '') {
             const images = await extractImages(rowData['images'], baseImageUrl);
             // console.log('images: ' + JSON.stringify(images));
@@ -521,26 +546,43 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         }
 
         // console.log('POSTCheck5.1.3.6');
-        
+
         const output: UpdateProductInput = {
             ...(rowData['product_id'] && { id: rowData['product_id'].trim() }),
             ...(rowData['title'] && { title: rowData['title'] }),
             ...(rowData['subtitle'] && { subtitle: rowData['subtitle'] }),
             ...(rowData['handle'] && { handle: rowData['handle'] }),
-            ...(rowData['description'] && { description: rowData['description'] }),
+            ...(rowData['description'] && {
+                description: rowData['description'],
+            }),
             is_giftcard: false,
-            ...(rowData['status'] && { status: rowData['status'] as ProductStatus }),
-            ...(thumbnail && thumbnail.trim() !== '' && { thumbnail: thumbnail }),
+            ...(rowData['status'] && {
+                status: rowData['status'] as ProductStatus,
+            }),
+            ...(thumbnail &&
+                thumbnail.trim() !== '' && { thumbnail: thumbnail }),
             ...(images && images.length > 0 && { images: images }),
             collection_id: collectionId,
-            ...(rowData['weight'] && { weight: Math.round(Number(rowData['weight'])) }),
-            ...(rowData['discountable'] && { discountable: rowData['discountable'] === '1' ? true : false }),
-            ...(rowData['category_id'] && { categories: [{ id: rowData['category_id'] }] }),
-            ...(salesChannelIds && salesChannelIds.length > 0 && { sales_channels: salesChannelIds.map((sc) => { return { id: sc }; }) }),
-            ...(optionNames && optionNames.length > 0 && { options: optionNames }),
+            ...(rowData['weight'] && {
+                weight: Math.round(Number(rowData['weight'])),
+            }),
+            ...(rowData['discountable'] && {
+                discountable: rowData['discountable'] === '1' ? true : false,
+            }),
+            ...(rowData['category_id'] && {
+                categories: [{ id: rowData['category_id'] }],
+            }),
+            ...(salesChannelIds &&
+                salesChannelIds.length > 0 && {
+                    sales_channels: salesChannelIds.map((sc) => {
+                        return { id: sc };
+                    }),
+                }),
+            ...(optionNames &&
+                optionNames.length > 0 && { options: optionNames }),
             ...(variants && variants.length > 0 && { variants: variants }),
         };
-        
+
         // console.log('POSTCheck5.1.3.7');
 
         // console.log('Converting data to UpdateProductInput:', JSON.stringify(output));
@@ -581,7 +623,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         if (productRows.length === 0) {
             return {
                 success: false,
-                message: 'Your spreadsheet does not contain any create product rows',
+                message:
+                    'Your spreadsheet does not contain any create product rows',
             };
         }
 
@@ -647,12 +690,12 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
         // if update is only a bunch of variants, we'll need to update variants only, not the product
         if (productRows.length === 0) {
-            
             for (let d of data) {
                 //TODO: handle variant only update
-                variantInputs.push(
+                variantInputs
+                    .push
                     // await convertCsvDataToUpdateVariantInput(d)
-                );
+                    ();
             }
 
             // console.log('variantInputs: ' + JSON.stringify(variantInputs));
@@ -686,11 +729,16 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
 
         // console.log('POSTCheck5.1.4');
 
+        // console.log('productInputs2: ' + JSON.stringify(productInputs));
+
         // console.log('productInputs: ' + JSON.stringify(productInputs));
-        
+
         return {
             success: productInputs.length > 0,
-            message: productInputs.length > 0 ? 'data converted successfully' : 'No data converted',
+            message:
+                productInputs.length > 0
+                    ? 'data converted successfully'
+                    : 'No data converted',
             variantOnly: false,
             jsonData: productInputs,
         };
@@ -727,11 +775,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             };
         }
 
-        const products: Product[] =
-            await productService.bulkImportProducts(
-                store.id,
-                convertCreateCsvDataOutput.jsonData
-            );
+        const products: Product[] = await productService.bulkImportProducts(
+            store.id,
+            convertCreateCsvDataOutput.jsonData
+        );
 
         if (products.length === 0) {
             return {
@@ -743,9 +790,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         return {
             success: true,
             message: 'Products imported successfully',
-            products: products
+            products: products,
         };
-    }
+    };
 
     const updateProducts = async (
         store: Store,
@@ -757,8 +804,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         success: boolean;
         message: string;
         products?: Product[];
-    }> => { 
-
+    }> => {
         // console.log('POSTCheck5.1');
 
         const convertUpdateCsvDataOutput: {
@@ -783,11 +829,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             };
         }
 
-        const products: Product[] =
-            await productService.bulkUpdateProducts(
-                store.id,
-                convertUpdateCsvDataOutput.jsonData as UpdateProductInput[]
-            );
+        const products: Product[] = await productService.bulkUpdateProducts(
+            store.id,
+            convertUpdateCsvDataOutput.jsonData as UpdateProductInput[]
+        );
 
         if (products.length === 0) {
             return {
@@ -801,40 +846,40 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         return {
             success: true,
             message: 'Products updated successfully',
-            products: products
+            products: products,
         };
-    }
+    };
 
-    
+
     /**
      * Handles the file upload and processing for CSV product data.
-     * 
+     *
      * Potential JSON Responses:
-     * 
+     *
      * 1. File upload error:
      *    Status: 400
      *    Response: { type: 'fileValidationError', message: 'No file uploaded' }
-     * 
+     *
      * 2. Missing store_id:
      *    Status: 400
      *    Response: { type: 'paramValidationError', message: 'store_id is required' }
-     * 
+     *
      * 3. Missing collection_id:
      *    Status: 400
      *    Response: { type: 'paramValidationError', message: 'collection_id is required' }
-     * 
+     *
      * 4. Missing sales_channel_id:
      *    Status: 400
      *    Response: { type: 'paramValidationError', message: 'sales_channel_id is required' }
-     * 
+     *
      * 5. No file uploaded:
      *    Status: 400
      *    Response: { type: 'fileValidationError', message: 'No file uploaded' }
-     * 
+     *
      * 6. CSV column validation error:
      *    Status: 400
      *    Response: { type: 'csvColumnValidationError', message: <validation error message> }
-     * 
+     *
      * 7. CSV data validation error:
      *    Status: 400
      *    Response: {
@@ -844,15 +889,15 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
      *      updateMessage: <update error message>,
      *      updateInvalidData: <invalid update data>
      *    }
-     * 
+     *
      * 8. Create products error:
      *    Status: 400
      *    Response: { type: 'createProductsError', message: <create error message> }
-     * 
+     *
      * 9. Update products error:
      *    Status: 400
      *    Response: { type: 'updateProductsError', message: <update error message> }
-     * 
+     *
      * 10. Successful response:
      *     Status: 200
      *     Response: {
@@ -877,13 +922,23 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             res,
             'POST',
             '/seller/product/csv',
-            ['store_id', 'file', 'collection_id', 'sales_channel_id', 'base_image_url']
+            [
+                'store_id',
+                'file',
+                'collection_id',
+                'sales_channel_id',
+                'base_image_url',
+            ]
         );
 
         await handler.handle(async () => {
             try {
-                const { store_id, collection_id, sales_channel_id, base_image_url } =
-                    handler.inputParams;
+                const {
+                    store_id,
+                    collection_id,
+                    sales_channel_id,
+                    base_image_url,
+                } = handler.inputParams;
 
                 if (!store_id) {
                     return handler.returnStatus(400, {
@@ -891,7 +946,22 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                         message: 'store_id is required',
                     });
                 }
+                console.log(`$$$$ file ${JSON.stringify(req.file)}`);
+                let collectionID;
+                let salesChannelID;
+                try {
+                    // Fetch default collection ID and sales channel ID
+                    const { collectionId, salesChannelId } =
+                        await productService.getProductCollectionAndSalesChannelIds();
 
+                    collectionID = collectionId;
+                    salesChannelID = salesChannelId;
+                    // Set defaults if not provided in inputParams
+                    if (!collection_id || !collectionID) {
+                        console.log(
+                            `Default Collection ID assigned: ${collection_id}`
+                        );
+                    }
                 if (!collection_id) {
                     return handler.returnStatus(400, {
                         type: 'paramValidationError',
@@ -899,6 +969,21 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     });
                 }
 
+                    if (!sales_channel_id || !salesChannelId) {
+                        console.log(
+                            `Default Sales Channel ID assigned: ${sales_channel_id}`
+                        );
+                    }
+                } catch (error) {
+                    console.error(
+                        'Error fetching default collection or sales channel IDs:',
+                        error.message
+                    );
+                    return handler.returnStatus(500, {
+                        message:
+                            'Failed to fetch collection or sales channel IDs.',
+                    });
+                }
                 if (!sales_channel_id) {
                     return handler.returnStatus(400, {
                         type: 'paramValidationError',
@@ -906,7 +991,9 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     });
                 }
 
-                const baseImageUrl = (base_image_url) ? base_image_url : 'https://static.hamza.market/stores/';
+                const baseImageUrl = base_image_url
+                    ? base_image_url
+                    : 'https://static.hamza.market/stores/';
 
                 const file = req.file;
                 if (!file) {
@@ -963,13 +1050,18 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 console.log('validateCsvDataOutput: ' + JSON.stringify(validateCsvDataOutput));
                 // console.log('POSTCheck3');
 
-                if (!validateCsvDataOutput.createSuccess && !validateCsvDataOutput.updateSuccess) {
+                if (
+                    !validateCsvDataOutput.createSuccess &&
+                    !validateCsvDataOutput.updateSuccess
+                ) {
                     return handler.returnStatus(400, {
                         type: 'csvDataValidationError',
                         createMessage: validateCsvDataOutput.createMessage,
-                        createInvalidData: validateCsvDataOutput.createInvalidData,
+                        createInvalidData:
+                            validateCsvDataOutput.createInvalidData,
                         updateMessage: validateCsvDataOutput.updateMessage,
-                        updateInvalidData: validateCsvDataOutput.updateInvalidData,
+                        updateInvalidData:
+                            validateCsvDataOutput.updateInvalidData,
                     });
                 }
                 // console.log('validateCsvDataOutput: ' + JSON.stringify(validateCsvDataOutput));
@@ -982,14 +1074,14 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 } = {
                     success: validateCsvDataOutput.createSuccess,
                     message: validateCsvDataOutput.createMessage,
-                    products: []
+                    products: [],
                 };
 
                 if (validateCsvDataOutput.createSuccess) {
                     createProductsOutput = await createProducts(
                         store,
-                        collection_id,
-                        sales_channel_id,
+                        collectionID,
+                        salesChannelID,
                         baseImageUrl,
                         validateCsvDataOutput.createValidData
                     );
@@ -1012,7 +1104,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 } = {
                     success: validateCsvDataOutput.updateSuccess,
                     message: validateCsvDataOutput.updateMessage,
-                    products: []
+                    products: [],
                 };
 
                 if (validateCsvDataOutput.updateSuccess) {

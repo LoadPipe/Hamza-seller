@@ -141,15 +141,6 @@ Content-Type: application/json
 GET http://localhost:9000/seller/dashboard?store_id=store_01JGBEPMEJ0KZB8PV0SWKFBW6W&wallet_address=0xb975bf5ca0b09e17834d0b5a526f8315f82986d4
 Content-Type: application/json
 
-### Query Product Categories
+###  Get Product Categories
 GET http://localhost:9000/seller/product/categories
 Content-Type: application/json
-
-### Set Tracking Number
-POST http://localhost:9000/seller/order/tracking
-Content-Type: application/json
-
-{
-  "order_id": "xxxxx",
-  "tracking_number": "123"
-}

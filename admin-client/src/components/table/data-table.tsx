@@ -151,6 +151,7 @@ export function DataTable<TData, TValue>({
         );
     };
 
+    // TODO: Can be moved to a utility function
     const handleDownloadCSV = () => {
         if (!data || data.length === 0) {
             console.error('No data available for download.');
