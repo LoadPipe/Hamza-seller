@@ -8,6 +8,10 @@ export const ProductSchema = z.object({
     subtitle: z.string().optional().nullable(),
     description: z.string().optional(),
     thumbnail: z.string().optional(),
+    weight: z.number().nullable(),
+    length: z.number().nullable(),
+    height: z.number().nullable(),
+    width: z.number().nullable(),
     categories: z
         .array(
             z.object({
@@ -34,6 +38,7 @@ export const ProductSchema = z.object({
     variants: z.array(
         z.object({
             id: z.string(),
+            product_id: z.string(),
             title: z.string(),
             created_at: z.string(),
             sku: z.string().nullable(),
