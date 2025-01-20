@@ -542,7 +542,7 @@ export default function EditProductPage() {
                         </div>
                     </div>
 
-                    {/* Preferred Currency && Base Price */}
+                    {/* Preferred Currency */}
                     <div className="bg-black p-[24px] rounded">
                         <h2 className="text-2xl font-bold">Product Data</h2>
 
@@ -581,7 +581,28 @@ export default function EditProductPage() {
                                                     {/* Variant Title */}
                                                     <editProductForm.Field
                                                         name={`variants[${index}].title`}
-                                                        key={`title-${variant}`}
+                                                        validators={{
+                                                            onBlur: ({
+                                                                value,
+                                                            }) => {
+                                                                if (
+                                                                    !value ||
+                                                                    value.trim()
+                                                                        .length ===
+                                                                        0
+                                                                ) {
+                                                                    return 'Title is required.';
+                                                                }
+                                                                if (
+                                                                    value.trim()
+                                                                        .length <
+                                                                    3
+                                                                ) {
+                                                                    return 'Title must be at least 3 characters long.';
+                                                                }
+                                                                return undefined;
+                                                            },
+                                                        }}
                                                     >
                                                         {(field) => (
                                                             <div>
@@ -604,12 +625,15 @@ export default function EditProductPage() {
                                                                                 .value
                                                                         )
                                                                     }
+                                                                    onBlur={
+                                                                        field.handleBlur
+                                                                    }
                                                                 />
                                                                 {field.state
                                                                     .meta.errors
                                                                     ?.length >
                                                                     0 && (
-                                                                    <span className="text-red-500">
+                                                                    <span className="text-red-500 mt-1 block">
                                                                         {field.state.meta.errors.join(
                                                                             ', '
                                                                         )}
@@ -656,6 +680,27 @@ export default function EditProductPage() {
                                                     <editProductForm.Field
                                                         name={`variants[${index}].inventory_quantity`}
                                                         key={`inventory_quantity-${variant.id}`}
+                                                        validators={{
+                                                            onBlur: ({
+                                                                value,
+                                                            }) => {
+                                                                if (
+                                                                    value ===
+                                                                    undefined
+                                                                ) {
+                                                                    return 'Quantity is required.';
+                                                                }
+                                                                if (value < 0) {
+                                                                    return 'Quantity cannot be negative.';
+                                                                }
+                                                                if (
+                                                                    value === 0
+                                                                ) {
+                                                                    return 'Quantity cannot be zero';
+                                                                }
+                                                                return undefined;
+                                                            },
+                                                        }}
                                                     >
                                                         {(field) => (
                                                             <div>
@@ -683,7 +728,20 @@ export default function EditProductPage() {
                                                                             )
                                                                         )
                                                                     }
+                                                                    onBlur={
+                                                                        field.handleBlur
+                                                                    }
                                                                 />
+                                                                {field.state
+                                                                    .meta.errors
+                                                                    ?.length >
+                                                                    0 && (
+                                                                    <span className="text-red-500 mt-1 block">
+                                                                        {field.state.meta.errors.join(
+                                                                            ', '
+                                                                        )}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </editProductForm.Field>
