@@ -45,7 +45,7 @@ export class Order extends MedusaOrder {
     @Column()
     external_source?: string;
 
-    @Column()
+    @Column('jsonb')
     external_metadata?: Record<string, unknown>;
 
     @OneToMany(() => OrderHistory, (orderHistory) => orderHistory.order, {
