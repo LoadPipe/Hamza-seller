@@ -114,12 +114,18 @@ export default function EditProductPage() {
                 length: variant.length || 0,
                 height: variant.height || 0,
                 width: variant.width || 0,
-                price: parseInt(
-                    variant.prices?.find(
+                price: (() => {
+                    const matchingPrice = variant.prices?.find(
                         (p) => p.currency_code === preferredCurrency
-                    )?.amount || '0',
-                    10
-                ),
+                    );
+                    return matchingPrice
+                        ? formatCryptoPrice(
+                              Number(matchingPrice.amount || '0'),
+                              preferredCurrency ?? 'eth'
+                          )
+                        : '';
+                })(),
+
                 inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
@@ -724,6 +730,74 @@ export default function EditProductPage() {
                                                                             .value ||
                                                                         variant.inventory_quantity ||
                                                                         ''
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        field.handleChange(
+                                                                            Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                    onBlur={
+                                                                        field.handleBlur
+                                                                    }
+                                                                />
+                                                                {field.state
+                                                                    .meta.errors
+                                                                    ?.length >
+                                                                    0 && (
+                                                                    <span className="text-red-500 mt-1 block">
+                                                                        {field.state.meta.errors.join(
+                                                                            ', '
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </editProductForm.Field>
+                                                    <editProductForm.Field
+                                                        name={`variants[${index}].price`}
+                                                        key={`price-${variant.id}`}
+                                                        validators={{
+                                                            onBlur: ({
+                                                                value,
+                                                            }) => {
+                                                                if (
+                                                                    value ===
+                                                                    undefined
+                                                                ) {
+                                                                    return 'Price is required.';
+                                                                }
+                                                                if (value < 0) {
+                                                                    return 'Price cannot be negative.';
+                                                                }
+                                                                if (
+                                                                    value === 0
+                                                                ) {
+                                                                    return 'Price cannot be zero';
+                                                                }
+                                                                return undefined;
+                                                            },
+                                                        }}
+                                                    >
+                                                        {(field) => (
+                                                            <div>
+                                                                <Label>
+                                                                    Price in{' '}
+                                                                    {preferredCurrency?.toUpperCase() ??
+                                                                        'ETH'}
+                                                                </Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    placeholder="Price"
+                                                                    value={
+                                                                        field
+                                                                            .state
+                                                                            .value
                                                                     }
                                                                     onChange={(
                                                                         e
