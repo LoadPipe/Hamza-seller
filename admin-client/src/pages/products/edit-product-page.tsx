@@ -22,7 +22,7 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { z } from 'zod';
 import {
     ProductSchema,
-    validateInput,
+    // validateInput,
 } from '@/pages/products/product-schema.ts';
 import { Label } from '@/components/ui/label.tsx';
 import { useForm, getBy, setBy } from '@tanstack/react-form';
@@ -1148,6 +1148,7 @@ export default function EditProductPage() {
 
                                             const payload = {
                                                 ...dirtyFields,
+                                                preferredCurrency,
                                             };
 
                                             updateEditForm.mutate(payload);

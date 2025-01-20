@@ -1946,17 +1946,22 @@ class ProductService extends MedusaProductService {
             ? requiredCsvHeadersForProductUpdate
             : requiredCsvHeadersForProduct;
         const productSpecificHeaders = headerForProduct.filter(
-                (header) => !headerForVariant.includes(header)
-            );
+            (header) => !headerForVariant.includes(header)
+        );
 
         // Check if all headers in headerForVariant are present in the row
-        const hasAllVariantHeaders = headerForVariant.every(
-            (header) => typeof row[header] === 'string' ? row[header].trim() !== "" : row[header] !== undefined
+        const hasAllVariantHeaders = headerForVariant.every((header) =>
+            typeof row[header] === 'string'
+                ? row[header].trim() !== ''
+                : row[header] !== undefined
         );
 
         // Check if none of the product-specific headers are present in the row
         const hasNoProductSpecificHeaders = productSpecificHeaders.every(
-            (header) => typeof row[header] === 'string' ? row[header].trim() === "" : row[header] === undefined
+            (header) =>
+                typeof row[header] === 'string'
+                    ? row[header].trim() === ''
+                    : row[header] === undefined
         );
 
         return (
@@ -1971,7 +1976,7 @@ class ProductService extends MedusaProductService {
         // this.logger.debug('hasNoProductSpecificHeaders: ' + hasNoProductSpecificHeaders);
         // this.logger.debug('isVariantOnly: ' + (hasAllVariantHeaders && hasNoProductSpecificHeaders));
         // this.logger.debug('--------------------------------');
-        return (hasAllVariantHeaders && hasNoProductSpecificHeaders);
+        return hasAllVariantHeaders && hasNoProductSpecificHeaders;
     }
 
     /**
@@ -2192,7 +2197,11 @@ class ProductService extends MedusaProductService {
         if (isCreate && row['handle'] && row['handle'].trim() !== '') {
             const product = await this.getProductByHandle(row['handle']);
             if (product) {
-                return 'database contains the same product handle (' + row['handle'] + '), please try a new one';
+                return (
+                    'database contains the same product handle (' +
+                    row['handle'] +
+                    '), please try a new one'
+                );
             }
 
             // check if handle is unique from other product rows
@@ -2208,7 +2217,11 @@ class ProductService extends MedusaProductService {
             );
             if (handleExistsInProducts) {
                 // this.logger.debug('productRows: ' + JSON.stringify(productRows));
-                return 'The handle (' + row['handle'] + ') must be unique from other product rows in the CSV.';
+                return (
+                    'The handle (' +
+                    row['handle'] +
+                    ') must be unique from other product rows in the CSV.'
+                );
             }
         }
 
