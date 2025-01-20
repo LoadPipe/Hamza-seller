@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, HelpCircle } from 'lucide-react';
 import { MoreHorizontal } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -182,14 +182,14 @@ export const generateColumns = (
             case 'items':
                 return {
                     accessorKey: 'items',
-                    header: ({ column }) => (
+                    header: () => (
                         <Button
                             variant={'ghost'}
-                            className=" text-white hover:text-opacity-70 "
+                            className=" text-white hover:text-opacity-70 w-40" // Added width to make the column wider
                             onClick={() => {
-                                column.toggleSorting(
-                                    column.getIsSorted() === 'asc'
-                                );
+                                // column.toggleSorting(
+                                //     column.getIsSorted() === 'asc'
+                                // );
                             }}
                         >
                             Items
@@ -200,17 +200,37 @@ export const generateColumns = (
                         return (
                             <div>
                                 {items && items.length === 1 ? (
-                                    <span title={items[0].title}>
-                                        {items[0].quantity} x{' '}
-                                        {items[0].title
-                                            .split(' ')
-                                            .slice(0, 4)
-                                            .join(' ') + ' ...'}
-                                    </span>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span>
+                                                <HelpCircle
+                                                    className="mr-1 h-4 w-4 inline mb-1"
+                                                    style={{
+                                                        color: 'mediumslateblue',
+                                                        marginBottom: '1px',
+                                                    }}
+                                                />
+                                                <span>{`${items.length} item ordered`}</span>
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            {items[0].quantity} x{' '}
+                                            {items[0].title}
+                                        </TooltipContent>
+                                    </Tooltip>
                                 ) : items && items.length > 1 ? (
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <span>{`${items.length} items ordered`}</span>
+                                            <span>
+                                                <HelpCircle
+                                                    className="mr-1 h-4 w-4 inline mb-1"
+                                                    style={{
+                                                        color: 'mediumslateblue',
+                                                        marginBottom: '3px',
+                                                    }}
+                                                />
+                                                <span>{`${items.length} items ordered`}</span>
+                                            </span>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <ul className="list-disc pl-4">
@@ -484,7 +504,9 @@ export const generateColumns = (
                                 {/* Render the asynchronous converted value */}
                                 {convertedPrice !== null &&
                                     payments[0]?.currency_code === 'eth' && (
-                                        <div>≅ {convertedPrice} (usdc)</div>
+                                        <div className="text-[12px] text-[#94D42A]">
+                                            ≅ {convertedPrice} (usdc)
+                                        </div>
                                     )}
                             </div>
                         );

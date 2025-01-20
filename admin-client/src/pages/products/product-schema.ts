@@ -63,7 +63,6 @@ export const ProductSchema = z.object({
             // Optional fields
             external_source: z.string().nullable(),
             external_metadata: z.any().nullable(),
-            bucky_metadata: z.any().nullable(),
             updated_at: z.string(),
             deleted_at: z.string().nullable(),
             barcode: z.string().nullable(),

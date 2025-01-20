@@ -1,4 +1,8 @@
-import { Payment, Store, TransactionBaseService } from '@medusajs/medusa';
+import {
+    Payment,
+    Store,
+    TransactionBaseService,
+} from '@medusajs/medusa';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import StoreRepository from '../repositories/store';
@@ -282,7 +286,6 @@ export default class StoreOrderService extends TransactionBaseService {
         note?: Record<string, any>
     ) {
         try {
-
             if (!validStatuses.includes(newStatus)) {
                 throw new Error(`Invalid order status: ${newStatus}`);
             }
@@ -472,6 +475,33 @@ export default class StoreOrderService extends TransactionBaseService {
             );
             throw error;
         }
+    }
+
+    async setOrderTracking(
+        orderId: string,
+        trackingNumber: string
+    ): Promise<Order> {
+        try {
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+            });
+        
+            if (!order) {
+                throw new Error(`Order with ID ${orderId} not found`);
+            }
+
+            order.tracking_number = trackingNumber;
+            const updatedOrder = await this.orderRepository_.save(order);
+
+            return updatedOrder;
+        } catch (e: any) {
+            this.logger.error(
+                `Error setting order tracking for order ${orderId}`,
+                e
+            );
+        }
+
+        return null;
     }
 
     private async syncEscrowPaymentForOrder(order: Order): Promise<Order> {

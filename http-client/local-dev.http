@@ -144,37 +144,3 @@ Content-Type: application/json
 ###  Get Product Categories
 GET http://localhost:9000/seller/product/categories
 Content-Type: application/json
-
-### Get Product W/ Variants && Categories
-GET http://localhost:9000/seller/product/edit-product?id=prod_01JHF7KW0TSDF0566500HEQXME&store_id=store_01JHF7NG1ZJWV5V6565TQFX2B4
-Content-Type: application/json
-
-### PUT Product W/ Variants && Categories
-PUT http://localhost:9000/seller/product/edit-product
-Content-Type: application/json
-
-### PATCH Product W/ Variants && Categories
-PATCH http://localhost:9000/seller/product/edit-product
-Content-Type: application/json
-
-{
-    "id": "prod_01JHF7KVQWTDGED30S1VMV5EVV",
-    "store_id": "store_01JHF7NG1ZJWV5V6565TQFX2B4",
-    "name": "New Product Name",
-    "description": "New Product Description",
-    "price": 1000,
-    "discount": 0,
-    "stock": 100,
-    "categories": [
-        "cat_01JHF7NG1ZJWV5V6565TQFX2B4"
-    ],
-    "variants": [
-        {
-        "id": "var_01JHF7KVQWTDGED30S1VMV5EVV",
-        "name": "New Variant Name",
-        "price": 1000,
-        "discount": 0,
-        "stock": 100
-        }
-    ]
-}
