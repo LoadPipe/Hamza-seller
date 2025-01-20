@@ -10,6 +10,7 @@ import {
     Product,
 } from '@medusajs/medusa';
 import axios from 'axios';
+import { reverseCryptoPrice } from '../utils/price-formatter';
 import {
     CreateProductInput as MedusaCreateProductInput,
     CreateProductProductVariantPriceInput,
@@ -1524,6 +1525,30 @@ class ProductService extends MedusaProductService {
         updates: any
     ): Promise<QuerySellerProductByIdResponse> {
         console.log(`Incoming Updates: ${JSON.stringify(updates)}`);
+
+        // Reverse crypto prices on updates
+        const { preferredCurrency } = updates;
+
+        if (!preferredCurrency) {
+            throw new Error('Preferred currency is missing in updates.');
+        }
+
+        if (updates.variants && Array.isArray(updates.variants)) {
+            updates.variants = updates.variants.map((variant) => {
+                if (variant.price) {
+                    console.log(`WTF ${variant.price}`);
+                    variant.price = reverseCryptoPrice(
+                        variant.price,
+                        preferredCurrency
+                    );
+                }
+                return variant;
+            });
+        }
+
+        console.log(
+            `Updated Variants Prices: ${JSON.stringify(updates.variants)}`
+        );
 
         try {
             // 1. Check if the product exists in this store
