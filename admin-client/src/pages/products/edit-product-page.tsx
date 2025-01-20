@@ -557,6 +557,7 @@ export default function EditProductPage() {
                                         <AccordionItem
                                             key={variant.id}
                                             value={`variant-${index}`}
+                                            className="my-2"
                                         >
                                             <AccordionTrigger>
                                                 Variant #{index + 1}
@@ -882,178 +883,189 @@ export default function EditProductPage() {
                             </div>
                         )}
 
-                        <div className="flex justify-end mt-8">
-                            <editProductForm.Subscribe
-                                selector={(formState) => {
-                                    let dirtyFields: Record<string, unknown> =
-                                        {};
+                        <div className="fixed bottom-0 left-0 w-full bg-black px-8 py-4 border-t border-gray-700">
+                            <div className="max-w-4xl mx-auto flex justify-end">
+                                <editProductForm.Subscribe
+                                    selector={(formState) => {
+                                        let dirtyFields: Record<
+                                            string,
+                                            unknown
+                                        > = {};
 
-                                    // Keep track of which variant indices are dirty
-                                    const dirtyVariantIndices =
-                                        new Set<number>();
+                                        // Keep track of which variant indices are dirty
+                                        const dirtyVariantIndices =
+                                            new Set<number>();
 
-                                    // 1) Build normal dirty fields
-                                    for (const [
-                                        fieldName,
-                                        fieldMeta,
-                                    ] of Object.entries(formState.fieldMeta)) {
-                                        if (!fieldMeta.isDirty) continue;
+                                        // 1) Build normal dirty fields
+                                        for (const [
+                                            fieldName,
+                                            fieldMeta,
+                                        ] of Object.entries(
+                                            formState.fieldMeta
+                                        )) {
+                                            if (!fieldMeta.isDirty) continue;
 
-                                        // If this is something like "variants[0].title",
-                                        // we parse out the "0" from the path.
-                                        const match =
-                                            fieldName.match(
-                                                /^variants\[(\d+)\]/
-                                            );
-                                        if (match) {
-                                            const variantIndex = Number(
-                                                match[1]
-                                            );
-                                            console.log(
-                                                'Detected dirty field for variant index:',
-                                                variantIndex,
-                                                'Field:',
+                                            // If this is something like "variants[0].title",
+                                            // we parse out the "0" from the path.
+                                            const match =
+                                                fieldName.match(
+                                                    /^variants\[(\d+)\]/
+                                                );
+                                            if (match) {
+                                                const variantIndex = Number(
+                                                    match[1]
+                                                );
+                                                console.log(
+                                                    'Detected dirty field for variant index:',
+                                                    variantIndex,
+                                                    'Field:',
+                                                    fieldName
+                                                );
+                                                dirtyVariantIndices.add(
+                                                    variantIndex
+                                                );
+                                            }
+
+                                            // Add the changed field to dirtyFields
+                                            const currentValue = getBy(
+                                                formState.values,
                                                 fieldName
                                             );
-                                            dirtyVariantIndices.add(
-                                                variantIndex
+                                            dirtyFields = setBy(
+                                                dirtyFields,
+                                                fieldName,
+                                                currentValue
                                             );
                                         }
 
-                                        // Add the changed field to dirtyFields
-                                        const currentValue = getBy(
-                                            formState.values,
-                                            fieldName
+                                        console.log(
+                                            'Final dirtyVariantIndices:',
+                                            dirtyVariantIndices
                                         );
-                                        dirtyFields = setBy(
+
+                                        // 2) For each variant index that is dirty, also inject the ID and product_id
+                                        const dirtyArray =
+                                            Array.from(dirtyVariantIndices);
+
+                                        for (const index of dirtyArray) {
+                                            console.log(
+                                                'Processing variant index:',
+                                                index
+                                            );
+
+                                            // Attach variant.id
+                                            const idPath = `variants[${index}].id`;
+                                            const variantId = getBy(
+                                                formState.values,
+                                                idPath
+                                            );
+                                            if (variantId) {
+                                                console.log(
+                                                    'Attaching variantId for index:',
+                                                    index,
+                                                    'Variant ID:',
+                                                    variantId
+                                                );
+                                                dirtyFields = setBy(
+                                                    dirtyFields,
+                                                    idPath,
+                                                    variantId
+                                                );
+                                            } else {
+                                                console.log(
+                                                    'No variantId found for index:',
+                                                    index
+                                                );
+                                            }
+
+                                            // Attach variant.product_id
+                                            const productIdPath = `variants[${index}].product_id`;
+                                            const variantProductId = getBy(
+                                                formState.values,
+                                                productIdPath
+                                            );
+                                            if (variantProductId) {
+                                                console.log(
+                                                    'Attaching productId for index:',
+                                                    index,
+                                                    'Product ID:',
+                                                    variantProductId
+                                                );
+                                                dirtyFields = setBy(
+                                                    dirtyFields,
+                                                    productIdPath,
+                                                    variantProductId
+                                                );
+                                            } else {
+                                                console.log(
+                                                    'No product_id found for index:',
+                                                    index
+                                                );
+                                            }
+                                        }
+
+                                        // Return these so your handleSubmit can see them
+                                        return {
                                             dirtyFields,
-                                            fieldName,
-                                            currentValue
-                                        );
-                                    }
-
-                                    console.log(
-                                        'Final dirtyVariantIndices:',
-                                        dirtyVariantIndices
-                                    );
-
-                                    // 2) For each variant index that is dirty, also inject the ID and product_id
-                                    const dirtyArray =
-                                        Array.from(dirtyVariantIndices);
-
-                                    for (const index of dirtyArray) {
-                                        console.log(
-                                            'Processing variant index:',
-                                            index
-                                        );
-
-                                        // Attach variant.id
-                                        const idPath = `variants[${index}].id`;
-                                        const variantId = getBy(
-                                            formState.values,
-                                            idPath
-                                        );
-                                        if (variantId) {
-                                            console.log(
-                                                'Attaching variantId for index:',
-                                                index,
-                                                'Variant ID:',
-                                                variantId
-                                            );
-                                            dirtyFields = setBy(
-                                                dirtyFields,
-                                                idPath,
-                                                variantId
-                                            );
-                                        } else {
-                                            console.log(
-                                                'No variantId found for index:',
-                                                index
-                                            );
-                                        }
-
-                                        // Attach variant.product_id
-                                        const productIdPath = `variants[${index}].product_id`;
-                                        const variantProductId = getBy(
-                                            formState.values,
-                                            productIdPath
-                                        );
-                                        if (variantProductId) {
-                                            console.log(
-                                                'Attaching productId for index:',
-                                                index,
-                                                'Product ID:',
-                                                variantProductId
-                                            );
-                                            dirtyFields = setBy(
-                                                dirtyFields,
-                                                productIdPath,
-                                                variantProductId
-                                            );
-                                        } else {
-                                            console.log(
-                                                'No product_id found for index:',
-                                                index
-                                            );
-                                        }
-                                    }
-
-                                    // Return these so your handleSubmit can see them
-                                    return {
+                                            canSubmit: formState.canSubmit,
+                                            isSubmitting:
+                                                formState.isSubmitting,
+                                        };
+                                    }}
+                                >
+                                    {({
                                         dirtyFields,
-                                        canSubmit: formState.canSubmit,
-                                        isSubmitting: formState.isSubmitting,
-                                    };
-                                }}
-                            >
-                                {({ dirtyFields, canSubmit, isSubmitting }) => {
-                                    const handleSubmit = async () => {
-                                        if (
-                                            Object.keys(dirtyFields).length ===
-                                            0
-                                        ) {
-                                            toast({
-                                                variant: 'default',
-                                                title: 'No Changes!',
-                                                description:
-                                                    'No Changes to submit',
-                                            });
-                                            return;
-                                        }
+                                        canSubmit,
+                                        isSubmitting,
+                                    }) => {
+                                        const handleSubmit = async () => {
+                                            if (
+                                                Object.keys(dirtyFields)
+                                                    .length === 0
+                                            ) {
+                                                toast({
+                                                    variant: 'default',
+                                                    title: 'No Changes!',
+                                                    description:
+                                                        'No Changes to submit',
+                                                });
+                                                return;
+                                            }
 
-                                        console.log(
-                                            'Dirty Fields only:',
-                                            dirtyFields
-                                        );
+                                            console.log(
+                                                'Dirty Fields only:',
+                                                dirtyFields
+                                            );
 
-                                        // Your final payload will have e.g.:
-                                        // {
-                                        //   "variants[0].inventory_quantity": 102,
-                                        //   "variants[0].id": "variant_123",
-                                        //   "variants[0].product_id": "prod_123",
-                                        //   ...
-                                        // }
+                                            // Your final payload will have e.g.:
+                                            // {
+                                            //   "variants[0].inventory_quantity": 102,
+                                            //   "variants[0].id": "variant_123",
+                                            //   "variants[0].product_id": "prod_123",
+                                            //   ...
+                                            // }
 
-                                        const payload = {
-                                            ...dirtyFields,
+                                            const payload = {
+                                                ...dirtyFields,
+                                            };
+
+                                            updateEditForm.mutate(payload);
                                         };
 
-                                        updateEditForm.mutate(payload);
-                                    };
-
-                                    return (
-                                        <Button
-                                            onClick={handleSubmit}
-                                            disabled={
-                                                !canSubmit || isSubmitting
-                                            }
-                                            className="hover:bg-primary-green-900 w-[164px] h-[44px] px-[24px] py-[16px]"
-                                        >
-                                            Save Changes
-                                        </Button>
-                                    );
-                                }}
-                            </editProductForm.Subscribe>
+                                        return (
+                                            <Button
+                                                onClick={handleSubmit}
+                                                disabled={
+                                                    !canSubmit || isSubmitting
+                                                }
+                                                className="hover:bg-primary-green-900 w-[164px] h-[44px] px-[24px] py-[16px]"
+                                            >
+                                                Save Changes
+                                            </Button>
+                                        );
+                                    }}
+                                </editProductForm.Subscribe>
+                            </div>
                         </div>
                     </div>
                 </form>
