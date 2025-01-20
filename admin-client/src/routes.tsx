@@ -64,7 +64,7 @@ const addProductRoute = createRoute({
 });
 
 const editProductRoute = createRoute({
-    path: '/edit-product',
+    path: '/products/$id/edit',
     component: EditProductPage,
     getParentRoute: () => rootRoute, // Specify the parent route
 });

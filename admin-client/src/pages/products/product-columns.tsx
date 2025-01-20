@@ -355,10 +355,7 @@ export const generateColumns = (
                                         <DropdownMenuItem
                                             onClick={() =>
                                                 navigate({
-                                                    to: '/edit-product',
-                                                    state: {
-                                                        // productId: product.id,
-                                                    },
+                                                    to: `/products/${product.id}/edit`,
                                                 })
                                             }
                                         >
