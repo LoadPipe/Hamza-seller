@@ -28,6 +28,7 @@ import { Label } from '@/components/ui/label.tsx';
 import { useForm, getBy, setBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
+import { CornerDownLeft, PackageSearch, Bitcoin } from 'lucide-react';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -147,13 +148,19 @@ export default function EditProductPage() {
 
     return (
         <div className="min-h-screen px-8 py-12 text-white">
-            <Button
-                variant="ghost"
-                onClick={() => navigate({ to: '/products' })}
-            >
-                Back to All Products
-            </Button>
+            {/*Back Button*/}
+            <div className="max-w-4xl mx-auto mb-4">
+                <Button
+                    className="bg-[#1A1A1A] p-8 rounded-lg shadow-md mt-4 justify-end"
+                    variant="ghost"
+                    onClick={() => navigate({ to: '/products' })}
+                >
+                    Back to All Products
+                    <PackageSearch size={18} />
+                </Button>
+            </div>
 
+            {/*Edit Product Form*/}
             <div className="max-w-4xl mx-auto bg-[#1A1A1A] p-8 rounded-lg shadow-md mt-4">
                 <h2 className="text-2xl font-bold mb-6">Edit Product</h2>
 
@@ -884,7 +891,27 @@ export default function EditProductPage() {
                         )}
 
                         <div className="fixed bottom-0 left-0 w-full bg-black px-8 py-4 border-t border-gray-700">
-                            <div className="max-w-4xl mx-auto flex justify-end">
+                            <div className="mx-auto w-[880px] flex justify-between">
+                                <Button
+                                    variant="ghost"
+                                    className="hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
+                                    onClick={() =>
+                                        navigate({ to: '/products' })
+                                    }
+                                >
+                                    Back to All Products
+                                    <PackageSearch size={18} />
+                                </Button>
+
+                                <Button
+                                    variant="ghost"
+                                    className="hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
+                                    onClick={() => navigate({ to: '/' })}
+                                >
+                                    Change Currency
+                                    <Bitcoin size={18} />
+                                </Button>
+
                                 <editProductForm.Subscribe
                                     selector={(formState) => {
                                         let dirtyFields: Record<
@@ -1058,9 +1085,13 @@ export default function EditProductPage() {
                                                 disabled={
                                                     !canSubmit || isSubmitting
                                                 }
-                                                className="hover:bg-primary-green-900 w-[164px] h-[44px] px-[24px] py-[16px]"
+                                                className="ml-8 hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
                                             >
                                                 Save Changes
+                                                <CornerDownLeft
+                                                    size={18}
+                                                    className="ml-2"
+                                                />
                                             </Button>
                                         );
                                     }}
