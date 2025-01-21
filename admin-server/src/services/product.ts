@@ -1526,17 +1526,16 @@ class ProductService extends MedusaProductService {
     ): Promise<QuerySellerProductByIdResponse> {
         console.log(`Incoming Updates: ${JSON.stringify(updates)}`);
 
-        // Reverse crypto prices on updates
         const { preferredCurrency } = updates;
-
         if (!preferredCurrency) {
             throw new Error('Preferred currency is missing in updates.');
         }
 
-        if (updates.variants && Array.isArray(updates.variants)) {
+        // 1. Reverse crypto prices for the variants based on preferred currency
+        if (Array.isArray(updates.variants)) {
             updates.variants = updates.variants.map((variant) => {
-                if (variant.price) {
-                    console.log(`WTF ${variant.price}`);
+                if (typeof variant.price === 'number') {
+                    // Convert display price into internal price
                     variant.price = reverseCryptoPrice(
                         variant.price,
                         preferredCurrency
@@ -1546,32 +1545,21 @@ class ProductService extends MedusaProductService {
             });
         }
 
-        console.log(
-            `Updated Variants Prices: ${JSON.stringify(updates.variants)}`
-        );
-
         try {
-            // 1. Check if the product exists in this store
-            console.log('Checking if product exists...');
+            // 2. Fetch and validate product
             const product = await this.productRepository_.findOne({
                 where: { id: productId, store_id: storeId },
             });
-
             if (!product) {
-                console.error(
-                    `Product with ID ${productId} not found for store ${storeId}`
-                );
                 throw new Error(
                     `Product with ID ${productId} not found for store ${storeId}`
                 );
             }
 
-            console.log('Product found. Current product details:', product);
-
-            // 2. Separate variants from top-level fields
+            // 3. Separate variants from top-level fields
             const { variants, ...productUpdates } = updates;
 
-            // 3. Merge top-level changes
+            // 4. Update the product
             const updatedProduct = {
                 ...product,
                 ...productUpdates,
@@ -1579,13 +1567,13 @@ class ProductService extends MedusaProductService {
             };
             await this.productRepository_.save(updatedProduct);
 
-            console.log('Product after applying updates:', updatedProduct);
-
-            // 4. Update variants if present
+            // 5. Update or create each variant
             if (Array.isArray(variants)) {
                 for (const variantUpdate of variants) {
+                    let variantId: string | undefined;
+
                     if (variantUpdate.id) {
-                        // a) Update existing variant
+                        // Update existing variant
                         const existingVariant =
                             await this.productVariantRepository_.findOne({
                                 where: {
@@ -1594,57 +1582,64 @@ class ProductService extends MedusaProductService {
                                 },
                             });
                         if (!existingVariant) {
-                            // Maybe throw an error or skip
+                            console.warn(
+                                `Variant ${variantUpdate.id} not found. Skipping.`
+                            );
                             continue;
                         }
+
                         existingVariant.title =
                             variantUpdate.title ?? existingVariant.title;
                         existingVariant.weight =
                             variantUpdate.weight ?? existingVariant.weight;
-                        // etc...
-                        await this.productVariantRepository_.save(
-                            existingVariant
-                        );
+                        // ... any other fields you may need to update
+                        const savedVariant =
+                            await this.productVariantRepository_.save(
+                                existingVariant
+                            );
+
+                        variantId = savedVariant.id;
                     } else {
-                        // b) Create new variant
+                        // Create new variant
                         const newVariant =
                             this.productVariantRepository_.create({
-                                product_id: product.id, // from our DB product
+                                product_id: product.id,
                                 title: variantUpdate.title,
                                 weight: variantUpdate.weight,
-                                // etc...
+                                // ... other fields
                             });
-                        await this.productVariantRepository_.save(newVariant);
+                        const savedVariant =
+                            await this.productVariantRepository_.save(
+                                newVariant
+                            );
+                        variantId = savedVariant.id;
+                    }
+
+                    // 5a. Update the variant’s money_amount *only* for preferredCurrency
+                    if (variantId && typeof variantUpdate.price === 'number') {
+                        await this.updateSingleVariantPrice(
+                            variantId,
+                            preferredCurrency,
+                            variantUpdate.price
+                        );
                     }
                 }
             }
 
-            console.log('Product successfully saved.');
-
-            // 5. Re-fetch the updated product with relations
-            console.log('Re-fetching updated product with relations...');
+            // 6. Re-fetch the updated product with relations
             const refreshedProduct = await this.productRepository_.findOne({
                 where: { id: productId, store_id: storeId },
                 relations: ['variants', 'variants.prices', 'categories'],
             });
-
             if (!refreshedProduct) {
-                console.error(
-                    `Failed to re-fetch updated product with ID ${productId}`
-                );
                 throw new Error(
                     `Failed to re-fetch updated product with ID ${productId}`
                 );
             }
 
-            console.log('Refetched product details:', refreshedProduct);
-
-            // 6. Fetch available categories
-            console.log('Fetching available categories...');
+            // 7. Fetch available categories
             const availableCategories = await this.productCategoryRepository_
-                .find({
-                    select: ['id', 'name'], // Only fetch the fields we actually need
-                })
+                .find({ select: ['id', 'name'] })
                 .then((categories) =>
                     categories.map((cat) => ({
                         id: cat.id,
@@ -1652,9 +1647,7 @@ class ProductService extends MedusaProductService {
                     }))
                 );
 
-            console.log('Available categories fetched:', availableCategories);
-
-            // 7. Return the updated product and available categories
+            // 8. Return the updated product
             return {
                 product: refreshedProduct,
                 availableCategories,
@@ -1664,6 +1657,91 @@ class ProductService extends MedusaProductService {
                 `Error updating product ${productId} for store ${storeId}: ${error.message}`
             );
             throw error;
+        }
+    }
+
+    /**
+     * Updates (or inserts) the price for the single currency on the given variant.
+     * Other currency amounts are left intact.
+     *
+     *  This approach is essentially a single SQL statement that updates the row in money_amount
+     *  if (and only if) it’s linked to the specified variant and has the specified currency.
+     *  If no row matches, no update occurs.
+     */
+    async updateSingleVariantPrice(
+        variantId: string,
+        currencyCode: string,
+        amount: number
+    ): Promise<void> {
+        const moneyAmountRepo = this.activeManager_.getRepository(MoneyAmount);
+        const pvmRepo = this.activeManager_.getRepository(
+            ProductVariantMoneyAmount
+        );
+
+        try {
+            // 1. Fetch the join table rows for this variant
+            const pvmRecords = await pvmRepo.find({
+                where: { variant_id: variantId },
+                // No 'relations' here because ProductVariantMoneyAmount
+                // does not define a money_amount property
+            });
+
+            if (pvmRecords.length === 0) {
+                this.logger.warn(
+                    `No product_variant_money_amount records found for variant=${variantId}`
+                );
+                return;
+            }
+
+            // 2. Gather all money_amount_ids from these rows
+            const moneyAmountIds = pvmRecords.map((r) => r.money_amount_id);
+
+            // 3. Find the existing money_amount for the matching currency
+            const existingMoneyAmount = await moneyAmountRepo.findOne({
+                where: {
+                    id: In(moneyAmountIds),
+                    currency_code: currencyCode,
+                },
+            });
+
+            if (existingMoneyAmount) {
+                // 4a. Update if found
+                existingMoneyAmount.amount = amount;
+                await moneyAmountRepo.save(existingMoneyAmount);
+                this.logger.info(
+                    `Updated price for variant=${variantId}, currency=${currencyCode} => ${amount}`
+                );
+            } else {
+                // 4b. (Optional) If not found, you can create a new record and link it
+                // Uncomment if desired to create a new price record:
+                /*
+                const newMoneyAmount = moneyAmountRepo.create({
+                  currency_code: currencyCode,
+                  amount,
+                })
+                const savedMoneyAmount = await moneyAmountRepo.save(newMoneyAmount)
+
+                // Create the join row
+                const newPvm = pvmRepo.create({
+                  variant_id: variantId,
+                  money_amount_id: savedMoneyAmount.id,
+                })
+                await pvmRepo.save(newPvm)
+
+                this.logger.info(
+                  `Created new price record for variant=${variantId}, currency=${currencyCode} => ${amount}`
+                )
+                */
+                this.logger.warn(
+                    `No existing money_amount found for variant=${variantId}, currency=${currencyCode}.`
+                );
+            }
+        } catch (err) {
+            this.logger.error(
+                `Error updating price for variant=${variantId}, currency=${currencyCode}:`,
+                err
+            );
+            throw err;
         }
     }
 
