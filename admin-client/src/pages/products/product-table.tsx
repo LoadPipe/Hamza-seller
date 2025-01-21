@@ -416,6 +416,7 @@ export function ProductTable({
                                                                             Title
                                                                         </th>
 
+                                                                        {/*// TODO: show first index in row for multi-variant*/}
                                                                         <th className="text-left p-2">
                                                                             Price
                                                                         </th>

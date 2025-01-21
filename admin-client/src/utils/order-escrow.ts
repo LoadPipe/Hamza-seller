@@ -63,7 +63,8 @@ export async function refundEscrowPayment(
 
             if (escrow) {
                 const payment = await getEscrowPayment(order);
-                console.log(payment);
+                console.log('escrow payment to refund is:', payment);
+
                 //validate before refunding
                 validatePaymentExists(payment, order.id);
                 validatePaymentNotReleased(payment, order.id);

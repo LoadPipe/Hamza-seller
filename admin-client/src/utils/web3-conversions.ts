@@ -6,10 +6,7 @@ export function convertFromWeiToDisplay(
     currencyCode: string,
     chainId: number
 ): string {
-    console.log(amount);
     const precision = getCurrencyPrecision(currencyCode, chainId);
-
-    console.log(precision);
 
     const amountString = amount.toString().padStart(precision.native, '0');
     const differential = amountString.length - precision.native;
@@ -17,7 +14,6 @@ export function convertFromWeiToDisplay(
         0,
         differential
     )}.${amountString.substring(differential).substring(0, precision.display)}`;
-    console.log(output);
 
     while (
         output.endsWith('0') &&
@@ -29,7 +25,6 @@ export function convertFromWeiToDisplay(
     while (output.startsWith('0') && !output.startsWith('0.')) {
         output = output.substring(1);
     }
-    console.log(output);
     return output;
 }
 

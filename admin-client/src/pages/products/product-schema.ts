@@ -1,5 +1,28 @@
 import { z } from 'zod';
 
+// Validation Helpers
+
+// SQL injection check helper
+export const sqlInjectionCheck = (value: string) => {
+    const sqlKeywords = [
+        'SELECT',
+        'INSERT',
+        'DELETE',
+        'UPDATE',
+        'DROP',
+        '--',
+        ';',
+    ];
+    return !sqlKeywords.some((kw) => value.toUpperCase().includes(kw));
+};
+
+// Validation function
+export const validateInput = (fieldName: string, value: string) => {
+    const sanitized = sqlInjectionCheck(value);
+    if (!sanitized) return `${fieldName} contains invalid characters.`;
+    return null;
+};
+
 // Define the Zod schema for Product
 export const ProductSchema = z.object({
     id: z.string(),
@@ -7,7 +30,14 @@ export const ProductSchema = z.object({
     created_at: z.string(),
     subtitle: z.string().optional().nullable(),
     description: z.string().optional(),
-    thumbnail: z.string().optional(),
+    thumbnail: z
+        .string()
+        .url({ message: 'Invalid URL format for thumbnail' })
+        .optional(),
+    weight: z.number().nullable(),
+    length: z.number().nullable(),
+    height: z.number().nullable(),
+    width: z.number().nullable(),
     categories: z
         .array(
             z.object({
@@ -34,6 +64,7 @@ export const ProductSchema = z.object({
     variants: z.array(
         z.object({
             id: z.string(),
+            product_id: z.string(),
             title: z.string(),
             created_at: z.string(),
             sku: z.string().nullable(),
@@ -58,7 +89,6 @@ export const ProductSchema = z.object({
             // Optional fields
             external_source: z.string().nullable(),
             external_metadata: z.any().nullable(),
-            bucky_metadata: z.any().nullable(),
             updated_at: z.string(),
             deleted_at: z.string().nullable(),
             barcode: z.string().nullable(),
