@@ -850,7 +850,6 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         };
     };
 
-
     /**
      * Handles the file upload and processing for CSV product data.
      *
@@ -947,27 +946,30 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     });
                 }
                 console.log(`$$$$ file ${JSON.stringify(req.file)}`);
-                let collectionID;
+
+                const collectionID =
+                    await storeService.getCollectionByStore(store_id);
+
                 let salesChannelID;
                 try {
                     // Fetch default collection ID and sales channel ID
-                    const { collectionId, salesChannelId } =
+                    const { salesChannelId } =
                         await productService.getProductCollectionAndSalesChannelIds();
 
-                    collectionID = collectionId;
                     salesChannelID = salesChannelId;
+                    console.log(`$$$ SALES CHANNEL ${salesChannelId}`);
                     // Set defaults if not provided in inputParams
                     if (!collection_id || !collectionID) {
                         console.log(
-                            `Default Collection ID assigned: ${collection_id}`
+                            `Default Collection ID assigned: ${collectionID}`
                         );
                     }
-                if (!collection_id) {
-                    return handler.returnStatus(400, {
-                        type: 'paramValidationError',
-                        message: 'collection_id is required',
-                    });
-                }
+                    if (!collection_id && !collectionID) {
+                        return handler.returnStatus(400, {
+                            type: 'paramValidationError',
+                            message: 'collection_id is required',
+                        });
+                    }
 
                     if (!sales_channel_id || !salesChannelId) {
                         console.log(
@@ -984,7 +986,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                             'Failed to fetch collection or sales channel IDs.',
                     });
                 }
-                if (!sales_channel_id) {
+                if (!sales_channel_id && !salesChannelID) {
                     return handler.returnStatus(400, {
                         type: 'paramValidationError',
                         message: 'sales_channel_id is required',
@@ -1047,7 +1049,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     requiredCsvHeadersForProductUpdate
                 );
 
-                console.log('validateCsvDataOutput: ' + JSON.stringify(validateCsvDataOutput));
+                console.log(
+                    'validateCsvDataOutput: ' +
+                        JSON.stringify(validateCsvDataOutput)
+                );
                 // console.log('POSTCheck3');
 
                 if (
@@ -1131,11 +1136,13 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     createSuccess: createProductsOutput.success,
                     createMessage: createProductsOutput.message,
                     createdProducts: createProductsOutput.products,
-                    invalidCreatedProducts: validateCsvDataOutput.createInvalidData,
+                    invalidCreatedProducts:
+                        validateCsvDataOutput.createInvalidData,
                     updateSuccess: updateProductsOutput.success,
                     updateMessage: updateProductsOutput.message,
                     updatedProducts: updateProductsOutput.products,
-                    invalidUpdatedProducts: validateCsvDataOutput.updateInvalidData,
+                    invalidUpdatedProducts:
+                        validateCsvDataOutput.updateInvalidData,
                 };
 
                 // console.log('responsePayload: ' + JSON.stringify(responsePayload));

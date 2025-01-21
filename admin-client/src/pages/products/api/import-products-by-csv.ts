@@ -20,7 +20,9 @@ export const importProductsByCsv = async (file: File) => {
         return response.success;
     } catch (e: any) {
         const errorMessage =
-            e?.response?.data?.message || 'Failed to import products by CSV.';
+            JSON.stringify(e?.response?.data?.message) ||
+            e?.response?.data?.updateMessage;
+        ('Failed to import products by CSV.');
         console.error('Error importing products by CSV:', errorMessage);
         // Throw the error message
         throw new Error(errorMessage);

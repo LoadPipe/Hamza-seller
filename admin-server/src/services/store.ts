@@ -9,6 +9,7 @@ import StoreRepository from '../repositories/store';
 import axios from 'axios';
 import { UpdateStoreInput as MedusaUpdateStoreInput } from '@medusajs/medusa/dist/types/store';
 import { UpdateProductInput as MedusaUpdateProductInput } from '@medusajs/medusa/dist/types/product';
+import ProductCollectionRepository from '../repositories/product-collection';
 import ProductRepository from '@medusajs/medusa/dist/repositories/product';
 import { createLogger, ILogger } from '../utils/logging/logger';
 import { Equal, IsNull, Not } from 'typeorm';
@@ -33,6 +34,7 @@ class StoreService extends MedusaStoreService {
     protected readonly productRepository_: typeof ProductRepository;
     protected readonly storeRepository_: typeof StoreRepository;
     protected readonly userRepository_: typeof UserRepository;
+    protected readonly productCollectionRepository_: typeof ProductCollectionRepository;
     protected readonly logger: ILogger;
 
     constructor(container) {
@@ -40,6 +42,8 @@ class StoreService extends MedusaStoreService {
         this.storeRepository_ = container.storeRepository;
         this.userRepository_ = container.userRepository;
         this.productRepository_ = container.productRepository;
+        this.productCollectionRepository_ =
+            container.productCollectionRepository;
         this.logger = createLogger(container, 'StoreService');
     }
 
@@ -119,6 +123,24 @@ class StoreService extends MedusaStoreService {
             throw new Error(`Store with name ${store_id} not found`);
         }
         return store;
+    }
+
+    async getCollectionByStore(store_id: string): Promise<string> {
+        const collectionRepo = this.manager_.withRepository(
+            this.productCollectionRepository_
+        );
+
+        // Fetch a single collection belonging to the store
+        const collection = await collectionRepo.findOne({
+            where: { store_id },
+            select: ['id'], // optionally select only the fields you need
+        });
+
+        if (!collection) {
+            throw new Error(`No collection found for store=${store_id}`);
+        }
+
+        return collection.id;
     }
 }
 
