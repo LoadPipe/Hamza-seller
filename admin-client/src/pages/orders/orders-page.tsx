@@ -1,5 +1,8 @@
-import { OrderSchema, columns } from '@/components/orders/columns';
-import { DataTable } from '@/components/table/data-table.tsx';
+import {
+    OrderSchema,
+    productColumns,
+} from '@/pages/orders/product-columns.tsx';
+import { ProductTable } from '@/pages/orders/product-table.tsx';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import React from 'react';
@@ -10,7 +13,7 @@ import { useStore } from '@tanstack/react-store';
 import { SortingState } from '@tanstack/react-table';
 import { useNavigate } from '@tanstack/react-router';
 import { setFilter } from '@/stores/order-filter/order-filter-store.ts';
-import { ReleaseEscrow } from '@/components/orders/release-escrow.tsx';
+import { ReleaseEscrow } from '@/pages/orders/sidebar/release-escrow.tsx';
 import { getSellerOrders } from '@/pages/orders/api/seller-orders.ts';
 
 type Order = z.infer<typeof OrderSchema>;
@@ -79,11 +82,11 @@ export default function OrdersPage() {
     }
 
     // console.log('orders: ', data);
-    // console.log('columns: ' + JSON.stringify(columns));
+    // console.log('productColumns: ' + JSON.stringify(productColumns));
     return (
         <>
-            <DataTable
-                columns={columns}
+            <ProductTable
+                columns={productColumns}
                 data={data?.orders ?? []}
                 pageIndex={pageIndex}
                 pageSize={pageSize}

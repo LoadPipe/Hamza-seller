@@ -1,4 +1,4 @@
-import currencyIcons from '../../../public/currencies/crypto-currencies.ts';
+import currencyIcons from '../../../utils/crypto-currencies.ts';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 
 type ItemProps = {

@@ -1,4 +1,4 @@
-import currencyIcons from '../../../public/currencies/crypto-currencies.ts';
+import currencyIcons from '../../../utils/crypto-currencies.ts';
 import { convertCryptoPrice } from '@/utils/get-product-price.ts';
 import React from 'react';
 
