@@ -764,20 +764,37 @@ export default function EditProductPage() {
                                                             onBlur: ({
                                                                 value,
                                                             }) => {
+                                                                // Convert the union string | number to a number
+                                                                const numericValue =
+                                                                    Number(
+                                                                        value
+                                                                    );
+
+                                                                // If value is undefined or NaN, handle that first
                                                                 if (
                                                                     value ===
-                                                                    undefined
+                                                                        undefined ||
+                                                                    isNaN(
+                                                                        numericValue
+                                                                    )
                                                                 ) {
-                                                                    return 'Price is required.';
+                                                                    return 'Price is required and must be a number.';
                                                                 }
-                                                                if (value < 0) {
+
+                                                                if (
+                                                                    numericValue <
+                                                                    0
+                                                                ) {
                                                                     return 'Price cannot be negative.';
                                                                 }
                                                                 if (
-                                                                    value === 0
+                                                                    numericValue ===
+                                                                    0
                                                                 ) {
-                                                                    return 'Price cannot be zero';
+                                                                    return 'Price cannot be zero.';
                                                                 }
+
+                                                                // No validation errors
                                                                 return undefined;
                                                             },
                                                         }}

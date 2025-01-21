@@ -1592,6 +1592,9 @@ class ProductService extends MedusaProductService {
                             variantUpdate.title ?? existingVariant.title;
                         existingVariant.weight =
                             variantUpdate.weight ?? existingVariant.weight;
+                        existingVariant.inventory_quantity =
+                            variantUpdate.inventory_quantity ??
+                            existingVariant.inventory_quantity;
                         // ... any other fields you may need to update
                         const savedVariant =
                             await this.productVariantRepository_.save(
