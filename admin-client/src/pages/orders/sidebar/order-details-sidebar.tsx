@@ -8,10 +8,10 @@ import {
     orderSidebarStore,
     closeOrderSidebar,
 } from '@/stores/order-sidebar/order-sidebar-store';
-import Timeline from '@/components/orders/timeline';
-import Item from '@/components/orders/item';
-import Payment from '@/components/orders/payment';
-import Refund from '@/components/orders/refund';
+import Timeline from '@/pages/orders/sidebar/timeline.tsx';
+import Item from '@/pages/orders/sidebar/item.tsx';
+import Payment from '@/pages/orders/sidebar/payment.tsx';
+import Refund from '@/pages/orders/sidebar/refund.tsx';
 import { X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -25,8 +25,8 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { getOrderStatusName } from '@/utils/check-order-status.ts';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import { ConfirmStatusChange } from '@/components/orders/confirm-status-change';
-import EscrowStatus from './escrow-status';
+import { ConfirmStatusChange } from '@/pages/orders/confirm-status-change.tsx';
+import EscrowStatus from '../escrow-status';
 import { getEscrowPayment } from '@/utils/order-escrow';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open

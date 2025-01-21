@@ -46,7 +46,7 @@ export default function ProductCategoryPage() {
         },
     });
 
-    // Define table columns
+    // Define table productColumns
     const columns: ColumnDef<Category>[] = [
         {
             accessorKey: 'id',

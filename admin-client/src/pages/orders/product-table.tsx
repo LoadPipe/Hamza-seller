@@ -12,7 +12,7 @@ import {
 } from '@tanstack/react-table';
 // import { Search } from 'lucide-react';
 import { Download, RefreshCw, Settings } from 'lucide-react';
-import OrderTabs from '@/components/orders/order-tabs';
+import OrderTabs from '@/pages/orders/order-tabs.tsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
@@ -48,7 +48,7 @@ import {
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 import { ChevronDown } from 'lucide-react';
 import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
-import { Order } from '@/components/orders/columns';
+import { Order } from '@/pages/orders/product-columns.tsx';
 import { useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -59,7 +59,7 @@ interface DataTableProps<TData, TValue> {
 
 // Localstorage key for storing the user's preferred productColumns
 
-export function DataTable<TData, TValue>({
+export function ProductTable<TData, TValue>({
     columns,
     data,
     pageIndex,

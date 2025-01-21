@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { OrderSchema } from '@/components/orders/columns.tsx';
+import { OrderSchema } from '@/pages/orders/product-columns.tsx';
 import { SortingState } from '@tanstack/react-table';
 import { postSecure } from '@/utils/api-calls.ts';
 import { getJwtStoreId } from '@/utils/authentication';
