@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import useSidebarStore from '@/stores/sidebar/sidebar-store';
 import {
     Home,
     Settings,
@@ -20,7 +20,6 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
-// Menu items.
 const items = [
     {
         title: 'Dashboard',
@@ -72,14 +71,9 @@ const items = [
 ];
 
 export function AppSidebar() {
-    const [expandedItem, setExpandedItem] = useState<string | null>(null);
-
-    const toggleDropdown = (title: string) => {
-        setExpandedItem(expandedItem === title ? null : title);
-    };
+    const { expandedItem, toggleDropdown } = useSidebarStore();
 
     return (
-        // <Sidebar side="left" className="w-navigation-sidebar">
         <Sidebar side="left">
             <SidebarContent>
                 <SidebarGroup>
