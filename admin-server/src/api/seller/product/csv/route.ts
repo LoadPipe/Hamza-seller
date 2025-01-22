@@ -934,8 +934,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             try {
                 const {
                     store_id,
-                    collection_id,
-                    sales_channel_id,
+                    param_collection_id,
+                    param_sales_channel_id,
                     base_image_url,
                 } = handler.inputParams;
 
@@ -945,52 +945,43 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                         message: 'store_id is required',
                     });
                 }
-                console.log(`$$$$ file ${JSON.stringify(req.file)}`);
 
-                const collectionID =
-                    await storeService.getCollectionByStore(store_id);
-
-                let salesChannelID;
-                try {
-                    // Fetch default collection ID and sales channel ID
-                    const { salesChannelId } =
+                let collection_id = param_collection_id
+                    ? param_collection_id
+                    : null;
+                let sales_channel_id = param_sales_channel_id
+                    ? param_sales_channel_id
+                    : null;
+                
+                if (!collection_id || !sales_channel_id) {
+                    const { salesChannelId, collectionId } =
                         await productService.getProductCollectionAndSalesChannelIds();
 
-                    salesChannelID = salesChannelId;
-                    console.log(`$$$ SALES CHANNEL ${salesChannelId}`);
-                    // Set defaults if not provided in inputParams
-                    if (!collection_id || !collectionID) {
-                        console.log(
-                            `Default Collection ID assigned: ${collectionID}`
-                        );
-                    }
-                    if (!collection_id && !collectionID) {
-                        return handler.returnStatus(400, {
-                            type: 'paramValidationError',
-                            message: 'collection_id is required',
-                        });
-                    }
+                    collection_id = collection_id
+                        ? collection_id
+                        : collectionId
+                          ? collectionId
+                          : null;
 
-                    if (!sales_channel_id || !salesChannelId) {
-                        console.log(
-                            `Default Sales Channel ID assigned: ${sales_channel_id}`
-                        );
-                    }
-                } catch (error) {
-                    console.error(
-                        'Error fetching default collection or sales channel IDs:',
-                        error.message
-                    );
-                    return handler.returnStatus(500, {
-                        message:
-                            'Failed to fetch collection or sales channel IDs.',
-                    });
+                    sales_channel_id = sales_channel_id
+                        ? sales_channel_id
+                        : salesChannelId
+                          ? salesChannelId
+                          : null;
                 }
-                if (!sales_channel_id && !salesChannelID) {
+
+                if (!collection_id) {
+                    return handler.returnStatus(400, {
+                        type: 'paramValidationError',
+                        message: 'collection_id is required',
+                    }); 
+                }
+
+                if (!sales_channel_id) {
                     return handler.returnStatus(400, {
                         type: 'paramValidationError',
                         message: 'sales_channel_id is required',
-                    });
+                    }); 
                 }
 
                 const baseImageUrl = base_image_url
@@ -1085,8 +1076,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 if (validateCsvDataOutput.createSuccess) {
                     createProductsOutput = await createProducts(
                         store,
-                        collectionID,
-                        salesChannelID,
+                        collection_id,
+                        sales_channel_id,
                         baseImageUrl,
                         validateCsvDataOutput.createValidData
                     );
