@@ -36,8 +36,9 @@ export default function EditProductPage() {
     const { id: productId } = useParams({ from: '/products/$id/edit' });
     const navigate = useNavigate();
     const preferredCurrency = useCustomerAuthStore(
-        (state) => state.preferred_currency_code
+        (state) => state.preferred_currency_code ?? 'eth'
     );
+
     const { toast } = useToast();
 
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
