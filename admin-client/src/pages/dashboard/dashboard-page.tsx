@@ -28,8 +28,8 @@ import { getSecure } from '@/utils/api-calls.ts';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button.tsx';
 import { useCallback, useEffect } from 'react';
-import { FilePlus } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
+import { FilePlus, CornerDownLeft } from 'lucide-react';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 
 async function getDashboardData(store_id: string, wallet_address: string) {
     try {
@@ -47,6 +47,7 @@ async function getDashboardData(store_id: string, wallet_address: string) {
 
 export default function DashboardPage() {
     const { toast } = useToast();
+
     const userData = useCustomerAuthStore();
     const isAuthenticated = userData.authData.status === 'authenticated';
     const hasLoggedIn = useCustomerAuthStore((state) => state.hasLoggedIn);
@@ -169,7 +170,11 @@ export default function DashboardPage() {
     };
 
     const navigate = useNavigate();
+    const router = useRouter();
 
+    const handleGoBack = () => {
+        router.history.back();
+    };
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
             <div className="max-w-7xl mx-auto space-y-8">
@@ -398,6 +403,18 @@ export default function DashboardPage() {
                             </Button>
                         </CardContent>
                     </Card>
+                </div>
+            </div>
+            <div className="fixed bottom-0 left-0 w-full bg-black px-8 py-4 border-t border-gray-700">
+                <div className="mx-auto w-[880px] flex justify-between">
+                    <Button
+                        variant="ghost"
+                        className="hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
+                        onClick={handleGoBack}
+                    >
+                        Back
+                        <CornerDownLeft size={18} />
+                    </Button>
                 </div>
             </div>
         </div>

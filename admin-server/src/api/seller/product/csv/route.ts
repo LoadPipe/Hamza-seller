@@ -850,7 +850,6 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
         };
     };
 
-
     /**
      * Handles the file upload and processing for CSV product data.
      *
@@ -935,8 +934,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
             try {
                 const {
                     store_id,
-                    collection_id,
-                    sales_channel_id,
+                    param_collection_id,
+                    param_sales_channel_id,
                     base_image_url,
                 } = handler.inputParams;
 
@@ -946,49 +945,43 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                         message: 'store_id is required',
                     });
                 }
-                console.log(`$$$$ file ${JSON.stringify(req.file)}`);
-                let collectionID;
-                let salesChannelID;
-                try {
-                    // Fetch default collection ID and sales channel ID
-                    const { collectionId, salesChannelId } =
+
+                let collection_id = param_collection_id
+                    ? param_collection_id
+                    : null;
+                let sales_channel_id = param_sales_channel_id
+                    ? param_sales_channel_id
+                    : null;
+                
+                if (!collection_id || !sales_channel_id) {
+                    const { salesChannelId, collectionId } =
                         await productService.getProductCollectionAndSalesChannelIds();
 
-                    collectionID = collectionId;
-                    salesChannelID = salesChannelId;
-                    // Set defaults if not provided in inputParams
-                    if (!collection_id || !collectionID) {
-                        console.log(
-                            `Default Collection ID assigned: ${collection_id}`
-                        );
-                    }
+                    collection_id = collection_id
+                        ? collection_id
+                        : collectionId
+                          ? collectionId
+                          : null;
+
+                    sales_channel_id = sales_channel_id
+                        ? sales_channel_id
+                        : salesChannelId
+                          ? salesChannelId
+                          : null;
+                }
+
                 if (!collection_id) {
                     return handler.returnStatus(400, {
                         type: 'paramValidationError',
                         message: 'collection_id is required',
-                    });
+                    }); 
                 }
 
-                    if (!sales_channel_id || !salesChannelId) {
-                        console.log(
-                            `Default Sales Channel ID assigned: ${sales_channel_id}`
-                        );
-                    }
-                } catch (error) {
-                    console.error(
-                        'Error fetching default collection or sales channel IDs:',
-                        error.message
-                    );
-                    return handler.returnStatus(500, {
-                        message:
-                            'Failed to fetch collection or sales channel IDs.',
-                    });
-                }
                 if (!sales_channel_id) {
                     return handler.returnStatus(400, {
                         type: 'paramValidationError',
                         message: 'sales_channel_id is required',
-                    });
+                    }); 
                 }
 
                 const baseImageUrl = base_image_url
@@ -1047,7 +1040,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     requiredCsvHeadersForProductUpdate
                 );
 
-                console.log('validateCsvDataOutput: ' + JSON.stringify(validateCsvDataOutput));
+                console.log(
+                    'validateCsvDataOutput: ' +
+                        JSON.stringify(validateCsvDataOutput)
+                );
                 // console.log('POSTCheck3');
 
                 if (
@@ -1080,8 +1076,8 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 if (validateCsvDataOutput.createSuccess) {
                     createProductsOutput = await createProducts(
                         store,
-                        collectionID,
-                        salesChannelID,
+                        collection_id,
+                        sales_channel_id,
                         baseImageUrl,
                         validateCsvDataOutput.createValidData
                     );
@@ -1131,11 +1127,13 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     createSuccess: createProductsOutput.success,
                     createMessage: createProductsOutput.message,
                     createdProducts: createProductsOutput.products,
-                    invalidCreatedProducts: validateCsvDataOutput.createInvalidData,
+                    invalidCreatedProducts:
+                        validateCsvDataOutput.createInvalidData,
                     updateSuccess: updateProductsOutput.success,
                     updateMessage: updateProductsOutput.message,
                     updatedProducts: updateProductsOutput.products,
-                    invalidUpdatedProducts: validateCsvDataOutput.updateInvalidData,
+                    invalidUpdatedProducts:
+                        validateCsvDataOutput.updateInvalidData,
                 };
 
                 // console.log('responsePayload: ' + JSON.stringify(responsePayload));
