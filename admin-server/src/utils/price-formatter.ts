@@ -34,13 +34,19 @@ export function reverseCryptoPrice(
                 ? parseFloat(formattedAmount)
                 : formattedAmount;
 
-        // Get the db precision for the currency
-        const dbPrecision = getCurrencyPrecision(currencyCode)?.db ?? 2;
+        // Get the correct precision for the currency
+        const precision =
+            currencyCode === 'eth'
+                ? (getCurrencyPrecision(currencyCode)?.native ?? 18)
+                : (getCurrencyPrecision(currencyCode)?.db ?? 2);
 
-        // Reverse the scaling by multiplying with 10 ** dbPrecision
-        const originalAmount = amount * 10 ** dbPrecision;
+        // Reverse the scaling by multiplying with 10 ** precision
+        const originalAmount = amount * 10 ** precision;
 
-        return originalAmount;
+        // Ensure no more than the required decimal places
+        const roundedAmount = parseFloat(originalAmount.toFixed(precision));
+
+        return roundedAmount;
     } catch (e) {
         console.error(e);
         return 0; // Default fallback for errors
