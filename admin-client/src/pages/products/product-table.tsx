@@ -155,7 +155,7 @@ export function ProductTable({
     };
 
     const preferredCurrency = useCustomerAuthStore(
-        (state) => state.preferred_currency_code
+        (state) => state.preferred_currency_code ?? 'eth'
     );
 
     // const handleFilterChange = (selected: string[] | null) => {
