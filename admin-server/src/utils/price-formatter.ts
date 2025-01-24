@@ -7,12 +7,16 @@ export function formatCryptoPrice(
     try {
         if (!currencyCode?.length) currencyCode = 'usdc';
         if (!amount) amount = 0;
+
         const displayPrecision = getCurrencyPrecision(currencyCode).db ?? 2;
+
+        // Scale down the amount
         amount = amount / 10 ** displayPrecision;
 
+        // Format based on display precision
         return displayPrecision <= 2
-            ? Number(amount).toFixed(2)
-            : parseFloat(Number(amount).toFixed(displayPrecision));
+            ? amount.toFixed(2)
+            : parseFloat(amount.toFixed(displayPrecision));
     } catch (e) {
         console.error(e);
         return '0.00';
@@ -21,34 +25,20 @@ export function formatCryptoPrice(
 
 export function reverseCryptoPrice(
     formattedAmount: number | string,
-    currencyCode: string = 'usdc'
+    currencyCode: string = 'eth',
+    chainId: number = 1
 ): number {
     try {
-        console.log(`reverseCryptoPrice: ${formattedAmount}, ${currencyCode}`);
-        if (!currencyCode?.length) currencyCode = 'usdc';
-        if (!formattedAmount) formattedAmount = 0;
-
-        // Ensure the formattedAmount is a number
-        const amount =
-            typeof formattedAmount === 'string'
-                ? parseFloat(formattedAmount)
-                : formattedAmount;
-
-        // Get the correct precision for the currency
+        // Set precision: default to 8 for eth, otherwise 2
         const precision =
-            currencyCode === 'eth'
-                ? (getCurrencyPrecision(currencyCode)?.native ?? 18)
-                : (getCurrencyPrecision(currencyCode)?.db ?? 2);
+            getCurrencyPrecision(currencyCode, chainId)?.db ??
+            (currencyCode === 'eth' ? 8 : 2);
 
-        // Reverse the scaling by multiplying with 10 ** precision
-        const originalAmount = amount * 10 ** precision;
-
-        // Ensure no more than the required decimal places
-        const roundedAmount = parseFloat(originalAmount.toFixed(precision));
-
-        return roundedAmount;
+        return Math.floor(
+            parseFloat(formattedAmount.toString()) * 10 ** precision
+        );
     } catch (e) {
-        console.error(e);
-        return 0; // Default fallback for errors
+        console.error('Error in reverseCryptoPrice:', e.message);
+        return 0;
     }
 }
