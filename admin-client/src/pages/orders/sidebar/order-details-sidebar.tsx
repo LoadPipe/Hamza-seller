@@ -28,6 +28,7 @@ import { useEffect, useState } from 'react';
 import { ConfirmStatusChange } from '@/pages/orders/confirm-status-change.tsx';
 import EscrowStatus from '../escrow-status';
 import { getEscrowPayment } from '@/utils/order-escrow';
+import { ConfirmShippedStatusChange } from '../confirm-shipped-status-change';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
@@ -67,6 +68,7 @@ export function OrderDetailsSidebar() {
     );
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isShippedDialogOpen, setIsShippedDialogOpen] = useState(false);
     const [newStatus, setNewStatus] = useState<string | null>(null);
 
     let currencyCode = orderDetails?.payments[0]?.currency_code;
@@ -89,11 +91,25 @@ export function OrderDetailsSidebar() {
     }, [orderDetails]);
 
     const mutation = useMutation({
-        mutationFn: async (newStatus: string) =>
-            await putSecure('/seller/order/status', {
+        mutationFn: async (data: {
+            status: string;
+            note?: string;
+            tracking_number?: string;
+        }) => {
+            const payload: any = {
                 order_id: orderId,
-                status: newStatus,
-            }),
+                status: data.status,
+                note: data.note ,
+            };
+            if (data.status.toLowerCase() === 'shipped') {
+                if (data.tracking_number) {
+                    payload.data = {
+                        tracking_number: data.tracking_number,
+                    };
+                }
+            }
+            return await putSecure('/seller/order/status', payload);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['orderDetails', orderId],
@@ -123,22 +139,42 @@ export function OrderDetailsSidebar() {
     const handleStatusChange = (
         event: React.ChangeEvent<HTMLSelectElement>
     ) => {
-        const newStatus = event.target.value;
-        setNewStatus(newStatus);
-        setIsDialogOpen(true);
+        const selectedStatus = event.target.value;
+        setNewStatus(selectedStatus);
+        if (selectedStatus.toLowerCase() === 'shipped') {
+            setIsShippedDialogOpen(true);
+        } else {
+            setIsDialogOpen(true);
+        }
     };
 
-    const confirmStatusChange = () => {
+    const confirmStatusChange = (note: string) => {
         if (newStatus) {
             setSelectedStatus(newStatus);
-            mutation.mutate(newStatus);
+            mutation.mutate({
+                status: newStatus,
+                note: note,
+            });
         }
         setIsDialogOpen(false);
+    };
+
+    const confirmShippedStatusChange = (note: string, trackingNumber?: string) => {
+        if (newStatus) {
+            setSelectedStatus(newStatus);
+            mutation.mutate({
+                status: newStatus,
+                note: note,
+                tracking_number: trackingNumber,
+            });
+        }
+        setIsShippedDialogOpen(false);
     };
 
     const cancelStatusChange = () => {
         setNewStatus(null);
         setIsDialogOpen(false);
+        setIsShippedDialogOpen(false);
     };
 
     const statusDetails = orderDetails && {
@@ -435,6 +471,13 @@ export function OrderDetailsSidebar() {
                 isOpen={isDialogOpen}
                 newStatus={newStatus}
                 onConfirm={confirmStatusChange}
+                onCancel={cancelStatusChange}
+            />
+
+            <ConfirmShippedStatusChange
+                isOpen={isShippedDialogOpen}
+                newStatus={newStatus}
+                onConfirm={confirmShippedStatusChange}
                 onCancel={cancelStatusChange}
             />
         </div>
