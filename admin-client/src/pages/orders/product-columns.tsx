@@ -649,7 +649,7 @@ export const generateColumns = (
 };
 
 // Usage
-export const columns = generateColumns([
+export const productColumns = generateColumns([
     'actions',
     'select',
     'id',
