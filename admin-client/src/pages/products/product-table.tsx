@@ -470,13 +470,14 @@ export function ProductTable({
                                                                                                               idx
                                                                                                           }
                                                                                                       >
+                                                                                                        {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? '≈ ' : ''}
                                                                                                           {formatCryptoPrice(
                                                                                                               Number(
                                                                                                                   price.amount
                                                                                                               ),
                                                                                                               price.currency_code
                                                                                                           )}{' '}
-                                                                                                          {price.currency_code.toUpperCase()}
+                                                                                                          {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? 'USD' : price.currency_code.toUpperCase()}
                                                                                                       </div>
                                                                                                   )
                                                                                               )

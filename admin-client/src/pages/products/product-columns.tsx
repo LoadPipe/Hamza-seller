@@ -282,6 +282,7 @@ export const generateColumns = (
                                                         className="flex items-center gap-2"
                                                     >
                                                         <span>
+                                                            {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? '≈ ' : ''}
                                                             {formatCryptoPrice(
                                                                 Number(
                                                                     price.amount
@@ -290,7 +291,9 @@ export const generateColumns = (
                                                             )}
                                                         </span>
                                                         <span>
-                                                            {price.currency_code.toUpperCase()}
+                                                            {['usdc', 'usdt'].includes(price.currency_code.toLowerCase())
+                                                                ? 'USD'
+                                                                : price.currency_code.toUpperCase()}
                                                         </span>
                                                     </div>
                                                 ))
