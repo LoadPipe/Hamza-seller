@@ -1,3 +1,5 @@
+// src/components/ConfirmShippedStatusChange.tsx
+
 import {
     Dialog,
     DialogContent,
@@ -10,24 +12,26 @@ import { Button } from '@/components/ui/button';
 import { OctagonAlert } from 'lucide-react';
 import { useState } from 'react';
 
-interface ConfirmStatusChangeProps {
+interface ConfirmShippedStatusChange {
     isOpen: boolean;
     newStatus: string | null;
-    onConfirm: (note: string) => void;
+    onConfirm: (note: string, trackingNumber: string) => void;
     onCancel: () => void;
 }
 
-export function ConfirmStatusChange({
+export function ConfirmShippedStatusChange({
     isOpen,
     newStatus,
     onConfirm,
     onCancel,
-}: ConfirmStatusChangeProps) {
+}: ConfirmShippedStatusChange) {
     const [note, setNote] = useState('');
+    const [trackingNumber, setTrackingNumber] = useState('');
 
     const handleConfirm = () => {
-        onConfirm(note);
-        setNote(''); 
+        onConfirm(note, trackingNumber);
+        setNote('');
+        setTrackingNumber('');
     };
 
     return (
@@ -49,7 +53,18 @@ export function ConfirmStatusChange({
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col space-y-4">
-                    {/* Private Note Field */}
+                    <div>
+                        <label className="block text-sm font-medium text-primary-black-60">
+                            Tracking Number (optional)
+                        </label>
+                        <input
+                            type="text"
+                            value={trackingNumber}
+                            onChange={(e) => setTrackingNumber(e.target.value)}
+                            className="mt-1 w-full p-2 bg-primary-black-80 border border-primary-black-60 rounded text-black"
+                            placeholder="Enter the tracking number"
+                        />
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-primary-black-60">
                             Private Note (optional)

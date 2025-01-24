@@ -283,7 +283,8 @@ export default class StoreOrderService extends TransactionBaseService {
     async changeOrderStatus(
         orderId: string,
         newStatus: string,
-        note?: Record<string, any>
+        note?: string,
+        trackingNumber?: string
     ) {
         try {
             if (!validStatuses.includes(newStatus)) {
@@ -341,7 +342,14 @@ export default class StoreOrderService extends TransactionBaseService {
 
             // Update metadata if a note is provided
             if (note) {
-                order.metadata = note;
+                if (!order.metadata) {
+                    order.metadata = {};
+                }
+                order.metadata.note = note;
+            }
+
+            if (newStatus.toLowerCase() === 'shipped' && trackingNumber) {
+                order.tracking_number = trackingNumber;
             }
 
             // Save the updated order
@@ -485,7 +493,7 @@ export default class StoreOrderService extends TransactionBaseService {
             const order = await this.orderRepository_.findOne({
                 where: { id: orderId },
             });
-        
+
             if (!order) {
                 throw new Error(`Order with ID ${orderId} not found`);
             }

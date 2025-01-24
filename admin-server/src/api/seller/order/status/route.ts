@@ -20,6 +20,7 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
         'order_id',
         'status',
         'note',
+        'data'
     ]);
 
     await handler.handle(async () => {
@@ -31,7 +32,9 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
             return;
         }
 
-        const { order_id, status, note } = handler.inputParams;
+        const { order_id, status, note, data } = handler.inputParams;
+
+        const trackingNumber = data?.tracking_number;
 
         // Validate the status parameter
         if (!validStatuses.includes(status)) {
@@ -46,7 +49,8 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
         const updatedOrder = await orderService.changeOrderStatus(
             order_id,
             status,
-            note
+            note,
+            trackingNumber
         );
 
         // Return the updated order details in the response
