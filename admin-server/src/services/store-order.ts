@@ -1,8 +1,4 @@
-import {
-    Payment,
-    Store,
-    TransactionBaseService,
-} from '@medusajs/medusa';
+import { Payment, Store, TransactionBaseService } from '@medusajs/medusa';
 import PaymentRepository from '@medusajs/medusa/dist/repositories/payment';
 import { ProductVariantRepository } from '../repositories/product-variant';
 import StoreRepository from '../repositories/store';

@@ -833,7 +833,7 @@ export default class OrderService extends MedusaOrderService {
             // Fetch order details
             const order = await this.orderRepository_.findOne({
                 where: { id: orderId },
-                relations: ['items'], // Ensure line items are fetched
+                relations: ['items', 'payments'], // Ensure line items are fetched
             });
 
             if (!order) {
@@ -841,10 +841,7 @@ export default class OrderService extends MedusaOrderService {
             }
 
             // Calculate total order amount
-            const totalOrderAmount = order.items.reduce(
-                (sum, item) => sum + item.unit_price * item.quantity,
-                0
-            );
+            const totalOrderAmount = order?.payments[0]?.amount ?? 0;
 
             // Calculate refunded amount
             const refundedResult = await this.refundRepository_.find({
