@@ -15,6 +15,8 @@ import ProductCategoryPage from '@/pages/products/product-category-page.tsx';
 import DashboardPage from '@/pages/dashboard/dashboard-page.tsx';
 import SettingsPage from '@/pages/settings/settings-page.tsx';
 import AnalyticsPage from '@/pages/analytics/analytics-page.tsx';
+import { authMiddleware } from './middleware/auth';
+import LogoutPage from '@/pages/logout/logout-page';
 
 export const OrderSearchSchema = z.object({
     page: z.coerce.number().catch(0),
@@ -32,11 +34,8 @@ export const ProductSearchSchema = z.object({
 
 // Create the root route
 const rootRoute = createRootRoute({
-    component: () => (
-        <>
-            <RootComponent />
-        </>
-    ),
+    component: RootComponent,
+    beforeLoad: authMiddleware,
 });
 
 const ordersRoute = createRoute({
@@ -93,6 +92,12 @@ const settingsRoute = createRoute({
     getParentRoute: () => rootRoute,
 });
 
+const logoutRoute = createRoute({
+    path: '/logout',
+    component: LogoutPage,
+    getParentRoute: () => rootRoute,
+});
+
 const notFoundRoute = createRoute({
     path: '*',
     component: NotFoundComponent,
@@ -109,6 +114,7 @@ rootRoute.addChildren([
     productCategory,
     analyticsRoute,
     settingsRoute,
+    logoutRoute,
     notFoundRoute,
 ]);
 
