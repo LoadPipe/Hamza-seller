@@ -1,5 +1,5 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { sepolia, optimism, polygonAmoy } from 'wagmi/chains';
+import { sepolia, optimism, polygonAmoy, base, polygon } from 'wagmi/chains';
 
 export const config = getDefaultConfig({
     appName: 'My RainbowKit App', //TODO: change these defaults
@@ -7,6 +7,6 @@ export const config = getDefaultConfig({
     chains:
         import.meta.env.VITE_INCLUDE_SEPOLIA === 'true'
             ? [sepolia, polygonAmoy]
-            : [optimism],
+            : [sepolia, optimism, base, polygon],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
