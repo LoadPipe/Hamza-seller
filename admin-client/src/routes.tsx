@@ -35,13 +35,19 @@ export const ProductSearchSchema = z.object({
 // Create the root route
 const rootRoute = createRootRoute({
     component: RootComponent,
-    beforeLoad: authMiddleware,
+});
+
+const homeRoute = createRoute({
+    path: '/',
+    component: RootComponent,
+    getParentRoute: () => rootRoute,
 });
 
 const ordersRoute = createRoute({
     path: '/orders',
     component: OrdersPage,
     getParentRoute: () => rootRoute, // Specify the parent route
+    beforeLoad: authMiddleware,
 
     // Use Zod Validator to validate the search parameters
     validateSearch: zodValidator(OrderSearchSchema),
@@ -51,6 +57,7 @@ const productsRoute = createRoute({
     path: '/products',
     component: ProductsPage,
     getParentRoute: () => rootRoute, // Specify the parent route
+    beforeLoad: authMiddleware,
 
     // Use Zod Validator to validate the search parameters
     validateSearch: zodValidator(ProductSearchSchema),
@@ -60,36 +67,42 @@ const addProductRoute = createRoute({
     path: '/add-product',
     component: AddProductPage,
     getParentRoute: () => rootRoute, // Specify the parent route
+    beforeLoad: authMiddleware,
 });
 
 const editProductRoute = createRoute({
     path: '/products/$id/edit',
     component: EditProductPage,
     getParentRoute: () => rootRoute, // Specify the parent route
+    beforeLoad: authMiddleware,
 });
 
 const productCategory = createRoute({
     path: 'product-category',
     component: ProductCategoryPage,
     getParentRoute: () => rootRoute, // Specify the parent route
+    beforeLoad: authMiddleware,
 });
 
 const DashboardRoute = createRoute({
-    path: '/',
+    path: '/dashboard',
     component: DashboardPage,
     getParentRoute: () => rootRoute,
+    beforeLoad: authMiddleware,
 });
 
 const analyticsRoute = createRoute({
     path: 'analytics',
     component: AnalyticsPage,
     getParentRoute: () => rootRoute,
+    beforeLoad: authMiddleware,
 });
 
 const settingsRoute = createRoute({
     path: 'settings',
     component: SettingsPage,
     getParentRoute: () => rootRoute,
+    beforeLoad: authMiddleware,
 });
 
 const logoutRoute = createRoute({
@@ -102,6 +115,7 @@ const notFoundRoute = createRoute({
     path: '*',
     component: NotFoundComponent,
     getParentRoute: () => rootRoute,
+    beforeLoad: authMiddleware,
 });
 
 // Add child routes to the root route
@@ -116,6 +130,7 @@ rootRoute.addChildren([
     settingsRoute,
     logoutRoute,
     notFoundRoute,
+    homeRoute,
 ]);
 
 // Create the router
