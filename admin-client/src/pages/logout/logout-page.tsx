@@ -5,9 +5,9 @@ import { deleteJwtCookie } from '@/utils/authentication';
 
 
 export default function LogoutPage() {
-    const navigate = useNavigate();
+		const navigate = useNavigate();
     const setCustomerAuthData = useCustomerAuthStore(state => state.setCustomerAuthData);
-
+		
     useEffect(() => {
         // Clear auth data
         setCustomerAuthData({
