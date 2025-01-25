@@ -27,7 +27,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { ConfirmStatusChange } from '@/pages/orders/confirm-status-change.tsx';
 import EscrowStatus from '../escrow-status';
-import { getEscrowPayment } from '@/utils/order-escrow';
 import { ConfirmShippedStatusChange } from '../confirm-shipped-status-change';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
@@ -47,9 +46,6 @@ export function OrderDetailsSidebar() {
             const order: any = await getSecure('/seller/order/detail', {
                 order_id: orderId,
             });
-            if (order) {
-                order.escrow_payment = await getEscrowPayment(order);
-            }
 
             return order;
         },
@@ -99,7 +95,7 @@ export function OrderDetailsSidebar() {
             const payload: any = {
                 order_id: orderId,
                 status: data.status,
-                note: data.note ,
+                note: data.note,
             };
             if (data.status.toLowerCase() === 'shipped') {
                 if (data.tracking_number) {
@@ -159,7 +155,10 @@ export function OrderDetailsSidebar() {
         setIsDialogOpen(false);
     };
 
-    const confirmShippedStatusChange = (note: string, trackingNumber?: string) => {
+    const confirmShippedStatusChange = (
+        note: string,
+        trackingNumber?: string
+    ) => {
         if (newStatus) {
             setSelectedStatus(newStatus);
             mutation.mutate({
@@ -393,13 +392,10 @@ export function OrderDetailsSidebar() {
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
                             <EscrowStatus
-                                payment={orderDetails?.escrow_payment}
+                                payment={orderDetails?.escrow_payment?.payment}
                             />
 
-                            <Refund
-                                order={orderDetails}
-                                chainId={import.meta.env.VITE_CHAIN_ID}
-                            />
+                            <Refund order={orderDetails} />
 
                             {/* Items */}
                             <div className="flex flex-col mt-4">

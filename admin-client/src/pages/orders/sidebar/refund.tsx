@@ -23,12 +23,11 @@ import { useSwitchChain } from 'wagmi';
 type RefundProps = {
     refundAmount?: number;
     order: any;
-    chainId: number;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
+const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
     const { switchChain } = useSwitchChain();
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
@@ -36,7 +35,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
         note: '',
     });
 
-    const payment = order?.escrow_payment;
+    const payment = order?.escrow_payment?.payment;
     let refundableAmount: BigInt = BigInt(0);
     let refundedAmount: BigInt = BigInt(0);
 
@@ -50,13 +49,13 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     const refundableAmountToDisplay = convertFromWeiToDisplay(
         refundableAmount.toString(),
         order?.currency_code,
-        chainId
+        order?.escrow_payment?.chain_id
     );
 
     const refundedAmountToDisplay = convertFromWeiToDisplay(
         refundedAmount.toString(),
         order?.currency_code,
-        chainId
+        order?.escrow_payment?.chain_id
     );
 
     //get order id
@@ -70,7 +69,10 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
 
     //get the currency code & precision
     const currencyCode = order?.payments[0]?.currency_code ?? 'usdc';
-    const precision = getCurrencyPrecision(currencyCode, chainId);
+    const precision = getCurrencyPrecision(
+        currencyCode,
+        order?.escrow_payment?.chain_id
+    );
 
     //convert the amount to db units
     const getDbAmount = (amount: string | number) => {
