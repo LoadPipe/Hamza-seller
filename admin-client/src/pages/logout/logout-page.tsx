@@ -22,6 +22,7 @@ export default function LogoutPage() {
         
         // Redirect to login
         navigate({ to: '/' });
+        window.location.href = '/';
     }, [navigate, setCustomerAuthData]);
 
     return <div>Logging out...</div>;
