@@ -33,7 +33,6 @@ export class EscrowClient {
      */
     constructor(chainId: number, address: string) {
         const rpcUrl = process.env[`ETHERS_RPC_PROVIDER_URL_${chainId}`];
-        console.log('rpc url is', rpcUrl);
         this.provider = new ethers.JsonRpcProvider(rpcUrl);
         this.contractAddress = address;
 
