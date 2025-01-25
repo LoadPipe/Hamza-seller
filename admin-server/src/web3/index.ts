@@ -46,7 +46,6 @@ export async function getEscrowPayment(
     orderId: string
 ): Promise<PaymentDefinition> {
     try {
-        console.log('chain id is', chainId);
         const escrow = new EscrowClient(chainId, escrowAddress);
         const payment = await escrow.getEscrowPayment(orderId);
 
