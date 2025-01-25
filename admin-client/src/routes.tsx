@@ -39,8 +39,9 @@ const rootRoute = createRootRoute({
 
 const homeRoute = createRoute({
     path: '/',
-    component: RootComponent,
+    component: DashboardPage,
     getParentRoute: () => rootRoute,
+    beforeLoad: authMiddleware,
 });
 
 const ordersRoute = createRoute({
