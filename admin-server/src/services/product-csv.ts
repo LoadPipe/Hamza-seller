@@ -384,6 +384,11 @@ class ProductCsvService extends MedusaProductService {
 					(header) => !headerForVariant.includes(header)
 			);
 
+			// console.log('row: ' + JSON.stringify(row));
+			// console.log('headerForVariant: ' + JSON.stringify(headerForVariant));
+			// console.log('headerForProduct: ' + JSON.stringify(headerForProduct));
+			// console.log('productSpecificHeaders: ' + JSON.stringify(productSpecificHeaders));
+
 			// Check if all headers in headerForVariant are present in the row
 			const hasAllVariantHeaders = headerForVariant.every((header) =>
 					typeof row[header] === 'string'
@@ -399,18 +404,12 @@ class ProductCsvService extends MedusaProductService {
 									: row[header] === undefined
 			);
 
-			return (
-					headerForVariant.every((header) => row[header]) &&
-					headerForProduct.every(
-							(header) => !row[header] || headerForVariant.includes(header)
-					)
-			);
-			// The row is variant-only if it has all variant headers and no product-specific headers
 			// this.logger.debug('row: ' + JSON.stringify(row));
 			// this.logger.debug('hasAllVariantHeaders: ' + hasAllVariantHeaders);
 			// this.logger.debug('hasNoProductSpecificHeaders: ' + hasNoProductSpecificHeaders);
 			// this.logger.debug('isVariantOnly: ' + (hasAllVariantHeaders && hasNoProductSpecificHeaders));
 			// this.logger.debug('--------------------------------');
+
 			return hasAllVariantHeaders && hasNoProductSpecificHeaders;
 	}
 
