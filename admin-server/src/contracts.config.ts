@@ -20,6 +20,25 @@ const chainConfig: any = {
             address: '0x8bA35513C3F5ac659907D222e3DaB38b20f8F52A',
         },
     },
+    80002: {
+        chain_name: 'amoy',
+        master_switch: {
+            address: '0x0',
+        },
+        massmarket_payment: {
+            address: '0x0',
+        },
+        lite_switch: {
+            //address: '0x08EdF664EB5617d7eCf4F1ec74Ee49d9e99Fbd5f'
+            address: '0x0',
+        },
+        escrow_multicall: {
+            address: '0xa8866FF28D26cdf312e5C902e8BFDbCf663a36ce',
+        },
+        dao: {
+            address: '0x1542612fee591eD35C05A3E980bAB325265c06a3',
+        },
+    },
     11155420: {
         chain_name: 'op-sepolia',
         master_switch: {
@@ -69,10 +88,50 @@ const chainConfig: any = {
             address: '0xDDa56f06D80f3D8E3E35159701A63753f39c3BCB',
         },
     },
+    8453: {
+        chain_name: 'base',
+        master_switch: {
+            address: '0x0',
+        },
+        massmarket_payment: {
+            address: '0x0',
+        },
+        lite_switch: {
+            //address: '0x08EdF664EB5617d7eCf4F1ec74Ee49d9e99Fbd5f'
+            address: '0x0',
+        },
+        escrow_multicall: {
+            address: '0x801c4C568DBfB540De91e6DD95b31d252765F7F8',
+        },
+        dao: {
+            address: '0x1542612fee591eD35C05A3E980bAB325265c06a3',
+        },
+    },
+    137: {
+        chain_name: 'polygon',
+        master_switch: {
+            address: '0x0',
+        },
+        massmarket_payment: {
+            address: '0x0',
+        },
+        lite_switch: {
+            //address: '0x08EdF664EB5617d7eCf4F1ec74Ee49d9e99Fbd5f'
+            address: '0x0',
+        },
+        escrow_multicall: {
+            address: '0xC4FaeAD225C62e5488dfE2dDD098A205c2f38759',
+        },
+        dao: {
+            address: '0x1542612fee591eD35C05A3E980bAB325265c06a3',
+        },
+    },
 };
 
 const getContractAddress = (contractId: string, chainId: number = 1) =>
-    chainConfig[chainId] ? chainConfig[chainId][contractId]?.address ?? '' : '';
+    chainConfig[chainId]
+        ? (chainConfig[chainId][contractId]?.address ?? '')
+        : '';
 
 const getMasterSwitchAddress = (chainId: number = 1) =>
     chainConfig[chainId]

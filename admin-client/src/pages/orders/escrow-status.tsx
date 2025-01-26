@@ -19,7 +19,7 @@ function getEscrowStatus(payment: PaymentDefinition): string {
     else if (payment.released) return 'released';
 
     //calculate if refunded or not
-    const amount: BigInt = BigInt(payment.amount?.toString() ?? '0;');
+    const amount: BigInt = BigInt(payment.amount?.toString() ?? '0');
 
     const refundableAmt: BigInt =
         BigInt(payment.amount?.toString() ?? '0') -

@@ -2,6 +2,9 @@ import { BigNumberish, ethers } from 'ethers';
 import { LiteSwitchClient } from './contracts/lite-switch';
 import { EscrowClient, PaymentDefinition } from './contracts/escrow';
 
+/**
+ * @deprecated
+ */
 export async function verifyPaymentForOrder(
     chainId: number,
     transactionId: string,
@@ -17,6 +20,9 @@ export async function verifyPaymentForOrder(
     return total >= BigInt(amount);
 }
 
+/**
+ * @deprecated
+ */
 export async function getAmountPaidForOrder(
     chainId: number,
     transactionId: string,
