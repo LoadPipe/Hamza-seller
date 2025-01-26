@@ -322,7 +322,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 };
 
                 if (validateCsvDataOutput.createSuccess) {
-                    createProductsOutput = await createProducts(
+                    createProductsOutput = await productCsvService.createProducts(
                         store,
                         collection_id,
                         sales_channel_id,
@@ -352,7 +352,7 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                 };
 
                 if (validateCsvDataOutput.updateSuccess) {
-                    updateProductsOutput = await updateProducts(
+                    updateProductsOutput = await productCsvService.updateProducts(
                         store,
                         collection_id,
                         sales_channel_id,

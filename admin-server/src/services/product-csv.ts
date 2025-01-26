@@ -1377,7 +1377,7 @@ class ProductCsvService extends MedusaProductService {
 			for (let p of productRows) {
 					// console.log('p: ' + JSON.stringify(p));
 					productInputs.push(
-							await convertCsvDataToCreateProductInput(
+							await this.convertCsvDataToCreateProductInput(
 									p,
 									data,
 									store,
@@ -1461,7 +1461,7 @@ class ProductCsvService extends MedusaProductService {
 			for (let p of productRows) {
 					// console.log('p: ' + JSON.stringify(p));
 					productInputs.push(
-							await convertCsvDataToUpdateProductInput(
+							await this.convertCsvDataToUpdateProductInput(
 									p,
 									data,
 									store,
@@ -1504,7 +1504,7 @@ class ProductCsvService extends MedusaProductService {
 					success: boolean;
 					message: string;
 					jsonData?: CreateProductInput[];
-			} = await convertCreateCsvData(
+			} = await this.convertCreateCsvData(
 					store,
 					collection_id,
 					sales_channel_id,
@@ -1556,7 +1556,7 @@ class ProductCsvService extends MedusaProductService {
 					success: boolean;
 					message: string;
 					jsonData?: (UpdateProductInput | UpdateProductProductVariantDTO)[];
-			} = await convertUpdateCsvData(
+			} = await this.convertUpdateCsvData(
 					store,
 					collection_id,
 					sales_channel_id,
