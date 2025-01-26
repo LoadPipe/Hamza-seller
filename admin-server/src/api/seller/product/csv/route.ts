@@ -288,10 +288,10 @@ export const POST = async (req: FileRequest, res: MedusaResponse) => {
                     requiredCsvHeadersForProductUpdate
                 );
 
-                console.log(
-                    'validateCsvDataOutput: ' +
-                        JSON.stringify(validateCsvDataOutput)
-                );
+                // console.log(
+                //     'validateCsvDataOutput: ' +
+                //         JSON.stringify(validateCsvDataOutput)
+                // );
                 // console.log('POSTCheck3');
 
                 if (
