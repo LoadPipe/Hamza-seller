@@ -72,7 +72,8 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                     });
                 }
 
-                return response.data;
+                window.location.href = '/dashboard';
+                return response.data;                
             } catch (error) {
                 console.error('Verification failed:', error);
             }
