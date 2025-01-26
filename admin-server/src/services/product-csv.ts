@@ -3,14 +3,10 @@ import {
     ProductService as MedusaProductService,
     Store,
     ProductStatus,
-		MedusaRequest,
 		Product,
 } from '@medusajs/medusa';
 import {
-		CreateProductProductOption,
-    CreateProductProductVariantInput,
-    CreateProductInput as MedusaCreateProductInput,
-    UpdateProductInput as MedusaUpdateProductInput,
+		CreateProductProductVariantInput,
 } from '@medusajs/medusa/dist/types/product';
 import { StoreRepository } from '../repositories/store';
 import ProductCategoryRepository from '@medusajs/medusa/dist/repositories/product-category';
@@ -22,20 +18,16 @@ import SalesChannelRepository from '@medusajs/medusa/dist/repositories/sales-cha
 import ProductCollectionRepository from '@medusajs/medusa/dist/repositories/product-collection';
 import { createLogger, ILogger } from '../utils/logging/logger';
 import { PriceConverter } from '../utils/price-conversion';
-import ProductService, { Price, UpdateProductProductVariantDTO } from './product';
+import ProductService, {
+    CreateProductProductOption_,
+    Price,
+    UpdateProductProductVariantDTO,
+    CreateProductInput,
+    UpdateProductInput,
+} from './product';
 import fs from 'fs';
 import csv from 'csv-parser';
-import { json } from 'body-parser';
 import * as readline from 'readline';
-
-type CreateProductInput = MedusaCreateProductInput & {
-    id?: string;
-    store_id: string;
-};
-
-type UpdateProductInput = MedusaUpdateProductInput & {
-    id?: string;
-};
 
 // Define the expected structure of the data
 export type csvProductData = {
@@ -79,10 +71,6 @@ type ProductDetails = {
 			baseCurrency?: string;
 	};
 	variants: csvProductData[];
-};
-
-type CreateProductProductOption_ = CreateProductProductOption & {
-	values: string[];
 };
 
 export const requiredCsvHeadersForProduct = [

@@ -44,6 +44,10 @@ import { getCurrencyPrecision } from '../currency.config';
 
 const DEFAULT_PAGE_COUNT = 10;
 
+export type CreateProductProductOption_ = CreateProductProductOption & {
+	values: string[];
+};
+
 export type BulkImportProductInput = CreateProductInput;
 
 export type UpdateProductProductVariantDTO = {
@@ -112,6 +116,7 @@ export type UpdateProductInput = Omit<Partial<CreateProductInput>, 'variants'> &
 
 export type CreateProductInput = MedusaCreateProductInput & {
     id?: string;
+    store_id: string;
 };
 
 class ProductService extends MedusaProductService {
