@@ -84,7 +84,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
         const dbAmount = getDbAmount(amount);
         const bcAmount =
             dbAmount.toString() +
-            ''.padEnd(precision.native - precision.db, '0');
+            ''.padEnd(precision?.native ?? 0 - precision?.db ?? 0, '0');
         return bcAmount;
     };
 

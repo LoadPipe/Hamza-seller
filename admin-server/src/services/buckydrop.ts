@@ -200,6 +200,7 @@ export default class BuckydropService extends TransactionBaseService {
                 ? cart.customer.preferred_currency_id
                 : (cart?.items[0]?.currency_code ?? 'usdc');
 
+
             output = SHIPPING_COST_MAX; // subtotal;
             output = output < SHIPPING_COST_MIN ? SHIPPING_COST_MIN : output;
             output = output > SHIPPING_COST_MAX ? SHIPPING_COST_MAX : output;
