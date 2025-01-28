@@ -28,6 +28,7 @@ import { useEffect, useState } from 'react';
 import { ConfirmStatusChange } from '@/pages/orders/confirm-status-change.tsx';
 import EscrowStatus from '../escrow-status';
 import { ConfirmShippedStatusChange } from '../confirm-shipped-status-change';
+import { chainIdToName } from '@/utils/chain-enum.ts';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
@@ -203,11 +204,18 @@ export function OrderDetailsSidebar() {
                     <div className="flex justify-between">
                         <div className="flex-col">
                             <h1 className="text-xl font-bold text-white">
-                                #{orderDetails?.id || 'Loading...'}
+                                <strong>Order ID: </strong>
+                                {orderDetails?.id
+                                    ? orderDetails.id.replace(/^order_/, '')
+                                    : 'Loading...'}{' '}
                             </h1>
-                            <span className="text-sm text-primary-black-60">
-                                ORDER ID
-                            </span>
+                            <h2>
+                                <strong>Order Chain: </strong>{' '}
+                                {chainIdToName(
+                                    orderDetails?.payments[0]?.blockchain_data
+                                        ?.chain_id
+                                )}
+                            </h2>
                         </div>
                         <div
                             onClick={closeOrderSidebar}
