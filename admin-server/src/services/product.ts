@@ -1595,7 +1595,14 @@ class ProductService extends MedusaProductService {
                         existingVariant.inventory_quantity =
                             variantUpdate.inventory_quantity ??
                             existingVariant.inventory_quantity;
-                        // ... any other fields you may need to update
+                        existingVariant.height =
+                            variantUpdate.height ?? existingVariant.height;
+                        existingVariant.width =
+                            variantUpdate.width ?? existingVariant.width;
+                        existingVariant.length =
+                            variantUpdate.length ?? existingVariant.length;
+                        existingVariant.sku =
+                            variantUpdate.sku ?? existingVariant.sku;
                         const savedVariant =
                             await this.productVariantRepository_.save(
                                 existingVariant
