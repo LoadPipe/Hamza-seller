@@ -102,7 +102,7 @@ class StoreService extends MedusaStoreService {
             select: ['name'],
         });
 
-        return store.name;
+        return store?.name ?? '';
     }
 
     async update(data: UpdateStoreInput) {
