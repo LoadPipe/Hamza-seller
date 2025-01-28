@@ -14,7 +14,7 @@ export const chainIdToName = (id: number): string => {
     // Validate that id is a number
     if (typeof id !== 'number' || isNaN(id)) {
         console.warn(`Invalid chain ID: ${id}`);
-        return 'Unknown Chain'; // Fallback name for invalid input
+        return 'Unknown Chain, is this a mock order?'; // Fallback name for invalid input
     }
 
     // Find the chain name or return a default value
