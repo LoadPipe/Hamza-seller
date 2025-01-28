@@ -166,6 +166,6 @@ export class RouteHandler {
     }
 
     hasParam(param): boolean {
-        return this.inputParams[param] ? true : false;
+        return this.inputParams[param]?.length ? true : false;
     }
 }
