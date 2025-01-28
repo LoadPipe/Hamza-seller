@@ -8,24 +8,27 @@ export function convertFromWeiToDisplay(
 ): string {
     const precision = getCurrencyPrecision(currencyCode, chainId);
 
-    const amountString = amount.toString().padStart(precision.native, '0');
-    const differential = amountString.length - precision.native;
-    let output = `${amountString.substring(
-        0,
-        differential
-    )}.${amountString.substring(differential).substring(0, precision.display)}`;
+    if (precision) {
+        const amountString = amount.toString().padStart(precision.native, '0');
+        const differential = amountString.length - precision.native;
+        let output = `${amountString.substring(
+            0,
+            differential
+        )}.${amountString.substring(differential).substring(0, precision.display)}`;
 
-    while (
-        output.endsWith('0') &&
-        !output.endsWith(''.padEnd(precision.display, '0'))
-    ) {
-        output = output.substring(0, output.length - 1);
+        while (
+            output.endsWith('0') &&
+            !output.endsWith(''.padEnd(precision.display, '0'))
+        ) {
+            output = output.substring(0, output.length - 1);
+        }
+        if (output.startsWith('.')) output = `0${output}`;
+        while (output.startsWith('0') && !output.startsWith('0.')) {
+            output = output.substring(1);
+        }
+        return output;
     }
-    if (output.startsWith('.')) output = `0${output}`;
-    while (output.startsWith('0') && !output.startsWith('0.')) {
-        output = output.substring(1);
-    }
-    return output;
+    return '';
 }
 
 /**
@@ -43,7 +46,9 @@ export function convertToWei(
 ): BigNumber {
     try {
         const precision = getCurrencyPrecision(currencyCode, chainId);
-        return convertToUnits(amount, precision.native);
+        return precision
+            ? convertToUnits(amount, precision.native)
+            : BigNumber.from(0);
     } catch (e) {
         console.log(e);
     }
