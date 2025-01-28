@@ -1029,20 +1029,18 @@ export default function EditProductPage() {
                                         )) {
                                             if (!fieldMeta.isDirty) continue;
 
+                                            // If variant field:
                                             const match =
                                                 fieldName.match(
                                                     /^variants\[(\d+)\]/
                                                 );
                                             if (match) {
-                                                const variantIndex = Number(
-                                                    match[1]
-                                                );
                                                 dirtyVariantIndices.add(
-                                                    variantIndex
+                                                    Number(match[1])
                                                 );
                                             }
 
-                                            // Add the changed field to dirtyFields (only if it's not for variants, or if we want top-level too)
+                                            // Set the changed value in dirtyFields
                                             const currentValue = getBy(
                                                 formState.values,
                                                 fieldName
@@ -1054,10 +1052,9 @@ export default function EditProductPage() {
                                             );
                                         }
 
-                                        // Build a separate array of only the dirty variants:
+                                        // Build array of only the changed variants:
                                         const dirtyVariantArray: any[] = [];
                                         for (const index of dirtyVariantIndices) {
-                                            // Grab the entire variant object from formState.values
                                             const variantData =
                                                 formState.values.variants?.[
                                                     index
@@ -1071,7 +1068,7 @@ export default function EditProductPage() {
 
                                         return {
                                             dirtyVariantArray,
-                                            dirtyFields, // in case you have top-level fields too
+                                            dirtyFields,
                                             canSubmit: formState.canSubmit,
                                             isSubmitting:
                                                 formState.isSubmitting,
@@ -1085,7 +1082,10 @@ export default function EditProductPage() {
                                         isSubmitting,
                                     }) => {
                                         const handleSubmit = async () => {
+                                            // If nothing is dirty at all:
                                             if (
+                                                Object.keys(dirtyFields)
+                                                    .length === 0 &&
                                                 dirtyVariantArray.length === 0
                                             ) {
                                                 toast({
@@ -1097,20 +1097,23 @@ export default function EditProductPage() {
                                                 return;
                                             }
 
-                                            console.log(dirtyFields);
-                                            // If you also have top-level dirty fields (e.g. product title), you can put them in the payload too.
-                                            // For example, if your "title" field is dirty, you might do:
-                                            // const changedTitle = dirtyFields.title ?? undefined;
+                                            // Because `dirtyVariantArray` is the array of changed variants,
+                                            // and `dirtyFields.variants` might have an object representation,
+                                            // you'll typically remove `dirtyFields.variants` so they don't conflict:
+                                            if (dirtyFields.variants) {
+                                                delete (dirtyFields as any)
+                                                    .variants;
+                                            }
 
+                                            // Merge top-level dirtyFields + dirtyVariantArray
                                             const payload = {
-                                                // top-level fields go here if needed:
-                                                // ...(changedTitle && { title: changedTitle }),
-                                                variants: dirtyVariantArray,
+                                                ...dirtyFields, // merges title, thumbnail, description, etc.
+                                                variants: dirtyVariantArray, // replaced with changed variants only
                                                 preferredCurrency,
                                             };
 
                                             console.log(
-                                                'Final Payload with only changed variants:',
+                                                'Final Payload:',
                                                 payload
                                             );
                                             updateEditForm.mutate(payload);
