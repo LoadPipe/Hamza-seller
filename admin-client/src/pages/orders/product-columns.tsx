@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 import { formatStatus, formatDate, customerName } from '@/utils/format-data.ts';
-import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
+// import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
 import {
     Tooltip,
     TooltipContent,
