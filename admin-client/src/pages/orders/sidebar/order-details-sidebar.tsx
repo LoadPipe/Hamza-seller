@@ -28,7 +28,7 @@ import { useEffect, useState } from 'react';
 import { ConfirmStatusChange } from '@/pages/orders/confirm-status-change.tsx';
 import EscrowStatus from '../escrow-status';
 import { ConfirmShippedStatusChange } from '../confirm-shipped-status-change';
-import { chainIdToName } from '@/utils/chain-enum.ts';
+import { chainIdToName, getChainLogo } from '@/utils/chain-enum.ts';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
@@ -194,13 +194,17 @@ export function OrderDetailsSidebar() {
         },
         0 // Initial accumulator value
     );
+
+    const chainId = orderDetails?.payments[0]?.blockchain_data?.chain_id;
+    const chainLogo = getChainLogo(chainId);
+    const chainName = chainIdToName(chainId);
     return (
         <div>
             <Sidebar
                 side="right"
                 className="fixed right-0 top-0 h-full w-order-details bg-primary-black-90"
             >
-                <SidebarHeader className="bg-primary-black-85 h-[87px] p-[24px]">
+                <SidebarHeader className="bg-primary-black-85 h-[100px] p-[24px]">
                     <div className="flex justify-between">
                         <div className="flex-col">
                             <h1 className="text-xl font-bold text-white">
@@ -209,12 +213,25 @@ export function OrderDetailsSidebar() {
                                     ? orderDetails.id.replace(/^order_/, '')
                                     : 'Loading...'}{' '}
                             </h1>
-                            <h2>
-                                <strong>Order Chain: </strong>{' '}
-                                {chainIdToName(
-                                    orderDetails?.payments[0]?.blockchain_data
-                                        ?.chain_id
+                            <h2 className="flex items-center gap-2 py-2">
+                                <strong>Order Chain:</strong>{' '}
+                                {chainLogo ? (
+                                    <img
+                                        src={chainLogo}
+                                        alt={chainName}
+                                        width={25}
+                                        height={25}
+                                        style={{
+                                            verticalAlign: 'middle',
+                                            marginLeft: '5px',
+                                        }}
+                                    />
+                                ) : (
+                                    <span style={{ color: 'red' }}>
+                                        No Logo
+                                    </span> // Optional debug
                                 )}
+                                {chainName}
                             </h2>
                         </div>
                         <div
