@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label.tsx';
 import { useForm, getBy, setBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
-import { CornerDownLeft, PackageSearch, Bitcoin } from 'lucide-react';
+import { PackageSearch, Bitcoin } from 'lucide-react';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -36,8 +36,9 @@ export default function EditProductPage() {
     const { id: productId } = useParams({ from: '/products/$id/edit' });
     const navigate = useNavigate();
     const preferredCurrency = useCustomerAuthStore(
-        (state) => state.preferred_currency_code
+        (state) => state.preferred_currency_code ?? 'eth'
     );
+
     const { toast } = useToast();
 
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
@@ -51,6 +52,7 @@ export default function EditProductPage() {
                 console.log('Empty payload; skipping mutation.');
                 throw new Error('No changes detected to update.');
             }
+            console.log(`PAYLOAD: ${JSON.stringify(payload)}`);
             // console.log(`THIS IS THE PAYLOAD ${JSON.stringify(payload)}`);
             return updateProductById(productId, payload);
         },
@@ -608,10 +610,19 @@ export default function EditProductPage() {
                                                                 if (
                                                                     value.trim()
                                                                         .length <
-                                                                    3
+                                                                    1
                                                                 ) {
-                                                                    return 'Title must be at least 3 characters long.';
+                                                                    return 'Title must be at least 1 character long.';
                                                                 }
+                                                                if (
+                                                                    !value ||
+                                                                    value.trim()
+                                                                        .length ===
+                                                                        0
+                                                                ) {
+                                                                    return 'Title is required.';
+                                                                }
+
                                                                 return undefined;
                                                             },
                                                         }}
@@ -1006,12 +1017,9 @@ export default function EditProductPage() {
                                             string,
                                             unknown
                                         > = {};
-
-                                        // Keep track of which variant indices are dirty
                                         const dirtyVariantIndices =
                                             new Set<number>();
 
-                                        // 1) Build normal dirty fields
                                         for (const [
                                             fieldName,
                                             fieldMeta,
@@ -1020,28 +1028,18 @@ export default function EditProductPage() {
                                         )) {
                                             if (!fieldMeta.isDirty) continue;
 
-                                            // If this is something like "variants[0].title",
-                                            // we parse out the "0" from the path.
+                                            // If variant field:
                                             const match =
                                                 fieldName.match(
                                                     /^variants\[(\d+)\]/
                                                 );
                                             if (match) {
-                                                const variantIndex = Number(
-                                                    match[1]
-                                                );
-                                                console.log(
-                                                    'Detected dirty field for variant index:',
-                                                    variantIndex,
-                                                    'Field:',
-                                                    fieldName
-                                                );
                                                 dirtyVariantIndices.add(
-                                                    variantIndex
+                                                    Number(match[1])
                                                 );
                                             }
 
-                                            // Add the changed field to dirtyFields
+                                            // Set the changed value in dirtyFields
                                             const currentValue = getBy(
                                                 formState.values,
                                                 fieldName
@@ -1053,74 +1051,22 @@ export default function EditProductPage() {
                                             );
                                         }
 
-                                        console.log(
-                                            'Final dirtyVariantIndices:',
-                                            dirtyVariantIndices
-                                        );
-
-                                        // 2) For each variant index that is dirty, also inject the ID and product_id
-                                        const dirtyArray =
-                                            Array.from(dirtyVariantIndices);
-
-                                        for (const index of dirtyArray) {
-                                            console.log(
-                                                'Processing variant index:',
-                                                index
-                                            );
-
-                                            // Attach variant.id
-                                            const idPath = `variants[${index}].id`;
-                                            const variantId = getBy(
-                                                formState.values,
-                                                idPath
-                                            );
-                                            if (variantId) {
-                                                console.log(
-                                                    'Attaching variantId for index:',
-                                                    index,
-                                                    'Variant ID:',
-                                                    variantId
-                                                );
-                                                dirtyFields = setBy(
-                                                    dirtyFields,
-                                                    idPath,
-                                                    variantId
-                                                );
-                                            } else {
-                                                console.log(
-                                                    'No variantId found for index:',
+                                        // Build array of only the changed variants:
+                                        const dirtyVariantArray: any[] = [];
+                                        for (const index of dirtyVariantIndices) {
+                                            const variantData =
+                                                formState.values.variants?.[
                                                     index
-                                                );
-                                            }
-
-                                            // Attach variant.product_id
-                                            const productIdPath = `variants[${index}].product_id`;
-                                            const variantProductId = getBy(
-                                                formState.values,
-                                                productIdPath
-                                            );
-                                            if (variantProductId) {
-                                                console.log(
-                                                    'Attaching productId for index:',
-                                                    index,
-                                                    'Product ID:',
-                                                    variantProductId
-                                                );
-                                                dirtyFields = setBy(
-                                                    dirtyFields,
-                                                    productIdPath,
-                                                    variantProductId
-                                                );
-                                            } else {
-                                                console.log(
-                                                    'No product_id found for index:',
-                                                    index
+                                                ];
+                                            if (variantData) {
+                                                dirtyVariantArray.push(
+                                                    variantData
                                                 );
                                             }
                                         }
 
-                                        // Return these so your handleSubmit can see them
                                         return {
+                                            dirtyVariantArray,
                                             dirtyFields,
                                             canSubmit: formState.canSubmit,
                                             isSubmitting:
@@ -1129,14 +1075,17 @@ export default function EditProductPage() {
                                     }}
                                 >
                                     {({
+                                        dirtyVariantArray,
                                         dirtyFields,
                                         canSubmit,
                                         isSubmitting,
                                     }) => {
                                         const handleSubmit = async () => {
+                                            // If nothing is dirty at all:
                                             if (
                                                 Object.keys(dirtyFields)
-                                                    .length === 0
+                                                    .length === 0 &&
+                                                dirtyVariantArray.length === 0
                                             ) {
                                                 toast({
                                                     variant: 'default',
@@ -1147,24 +1096,25 @@ export default function EditProductPage() {
                                                 return;
                                             }
 
-                                            console.log(
-                                                'Dirty Fields only:',
-                                                dirtyFields
-                                            );
+                                            // Because `dirtyVariantArray` is the array of changed variants,
+                                            // and `dirtyFields.variants` might have an object representation,
+                                            // you'll typically remove `dirtyFields.variants` so they don't conflict:
+                                            if (dirtyFields.variants) {
+                                                delete (dirtyFields as any)
+                                                    .variants;
+                                            }
 
-                                            // Your final payload will have e.g.:
-                                            // {
-                                            //   "variants[0].inventory_quantity": 102,
-                                            //   "variants[0].id": "variant_123",
-                                            //   "variants[0].product_id": "prod_123",
-                                            //   ...
-                                            // }
-
+                                            // Merge top-level dirtyFields + dirtyVariantArray
                                             const payload = {
-                                                ...dirtyFields,
+                                                ...dirtyFields, // merges title, thumbnail, description, etc.
+                                                variants: dirtyVariantArray, // replaced with changed variants only
                                                 preferredCurrency,
                                             };
 
+                                            console.log(
+                                                'Final Payload:',
+                                                payload
+                                            );
                                             updateEditForm.mutate(payload);
                                         };
 
@@ -1174,13 +1124,8 @@ export default function EditProductPage() {
                                                 disabled={
                                                     !canSubmit || isSubmitting
                                                 }
-                                                className="ml-8 hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
                                             >
                                                 Save Changes
-                                                <CornerDownLeft
-                                                    size={18}
-                                                    className="ml-2"
-                                                />
                                             </Button>
                                         );
                                     }}

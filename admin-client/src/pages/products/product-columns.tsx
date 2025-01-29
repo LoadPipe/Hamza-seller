@@ -261,7 +261,7 @@ export const generateColumns = (
                     cell: ({ row }) => {
                         const variants = row.original.variants || [];
                         const preferredCurrency = useCustomerAuthStore(
-                            (state) => state.preferred_currency_code
+                            (state) => state.preferred_currency_code ?? 'eth'
                         );
                         if (variants.length === 1) {
                             const variant = variants[0];
