@@ -103,9 +103,13 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
 
         // Check and transform `to_status`
         if (history.to_status) {
-            if (history.to_status === 'buyer_released') {
+            // Convert to lowercase for case-insensitive comparisons
+            const toStatusLower = history.to_status.toLowerCase();
+
+            if (toStatusLower === 'buyer_released') {
                 details.push('Buyer released escrow');
-            } else if (!ignoredStatuses.includes(history.to_status)) {
+            } else if (!ignoredStatuses.includes(toStatusLower)) {
+                // Keep the original text if we’re displaying it
                 details.push(`Status: ${history.to_status}`);
             }
         }
