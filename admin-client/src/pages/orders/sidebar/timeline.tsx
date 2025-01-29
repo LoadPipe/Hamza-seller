@@ -73,6 +73,24 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
     // Add historical events from `histories` array
     orderDetails.histories?.forEach((history) => {
         const details = [];
+        const ignoredStatuses = ['seller_released', 'in_escrow'];
+
+        console.log(`HIstory: ${JSON.stringify(history)}`);
+        // Convert history fields to lowercase before checking
+        const toStatusLower = history.to_status?.toLowerCase() || '';
+        const toPaymentLower = history.to_payment_status?.toLowerCase() || '';
+        const toFulfillmentLower =
+            history.to_fulfillment_status?.toLowerCase() || '';
+
+        // Skip if any of these are in the ignored list
+        if (
+            ignoredStatuses.includes(toStatusLower) ||
+            ignoredStatuses.includes(toPaymentLower) ||
+            ignoredStatuses.includes(toFulfillmentLower)
+        ) {
+            return; // Skip this history entry entirely
+        }
+
         if (history.to_status) {
             details.push(`Status: ${history.to_status}`);
         }
@@ -82,6 +100,18 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
         if (history.to_fulfillment_status) {
             details.push(`Fulfillment: ${history.to_fulfillment_status}`);
         }
+
+        // Check and transform `to_status`
+        if (history.to_status) {
+            if (history.to_status === 'buyer_released') {
+                details.push('Buyer released escrow');
+            } else if (!ignoredStatuses.includes(history.to_status)) {
+                details.push(`Status: ${history.to_status}`);
+            }
+        }
+
+        // Skip the event if no valid details remain after filtering
+        if (details.length === 0) return;
 
         events.push({
             title:
