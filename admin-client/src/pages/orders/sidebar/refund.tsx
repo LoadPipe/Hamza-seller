@@ -248,18 +248,13 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
     return (
         <div>
             {/* Manual Refund Checkbox */}
-            <div className="mt-4 flex justify-between items-center">
-                <div className="flex">
-                    <h2 className="text-lg font-bold">Refund Management</h2>
-                </div>
-            </div>
 
             {/* Accordion for Refund Details */}
             <Accordion
                 type="single"
                 defaultValue="refund-details"
                 collapsible
-                className="mt-4 "
+                className="mt-4"
             >
                 <AccordionItem value="refund-details">
                     <AccordionTrigger>Refund Details</AccordionTrigger>

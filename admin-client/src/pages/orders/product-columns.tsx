@@ -624,17 +624,18 @@ export const generateColumns = (
                                     >
                                         View order details
                                     </DropdownMenuItem>
-                                    {order.payment_status !== 'refunded' &&
-                                        order.payment_status !== 'canceled' &&
-                                        order.payment_status !== 'not_paid' && (
-                                            <DropdownMenuItem
-                                                onClick={() =>
-                                                    openOrderEscrowDialog(order)
-                                                }
-                                            >
-                                                Release Escrow
-                                            </DropdownMenuItem>
-                                        )}
+                                    {/*TODO: We have temp removed this for now.. it will be back*/}
+                                    {/*{order.payment_status !== 'refunded' &&*/}
+                                    {/*    order.payment_status !== 'canceled' &&*/}
+                                    {/*    order.payment_status !== 'not_paid' && (*/}
+                                    {/*        <DropdownMenuItem*/}
+                                    {/*            onClick={() =>*/}
+                                    {/*                openOrderEscrowDialog(order)*/}
+                                    {/*            }*/}
+                                    {/*        >*/}
+                                    {/*            Release Escrow*/}
+                                    {/*        </DropdownMenuItem>*/}
+                                    {/*    )}*/}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         );
