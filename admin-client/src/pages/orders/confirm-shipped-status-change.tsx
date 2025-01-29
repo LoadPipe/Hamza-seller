@@ -1,3 +1,5 @@
+// src/components/ConfirmShippedStatusChange.tsx
+
 import {
     Dialog,
     DialogContent,
@@ -8,20 +10,30 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { OctagonAlert } from 'lucide-react';
+import { useState } from 'react';
 
-interface ConfirmStatusChangeProps {
+interface ConfirmShippedStatusChange {
     isOpen: boolean;
     newStatus: string | null;
-    onConfirm: () => void;
+    onConfirm: (note: string, trackingNumber: string) => void;
     onCancel: () => void;
 }
 
-export function ConfirmStatusChange({
+export function ConfirmShippedStatusChange({
     isOpen,
     newStatus,
     onConfirm,
     onCancel,
-}: ConfirmStatusChangeProps) {
+}: ConfirmShippedStatusChange) {
+    const [note, setNote] = useState('');
+    const [trackingNumber, setTrackingNumber] = useState('');
+
+    const handleConfirm = () => {
+        onConfirm(note, trackingNumber);
+        setNote('');
+        setTrackingNumber('');
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onCancel}>
             <DialogContent className="sm:max-w-[448.97px] bg-primary-black-90 text-white m-['40px'] [&>button]:hidden border-primary-purple-90">
@@ -40,7 +52,32 @@ export function ConfirmStatusChange({
                         <strong>{newStatus}</strong>?
                     </DialogDescription>
                 </DialogHeader>
-                <DialogFooter className="flex text-white pt-[32px]">
+                <div className="flex flex-col space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-primary-black-60">
+                            Tracking Number (optional)
+                        </label>
+                        <input
+                            type="text"
+                            value={trackingNumber}
+                            onChange={(e) => setTrackingNumber(e.target.value)}
+                            className="mt-1 w-full p-2 bg-primary-black-80 border border-primary-black-60 rounded text-black"
+                            placeholder="Enter the tracking number"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-primary-black-60">
+                            Private Note (optional)
+                        </label>
+                        <textarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            className="mt-1 w-full p-2 bg-primary-black-80 border border-primary-black-60 rounded text-black"
+                            placeholder="Enter a private note (optional)"
+                        />
+                    </div>
+                </div>
+                <DialogFooter className="flex justify-end space-x-4 mt-6">
                     <Button
                         variant="outline"
                         className="w-[200px] h-[52px] rounded-[53px] hover:border-none border-primary-purple-90 text-primary-purple-90 hover:bg-red-600"
@@ -50,7 +87,7 @@ export function ConfirmStatusChange({
                     </Button>
                     <Button
                         className="bg-primary-purple-90 rounded-[53px] hover:border-none w-[200px] h-[52px] hover:bg-primary-green-900"
-                        onClick={onConfirm}
+                        onClick={handleConfirm}
                     >
                         Confirm
                     </Button>

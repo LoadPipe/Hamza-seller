@@ -39,8 +39,14 @@ export class Order extends MedusaOrder {
     @Column()
     massmarket_amount?: string;
 
+    @Column()
+    tracking_number?: string;
+
+    @Column()
+    external_source?: string;
+
     @Column('jsonb')
-    bucky_metadata?: Record<string, unknown>;
+    external_metadata?: Record<string, unknown>;
 
     @OneToMany(() => OrderHistory, (orderHistory) => orderHistory.order, {
         cascade: true,

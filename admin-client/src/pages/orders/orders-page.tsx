@@ -1,63 +1,22 @@
-import { OrderSchema, columns } from '@/components/orders/columns';
-import { DataTable } from '@/components/table/data-table.tsx';
+import {
+    OrderSchema,
+    productColumns,
+} from '@/pages/orders/product-columns.tsx';
+import { ProductTable } from '@/pages/orders/product-table.tsx';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import React from 'react';
 import { useSearch } from '@tanstack/react-router';
 import { OrderSearchSchema } from '@/routes.tsx';
-import { getJwtStoreId } from '@/utils/authentication';
-import { postSecure } from '@/utils/api-calls';
 import { filterStore } from '@/stores/order-filter/order-filter-store.ts';
 import { useStore } from '@tanstack/react-store';
 import { SortingState } from '@tanstack/react-table';
-import {
-    saveStatusCountToStorage,
-    updateStatusCount,
-} from '@/stores/order-filter/order-filter-store';
 import { useNavigate } from '@tanstack/react-router';
 import { setFilter } from '@/stores/order-filter/order-filter-store.ts';
-import { ReleaseEscrow } from '@/components/orders/release-escrow.tsx';
+import { ReleaseEscrow } from '@/pages/orders/sidebar/release-escrow.tsx';
+import { getSellerOrders } from '@/pages/orders/api/seller-orders.ts';
 
 type Order = z.infer<typeof OrderSchema>;
-
-async function getSellerOrders(
-    pageIndex = 0,
-    pageSize = 10,
-    filters: Record<string, any>,
-    sorting: SortingState = []
-): Promise<{ orders: Order[]; totalRecords: number }> {
-    try {
-        const sort = sorting[0]
-            ? {
-                  field: sorting[0].id,
-                  direction: sorting[0].desc ? 'DESC' : 'ASC',
-              }
-            : { field: 'created_at', direction: 'DESC' };
-
-        const response = await postSecure('/seller/order', {
-            store_id: getJwtStoreId(),
-            page: pageIndex,
-            count: pageSize,
-            filter: filters, // Add filters here
-            sort: sort,
-        });
-
-        // SS orders: object => typecast: object ...
-        const data: object = response.orders as object;
-        // SS totalRecords: string => typecast: number...
-        const totalRecords: number = response.totalRecords as number;
-        // console.log(`TOTAL RECORDS: ${JSON.stringify(response.statusCount)}`);
-        saveStatusCountToStorage(response.statusCount);
-        updateStatusCount(response.statusCount);
-        return {
-            orders: OrderSchema.array().parse(data), // Validate using Zod
-            totalRecords,
-        };
-    } catch (error) {
-        console.error('Failed to fetch seller orders:', error);
-        throw new Error('Failed to fetch seller orders');
-    }
-}
 
 export default function OrdersPage() {
     const { filters } = useStore(filterStore); // Subscribe to filter store
@@ -122,12 +81,12 @@ export default function OrdersPage() {
         return <div>{error.message}</div>;
     }
 
-    console.log('orders: ', data);
-    // console.log('columns: ' + JSON.stringify(columns));
+    // console.log('orders: ', data);
+    // console.log('productColumns: ' + JSON.stringify(productColumns));
     return (
         <>
-            <DataTable
-                columns={columns}
+            <ProductTable
+                columns={productColumns}
                 data={data?.orders ?? []}
                 pageIndex={pageIndex}
                 pageSize={pageSize}

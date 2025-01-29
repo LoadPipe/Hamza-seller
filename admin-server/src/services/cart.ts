@@ -4,6 +4,7 @@ import {
     CartService as MedusaCartService,
     MoneyAmount,
     Logger,
+    Address,
 } from '@medusajs/medusa';
 import CustomerRepository from '@medusajs/medusa/dist/repositories/customer';
 import { LineItem } from '../models/line-item';
@@ -57,7 +58,7 @@ export default class CartService extends MedusaCartService {
                 'items.variant.product.store',
             ];
         }
-        const cart = await super.retrieve(cartId, options, totalsConfig);
+        let cart = await super.retrieve(cartId, options, totalsConfig);
 
         //handle items - mainly currency conversion
         if (cart?.items) {
@@ -77,49 +78,53 @@ export default class CartService extends MedusaCartService {
             //adjust price for each line item, convert if necessary
             const itemsToSave: LineItem[] = [];
             for (let item of cart.items) {
-                //detect if currency has changed in line item
-                let storeCurrency =
-                    item.variant.product.store?.default_currency_code;
-                const originalCurrency = item.currency_code;
-                let originalPrice = item.unit_price;
+                if (item?.variant) {
+                    //detect if currency has changed in line item
+                    let storeCurrency =
+                        item.variant.product.store?.default_currency_code;
+                    const originalCurrency = item.currency_code;
+                    let originalPrice = item.unit_price;
 
-                item.currency_code = storeCurrency;
+                    item.currency_code = storeCurrency;
 
-                //now detect if price has changed
-                let newPrice = item.variant.prices.find(
-                    (p) => p.currency_code === storeCurrency
-                ).amount;
-                item.unit_price = newPrice;
+                    //now detect if price has changed
+                    let newPrice = item.variant.prices.find(
+                        (p) => p.currency_code === storeCurrency
+                    ).amount;
 
-                if (storeCurrency != userPreferredCurrency) {
-                    newPrice = await this.priceConverter.getPrice({
-                        baseAmount: item.unit_price,
-                        baseCurrency: storeCurrency,
-                        toCurrency: userPreferredCurrency,
-                    });
-                }
-                item.unit_price = newPrice;
-                item.currency_code = userPreferredCurrency;
+                    item.unit_price = newPrice;
 
-                //if EITHER currency OR price has changed, the item will beupdated
-                const priceChanged = originalPrice != item.unit_price;
-                const currencyChanged = originalCurrency != item.currency_code;
+                    if (storeCurrency != userPreferredCurrency) {
+                        newPrice = await this.priceConverter.getPrice({
+                            baseAmount: item.unit_price,
+                            baseCurrency: storeCurrency,
+                            toCurrency: userPreferredCurrency,
+                        });
+                    }
+                    item.unit_price = newPrice;
+                    item.currency_code = userPreferredCurrency;
 
-                if (priceChanged || currencyChanged) {
-                    const reason = priceChanged
-                        ? currencyChanged
-                            ? 'Price and currency have both changed'
-                            : 'Price has changed'
-                        : 'Currency has changed';
+                    //if EITHER currency OR price has changed, the item will beupdated
+                    const priceChanged = originalPrice != item.unit_price;
+                    const currencyChanged =
+                        originalCurrency != item.currency_code;
 
-                    this.logger.info(
-                        `cart item with currency ${originalCurrency} price ${originalPrice} changing to ${item.currency_code} ${item.unit_price}`
-                    );
-                    this.logger.debug(
-                        `${reason}, updating line item in cart ${cart.id}`
-                    );
+                    if (priceChanged || currencyChanged) {
+                        const reason = priceChanged
+                            ? currencyChanged
+                                ? 'Price and currency have both changed'
+                                : 'Price has changed'
+                            : 'Currency has changed';
 
-                    itemsToSave.push(item);
+                        this.logger.info(
+                            `cart item with currency ${originalCurrency} price ${originalPrice} changing to ${item.currency_code} ${item.unit_price}`
+                        );
+                        this.logger.debug(
+                            `${reason}, updating line item in cart ${cart.id}`
+                        );
+
+                        itemsToSave.push(item);
+                    }
                 }
             }
 
@@ -142,6 +147,11 @@ export default class CartService extends MedusaCartService {
         });
         if (cartEmail) cart.email = cartEmail.email_address;
 
+        //restore cart address
+        if (!cart.shipping_address_id) {
+            cart = await this.restoreCartShippingAddress(cart);
+        }
+
         return cart;
     }
 
@@ -150,12 +160,15 @@ export default class CartService extends MedusaCartService {
         const carts = await this.cartRepository_.find({
             where: {
                 customer_id: customerId,
+                completed_at: IsNull(),
+                deleted_at: IsNull(),
             },
             order: { updated_at: 'DESC' },
             take: 1,
         });
 
         let previousCart = carts?.length ? carts[0] : null;
+        console.log('previous cart: ', previousCart);
 
         //don't consider previous cart if completed or deleted
         if (previousCart) {
@@ -305,5 +318,46 @@ export default class CartService extends MedusaCartService {
         }
 
         return cart1;
+    }
+
+    private async restoreCartShippingAddress(cart: Cart): Promise<Cart> {
+        try {
+            const address = await this.getLastCartShippingAddress(
+                cart?.customer_id
+            );
+            if (address) {
+                cart.shipping_address = address;
+                cart.shipping_address_id = address.id;
+                cart.billing_address = address;
+                cart.billing_address_id = address.id;
+                console.log(cart.email);
+                await this.cartRepository_.save(cart);
+            }
+        } catch (e: any) {
+            this.logger.error(
+                `Error in restoreCartShippingAddress for ${cart?.id}`,
+                e
+            );
+        }
+        return cart;
+    }
+
+    private async getLastCartShippingAddress(
+        customerId: string
+    ): Promise<Address> {
+        const carts = await this.cartRepository_.find({
+            where: {
+                shipping_address_id: Not(IsNull()),
+                customer_id: customerId,
+            },
+            order: { created_at: 'DESC' },
+            relations: ['shipping_address'],
+            take: 1,
+        });
+
+        if (carts?.length) {
+            return carts[0].shipping_address;
+        }
+        return null;
     }
 }

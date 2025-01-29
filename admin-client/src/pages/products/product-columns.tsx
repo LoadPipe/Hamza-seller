@@ -261,7 +261,7 @@ export const generateColumns = (
                     cell: ({ row }) => {
                         const variants = row.original.variants || [];
                         const preferredCurrency = useCustomerAuthStore(
-                            (state) => state.preferred_currency_code
+                            (state) => state.preferred_currency_code ?? 'eth'
                         );
                         if (variants.length === 1) {
                             const variant = variants[0];
@@ -282,6 +282,7 @@ export const generateColumns = (
                                                         className="flex items-center gap-2"
                                                     >
                                                         <span>
+                                                            {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? '≈ ' : ''}
                                                             {formatCryptoPrice(
                                                                 Number(
                                                                     price.amount
@@ -290,7 +291,9 @@ export const generateColumns = (
                                                             )}
                                                         </span>
                                                         <span>
-                                                            {price.currency_code.toUpperCase()}
+                                                            {['usdc', 'usdt'].includes(price.currency_code.toLowerCase())
+                                                                ? 'USD'
+                                                                : price.currency_code.toUpperCase()}
                                                         </span>
                                                     </div>
                                                 ))
@@ -355,10 +358,7 @@ export const generateColumns = (
                                         <DropdownMenuItem
                                             onClick={() =>
                                                 navigate({
-                                                    to: '/edit-product',
-                                                    state: {
-                                                        // productId: product.id,
-                                                    },
+                                                    to: `/products/${product.id}/edit`,
                                                 })
                                             }
                                         >

@@ -279,10 +279,10 @@ export default class StoreOrderService extends TransactionBaseService {
     async changeOrderStatus(
         orderId: string,
         newStatus: string,
-        note?: Record<string, any>
+        note?: string,
+        trackingNumber?: string
     ) {
         try {
-
             if (!validStatuses.includes(newStatus)) {
                 throw new Error(`Invalid order status: ${newStatus}`);
             }
@@ -338,7 +338,14 @@ export default class StoreOrderService extends TransactionBaseService {
 
             // Update metadata if a note is provided
             if (note) {
-                order.metadata = note;
+                if (!order.metadata) {
+                    order.metadata = {};
+                }
+                order.metadata.note = note;
+            }
+
+            if (newStatus.toLowerCase() === 'shipped' && trackingNumber) {
+                order.tracking_number = trackingNumber;
             }
 
             // Save the updated order
@@ -472,6 +479,33 @@ export default class StoreOrderService extends TransactionBaseService {
             );
             throw error;
         }
+    }
+
+    async setOrderTracking(
+        orderId: string,
+        trackingNumber: string
+    ): Promise<Order> {
+        try {
+            const order = await this.orderRepository_.findOne({
+                where: { id: orderId },
+            });
+
+            if (!order) {
+                throw new Error(`Order with ID ${orderId} not found`);
+            }
+
+            order.tracking_number = trackingNumber;
+            const updatedOrder = await this.orderRepository_.save(order);
+
+            return updatedOrder;
+        } catch (e: any) {
+            this.logger.error(
+                `Error setting order tracking for order ${orderId}`,
+                e
+            );
+        }
+
+        return null;
     }
 
     private async syncEscrowPaymentForOrder(order: Order): Promise<Order> {

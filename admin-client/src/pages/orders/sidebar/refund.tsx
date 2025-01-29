@@ -23,12 +23,11 @@ import { useSwitchChain } from 'wagmi';
 type RefundProps = {
     refundAmount?: number;
     order: any;
-    chainId: number;
 };
 
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
-const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
+const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
     const { switchChain } = useSwitchChain();
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
@@ -36,7 +35,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
         note: '',
     });
 
-    const payment = order?.escrow_payment;
+    const payment = order?.escrow_payment?.payment;
     let refundableAmount: BigInt = BigInt(0);
     let refundedAmount: BigInt = BigInt(0);
 
@@ -50,13 +49,13 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     const refundableAmountToDisplay = convertFromWeiToDisplay(
         refundableAmount.toString(),
         order?.currency_code,
-        chainId
+        order?.escrow_payment?.chain_id
     );
 
     const refundedAmountToDisplay = convertFromWeiToDisplay(
         refundedAmount.toString(),
         order?.currency_code,
-        chainId
+        order?.escrow_payment?.chain_id
     );
 
     //get order id
@@ -70,7 +69,10 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
 
     //get the currency code & precision
     const currencyCode = order?.payments[0]?.currency_code ?? 'usdc';
-    const precision = getCurrencyPrecision(currencyCode, chainId);
+    const precision = getCurrencyPrecision(
+        currencyCode,
+        order?.escrow_payment?.chain_id
+    );
 
     //convert the amount to db units
     const getDbAmount = (amount: string | number) => {
@@ -82,13 +84,14 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
         const dbAmount = getDbAmount(amount);
         const bcAmount =
             dbAmount.toString() +
-            ''.padEnd(precision.native - precision.db, '0');
+            ''.padEnd(precision?.native ?? 0 - precision?.db ?? 0, '0');
         return bcAmount;
     };
 
     const refundMutation = useMutation({
         mutationFn: async () => {
             const escrowPayment = await getEscrowPayment(order);
+            console.log('escrow payment in mutation is', escrowPayment);
 
             if (escrowPayment === null) {
                 toast({
@@ -122,6 +125,8 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                     getBlockchainAmount(formData.refundAmount)
                 );
 
+                console.log('escrowRefundResult is', escrowRefundResult);
+
                 //if result successful, confirm the refund
                 if (escrowRefundResult) {
                     await putSecure('/seller/order/refund', {
@@ -150,6 +155,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
                     console.error('Escrow refund failed');
                 }
             } catch (error) {
+                console.error(error);
                 toast({
                     variant: 'destructive',
                     title: 'Escrow Refund Error',
@@ -242,18 +248,13 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order, chainId }) => {
     return (
         <div>
             {/* Manual Refund Checkbox */}
-            <div className="mt-4 flex justify-between items-center">
-                <div className="flex">
-                    <h2 className="text-lg font-bold">Refund Management</h2>
-                </div>
-            </div>
 
             {/* Accordion for Refund Details */}
             <Accordion
                 type="single"
                 defaultValue="refund-details"
                 collapsible
-                className="mt-4 "
+                className="mt-4"
             >
                 <AccordionItem value="refund-details">
                     <AccordionTrigger>Refund Details</AccordionTrigger>

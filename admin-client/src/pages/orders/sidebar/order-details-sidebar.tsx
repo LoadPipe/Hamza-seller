@@ -8,10 +8,10 @@ import {
     orderSidebarStore,
     closeOrderSidebar,
 } from '@/stores/order-sidebar/order-sidebar-store';
-import Timeline from '@/components/orders/timeline';
-import Item from '@/components/orders/item';
-import Payment from '@/components/orders/payment';
-import Refund from '@/components/orders/refund';
+import Timeline from '@/pages/orders/sidebar/timeline.tsx';
+import Item from '@/pages/orders/sidebar/item.tsx';
+import Payment from '@/pages/orders/sidebar/payment.tsx';
+import Refund from '@/pages/orders/sidebar/refund.tsx';
 import { X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -25,9 +25,10 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { getOrderStatusName } from '@/utils/check-order-status.ts';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import { ConfirmStatusChange } from '@/components/orders/confirm-status-change';
-import EscrowStatus from './escrow-status';
-import { getEscrowPayment } from '@/utils/order-escrow';
+import { ConfirmStatusChange } from '@/pages/orders/confirm-status-change.tsx';
+import EscrowStatus from '../escrow-status';
+import { ConfirmShippedStatusChange } from '../confirm-shipped-status-change';
+import { chainIdToName, getChainLogo } from '@/utils/chain-enum.ts';
 export function OrderDetailsSidebar() {
     // Use the store to determine if the sidebar should be open
     const { isSidebarOpen, orderId } = useStore(orderSidebarStore);
@@ -46,9 +47,6 @@ export function OrderDetailsSidebar() {
             const order: any = await getSecure('/seller/order/detail', {
                 order_id: orderId,
             });
-            if (order) {
-                order.escrow_payment = await getEscrowPayment(order);
-            }
 
             return order;
         },
@@ -67,6 +65,7 @@ export function OrderDetailsSidebar() {
     );
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isShippedDialogOpen, setIsShippedDialogOpen] = useState(false);
     const [newStatus, setNewStatus] = useState<string | null>(null);
 
     let currencyCode = orderDetails?.payments[0]?.currency_code;
@@ -89,11 +88,25 @@ export function OrderDetailsSidebar() {
     }, [orderDetails]);
 
     const mutation = useMutation({
-        mutationFn: async (newStatus: string) =>
-            await putSecure('/seller/order/status', {
+        mutationFn: async (data: {
+            status: string;
+            note?: string;
+            tracking_number?: string;
+        }) => {
+            const payload: any = {
                 order_id: orderId,
-                status: newStatus,
-            }),
+                status: data.status,
+                note: data.note,
+            };
+            if (data.status.toLowerCase() === 'shipped') {
+                if (data.tracking_number) {
+                    payload.data = {
+                        tracking_number: data.tracking_number,
+                    };
+                }
+            }
+            return await putSecure('/seller/order/status', payload);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['orderDetails', orderId],
@@ -123,22 +136,45 @@ export function OrderDetailsSidebar() {
     const handleStatusChange = (
         event: React.ChangeEvent<HTMLSelectElement>
     ) => {
-        const newStatus = event.target.value;
-        setNewStatus(newStatus);
-        setIsDialogOpen(true);
+        const selectedStatus = event.target.value;
+        setNewStatus(selectedStatus);
+        if (selectedStatus.toLowerCase() === 'shipped') {
+            setIsShippedDialogOpen(true);
+        } else {
+            setIsDialogOpen(true);
+        }
     };
 
-    const confirmStatusChange = () => {
+    const confirmStatusChange = (note: string) => {
         if (newStatus) {
             setSelectedStatus(newStatus);
-            mutation.mutate(newStatus);
+            mutation.mutate({
+                status: newStatus,
+                note: note,
+            });
         }
         setIsDialogOpen(false);
+    };
+
+    const confirmShippedStatusChange = (
+        note: string,
+        trackingNumber?: string
+    ) => {
+        if (newStatus) {
+            setSelectedStatus(newStatus);
+            mutation.mutate({
+                status: newStatus,
+                note: note,
+                tracking_number: trackingNumber,
+            });
+        }
+        setIsShippedDialogOpen(false);
     };
 
     const cancelStatusChange = () => {
         setNewStatus(null);
         setIsDialogOpen(false);
+        setIsShippedDialogOpen(false);
     };
 
     const statusDetails = orderDetails && {
@@ -158,21 +194,45 @@ export function OrderDetailsSidebar() {
         },
         0 // Initial accumulator value
     );
+
+    const chainId = orderDetails?.payments[0]?.blockchain_data?.chain_id;
+    const chainLogo = getChainLogo(chainId);
+    const chainName = chainIdToName(chainId);
     return (
         <div>
             <Sidebar
                 side="right"
                 className="fixed right-0 top-0 h-full w-order-details bg-primary-black-90"
             >
-                <SidebarHeader className="bg-primary-black-85 h-[87px] p-[24px]">
+                <SidebarHeader className="bg-primary-black-85 h-[100px] p-[24px]">
                     <div className="flex justify-between">
                         <div className="flex-col">
                             <h1 className="text-xl font-bold text-white">
-                                #{orderDetails?.id || 'Loading...'}
+                                <strong>Order ID: </strong>
+                                {orderDetails?.id
+                                    ? orderDetails.id.replace(/^order_/, '')
+                                    : 'Loading...'}{' '}
                             </h1>
-                            <span className="text-sm text-primary-black-60">
-                                ORDER ID
-                            </span>
+                            <h2 className="flex items-center gap-2 py-2">
+                                <strong>Order Chain:</strong>{' '}
+                                {chainLogo ? (
+                                    <img
+                                        src={chainLogo}
+                                        alt={chainName}
+                                        width={25}
+                                        height={25}
+                                        style={{
+                                            verticalAlign: 'middle',
+                                            marginLeft: '5px',
+                                        }}
+                                    />
+                                ) : (
+                                    <span style={{ color: 'red' }}>
+                                        No Logo
+                                    </span> // Optional debug
+                                )}
+                                {chainName}
+                            </h2>
                         </div>
                         <div
                             onClick={closeOrderSidebar}
@@ -357,13 +417,10 @@ export function OrderDetailsSidebar() {
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
                             <EscrowStatus
-                                payment={orderDetails?.escrow_payment}
+                                payment={orderDetails?.escrow_payment?.payment}
                             />
 
-                            <Refund
-                                order={orderDetails}
-                                chainId={import.meta.env.VITE_CHAIN_ID}
-                            />
+                            <Refund order={orderDetails} />
 
                             {/* Items */}
                             <div className="flex flex-col mt-4">
@@ -435,6 +492,13 @@ export function OrderDetailsSidebar() {
                 isOpen={isDialogOpen}
                 newStatus={newStatus}
                 onConfirm={confirmStatusChange}
+                onCancel={cancelStatusChange}
+            />
+
+            <ConfirmShippedStatusChange
+                isOpen={isShippedDialogOpen}
+                newStatus={newStatus}
+                onConfirm={confirmShippedStatusChange}
                 onCancel={cancelStatusChange}
             />
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { FilePlus } from 'lucide-react';
+import { Download, FilePlus } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import {
     ColumnDef,
@@ -22,11 +22,12 @@ import {
     clearProductFilter,
 } from '@/stores/product-filter/product-filter-store.tsx';
 import { useStore } from '@tanstack/react-store';
-
+import ProductImportModal from '@/pages/products/utils/product-import-dialog.tsx';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
+    DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -93,6 +94,7 @@ export function ProductTable({
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>(
         {}
     );
+    const [isModalOpen, setModalOpen] = useState(false);
 
     const { filters } = useStore(productStore);
 
@@ -153,7 +155,7 @@ export function ProductTable({
     };
 
     const preferredCurrency = useCustomerAuthStore(
-        (state) => state.preferred_currency_code
+        (state) => state.preferred_currency_code ?? 'eth'
     );
 
     // const handleFilterChange = (selected: string[] | null) => {
@@ -172,7 +174,7 @@ export function ProductTable({
                     <div className="mb-4">
                         <Button
                             variant="outline"
-                            className="hover:text-primary-purple-90 border-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] hover:bg-primary-green-900 text-white"
+                            className="hover:text-primary-purple-90 hover:bg-white  whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] text-white"
                             onClick={() =>
                                 navigate({
                                     to: '/add-product',
@@ -183,6 +185,31 @@ export function ProductTable({
                             <FilePlus />
                         </Button>
                     </div>
+                    <>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button className="hover:text-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] text-white">
+                                    <Download />
+                                    Import
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem
+                                    className="px-4 py-2 w-full "
+                                    onClick={() => setModalOpen(true)} // Open the modal
+                                >
+                                    Import product as CSV
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        {/* Render the Modal */}
+                        <ProductImportModal
+                            open={isModalOpen}
+                            onClose={() => setModalOpen(false)} // Close the modal
+                        />
+                    </>
+
                     <div className="flex justify-start">
                         <DropdownMultiselectFilter
                             title="Filter By Category"
@@ -389,6 +416,7 @@ export function ProductTable({
                                                                             Title
                                                                         </th>
 
+                                                                        {/*// TODO: show first index in row for multi-variant*/}
                                                                         <th className="text-left p-2">
                                                                             Price
                                                                         </th>
@@ -442,13 +470,14 @@ export function ProductTable({
                                                                                                               idx
                                                                                                           }
                                                                                                       >
+                                                                                                        {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? '≈ ' : ''}
                                                                                                           {formatCryptoPrice(
                                                                                                               Number(
                                                                                                                   price.amount
                                                                                                               ),
                                                                                                               price.currency_code
                                                                                                           )}{' '}
-                                                                                                          {price.currency_code.toUpperCase()}
+                                                                                                          {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? 'USD' : price.currency_code.toUpperCase()}
                                                                                                       </div>
                                                                                                   )
                                                                                               )

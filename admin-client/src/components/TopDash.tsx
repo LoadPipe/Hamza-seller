@@ -1,9 +1,10 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { BellRing } from 'lucide-react';
+import { BellRing, LogOut } from 'lucide-react';
 import { WalletConnect } from './wallet-connect/WalletConnect';
 import { useQuery } from '@tanstack/react-query';
 import { getSecure } from '@/utils/api-calls';
 import { getJwtStoreId } from '@/utils/authentication';
+import { Button } from './ui/button';
 
 const TopDash = () => {
     const store_id = getJwtStoreId();
@@ -38,6 +39,17 @@ const TopDash = () => {
                         <h2 className="text-green-50 self-center">
                             {storeName}
                         </h2>
+                        <Button
+                            variant="ghost" 
+                            size="icon"
+                            className="h-[50px] w-[50px] rounded-full bg-[#121212] hover:bg-[#1a1a1a]"
+                            onClick={() => {
+                                window.location.href = '/logout';
+                            }}
+                        >
+                            <LogOut className="h-6 w-6" />
+                            <span className="sr-only">Logout</span>
+                        </Button>
                     </div>
                 </div>
             </nav>

@@ -72,7 +72,8 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                     });
                 }
 
-                return response.data;
+                window.location.href = '/dashboard';
+                return response.data;                
             } catch (error) {
                 console.error('Verification failed:', error);
             }
@@ -83,7 +84,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('tableColumnVisibility');
             localStorage.removeItem('filter_store');
             localStorage.removeItem('status_count_store');
-
+            localStorage.removeItem('sidebar-store');
             setCustomerAuthData({
                 token: '',
                 wallet_address: '',
