@@ -101,7 +101,7 @@ export default class StoreOrderService extends TransactionBaseService {
     async getOrdersForStore(
         storeId: string,
         filter: FilterOrders,
-        sort: any,
+        sort: { field: string; direction: 'ASC' | 'DESC' },
         page: number,
         ordersPerPage: number
     ): Promise<StoreOrdersDTO> {
@@ -226,16 +226,12 @@ export default class StoreOrderService extends TransactionBaseService {
 
         if (sort?.field === 'payments') {
             allOrders.sort((a, b) => {
-                const amountA = a.payments?.[0]?.amount || 0; // Fallback to 0 if no payment
+                const amountA = a.payments?.[0]?.amount || 0;
                 const amountB = b.payments?.[0]?.amount || 0;
 
-                if (sort.direction === 'ASC') {
-                    return amountA - amountB;
-                } else if (sort.direction === 'DESC') {
-                    return amountB - amountA;
-                }
-
-                return 0;
+                return sort.direction === 'ASC'
+                    ? amountA - amountB
+                    : amountB - amountA;
             });
         }
 

@@ -1,8 +1,5 @@
-import {
-    OrderSchema,
-    productColumns,
-} from '@/pages/orders/product-columns.tsx';
-import { ProductTable } from '@/pages/orders/product-table.tsx';
+import { orderColumns } from '@/pages/orders/order-columns.tsx';
+import { OrderTable } from '@/pages/orders/order-table.tsx';
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import React from 'react';
@@ -15,14 +12,17 @@ import { useNavigate } from '@tanstack/react-router';
 import { setFilter } from '@/stores/order-filter/order-filter-store.ts';
 import { ReleaseEscrow } from '@/pages/orders/sidebar/release-escrow.tsx';
 import { getSellerOrders } from '@/pages/orders/api/seller-orders.ts';
+import { OrderSchema } from '@/pages/orders/order-schema.ts';
 
 type Order = z.infer<typeof OrderSchema>;
 
 export default function OrdersPage() {
+    const navigate = useNavigate();
     const { filters } = useStore(filterStore); // Subscribe to filter store
 
     const search = useSearch({ from: '/orders' });
 
+    // Extract pagination, sorting, and filters from URL
     const { page, count, sort, filter } = OrderSearchSchema.parse(search);
 
     // Parse sort into field and direction
@@ -40,7 +40,7 @@ export default function OrdersPage() {
         }
     }, [filter]);
 
-    // data table hooks
+    // Local State for pagination and sorting
     const [pageIndex, setPageIndex] = React.useState(page);
     const [pageSize, setPageSize] = React.useState(count);
     const [sorting, setSorting] = React.useState<SortingState>(
@@ -50,7 +50,6 @@ export default function OrdersPage() {
     );
 
     // Update URL when filters, page, or sorting change
-    const navigate = useNavigate();
     React.useEffect(() => {
         navigate({
             to: '/orders',
@@ -82,11 +81,11 @@ export default function OrdersPage() {
     }
 
     // console.log('orders: ', data);
-    // console.log('productColumns: ' + JSON.stringify(productColumns));
+    // console.log('orderColumns: ' + JSON.stringify(orderColumns));
     return (
         <>
-            <ProductTable
-                columns={productColumns}
+            <OrderTable
+                columns={orderColumns}
                 data={data?.orders ?? []}
                 pageIndex={pageIndex}
                 pageSize={pageSize}

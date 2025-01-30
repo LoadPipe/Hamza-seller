@@ -48,7 +48,7 @@ import {
 import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
 import { ChevronDown } from 'lucide-react';
 import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
-import { Order } from '@/pages/orders/product-columns.tsx';
+import { Order } from '@/pages/orders/order-columns.tsx';
 import { useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -57,9 +57,9 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
 }
 
-// Localstorage key for storing the user's preferred productColumns
+// Localstorage key for storing the user's preferred orderColumns
 
-export function ProductTable<TData, TValue>({
+export function OrderTable<TData, TValue>({
     columns,
     data,
     pageIndex,
@@ -97,7 +97,6 @@ export function ProductTable<TData, TValue>({
     const table = useReactTable({
         data,
         columns,
-        manualSorting: true,
         pageCount,
         onSortingChange: setSorting,
         getPaginationRowModel: getPaginationRowModel(),
@@ -170,7 +169,7 @@ export function ProductTable<TData, TValue>({
             .filter((key): key is string => !!key); // Ensure keys are non-null strings
 
         if (headers.length === 0) {
-            console.error('No valid productColumns available for CSV export.');
+            console.error('No valid orderColumns available for CSV export.');
             return;
         }
 
