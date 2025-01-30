@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { OrderSchema } from '@/pages/orders/product-columns.tsx';
+import { OrderSchema } from '@/pages/orders/order-schema.ts';
 import { SortingState } from '@tanstack/react-table';
 import { postSecure } from '@/utils/api-calls.ts';
 import { getJwtStoreId } from '@/utils/authentication';
@@ -18,11 +18,8 @@ export async function getSellerOrders(
 ): Promise<{ orders: Order[]; totalRecords: number }> {
     try {
         const sort = sorting[0]
-            ? {
-                  field: sorting[0].id,
-                  direction: sorting[0].desc ? 'DESC' : 'ASC',
-              }
-            : { field: 'created_at', direction: 'DESC' };
+            ? `${sorting[0].id}:${sorting[0].desc ? 'DESC' : 'ASC'}`
+            : 'created_at:ASC';
 
         const response = await postSecure('/seller/order', {
             store_id: getJwtStoreId(),

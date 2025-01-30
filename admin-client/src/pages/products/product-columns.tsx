@@ -19,7 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox.tsx';
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
 
-// Function to generate productColumns
+// Function to generate orderColumns
 export const generateColumns = (
     includeColumns: Array<
         keyof Product | 'actions' | 'price' | 'inventory_quantity' | 'select'
@@ -282,7 +282,14 @@ export const generateColumns = (
                                                         className="flex items-center gap-2"
                                                     >
                                                         <span>
-                                                            {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? '≈ ' : ''}
+                                                            {[
+                                                                'usdc',
+                                                                'usdt',
+                                                            ].includes(
+                                                                price.currency_code.toLowerCase()
+                                                            )
+                                                                ? '≈ '
+                                                                : ''}
                                                             {formatCryptoPrice(
                                                                 Number(
                                                                     price.amount
@@ -291,7 +298,12 @@ export const generateColumns = (
                                                             )}
                                                         </span>
                                                         <span>
-                                                            {['usdc', 'usdt'].includes(price.currency_code.toLowerCase())
+                                                            {[
+                                                                'usdc',
+                                                                'usdt',
+                                                            ].includes(
+                                                                price.currency_code.toLowerCase()
+                                                            )
                                                                 ? 'USD'
                                                                 : price.currency_code.toUpperCase()}
                                                         </span>

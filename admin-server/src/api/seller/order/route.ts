@@ -30,9 +30,22 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         if (!handler.requireParam('store_id')) return;
 
         const filter: any = handler.inputParams.filter;
-        const sort: any = handler.hasParam('sort')
+
+        const sortParam = handler.hasParam('sort')
             ? handler.inputParams.sort
             : null;
+        const sort: { field: string; direction: 'ASC' | 'DESC' } | null =
+            sortParam
+                ? (() => {
+                      const [field, direction] = sortParam.split(':');
+                      console.log('Sort Field:', field); // Log sort field
+                      console.log('Sort Direction:', direction); // Log sort direction
+                      return {
+                          field,
+                          direction: direction?.toUpperCase() as 'ASC' | 'DESC',
+                      };
+                  })()
+                : null;
         const page: number = handler.hasParam('page')
             ? parseInt(handler.inputParams.page.toString())
             : 0;
@@ -40,7 +53,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             ? parseInt(handler.inputParams.ordersPerPage.toString())
             : 0;
 
-        const store_id = handler.inputParams.store_id;
+        console.log('Filter:', filter); // Log filter parameters
+        console.log('Page:', handler.inputParams.page); // Log pagination values
+        console.log('Products Per Page:', handler.inputParams.count); // Log
 
         const orders = await orderService.getOrdersForStore(
             handler.inputParams.store_id,
