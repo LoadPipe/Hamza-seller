@@ -14,93 +14,23 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 import { formatStatus, formatDate, customerName } from '@/utils/format-data.ts';
-import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
+// import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-// Define the Zod schema for the productColumns you want to display
-export const OrderSchema = z.object({
-    id: z.string(),
-    customer_id: z.string(),
-    created_at: z.string(),
-    payment_status: z.enum([
-        'awaiting',
-        'completed',
-        'failed',
-        'not_paid',
-        'requires_action',
-        'captured',
-        'partially_refunded',
-        'refunded',
-        'canceled',
-    ]),
-    fulfillment_status: z.enum([
-        'not_fulfilled',
-        'partially_fulfilled',
-        'fulfilled',
-        'partially_shipped',
-        'shipped',
-        'partially_returned',
-        'returned',
-        'canceled',
-        'requires_action',
-    ]),
-    price: z.number().optional(), // Optional since it's not always passed
-    currency_code: z.string().optional().nullable(), // Optional since it's not always passed
-    email: z.string().email(), // Add email back to the schema
-    customer: z
-        .object({
-            first_name: z.string(),
-            last_name: z.string(),
-        })
-        .optional(), // Make it optional in case of any missing data
-    payments: z
-        .array(
-            z
-                .object({
-                    id: z.string(),
-                    amount: z.number(),
-                    currency_code: z.string(),
-                    provider_id: z.string(),
-                    created_at: z.string(),
-                    blockchain_data: z
-                        .object({
-                            chain_id: z
-                                .union([z.number(), z.string()])
-                                .optional(),
-                            payer_address: z.string().optional(),
-                            escrow_address: z.string().optional(),
-                            transaction_id: z.string().optional(),
-                        })
-                        .nullable()
-                        .optional(),
-                })
-                .optional()
-                .nullable()
-        )
-        .optional(), // Add payments as an optional array
-    items: z
-        .array(
-            z.object({
-                id: z.string(),
-                title: z.string(),
-                quantity: z.number(),
-            })
-        )
-        .optional(), // Add items as an optional array
-});
 import {
     convertCryptoPrice,
     formatCryptoPrice,
 } from '@/utils/get-product-price';
 import React from 'react';
+import { OrderSchema } from '@/pages/orders/order-schema.ts';
 
 // Generate TypeScript type from Zod schema
 export type Order = z.infer<typeof OrderSchema>;
 
-// Pure Function; We aren't using sideEffects here, the purpose of this function is to generate productColumns
+// Pure Function; We aren't using sideEffects here, the purpose of this function is to generate orderColumns
 export const generateColumns = (
     includeColumns: Array<keyof Order | 'select' | 'actions'>
 ): ColumnDef<Order>[] => {
@@ -147,7 +77,7 @@ export const generateColumns = (
                     accessorKey: 'id',
                     header: ({ column }) => (
                         <Button
-                            variant={'ghost'}
+                            variant="ghost"
                             className=" text-white hover:text-opacity-70 "
                             onClick={() =>
                                 column.toggleSorting(
@@ -624,17 +554,18 @@ export const generateColumns = (
                                     >
                                         View order details
                                     </DropdownMenuItem>
-                                    {order.payment_status !== 'refunded' &&
-                                        order.payment_status !== 'canceled' &&
-                                        order.payment_status !== 'not_paid' && (
-                                            <DropdownMenuItem
-                                                onClick={() =>
-                                                    openOrderEscrowDialog(order)
-                                                }
-                                            >
-                                                Release Escrow
-                                            </DropdownMenuItem>
-                                        )}
+                                    {/*TODO: We have temp removed this for now.. it will be back*/}
+                                    {/*{order.payment_status !== 'refunded' &&*/}
+                                    {/*    order.payment_status !== 'canceled' &&*/}
+                                    {/*    order.payment_status !== 'not_paid' && (*/}
+                                    {/*        <DropdownMenuItem*/}
+                                    {/*            onClick={() =>*/}
+                                    {/*                openOrderEscrowDialog(order)*/}
+                                    {/*            }*/}
+                                    {/*        >*/}
+                                    {/*            Release Escrow*/}
+                                    {/*        </DropdownMenuItem>*/}
+                                    {/*    )}*/}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         );
@@ -649,7 +580,7 @@ export const generateColumns = (
 };
 
 // Usage
-export const productColumns = generateColumns([
+export const orderColumns = generateColumns([
     'actions',
     'select',
     'id',

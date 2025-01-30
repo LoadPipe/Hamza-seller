@@ -46,10 +46,3 @@ export const formatShippingAddress = (
 
     return parts.length > 0 ? parts.join(', ') : 'Undefined';
 };
-
-export const capitalizeWords = (str: string) => {
-    return str
-        .replace(/([A-Z])/g, ' $1') // Add space before capital letters (e.g., "inTransit" → "in Transit")
-        .replace(/^./, (char) => char.toUpperCase()) // Capitalize the first letter
-        .trim(); // Remove any extra spaces
-};
