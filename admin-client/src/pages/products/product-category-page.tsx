@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getSecure } from '@/utils/api-calls';
 import {
     ColumnDef,
     flexRender,
