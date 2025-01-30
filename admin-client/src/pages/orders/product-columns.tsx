@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 import { formatStatus, formatDate, customerName } from '@/utils/format-data.ts';
-import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
+// import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
 import {
     Tooltip,
     TooltipContent,
@@ -624,17 +624,18 @@ export const generateColumns = (
                                     >
                                         View order details
                                     </DropdownMenuItem>
-                                    {order.payment_status !== 'refunded' &&
-                                        order.payment_status !== 'canceled' &&
-                                        order.payment_status !== 'not_paid' && (
-                                            <DropdownMenuItem
-                                                onClick={() =>
-                                                    openOrderEscrowDialog(order)
-                                                }
-                                            >
-                                                Release Escrow
-                                            </DropdownMenuItem>
-                                        )}
+                                    {/*TODO: We have temp removed this for now.. it will be back*/}
+                                    {/*{order.payment_status !== 'refunded' &&*/}
+                                    {/*    order.payment_status !== 'canceled' &&*/}
+                                    {/*    order.payment_status !== 'not_paid' && (*/}
+                                    {/*        <DropdownMenuItem*/}
+                                    {/*            onClick={() =>*/}
+                                    {/*                openOrderEscrowDialog(order)*/}
+                                    {/*            }*/}
+                                    {/*        >*/}
+                                    {/*            Release Escrow*/}
+                                    {/*        </DropdownMenuItem>*/}
+                                    {/*    )}*/}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         );

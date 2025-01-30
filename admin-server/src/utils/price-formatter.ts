@@ -7,12 +7,16 @@ export function formatCryptoPrice(
     try {
         if (!currencyCode?.length) currencyCode = 'usdc';
         if (!amount) amount = 0;
+
         const displayPrecision = getCurrencyPrecision(currencyCode).db ?? 2;
+
+        // Scale down the amount
         amount = amount / 10 ** displayPrecision;
 
+        // Format based on display precision
         return displayPrecision <= 2
-            ? Number(amount).toFixed(2)
-            : parseFloat(Number(amount).toFixed(displayPrecision));
+            ? amount.toFixed(2)
+            : parseFloat(amount.toFixed(displayPrecision));
     } catch (e) {
         console.error(e);
         return '0.00';
@@ -21,28 +25,20 @@ export function formatCryptoPrice(
 
 export function reverseCryptoPrice(
     formattedAmount: number | string,
-    currencyCode: string = 'usdc'
+    currencyCode: string = 'eth',
+    chainId: number = 1
 ): number {
     try {
-        console.log(`reverseCryptoPrice: ${formattedAmount}, ${currencyCode}`);
-        if (!currencyCode?.length) currencyCode = 'usdc';
-        if (!formattedAmount) formattedAmount = 0;
+        // Set precision: default to 8 for eth, otherwise 2
+        const precision =
+            getCurrencyPrecision(currencyCode, chainId)?.db ??
+            (currencyCode === 'eth' ? 8 : 2);
 
-        // Ensure the formattedAmount is a number
-        const amount =
-            typeof formattedAmount === 'string'
-                ? parseFloat(formattedAmount)
-                : formattedAmount;
-
-        // Get the db precision for the currency
-        const dbPrecision = getCurrencyPrecision(currencyCode)?.db ?? 2;
-
-        // Reverse the scaling by multiplying with 10 ** dbPrecision
-        const originalAmount = amount * 10 ** dbPrecision;
-
-        return originalAmount;
+        return Math.floor(
+            parseFloat(formattedAmount.toString()) * 10 ** precision
+        );
     } catch (e) {
-        console.error(e);
-        return 0; // Default fallback for errors
+        console.error('Error in reverseCryptoPrice:', e.message);
+        return 0;
     }
 }
