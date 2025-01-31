@@ -106,6 +106,10 @@ const generateCsvContent = (products: Product[], store: Store) => {
 
 const formatCsvRow = (product: Product, variant: ProductVariant, variantPrice: number, store: Store, index: number) => {
     const handleCommasAndQuotes = (field: string) => handleCommas(handleQuotes(field));
+    const handleNewLines = (field: string) => field && field.includes('\n') ? field.replace(/\n/g, ' ') : field;
+    const handleCarriageReturns = (field: string) => field && field.includes('\r') ? field.replace(/\r/g, ' ') : field;
+    const handleTabs = (field: string) => field && field.includes('\t') ? field.replace(/\t/g, ' ') : field;
+    const handleAll = (field: string) => handleNewLines(handleCarriageReturns(handleCommasAndQuotes(handleTabs(field))));
     const handleCommas = (field: string) => field && field.includes(',') ? `"${field}"` : field;
     const handleQuotes = (field: string) => field && field.includes('"') ? field.replace(/"/g, '""') : field;
     const handleNulls = (field: any) => {
@@ -120,9 +124,9 @@ const formatCsvRow = (product: Product, variant: ProductVariant, variantPrice: n
     const handleBoolean = (field: boolean) => field && field ? 1 : 0;
     let row = '';
     if (index === 0) {
-        row = `${product.id},${product.categories[0].handle},,${handleNulls(handleCommasAndQuotes(product.title))},${handleNulls(handleCommasAndQuotes(product.subtitle))},${handleCommasAndQuotes(product.description)},${product.status},${handleNulls(product.thumbnail)},${handleNulls(product.weight)},${handleBoolean(product.discountable)},${store.default_currency_code},${handleNulls(product.handle)},${variant.id},${variant.title},${variantPrice},${variant.inventory_quantity},${handleBoolean(variant.allow_backorder)},${handleBoolean(variant.manage_inventory)},${handleNulls(variant.sku)},${handleNulls(variant.barcode)},${handleNulls(variant.ean)},${handleNulls(variant.upc)},${handleNulls(variant.hs_code)},${handleNulls(variant.origin_country)},${handleNulls(variant.mid_code)},${handleNulls(variant.material)},${handleNulls(variant.weight)},${handleNulls(variant.length)},${handleNulls(variant.height)},${handleNulls(variant.width)}\n`;
+        row = `${product.id},${product.categories[0].handle},,${handleNulls(handleAll(product.title))},${handleNulls(handleAll(product.subtitle))},${handleAll(product.description)},${product.status},${handleNulls(product.thumbnail)},${handleNulls(product.weight)},${handleBoolean(product.discountable)},${store.default_currency_code},${handleNulls(product.handle)},${variant.id},${handleAll(variant.title)},${variantPrice},${variant.inventory_quantity},${handleBoolean(variant.allow_backorder)},${handleBoolean(variant.manage_inventory)},${handleNulls(variant.sku)},${handleNulls(variant.barcode)},${handleNulls(variant.ean)},${handleNulls(variant.upc)},${handleNulls(variant.hs_code)},${handleNulls(variant.origin_country)},${handleNulls(variant.mid_code)},${handleNulls(variant.material)},${handleNulls(variant.weight)},${handleNulls(variant.length)},${handleNulls(variant.height)},${handleNulls(variant.width)}\n`;
     } else {
-        row = `,,,,,,,,,,,${handleNulls(product.handle)},${variant.id},${variant.title},${variantPrice},${variant.inventory_quantity},${handleBoolean(variant.allow_backorder)},${handleBoolean(variant.manage_inventory)},${handleNulls(variant.sku)},${handleNulls(variant.barcode)},${handleNulls(variant.ean)},${handleNulls(variant.upc)},${handleNulls(variant.hs_code)},${handleNulls(variant.origin_country)},${handleNulls(variant.mid_code)},${handleNulls(variant.material)},${handleNulls(variant.weight)},${handleNulls(variant.length)},${handleNulls(variant.height)},${handleNulls(variant.width)}\n`;
+        row = `,,,,,,,,,,,${handleNulls(product.handle)},${variant.id},${handleAll(variant.title)},${variantPrice},${variant.inventory_quantity},${handleBoolean(variant.allow_backorder)},${handleBoolean(variant.manage_inventory)},${handleNulls(variant.sku)},${handleNulls(variant.barcode)},${handleNulls(variant.ean)},${handleNulls(variant.upc)},${handleNulls(variant.hs_code)},${handleNulls(variant.origin_country)},${handleNulls(variant.mid_code)},${handleNulls(variant.material)},${handleNulls(variant.weight)},${handleNulls(variant.length)},${handleNulls(variant.height)},${handleNulls(variant.width)}\n`;
     }
     return row;
 }
