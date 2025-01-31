@@ -60,6 +60,7 @@ export type csvProductData = {
 	variant_length?: string;
 	variant_height?: string;
 	variant_width?: string;
+	metadata?: Record<string, any>;
 	category_id?: string; // optional: created when data is valid, and retrieved from DB
 	invalid_error?: string; // optional: created when data is invalid, and indicates the type of error
 };
@@ -93,6 +94,7 @@ export const requiredCsvHeadersForProduct = [
 export const requiredCsvHeadersForVariant = [
 	'handle',
 	'variant',
+	'thumbnail',
 	'variant_price',
 	'variant_inventory_quantity',
 	'variant_allow_backorder',
@@ -1005,6 +1007,7 @@ class ProductCsvService extends MedusaProductService {
 						length: variant.variant_length || null,
 						width: variant.variant_width || null,
 						height: variant.variant_height || null,
+						metadata: variant.metadata || null,
 						...(prices.length > 0 && { prices }),
 						...(options && { options: options }),
 				});
@@ -1024,10 +1027,25 @@ class ProductCsvService extends MedusaProductService {
 	public async convertRowDataToProductDetails(
 		rowData: csvProductData,
 		csvData: csvProductData[],
-		store: Store
+		store: Store,
+		baseImageUrl: string
 	): Promise<ProductDetails> {
 		//get all variant rows with same handle
 		let variants = [];
+
+		// add metadata to rowData
+		rowData.metadata = rowData.thumbnail ? {
+			"imgUrl": rowData.thumbnail.startsWith('http') ? rowData.thumbnail : baseImageUrl + rowData.thumbnail
+		} : {};
+
+		// Add metadata for all rows in csvData
+		csvData.forEach(row => {
+			if (row.thumbnail) {
+				row.metadata = {
+					"imgUrl": row.thumbnail.startsWith('http') ? row.thumbnail : baseImageUrl + row.thumbnail
+				};
+			}
+		});
 
 		//usually, product row data contains variant data as well
 		const hasVariant = this.csvRowHasVariant(
@@ -1172,7 +1190,7 @@ class ProductCsvService extends MedusaProductService {
 			//     ],
 			// };
 			const productDetails: ProductDetails =
-					await this.convertRowDataToProductDetails(rowData, csvData, store);
+					await this.convertRowDataToProductDetails(rowData, csvData, store, baseImageUrl);
 
 			const optionNames = await this.extractOptionNames(productDetails.variants);
 			// console.log('optionNames: ' + JSON.stringify(optionNames));
@@ -1253,7 +1271,7 @@ class ProductCsvService extends MedusaProductService {
 		// console.log('POSTCheck5.1.3.1');
 
 		const productDetails: ProductDetails =
-				await this.convertRowDataToProductDetails(rowData, csvData, store);
+				await this.convertRowDataToProductDetails(rowData, csvData, store, baseImageUrl);
 
 		// console.log('POSTCheck5.1.3.2');
 
