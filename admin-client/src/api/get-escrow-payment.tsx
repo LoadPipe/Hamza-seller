@@ -5,7 +5,8 @@ export async function getEscrowPaymentData(
     order_id: string,
     validate_refund: boolean = false,
     validate_release: boolean = false,
-    wallet_address: string = ''
+    wallet_address: string = '',
+    refund_amount: string = ''
 ): Promise<EscrowPaymentDefinitionWithError> {
     const output = await get<EscrowPaymentDefinitionWithError>(
         '/seller/order/escrow/status',
@@ -15,6 +16,7 @@ export async function getEscrowPaymentData(
                 validate_refund,
                 validate_release,
                 wallet_address,
+                refund_amount,
             },
         }
     );
