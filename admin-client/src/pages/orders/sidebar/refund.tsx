@@ -19,7 +19,6 @@ import { getEscrowPaymentData } from '@/api/get-escrow-payment';
 import { getChainId, getWalletAddress } from '@/web3';
 import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
 import { useSwitchChain } from 'wagmi';
-import { ethers } from 'ethers';
 
 type RefundProps = {
     refundAmount?: number;
