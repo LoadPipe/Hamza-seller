@@ -8,7 +8,7 @@ import {
 import { Input } from '@/components/ui/input';
 // import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
 import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
@@ -28,6 +28,7 @@ type RefundProps = {
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
 const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
+    const queryClient = useQueryClient();
     const { switchChain } = useSwitchChain();
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
@@ -144,6 +145,11 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                         ...formData,
                         refundAmount: '',
                         note: '',
+                    });
+
+                    // Force refresh order details to update the refund status
+                    queryClient.invalidateQueries({
+                        queryKey: ['orderDetails', orderId],
                     });
                 } else {
                     toast({
