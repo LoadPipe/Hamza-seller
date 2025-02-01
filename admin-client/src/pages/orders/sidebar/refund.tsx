@@ -36,10 +36,12 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
         note: '',
     });
 
+    //get the payment
     const payment = order?.escrow_payment?.payment;
     let refundableAmount: BigInt = BigInt(0);
     let refundedAmount: BigInt = BigInt(0);
 
+    //convert the amount & refundable amount
     if (payment) {
         refundedAmount = BigInt(payment.amountRefunded?.toString() ?? '0');
         refundableAmount =
@@ -47,12 +49,14 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
             BigInt(payment.amountRefunded?.toString() ?? '0');
     }
 
+    //convert refundable to displayable string
     const refundableAmountToDisplay = convertFromWeiToDisplay(
         refundableAmount.toString(),
         order?.currency_code,
         order?.escrow_payment?.chain_id
     );
 
+    //convert refunded amount to displayable string
     const refundedAmountToDisplay = convertFromWeiToDisplay(
         refundedAmount.toString(),
         order?.currency_code,
@@ -77,18 +81,27 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
 
     //convert the amount to db units
     const getDbAmount = (amount: string | number) => {
+        console.log(
+            'DB AMOIUNT IS,',
+            Math.floor(parseFloat(amount.toString()) * 10 ** precision.db)
+        );
         return Math.floor(parseFloat(amount.toString()) * 10 ** precision.db);
     };
 
     //convert the amount to wei for blockchain use
     const getBlockchainAmount = (amount: string | number) => {
-        const dbAmount = getDbAmount(amount);
-        const bcAmount =
-            dbAmount.toString() +
-            ''.padEnd(precision?.native ?? 0 - precision?.db ?? 0, '0');
-        return bcAmount;
+        amount = parseFloat(amount.toString());
+        let numPlaces = 0;
+        while (amount.toString().indexOf('.') >= 0) {
+            numPlaces += 1;
+            amount *= 10;
+        }
+        const adjustmentFactor = Math.pow(10, precision.native - numPlaces);
+        const nativeAmount = BigInt(amount) * BigInt(adjustmentFactor);
+        return BigInt(nativeAmount);
     };
 
+    //this mutation sends the refund request (createRefund) to the server (not the contract)
     const refundMutation = useMutation({
         mutationFn: async () => {
             const escrowPayment = await getEscrowPayment(order);
@@ -196,6 +209,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
         setFormData({ ...formData, reason: e.target.value });
     };
 
+    //form validation
     const validateForm = () => {
         const newErrors = {
             refundAmount: '',
@@ -223,8 +237,16 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
         const address = await getWalletAddress();
         const userChainId = await getChainId();
 
+        //get the escrow data (some validation is done on server side too)
         const payment: EscrowPaymentDefinitionWithError =
-            await getEscrowPaymentData(order?.id, true, false, address);
+            await getEscrowPaymentData(
+                order?.id,
+                true,
+                false,
+                address,
+                getBlockchainAmount(formData.refundAmount).toString()
+            );
+
         if (!payment) {
             toast({
                 variant: 'destructive',
@@ -244,6 +266,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                     switchChain({ chainId: payment.chain_id });
                 }
 
+                //validate, and send refund request to server
                 if (validateForm()) {
                     refundMutation.mutate();
                 }
