@@ -1,9 +1,11 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
-import ProductService from '../../../../services/product';
+import StoreProductService from '../../../../services/store-product';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-    const productService: ProductService = req.scope.resolve('productService');
+    const storeProductService: StoreProductService = req.scope.resolve(
+        'storeProductService'
+    );
 
     const handler = new RouteHandler(
         req,
@@ -26,7 +28,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
         const id = handler.inputParams.id;
 
-        const products = await productService.querySellerProductById(
+        const products = await storeProductService.querySellerProductById(
             id,
             storeId
         );
@@ -36,7 +38,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 };
 
 export const PATCH = async (req: MedusaRequest, res: MedusaResponse) => {
-    const productService: ProductService = req.scope.resolve('productService');
+    const storeProductService: StoreProductService = req.scope.resolve(
+        'storeProductService'
+    );
 
     const handler = new RouteHandler(
         req,
@@ -62,7 +66,7 @@ export const PATCH = async (req: MedusaRequest, res: MedusaResponse) => {
 
         const id = handler.inputParams.id;
 
-        const products = await productService.patchSellerProduct(
+        const products = await storeProductService.patchSellerProduct(
             id,
             storeId,
             updates

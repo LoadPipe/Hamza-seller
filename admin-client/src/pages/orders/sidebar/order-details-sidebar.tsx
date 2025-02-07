@@ -201,9 +201,17 @@ export function OrderDetailsSidebar() {
         0 // Initial accumulator value
     );
 
+    //Grand total calculated
+    const totalPriceFormatted = formatCryptoPrice(
+        totalPrice ?? 0,
+        currencyCode
+    );
+    const grandTotal = Number(totalPriceFormatted) + Number(shippingFee);
+
     const chainId = orderDetails?.payments[0]?.blockchain_data?.chain_id;
     const chainLogo = getChainLogo(chainId);
     const chainName = chainIdToName(chainId);
+
     return (
         <div>
             <Sidebar
