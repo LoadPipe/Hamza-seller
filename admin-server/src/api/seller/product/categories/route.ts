@@ -1,10 +1,11 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/medusa';
 import { RouteHandler } from '../../../route-handler';
-import ProductService from '../../../../services/product';
+import StoreProductService from '../../../../services/store-product';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-    const productService: ProductService = req.scope.resolve('productService');
-
+    const storeProductService: StoreProductService = req.scope.resolve(
+        'storeProductService'
+    );
     const handler = new RouteHandler(
         req,
         res,
@@ -16,7 +17,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         // Ensure required parameters are provided
 
         const queryProductCategories =
-            await productService.queryAllCategories();
+            await storeProductService.queryAllCategories();
 
         return handler.returnStatus(200, queryProductCategories);
     });

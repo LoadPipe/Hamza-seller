@@ -68,7 +68,6 @@ export async function refundEscrowPayment(
                 //validate before refunding
                 validatePaymentExists(payment, order.id);
                 validatePaymentNotReleased(payment, order.id);
-                validateRefundAmount(payment, order.id, amount);
 
                 await escrow.refundPayment(
                     ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id)),
@@ -199,22 +198,6 @@ function validatePaymentNotReleasedBySeller(
     if (payment?.receiverReleased) {
         throw new Error(
             `Escrow payment for ${orderId} has already been released by the seller.`
-        );
-    }
-}
-
-function validateRefundAmount(
-    payment: PaymentDefinition | null,
-    orderId: string,
-    amount: BigNumberish
-) {
-    const refundableAmt =
-        BigInt(payment?.amount.toString() ?? '0') -
-        BigInt(payment?.amountRefunded.toString() ?? '0');
-
-    if (refundableAmt < BigInt(amount.toString())) {
-        throw new Error(
-            `Amount of ${amount} exceeds the refundable amount of ${refundableAmt} for ${orderId}.`
         );
     }
 }
