@@ -38,7 +38,7 @@ const chainConfig: Record<string | number, RainbowKitChain> = {
 
 // Populate wagmiChains based on allowedChains
 wagmiChains = allowedChains
-    .map((c) => chainConfig[c as keyof typeof chainConfig])
+    .map((c: any) => chainConfig[c as keyof typeof chainConfig])
     .filter(Boolean) as RainbowKitChain[]; // Remove undefined values
 
 // Ensure wagmiChains has at least one item before assigning it to wagmiChains2
