@@ -127,6 +127,56 @@ class StoreService extends MedusaStoreService {
         return store;
     }
 
+    async getSellerStoreDetailsByWalletAddress(walletAddress: string): Promise<any> {
+        const userRepo = this.manager_.withRepository(this.userRepository_);
+        const user = await userRepo.findOne({ where: { wallet_address: walletAddress } });
+        if (!user) {
+            throw new Error(`User not found with wallet address: ${walletAddress}`);
+        }
+        
+        const store = await this.getStoreById(user.store_id);
+        
+        return {
+            ...store,
+            ...store.metadata,
+            ...user
+        };
+    }
+
+    async updateSellerStoreDetails(
+        store_id: string,
+        updates: any
+        ): Promise<Store> {
+        const existingStore = await this.getStoreById(store_id);
+
+        const { 
+            storeName, 
+            storeDescription, 
+            fullName, 
+            username, 
+            phoneNumber, 
+            emailAddress, 
+            ...rest 
+        } = updates;
+
+        const updatedMetadata = {
+            ...existingStore.metadata,
+            ...rest,
+        };
+
+        const updateObj = {
+            name: storeName || existingStore.name,
+            store_description: storeDescription || existingStore.store_description,
+            metadata: updatedMetadata,
+        };
+
+        const storeRepo = this.manager_.withRepository(this.storeRepository_);
+        await storeRepo.update({ id: store_id }, updateObj);
+
+        return await this.getStoreById(store_id);
+    }
+
+
     async getCollectionByStore(store_id: string): Promise<string> {
         const collectionRepo = this.manager_.withRepository(
             this.productCollectionRepository_
