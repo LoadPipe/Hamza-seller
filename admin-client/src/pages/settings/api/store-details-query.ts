@@ -1,4 +1,3 @@
-import { WalletAddress } from './../../../../../admin-server/src/models/walletAddress';
 import { postSecure } from '@/utils/api-calls';
 import { getJwtWalletAddress } from '@/utils/authentication';
 

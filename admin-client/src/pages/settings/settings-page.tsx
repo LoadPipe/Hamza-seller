@@ -44,8 +44,8 @@ export default function SettingsPage() {
         businessName: data?.businessName || '',
         registrationNumber: data?.registrationNumber || '',
         taxId: data?.taxId || '',
-        businessStructure: data?.businessStructure || '',
-        industry: data?.industry || '',
+        businessStructure: data?.businessStructure || 'sole-proprietor',
+        industry: data?.industry || 'retail',
         addressLine1: data?.addressLine1 || '',
         addressLine2: data?.addressLine2 || '',
         city: data?.city || '',
@@ -98,8 +98,8 @@ export default function SettingsPage() {
 
         autoConvert: data?.autoConvert || false,
         preferredCrypto: data?.preferredCrypto || '',
-        minimumPayoutThreshold: data?.minimumPayoutThreshold || '',
-        paymentFrequency: data?.paymentFrequency || '',
+        minimumPayoutThreshold: data?.minimumPayoutThreshold || 'daily',
+        paymentFrequency: data?.paymentFrequency || 'daily',
     };
 
     const settingsForm = useForm<Settings>({ defaultValues });
@@ -463,14 +463,21 @@ export default function SettingsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <settingsForm.Field name="businessStructure">
-                                            {() => (
+                                            {(field) => (
                                                 <div>
                                                     <label className="font-sora font-normal text-[16px] pl-[16px] text-white">
                                                         Business Structure
                                                     </label>
-                                                    <Select>
+                                                    <Select value={field.state.value} onValueChange={(newValue) => {
+                                                        if (newValue === "") return;
+                                                        field.handleChange(newValue);
+                                                    }}>
                                                         <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 h-[50px] py-[10px] mt-[20px]">
-                                                            <SelectValue placeholder="Select business structure" />
+                                                            <SelectValue>
+                                                                {field.state.value
+                                                                    ? field.state.value
+                                                                    : 'Select business structure'}
+                                                            </SelectValue>
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="sole-proprietor">
@@ -487,14 +494,21 @@ export default function SettingsPage() {
                                         </settingsForm.Field>
 
                                         <settingsForm.Field name="industry">
-                                            {() => (
+                                            {(field) => (
                                                 <div>
                                                     <label className="font-sora font-normal text-[16px] pl-[16px] text-white">
                                                         Industry
                                                     </label>
-                                                    <Select>
+                                                    <Select value={field.state.value} onValueChange={(newValue) => {
+                                                        if (newValue === "") return;
+                                                        field.handleChange(newValue);
+                                                    }}>
                                                         <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 h-[50px] py-[10px] mt-[20px]">
-                                                            <SelectValue placeholder="Select industry" />
+                                                            <SelectValue>
+                                                                {field.state.value
+                                                                    ? field.state.value.charAt(0).toUpperCase() + field.state.value.slice(1)
+                                                                    : 'Select industry'}
+                                                            </SelectValue>
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="retail">Retail</SelectItem>
@@ -1063,9 +1077,14 @@ export default function SettingsPage() {
                                                 <label className="font-sora font-normal text-[16px] text-white">
                                                     Protocol
                                                 </label>
-                                                <Select value={field.state.value} onValueChange={field.handleChange}>
+                                                <Select value={field.state.value} onValueChange={(newValue) => {
+                                                    if (newValue === "") return;
+                                                    field.handleChange(newValue);
+                                                }}>
                                                     <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 py-[10px] mt-[20px] h-[42px]">
-                                                        <SelectValue placeholder="Loadpipe" />
+                                                        <SelectValue>
+                                                            {field.state.value === 'other' ? 'Other' : 'Loadpipe'}
+                                                        </SelectValue>
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="loadpipe">Loadpipe</SelectItem>
@@ -1277,9 +1296,16 @@ export default function SettingsPage() {
                                                 <label className="font-sora font-normal text-[16px] text-white">
                                                     Minimum Payout Threshold
                                                 </label>
-                                                <Select value={field.state.value} onValueChange={field.handleChange}>
+                                                <Select value={field.state.value} onValueChange={(newValue) => {
+                                                    if (newValue === "") return;
+                                                    field.handleChange(newValue);
+                                                }}>
                                                     <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 py-[10px] mt-[20px] h-[44px]">
-                                                        <SelectValue placeholder="Threshold (in selected cryptocurrency)" />
+                                                        <SelectValue>
+                                                            {field.state.value
+                                                                ? field.state.value.charAt(0).toUpperCase() + field.state.value.slice(1)
+                                                                : 'Threshold (in selected cryptocurrency)'}
+                                                        </SelectValue>
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="daily">Daily</SelectItem>
@@ -1299,9 +1325,16 @@ export default function SettingsPage() {
                                                 <label className="font-sora font-normal text-[16px] text-white">
                                                     Payment Frequency
                                                 </label>
-                                                <Select value={field.state.value} onValueChange={field.handleChange}>
+                                                <Select value={field.state.value} onValueChange={(newValue) => {
+                                                    if (newValue === "") return;
+                                                    field.handleChange(newValue);
+                                                }}>
                                                     <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 py-[10px] mt-[20px] h-[42px]">
-                                                        <SelectValue placeholder="Daily" />
+                                                        <SelectValue>
+                                                            {field.state.value
+                                                                ? field.state.value.charAt(0).toUpperCase() + field.state.value.slice(1)
+                                                                : 'Daily'}
+                                                        </SelectValue>
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="daily">Daily</SelectItem>
