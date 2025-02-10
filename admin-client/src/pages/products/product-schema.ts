@@ -29,6 +29,7 @@ export const ProductSchema = z.object({
     title: z.string(),
     created_at: z.string(),
     subtitle: z.string().optional().nullable(),
+    handle: z.string().optional().nullable(),
     description: z.string().optional(),
     thumbnail: z
         .string()

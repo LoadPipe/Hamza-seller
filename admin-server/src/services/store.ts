@@ -96,13 +96,17 @@ class StoreService extends MedusaStoreService {
         return stores.map((store) => store.name);
     }
 
-    async getStoreNameById(store_id: string) {
+    async getStoreDetailsById(
+        store_id: string
+    ): Promise<{ name: string; handle: string }> {
         const store = await this.storeRepository_.findOne({
             where: { id: store_id },
-            select: ['name'],
+            select: ['name', 'handle'], // Include handle
         });
 
-        return store?.name ?? '';
+        return store
+            ? { name: store.name, handle: store.handle }
+            : { name: '', handle: '' };
     }
 
     async update(data: UpdateStoreInput) {
@@ -127,36 +131,42 @@ class StoreService extends MedusaStoreService {
         return store;
     }
 
-    async getSellerStoreDetailsByWalletAddress(walletAddress: string): Promise<any> {
+    async getSellerStoreDetailsByWalletAddress(
+        walletAddress: string
+    ): Promise<any> {
         const userRepo = this.manager_.withRepository(this.userRepository_);
-        const user = await userRepo.findOne({ where: { wallet_address: walletAddress } });
+        const user = await userRepo.findOne({
+            where: { wallet_address: walletAddress },
+        });
         if (!user) {
-            throw new Error(`User not found with wallet address: ${walletAddress}`);
+            throw new Error(
+                `User not found with wallet address: ${walletAddress}`
+            );
         }
-        
+
         const store = await this.getStoreById(user.store_id);
-        
+
         return {
             ...store,
             ...store.metadata,
-            ...user
+            ...user,
         };
     }
 
     async updateSellerStoreDetails(
         store_id: string,
         updates: any
-        ): Promise<Store> {
+    ): Promise<Store> {
         const existingStore = await this.getStoreById(store_id);
 
-        const { 
-            storeName, 
-            storeDescription, 
-            fullName, 
-            username, 
-            phoneNumber, 
-            emailAddress, 
-            ...rest 
+        const {
+            storeName,
+            storeDescription,
+            fullName,
+            username,
+            phoneNumber,
+            emailAddress,
+            ...rest
         } = updates;
 
         const updatedMetadata = {
@@ -166,7 +176,8 @@ class StoreService extends MedusaStoreService {
 
         const updateObj = {
             name: storeName || existingStore.name,
-            store_description: storeDescription || existingStore.store_description,
+            store_description:
+                storeDescription || existingStore.store_description,
             metadata: updatedMetadata,
         };
 
@@ -175,7 +186,6 @@ class StoreService extends MedusaStoreService {
 
         return await this.getStoreById(store_id);
     }
-
 
     async getCollectionByStore(store_id: string): Promise<string> {
         const collectionRepo = this.manager_.withRepository(

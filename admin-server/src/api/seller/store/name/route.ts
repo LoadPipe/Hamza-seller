@@ -16,7 +16,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
             });
         }
 
-        const stores = await storeService.getStoreNameById(
+        const stores = await storeService.getStoreDetailsById(
             handler.inputParams.store_id
         );
         handler.returnStatus(200, stores);

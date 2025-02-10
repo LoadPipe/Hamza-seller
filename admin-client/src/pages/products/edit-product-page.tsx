@@ -11,6 +11,7 @@ import {
     AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
+import { getJwtStoreId } from '@/utils/authentication';
 
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { z } from 'zod';
@@ -23,6 +24,9 @@ import { useForm, getBy, setBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
 import { PackageSearch, Bitcoin } from 'lucide-react';
+import { uploadProductThumbnail } from '@/pages/products/api/upload-product-thumbnail.ts';
+import ImageUploadDialog from '@/pages/products/utils/image-upload-dialog.tsx';
+import { useState } from 'react';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -44,6 +48,45 @@ export default function EditProductPage() {
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
         queryKey: ['view-product-form', productId],
         queryFn: () => fetchProductById(productId),
+    });
+
+    const [isImageDialogOpen, setImageDialogOpen] = useState(false);
+
+    const handleImageUpload = (imageUrl: string) => {
+        editProductForm.setFieldValue('thumbnail', imageUrl); // Update form
+    };
+
+    const cachedStore = queryClient.getQueryData<{ handle: string }>([
+        'store',
+        getJwtStoreId(),
+    ]);
+
+    const storeHandle = cachedStore?.handle ?? '';
+
+    // Mutation to upload a new thumbnail
+    const uploadThumbnailMutation = useMutation({
+        mutationFn: async (file: File) => {
+            return await uploadProductThumbnail(file, storeHandle);
+        },
+        onSuccess: (uploadedImageUrl) => {
+            console.log('Thumbnail uploaded successfully:', uploadedImageUrl);
+
+            editProductForm.setFieldValue('thumbnail', uploadedImageUrl);
+
+            toast({
+                variant: 'default',
+                title: 'Thumbnail Uploaded!',
+                description: 'Your product thumbnail has been updated.',
+            });
+        },
+        onError: (error) => {
+            console.error('Thumbnail Upload Failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Upload Failed',
+                description: 'Could not upload image. Please try again.',
+            });
+        },
     });
 
     const updateEditForm = useMutation({
@@ -312,14 +355,15 @@ export default function EditProductPage() {
                                         <>
                                             <Label>Thumbnail URL</Label>
                                             <Input
-                                                placeholder="Thumbnail URL"
-                                                value={field.state.value}
-                                                onChange={(e) =>
-                                                    field.handleChange(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                onBlur={field.handleBlur} // Handle blur event for validation
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    if (e.target.files?.[0]) {
+                                                        uploadThumbnailMutation.mutate(
+                                                            e.target.files[0]
+                                                        );
+                                                    }
+                                                }}
                                             />
                                             {field.state.meta.errors?.length >
                                                 0 && (
@@ -339,6 +383,21 @@ export default function EditProductPage() {
                                         </>
                                     )}
                                 </editProductForm.Field>
+                                {/* Thumbnail Upload Button */}
+                                <Button
+                                    className="mt-2"
+                                    onClick={() => setImageDialogOpen(true)} // Open Dialog
+                                >
+                                    Upload Image
+                                </Button>
+
+                                {/* Image Upload Dialog */}
+                                <ImageUploadDialog
+                                    open={isImageDialogOpen}
+                                    onClose={() => setImageDialogOpen(false)}
+                                    onImageUpload={handleImageUpload} // Pass uploaded image URL back to the form
+                                    storeHandle={storeHandle}
+                                />
                             </div>
                             {/* Show current categories & an "Add Category" button */}
                             <div className="mt-6 flex flex-col gap-4">
@@ -814,7 +873,16 @@ export default function EditProductPage() {
                                                             <div>
                                                                 <Label>
                                                                     Price in{' '}
-                                                                    {['usdc', 'usdt'].includes(preferredCurrency?.toLowerCase() ?? '') ? 'USD' : preferredCurrency?.toUpperCase() ?? 'ETH'}
+                                                                    {[
+                                                                        'usdc',
+                                                                        'usdt',
+                                                                    ].includes(
+                                                                        preferredCurrency?.toLowerCase() ??
+                                                                            ''
+                                                                    )
+                                                                        ? 'USD'
+                                                                        : (preferredCurrency?.toUpperCase() ??
+                                                                          'ETH')}
                                                                 </Label>
                                                                 <Input
                                                                     type="number"

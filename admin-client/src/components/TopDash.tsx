@@ -9,7 +9,7 @@ import { Button } from './ui/button';
 const TopDash = () => {
     const store_id = getJwtStoreId();
 
-    const { data: storeName } = useQuery({
+    const { data: storeData } = useQuery({
         queryKey: ['store', store_id],
         queryFn: async () => {
             return await getSecure('/seller/store/name', {
@@ -37,10 +37,10 @@ const TopDash = () => {
                             <WalletConnect />
                         </div>
                         <h2 className="text-green-50 self-center">
-                            {storeName}
+                            {storeData?.name}
                         </h2>
                         <Button
-                            variant="ghost" 
+                            variant="ghost"
                             size="icon"
                             className="h-[50px] w-[50px] rounded-full bg-[#121212] hover:bg-[#1a1a1a]"
                             onClick={() => {
