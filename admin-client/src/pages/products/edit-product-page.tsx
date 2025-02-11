@@ -54,6 +54,7 @@ export default function EditProductPage() {
 
     const handleImageUpload = (imageUrl: string) => {
         editProductForm.setFieldValue('thumbnail', imageUrl); // Update form
+        updateEditForm.mutate({ thumbnail: imageUrl, preferredCurrency }); // Update API
     };
 
     const cachedStore = queryClient.getQueryData<{ handle: string }>([
@@ -62,32 +63,6 @@ export default function EditProductPage() {
     ]);
 
     const storeHandle = cachedStore?.handle ?? '';
-
-    // Mutation to upload a new thumbnail
-    const uploadThumbnailMutation = useMutation({
-        mutationFn: async (file: File) => {
-            return await uploadProductThumbnail(file, storeHandle, productId);
-        },
-        onSuccess: (uploadedImageUrl) => {
-            console.log('Thumbnail uploaded successfully:', uploadedImageUrl);
-
-            editProductForm.setFieldValue('thumbnail', uploadedImageUrl);
-
-            toast({
-                variant: 'default',
-                title: 'Thumbnail Uploaded!',
-                description: 'Your product thumbnail has been updated.',
-            });
-        },
-        onError: (error) => {
-            console.error('Thumbnail Upload Failed:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Upload Failed',
-                description: 'Could not upload image. Please try again.',
-            });
-        },
-    });
 
     const updateEditForm = useMutation({
         mutationFn: async (payload: any) => {
@@ -331,74 +306,53 @@ export default function EditProductPage() {
 
                         {/* Right side fields */}
                         <div>
-                            <h2 className="text-lg font-medium mb-4">
-                                Product Media
-                            </h2>
                             {/* Thumbnail */}
-                            {/* Image Upload Dialog */}
-                            {/* Thumbnail Upload Button */}
-                            <Button
-                                className="mt-2"
-                                onClick={() => setImageDialogOpen(true)} // Open Dialog
-                            >
-                                Upload Image
-                            </Button>
-                            <ImageUploadDialog
-                                open={isImageDialogOpen}
-                                onClose={() => setImageDialogOpen(false)}
-                                onImageUpload={handleImageUpload} // Pass uploaded image URL back to the form
-                                storeHandle={storeHandle}
-                                productId={productId}
-                            />
-                            <div>
-                                <editProductForm.Field
-                                    name="thumbnail"
-                                    validators={{
-                                        onBlur: ({ value }) => {
-                                            if (!value)
-                                                return 'Thumbnail URL is required.';
-                                            try {
-                                                new URL(value); // Validate if it's a valid URL
-                                                return undefined;
-                                            } catch {
-                                                return 'Invalid URL format.';
-                                            }
-                                        },
-                                    }}
+                            <div className="mb-6">
+                                <h2 className="text-lg font-medium mb-4">
+                                    Product Media
+                                </h2>
+
+                                {/* Show Thumbnail Preview if Available */}
+                                <editProductForm.Subscribe
+                                    selector={(formState) =>
+                                        formState.values.thumbnail
+                                    }
                                 >
-                                    {(field) => (
-                                        <>
-                                            <Label>Thumbnail URL</Label>
-                                            <Input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => {
-                                                    if (e.target.files?.[0]) {
-                                                        uploadThumbnailMutation.mutate(
-                                                            e.target.files[0]
-                                                        );
-                                                    }
-                                                }}
+                                    {(thumbnail) =>
+                                        thumbnail ? (
+                                            <img
+                                                src={thumbnail}
+                                                alt="Thumbnail Preview"
+                                                className="object-cover rounded-md mx-auto max-w-[200px] max-h-[200px] mb-4"
                                             />
-                                            {field.state.meta.errors?.length >
-                                                0 && (
-                                                <span className="text-red-500 mt-1">
-                                                    {field.state.meta.errors.join(
-                                                        ', '
-                                                    )}
-                                                </span>
-                                            )}
-                                            {field.state.value && (
-                                                <img
-                                                    src={field.state.value}
-                                                    alt="Thumbnail Preview"
-                                                    className="object-cover rounded-md mx-auto max-w-[200px] max-h-[200px] mt-4"
-                                                />
-                                            )}
-                                        </>
-                                    )}
-                                </editProductForm.Field>
+                                        ) : (
+                                            <p className="text-gray-400 text-sm text-center">
+                                                No image selected
+                                            </p>
+                                        )
+                                    }
+                                </editProductForm.Subscribe>
+
+                                {/* Upload Image Button */}
+                                <div className="flex justify-center">
+                                    <Button
+                                        className="mt-2"
+                                        onClick={() => setImageDialogOpen(true)} // Open Dialog
+                                    >
+                                        Upload Image
+                                    </Button>
+                                </div>
+
+                                {/* Image Upload Dialog */}
+                                <ImageUploadDialog
+                                    open={isImageDialogOpen}
+                                    onClose={() => setImageDialogOpen(false)}
+                                    onImageUpload={handleImageUpload} // Pass uploaded image URL back to the form
+                                    storeHandle={storeHandle}
+                                    productId={productId}
+                                />
                             </div>
+
                             {/* Show current categories & an "Add Category" button */}
                             <div className="mt-6 flex flex-col gap-4">
                                 <div className="flex justify-end">
