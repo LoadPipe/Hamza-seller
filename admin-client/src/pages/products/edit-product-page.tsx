@@ -24,7 +24,6 @@ import { useForm, getBy, setBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
 import { PackageSearch, Bitcoin } from 'lucide-react';
-import { uploadProductThumbnail } from '@/pages/products/api/upload-product-thumbnail.ts';
 import ImageUploadDialog from '@/pages/products/utils/image-upload-dialog.tsx';
 import { useState } from 'react';
 
@@ -53,8 +52,8 @@ export default function EditProductPage() {
     const [isImageDialogOpen, setImageDialogOpen] = useState(false);
 
     const handleImageUpload = (imageUrl: string) => {
-        editProductForm.setFieldValue('thumbnail', imageUrl); // Update form
-        updateEditForm.mutate({ thumbnail: imageUrl, preferredCurrency }); // Update API
+        editProductForm.setFieldValue('thumbnail', imageUrl);
+        updateEditForm.mutate({ thumbnail: imageUrl, preferredCurrency });
     };
 
     const cachedStore = queryClient.getQueryData<{ handle: string }>([
@@ -351,6 +350,28 @@ export default function EditProductPage() {
                                     storeHandle={storeHandle}
                                     productId={productId}
                                 />
+                                {/* Gallery Section */}
+                                {product?.images?.length > 0 && (
+                                    <div className="mt-6">
+                                        <h2 className="text-lg font-medium mb-4">
+                                            Gallery
+                                        </h2>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            {product.images.map((image) => (
+                                                <div
+                                                    key={image.id}
+                                                    className="relative group"
+                                                >
+                                                    <img
+                                                        src={image.url}
+                                                        alt={`Product Image ${image.id}`}
+                                                        className="object-cover w-full h-32 rounded-lg transition-opacity duration-200 hover:opacity-75"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Show current categories & an "Add Category" button */}

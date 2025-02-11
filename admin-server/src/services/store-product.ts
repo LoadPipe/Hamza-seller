@@ -292,7 +292,12 @@ class StoreProductService extends MedusaProductService {
 
             const product = await this.productRepository_.findOne({
                 where: where,
-                relations: ['variants', 'variants.prices', 'categories'],
+                relations: [
+                    'variants',
+                    'variants.prices',
+                    'categories',
+                    'images',
+                ],
             });
 
             // Fetch all available categories
