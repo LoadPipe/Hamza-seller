@@ -335,6 +335,21 @@ export default function EditProductPage() {
                                 Product Media
                             </h2>
                             {/* Thumbnail */}
+                            {/* Image Upload Dialog */}
+                            {/* Thumbnail Upload Button */}
+                            <Button
+                                className="mt-2"
+                                onClick={() => setImageDialogOpen(true)} // Open Dialog
+                            >
+                                Upload Image
+                            </Button>
+                            <ImageUploadDialog
+                                open={isImageDialogOpen}
+                                onClose={() => setImageDialogOpen(false)}
+                                onImageUpload={handleImageUpload} // Pass uploaded image URL back to the form
+                                storeHandle={storeHandle}
+                                productId={productId}
+                            />
                             <div>
                                 <editProductForm.Field
                                     name="thumbnail"
@@ -383,21 +398,6 @@ export default function EditProductPage() {
                                         </>
                                     )}
                                 </editProductForm.Field>
-                                {/* Thumbnail Upload Button */}
-                                <Button
-                                    className="mt-2"
-                                    onClick={() => setImageDialogOpen(true)} // Open Dialog
-                                >
-                                    Upload Image
-                                </Button>
-
-                                {/* Image Upload Dialog */}
-                                <ImageUploadDialog
-                                    open={isImageDialogOpen}
-                                    onClose={() => setImageDialogOpen(false)}
-                                    onImageUpload={handleImageUpload} // Pass uploaded image URL back to the form
-                                    storeHandle={storeHandle}
-                                />
                             </div>
                             {/* Show current categories & an "Add Category" button */}
                             <div className="mt-6 flex flex-col gap-4">
