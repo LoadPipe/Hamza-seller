@@ -66,7 +66,7 @@ export default function EditProductPage() {
     // Mutation to upload a new thumbnail
     const uploadThumbnailMutation = useMutation({
         mutationFn: async (file: File) => {
-            return await uploadProductThumbnail(file, storeHandle);
+            return await uploadProductThumbnail(file, storeHandle, productId);
         },
         onSuccess: (uploadedImageUrl) => {
             console.log('Thumbnail uploaded successfully:', uploadedImageUrl);
