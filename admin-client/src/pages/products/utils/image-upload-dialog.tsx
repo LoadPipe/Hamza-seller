@@ -11,6 +11,7 @@ interface ImageUploadDialogProps {
     onClose: () => void;
     onImageUpload: (imageUrl: string) => void; // Pass uploaded image URL back to form
     storeHandle: string; // Store handle needed for upload API
+    productId: string; // Product ID needed for upload API
 }
 
 const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
@@ -18,6 +19,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
     onClose,
     onImageUpload,
     storeHandle,
+    productId,
 }) => {
     const [file, setFile] = useState<File | null>(null);
     const { toast } = useToast();
@@ -43,7 +45,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
 
     const uploadThumbnailMutation = useMutation({
         mutationFn: async (file: File) => {
-            return await uploadProductThumbnail(file, storeHandle);
+            return await uploadProductThumbnail(file, storeHandle, productId);
         },
         onSuccess: (uploadedImageUrl) => {
             toast({
