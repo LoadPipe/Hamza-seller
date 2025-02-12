@@ -39,6 +39,16 @@ export const ProductSchema = z.object({
     length: z.number().nullable(),
     height: z.number().nullable(),
     width: z.number().nullable(),
+    images: z
+        .array(
+            z.object({
+                url: z.string().url({ message: 'Invalid image URL' }),
+                id: z.string(),
+                fileName: z.string(),
+            })
+        )
+        .optional()
+        .default([]),
     categories: z
         .array(
             z.object({

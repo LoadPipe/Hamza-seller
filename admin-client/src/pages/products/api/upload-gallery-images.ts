@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { delSecure } from '@/utils/api-calls';
 const BUNNY_STORAGE_ZONE = 'hamza-market';
 const BUNNY_CDN_URL = import.meta.env.VITE_BUNNY_CDN_URL;
@@ -74,7 +74,8 @@ export const deleteImageFromCDN = async (imageUrl: string) => {
         });
         return true;
     } catch (error) {
-        if (error.response?.status === 404) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response?.status === 404) {
             console.warn('CDN image not found, skipping deletion:', imageUrl);
             return false;
         }

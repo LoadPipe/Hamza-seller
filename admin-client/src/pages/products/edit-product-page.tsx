@@ -25,7 +25,7 @@ import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
 import { PackageSearch, Bitcoin, Trash } from 'lucide-react';
 import ImageUploadDialog from '@/pages/products/utils/image-upload-dialog.tsx';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import GalleryUploadDialog from '@/pages/products/utils/gallery-upload-dialog.tsx';
 import {
     deleteImageFromCDN,
@@ -231,16 +231,21 @@ export default function EditProductPage() {
                     context.previousData
                 );
             }
+            console.log(variables);
             toast({
                 title: 'Error',
-                description: 'Failed to delete image. Please try again later.',
+                description:
+                    `Failed to delete image, ${error.message}` ||
+                    'Failed to delete image. Please try again later.',
                 variant: 'destructive',
             });
         },
         onSuccess: (deletedImageUrl) => {
             toast({
                 title: 'Deleted',
-                description: 'Image removed from gallery.',
+                description:
+                    `Removed ${deletedImageUrl} from gallery` ||
+                    'Image removed from gallery.',
             });
         },
         onSettled: () => {
