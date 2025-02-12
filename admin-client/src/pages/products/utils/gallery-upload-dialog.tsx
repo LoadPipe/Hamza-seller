@@ -1,3 +1,4 @@
+// GalleryUploadDialog.tsx
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -9,16 +10,17 @@ import { FilePlus, Trash, Loader2 } from 'lucide-react';
 interface GalleryImage {
     id: string;
     url: string;
+    fileName: string; // e.g. 'gallery_1.png'
 }
 
 interface GalleryUploadDialogProps {
     open: boolean;
     onClose: () => void;
-    onGalleryUpload: (imageUrls: string[]) => void; // Pass back URLs
+    onGalleryUpload: (imageUrls: string[]) => void;
     storeHandle: string;
     productId: string;
-    currentGallery: GalleryImage[]; // Array of objects with id & url
-    onDeleteImage: (image: GalleryImage) => void; // Now accepts the full image object
+    currentGallery: GalleryImage[]; // Array of objects with id, url, fileName
+    onDeleteImage: (image: GalleryImage) => void;
 }
 
 const GalleryUploadDialog: React.FC<GalleryUploadDialogProps> = ({
@@ -35,13 +37,13 @@ const GalleryUploadDialog: React.FC<GalleryUploadDialogProps> = ({
     const queryClient = useQueryClient();
 
     const onDrop = (acceptedFiles: File[]) => {
-        if (acceptedFiles.length > 5) {
+        const totalAfterDrop = currentGallery.length + acceptedFiles.length;
+        if (totalAfterDrop > 5) {
             toast({
                 title: 'Limit Exceeded',
-                description: 'You can upload up to 5 images at a time.',
+                description: 'New images will replace the oldest ones.',
                 variant: 'destructive',
             });
-            return;
         }
         setFiles(acceptedFiles);
     };
@@ -52,21 +54,30 @@ const GalleryUploadDialog: React.FC<GalleryUploadDialogProps> = ({
         multiple: true,
     });
 
+    // Mutation for uploading gallery images.
     const uploadGalleryMutation = useMutation({
-        mutationFn: async (files: File[]) => {
-            return await uploadGalleryImages(files, storeHandle, productId);
+        mutationFn: async ({
+            files,
+            replacementFileName,
+        }: {
+            files: File[];
+            replacementFileName?: string;
+        }) => {
+            return await uploadGalleryImages(files, storeHandle, productId, {
+                replacementFileName,
+            });
         },
         onSuccess: (uploadedImageUrls) => {
             toast({
                 title: 'Success',
                 description: 'Gallery images uploaded!',
             });
-            onGalleryUpload(uploadedImageUrls); // Pass URLs back to parent
+            onGalleryUpload(uploadedImageUrls);
             queryClient.invalidateQueries({
                 queryKey: ['view-product-form', productId],
-            }); // Auto-refresh
+            });
             setFiles([]);
-            onClose(); // Close dialog
+            onClose();
         },
         onError: (error: any) => {
             toast({
@@ -86,7 +97,25 @@ const GalleryUploadDialog: React.FC<GalleryUploadDialogProps> = ({
             });
             return;
         }
-        uploadGalleryMutation.mutate(files);
+
+        let replacementFileName: string | undefined = undefined;
+        // Check if adding these files would exceed 5.
+        const totalAfterDrop = currentGallery.length + files.length;
+        if (totalAfterDrop > 5) {
+            const removeCount = totalAfterDrop - 5;
+            // Assume the oldest images are at the beginning of currentGallery.
+            const imagesToRemove = currentGallery.slice(0, removeCount);
+            if (imagesToRemove.length > 0) {
+                // Use the fileName of the oldest image as the replacement name for the first new file.
+                replacementFileName = imagesToRemove[0].fileName;
+                // Trigger deletion for these images.
+                imagesToRemove.forEach((img) => {
+                    onDeleteImage(img);
+                });
+            }
+        }
+
+        uploadGalleryMutation.mutate({ files, replacementFileName });
     };
 
     if (!open) return null;
@@ -97,7 +126,6 @@ const GalleryUploadDialog: React.FC<GalleryUploadDialogProps> = ({
                 <h2 className="text-xl font-semibold py-4">
                     Upload Gallery Images
                 </h2>
-
                 <div
                     {...getRootProps()}
                     className={`p-6 text-center rounded-lg text-white border-2 border-dashed ${
@@ -115,14 +143,12 @@ const GalleryUploadDialog: React.FC<GalleryUploadDialogProps> = ({
                         <div className="text-center">
                             <FilePlus className="mx-auto mb-4" size={28} />
                             <p className="text-white my-4">
-                                Drag and drop up to 5 images here, or click to
-                                select.
+                                Drag and drop images here, or click to select.
                             </p>
                         </div>
                     )}
                 </div>
-
-                {/* Display Existing Gallery Images with Delete Buttons */}
+                {/* Display existing gallery images with delete buttons */}
                 <div className="grid grid-cols-3 gap-2 mt-6">
                     {currentGallery.map((image) => (
                         <div key={image.id} className="relative group">
@@ -140,7 +166,6 @@ const GalleryUploadDialog: React.FC<GalleryUploadDialogProps> = ({
                         </div>
                     ))}
                 </div>
-
                 <div className="mt-8 flex justify-end gap-2">
                     <Button onClick={onClose} className="w-[200px]">
                         Cancel

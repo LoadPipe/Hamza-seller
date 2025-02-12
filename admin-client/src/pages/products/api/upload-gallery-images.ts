@@ -8,16 +8,22 @@ const BUNNY_STORAGE_REGION = 'storage.bunnycdn.com';
 export const uploadGalleryImages = async (
     files: File[],
     storeSlug: string,
-    productId: string
+    productId: string,
+    options?: { replacementFileName?: string }
 ) => {
     const uploadUrls: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const fileExtension = file.name.split('.').pop();
-        const fileName = `gallery_${i + 1}.${fileExtension}`; // Indexed filenames
-        const uploadPath = `storedev/${storeSlug}/${productId}/${fileName}`;
 
+        // For the first file, if a replacement file name is provided, use it.
+        const fileName =
+            i === 0 && options?.replacementFileName
+                ? options.replacementFileName
+                : `gallery_${i + 1}.${fileExtension}`;
+
+        const uploadPath = `storedev/${storeSlug}/${productId}/${fileName}`;
         const storageUploadUrl = `https://${BUNNY_STORAGE_REGION}/${BUNNY_STORAGE_ZONE}/${uploadPath}`;
         const cdnUrl = `${BUNNY_CDN_URL}/${uploadPath}`;
 
@@ -39,13 +45,13 @@ export const uploadGalleryImages = async (
         }
     }
 
-    return uploadUrls; // Return all uploaded image URLs
+    return uploadUrls; // Return the array of uploaded image URLs
 };
 
-// 1. Move gallery to storedev/
-// 2. Log everything
-// 3. Debug the deleting all
-// 4. Prevent more than 5 images from being uploaded
+// 1. Move gallery to storedev/ (done)
+// 2. Log everything (done)
+// 3. Debug the deleting all (done)
+// 4. Prevent more than 5 images from being uploaded (done)
 // 4. Figure out why thumbnail is also being passed to gallery
 export const deleteImageFromCDN = async (imageUrl: string) => {
     if (!imageUrl) {
