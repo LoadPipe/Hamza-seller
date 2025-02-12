@@ -64,12 +64,6 @@ export default function EditProductPage() {
     const [isGalleryDialogOpen, setGalleryDialogOpen] = useState(false);
     const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
-    useEffect(() => {
-        if (data?.images) {
-            setGalleryImages(data.images.map((img) => img.url));
-        }
-    }, [data]);
-
     const handleGalleryUpload = (uploadedImageUrls: string[]) => {
         const updatedGallery = [...galleryImages, ...uploadedImageUrls];
         setGalleryImages(updatedGallery);

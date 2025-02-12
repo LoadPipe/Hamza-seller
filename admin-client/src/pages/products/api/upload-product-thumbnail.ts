@@ -12,7 +12,7 @@ export const uploadProductThumbnail = async (
 ) => {
     const fileExtension = file.name.split('.').pop(); // Extract file extension
     const fileName = `thumbnail.${fileExtension}`; // Always overwrite old thumbnail
-    const uploadPath = `${storeSlug}/${productId}/${fileName}`; // Organized per product
+    const uploadPath = `storedev/${storeSlug}/${productId}/${fileName}`; // Organized per product
 
     // Bunny Storage Upload URL (private API)
     const storageUploadUrl = `https://${BUNNY_STORAGE_REGION}/${BUNNY_STORAGE_ZONE}/${uploadPath}`;

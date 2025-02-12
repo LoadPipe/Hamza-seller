@@ -124,10 +124,10 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                     </Button>
                     <Button
                         onClick={handleUpload}
-                        disabled={!file || uploadThumbnailMutation.isPaused}
+                        disabled={!file || uploadThumbnailMutation.isPending}
                         className="bg-primary-purple-90 rounded-[53px] hover:border-none w-[200px] h-[52px] hover:bg-primary-green-900"
                     >
-                        {uploadThumbnailMutation.isSuccess ? (
+                        {uploadThumbnailMutation.isPending ? (
                             <Loader2 className="animate-spin mx-auto" />
                         ) : (
                             'Upload'
