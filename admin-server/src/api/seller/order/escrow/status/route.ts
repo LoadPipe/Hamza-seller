@@ -69,11 +69,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                 );
             const refundableAmount = getRefundableAmount(payment.payment);
             if (amount >= refundableAmount) {
-                // Use 18 decimals for native Ether (zero address), otherwise default to 6 decimals.
-                const decimals = payment.payment.currency.toLowerCase() === "0x0000000000000000000000000000000000000000" ? 18 : 6; 
-                const readableRequested = formatUnits(amount.toString(), decimals);
-                const readableRefundable = formatUnits(refundableAmount.toString(), decimals);
-
+                const readableRequested = formatUnits(amount.toString());
+                const readableRefundable = formatUnits(refundableAmount.toString());
                 return `The amount of ${readableRequested} exceeds the refundable amount of ${readableRefundable}.`;
             }
             }
