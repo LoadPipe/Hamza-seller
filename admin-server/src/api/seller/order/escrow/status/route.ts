@@ -6,7 +6,7 @@ import {
     PaymentDefinition,
 } from 'src/web3/contracts/escrow';
 import { getCurrencyPrecision } from 'src/currency.config';
-import { BigNumberish, ethers } from 'ethers';
+import { BigNumberish, ethers ,formatUnits } from 'ethers';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const storeOrderService: StoreOrderService =
@@ -67,10 +67,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                 const amount = BigInt(
                     handler.inputParams.refund_amount.toString()
                 );
-                const refundableAmount = getRefundableAmount(payment.payment);
-                if (amount >= refundableAmount) {
-                    return `The amount of ${handler.inputParams.refund_amount} exceeds the refundable amount of ${refundableAmount}.`;
-                }
+            const refundableAmount = getRefundableAmount(payment.payment);
+            if (amount >= refundableAmount) {
+                // Use 18 decimals for native Ether (zero address), otherwise default to 6 decimals.
+                const decimals = payment.payment.currency.toLowerCase() === "0x0000000000000000000000000000000000000000" ? 18 : 6; 
+                const readableRequested = formatUnits(amount.toString(), decimals);
+                const readableRefundable = formatUnits(refundableAmount.toString(), decimals);
+
+                return `The amount of ${readableRequested} exceeds the refundable amount of ${readableRefundable}.`;
+            }
             }
         } else if (validateRelease) {
             //cannot be released by receiver if already released by receiver
