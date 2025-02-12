@@ -52,7 +52,7 @@ export const uploadGalleryImages = async (
 // 2. Log everything (done)
 // 3. Debug the deleting all (done)
 // 4. Prevent more than 5 images from being uploaded (done)
-// 4. Figure out why thumbnail is also being passed to gallery (WIP)
+// 5. Figure out why thumbnail is also being passed to gallery (done)
 export const deleteImageFromCDN = async (imageUrl: string) => {
     if (!imageUrl) {
         console.warn('deleteImageFromCDN called with an empty URL');
