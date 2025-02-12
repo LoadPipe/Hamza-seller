@@ -93,13 +93,14 @@ export default function EditProductPage() {
 
         // Create a sanitized copy of variants where we remove problematic fields like an empty SKU.
         const sanitizedVariants = editProductForm?.state?.values?.variants?.map(
-            (variant) => {
-                // If sku is an empty string, remove it from the payload.
-                return {
-                    ...variant,
-                    sku: variant.sku?.trim() ? variant.sku : undefined,
-                };
-            }
+            (variant) => ({
+                ...variant,
+                metadata: variant.metadata || {}, // Replace null with an empty object
+                sku:
+                    variant.sku && variant.sku.trim() !== ''
+                        ? variant.sku
+                        : undefined,
+            })
         );
 
         const payload = {
@@ -108,7 +109,6 @@ export default function EditProductPage() {
             preferredCurrency,
         };
 
-        // Immediately trigger the update mutation.
         updateEditForm.mutate(payload);
     };
 
