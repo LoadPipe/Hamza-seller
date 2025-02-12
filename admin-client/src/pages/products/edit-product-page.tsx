@@ -23,9 +23,15 @@ import { Label } from '@/components/ui/label.tsx';
 import { useForm, getBy, setBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
-import { PackageSearch, Bitcoin } from 'lucide-react';
+import { PackageSearch, Bitcoin, Trash } from 'lucide-react';
 import ImageUploadDialog from '@/pages/products/utils/image-upload-dialog.tsx';
 import { useState } from 'react';
+import GalleryUploadDialog from '@/pages/products/utils/gallery-upload-dialog.tsx';
+import {
+    deleteImageFromCDN,
+    deleteImageFromdB,
+} from '@/pages/products/api/upload-gallery-images.ts';
+import VariantUploadDialog from '@/pages/products/utils/variant-upload-dialog.tsx';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -51,10 +57,62 @@ export default function EditProductPage() {
 
     const [isImageDialogOpen, setImageDialogOpen] = useState(false);
 
-    const handleImageUpload = (imageUrl: string) => {
+    const handleThumbnailUpload = (imageUrl: string) => {
         editProductForm.setFieldValue('thumbnail', imageUrl);
         updateEditForm.mutate({ thumbnail: imageUrl, preferredCurrency });
     };
+
+    const [isGalleryDialogOpen, setGalleryDialogOpen] = useState(false);
+    const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
+    const handleGalleryUpload = (uploadedImageUrls: string[]) => {
+        const updatedGallery = [...galleryImages, ...uploadedImageUrls];
+        setGalleryImages(updatedGallery);
+
+        // Mutate backend (optional: depends if you want to update product immediately)
+        updateEditForm.mutate({ images: updatedGallery, preferredCurrency });
+    };
+
+    // The following section is variant image logic
+    const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+    const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
+
+    const openVariantUploadDialog = (index: number) => {
+        setCurrentVariantIndex(index);
+        setVariantDialogOpen(true);
+    };
+
+    const handleVariantImageUpload = (
+        imageUrl: string,
+        variantIndex: number
+    ) => {
+        // Update the variant's metadata in your form.
+        editProductForm.setFieldValue(`variants[${variantIndex}].metadata`, {
+            imgUrl: imageUrl,
+        });
+
+        // Create a sanitized copy of variants where we remove problematic fields like an empty SKU.
+        const sanitizedVariants = editProductForm?.state?.values?.variants?.map(
+            (variant) => ({
+                ...variant,
+                metadata: variant.metadata || {}, // Replace null with an empty object
+                sku:
+                    variant.sku && variant.sku.trim() !== ''
+                        ? variant.sku
+                        : undefined,
+            })
+        );
+
+        const payload = {
+            ...editProductForm.state.values,
+            variants: sanitizedVariants,
+            preferredCurrency,
+        };
+
+        updateEditForm.mutate(payload);
+    };
+
+    // ---- End of Variant Image Upload / handing logic
 
     const cachedStore = queryClient.getQueryData<{ handle: string }>([
         'store',
@@ -138,7 +196,7 @@ export default function EditProductPage() {
                           )
                         : '';
                 })(),
-
+                metadata: variant.metadata || {},
                 inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
@@ -160,6 +218,83 @@ export default function EditProductPage() {
         //
         //     return errors;
         // },
+    });
+
+    const deleteImageMutation = useMutation({
+        mutationFn: async ({
+            imageUrl,
+            imageId,
+        }: {
+            imageUrl: string;
+            imageId: string;
+        }) => {
+            try {
+                await deleteImageFromCDN(imageUrl);
+            } catch (error: any) {
+                if (error.response?.status !== 404) {
+                    throw error;
+                }
+                console.warn(
+                    'CDN image not found, skipping deletion:',
+                    imageUrl
+                );
+            }
+            await deleteImageFromdB(imageId);
+            return imageUrl;
+        },
+        onMutate: async ({ imageUrl }) => {
+            await queryClient.cancelQueries({
+                queryKey: ['view-product-form', productId],
+            });
+            const previousData = queryClient.getQueryData<FetchProductResponse>(
+                ['view-product-form', productId]
+            );
+            if (previousData) {
+                queryClient.setQueryData<FetchProductResponse>(
+                    ['view-product-form', productId],
+                    {
+                        ...previousData,
+                        product: {
+                            ...previousData.product,
+                            images: previousData.product.images.filter(
+                                (img) => img.url !== imageUrl
+                            ),
+                        },
+                    }
+                );
+            }
+            setGalleryImages((prev) => prev.filter((url) => url !== imageUrl));
+            return { previousData };
+        },
+        onError: (error, variables, context) => {
+            if (context?.previousData) {
+                queryClient.setQueryData(
+                    ['view-product-form', productId],
+                    context.previousData
+                );
+            }
+            console.log(variables);
+            toast({
+                title: 'Error',
+                description:
+                    `Failed to delete image, ${error.message}` ||
+                    'Failed to delete image. Please try again later.',
+                variant: 'destructive',
+            });
+        },
+        onSuccess: (deletedImageUrl) => {
+            toast({
+                title: 'Deleted',
+                description:
+                    `Removed ${deletedImageUrl} from gallery` ||
+                    'Image removed from gallery.',
+            });
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['view-product-form', productId],
+            });
+        },
     });
 
     if (isLoading) return <div>Loading...</div>;
@@ -338,7 +473,7 @@ export default function EditProductPage() {
                                         className="mt-2"
                                         onClick={() => setImageDialogOpen(true)} // Open Dialog
                                     >
-                                        Upload Image
+                                        Upload Thumbnail Image
                                     </Button>
                                 </div>
 
@@ -346,32 +481,83 @@ export default function EditProductPage() {
                                 <ImageUploadDialog
                                     open={isImageDialogOpen}
                                     onClose={() => setImageDialogOpen(false)}
-                                    onImageUpload={handleImageUpload} // Pass uploaded image URL back to the form
+                                    onImageUpload={handleThumbnailUpload} // Pass uploaded image URL back to the form
                                     storeHandle={storeHandle}
                                     productId={productId}
                                 />
                                 {/* Gallery Section */}
-                                {product?.images?.length > 0 && (
-                                    <div className="mt-6">
-                                        <h2 className="text-lg font-medium mb-4">
-                                            Gallery
-                                        </h2>
-                                        <div className="grid grid-cols-3 gap-4">
-                                            {product.images.map((image) => (
-                                                <div
-                                                    key={image.id}
-                                                    className="relative group"
+                                <div className="mt-6">
+                                    <h2 className="text-lg font-medium mb-4">
+                                        Gallery
+                                    </h2>
+
+                                    {/* Open Upload Dialog */}
+                                    <Button
+                                        onClick={() =>
+                                            setGalleryDialogOpen(true)
+                                        }
+                                    >
+                                        Upload Gallery Images
+                                    </Button>
+
+                                    {/* Display Gallery Images */}
+                                    <div className="grid grid-cols-3 gap-4 mt-4">
+                                        {product?.images?.map((image) => (
+                                            <div
+                                                key={image.id}
+                                                className="relative group"
+                                            >
+                                                <img
+                                                    src={image.url}
+                                                    alt="Gallery"
+                                                    className="rounded-lg object-cover w-full h-32"
+                                                />
+                                                <button
+                                                    onClick={() =>
+                                                        deleteImageMutation.mutate(
+                                                            {
+                                                                imageUrl:
+                                                                    image.url,
+                                                                imageId:
+                                                                    image.id,
+                                                            }
+                                                        )
+                                                    }
+                                                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
                                                 >
-                                                    <img
-                                                        src={image.url}
-                                                        alt={`Product Image ${image.id}`}
-                                                        className="object-cover w-full h-32 rounded-lg transition-opacity duration-200 hover:opacity-75"
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
+                                                    <Trash size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
-                                )}
+
+                                    {/* Upload Dialog */}
+                                    <GalleryUploadDialog
+                                        open={isGalleryDialogOpen}
+                                        onClose={() =>
+                                            setGalleryDialogOpen(false)
+                                        }
+                                        onGalleryUpload={handleGalleryUpload}
+                                        storeHandle={storeHandle}
+                                        productId={productId}
+                                        currentGallery={product?.images ?? []} // Now an array of { id: string; url: string }
+                                        onDeleteImage={(image) => {
+                                            if (!image?.id) {
+                                                toast({
+                                                    title: 'Error',
+                                                    description:
+                                                        'Image ID not found for deletion.',
+                                                    variant: 'destructive',
+                                                });
+                                                return;
+                                            }
+                                            deleteImageMutation.mutate({
+                                                imageUrl: image.url,
+                                                imageId: image.id,
+                                            });
+                                        }}
+                                    />
+                                </div>
                             </div>
 
                             {/* Show current categories & an "Add Category" button */}
@@ -443,6 +629,58 @@ export default function EditProductPage() {
                                                 Variant #{index + 1}
                                             </AccordionTrigger>
                                             <AccordionContent>
+                                                <div className="flex items-center justify-between border-b border-gray-700 py-2 mb-4">
+                                                    <div className="flex items-center gap-4">
+                                                        {variant.metadata
+                                                            ?.imgUrl ? (
+                                                            <img
+                                                                src={
+                                                                    variant
+                                                                        .metadata
+                                                                        .imgUrl
+                                                                }
+                                                                alt={`Variant ${index + 1}`}
+                                                                className="w-16 h-16 rounded"
+                                                            />
+                                                        ) : null}
+                                                        <span className="text-lg font-medium">
+                                                            Variant {index + 1}
+                                                        </span>
+                                                    </div>
+                                                    <Button
+                                                        onClick={() =>
+                                                            openVariantUploadDialog(
+                                                                index
+                                                            )
+                                                        }
+                                                    >
+                                                        Upload Variant Image
+                                                    </Button>
+                                                    {variantDialogOpen && (
+                                                        <VariantUploadDialog
+                                                            open={
+                                                                variantDialogOpen
+                                                            }
+                                                            onClose={() =>
+                                                                setVariantDialogOpen(
+                                                                    false
+                                                                )
+                                                            }
+                                                            variantIndex={
+                                                                currentVariantIndex
+                                                            }
+                                                            storeHandle={
+                                                                storeHandle
+                                                            }
+                                                            productId={
+                                                                productId
+                                                            }
+                                                            onVariantImageUpload={
+                                                                handleVariantImageUpload
+                                                            }
+                                                        />
+                                                    )}
+                                                </div>
                                                 <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
                                                     {/* Variant ID HIDDEN*/}
                                                     <editProductForm.Field
