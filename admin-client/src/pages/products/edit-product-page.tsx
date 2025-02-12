@@ -461,30 +461,33 @@ export default function EditProductPage() {
 
                                     {/* Display Gallery Images */}
                                     <div className="grid grid-cols-3 gap-4 mt-4">
-                                        {product?.images?.map(
-                                            (image: string) => (
-                                                <div
-                                                    key={image.id}
-                                                    className="relative group"
+                                        {product?.images?.map((image) => (
+                                            <div
+                                                key={image.id}
+                                                className="relative group"
+                                            >
+                                                <img
+                                                    src={image.url}
+                                                    alt="Gallery"
+                                                    className="rounded-lg object-cover w-full h-32"
+                                                />
+                                                <button
+                                                    onClick={() =>
+                                                        deleteImageMutation.mutate(
+                                                            {
+                                                                imageUrl:
+                                                                    image.url,
+                                                                imageId:
+                                                                    image.id,
+                                                            }
+                                                        )
+                                                    }
+                                                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
                                                 >
-                                                    <img
-                                                        src={image.url}
-                                                        className="rounded-lg object-cover w-full h-32"
-                                                    />
-                                                    <button
-                                                        onClick={() =>
-                                                            handleDeleteImage(
-                                                                image.url,
-                                                                image.id
-                                                            )
-                                                        }
-                                                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
-                                                    >
-                                                        <Trash size={16} />
-                                                    </button>
-                                                </div>
-                                            )
-                                        )}
+                                                    <Trash size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
 
                                     {/* Upload Dialog */}
