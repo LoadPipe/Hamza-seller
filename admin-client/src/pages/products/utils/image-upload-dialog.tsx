@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { uploadProductThumbnail } from '@/pages/products/api/upload-product-thumbnail';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FilePlus, CircleAlert, Loader2 } from 'lucide-react';
 
 interface ImageUploadDialogProps {
@@ -23,6 +23,7 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
 }) => {
     const [file, setFile] = useState<File | null>(null);
     const { toast } = useToast();
+    const queryClient = useQueryClient();
 
     const onDrop = (acceptedFiles: File[]) => {
         const imageFile = acceptedFiles[0];
@@ -53,6 +54,9 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({
                 description: 'Image uploaded successfully!',
             });
             onImageUpload(uploadedImageUrl); // Pass URL back to parent component
+            queryClient.invalidateQueries({
+                queryKey: ['view-product-form', productId],
+            });
             onClose(); // Close dialog
         },
         onError: (error: any) => {
