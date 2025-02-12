@@ -156,6 +156,7 @@ class StoreProductService extends MedusaProductService {
                             variantUpdate.length ?? existingVariant.length;
                         existingVariant.sku =
                             variantUpdate.sku ?? existingVariant.sku;
+                        existingVariant.metadata = variantUpdate.metadata ?? {};
                         const savedVariant =
                             await this.productVariantRepository_.save(
                                 existingVariant

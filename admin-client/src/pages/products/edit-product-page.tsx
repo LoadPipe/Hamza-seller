@@ -31,6 +31,7 @@ import {
     deleteImageFromCDN,
     deleteImageFromdB,
 } from '@/pages/products/api/upload-gallery-images.ts';
+import VariantUploadDialog from '@/pages/products/utils/variant-upload-dialog.tsx';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -71,6 +72,47 @@ export default function EditProductPage() {
         // Mutate backend (optional: depends if you want to update product immediately)
         updateEditForm.mutate({ images: updatedGallery, preferredCurrency });
     };
+
+    // The following section is variant image logic
+    const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+    const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
+
+    const openVariantUploadDialog = (index: number) => {
+        setCurrentVariantIndex(index);
+        setVariantDialogOpen(true);
+    };
+
+    const handleVariantImageUpload = (
+        imageUrl: string,
+        variantIndex: number
+    ) => {
+        // Update the variant's metadata in your form.
+        editProductForm.setFieldValue(`variants[${variantIndex}].metadata`, {
+            imgUrl: imageUrl,
+        });
+
+        // Create a sanitized copy of variants where we remove problematic fields like an empty SKU.
+        const sanitizedVariants = editProductForm?.state?.values?.variants?.map(
+            (variant) => {
+                // If sku is an empty string, remove it from the payload.
+                return {
+                    ...variant,
+                    sku: variant.sku?.trim() ? variant.sku : undefined,
+                };
+            }
+        );
+
+        const payload = {
+            ...editProductForm.state.values,
+            variants: sanitizedVariants,
+            preferredCurrency,
+        };
+
+        // Immediately trigger the update mutation.
+        updateEditForm.mutate(payload);
+    };
+
+    // ---- End of Variant Image Upload / handing logic
 
     const cachedStore = queryClient.getQueryData<{ handle: string }>([
         'store',
@@ -154,7 +196,7 @@ export default function EditProductPage() {
                           )
                         : '';
                 })(),
-
+                metadata: variant.metadata || {},
                 inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
@@ -587,6 +629,58 @@ export default function EditProductPage() {
                                                 Variant #{index + 1}
                                             </AccordionTrigger>
                                             <AccordionContent>
+                                                <div className="flex items-center justify-between border-b border-gray-700 py-2 mb-4">
+                                                    <div className="flex items-center gap-4">
+                                                        {variant.metadata
+                                                            ?.imgUrl ? (
+                                                            <img
+                                                                src={
+                                                                    variant
+                                                                        .metadata
+                                                                        .imgUrl
+                                                                }
+                                                                alt={`Variant ${index + 1}`}
+                                                                className="w-16 h-16 rounded"
+                                                            />
+                                                        ) : null}
+                                                        <span className="text-lg font-medium">
+                                                            Variant {index + 1}
+                                                        </span>
+                                                    </div>
+                                                    <Button
+                                                        onClick={() =>
+                                                            openVariantUploadDialog(
+                                                                index
+                                                            )
+                                                        }
+                                                    >
+                                                        Upload Variant Image
+                                                    </Button>
+                                                    {variantDialogOpen && (
+                                                        <VariantUploadDialog
+                                                            open={
+                                                                variantDialogOpen
+                                                            }
+                                                            onClose={() =>
+                                                                setVariantDialogOpen(
+                                                                    false
+                                                                )
+                                                            }
+                                                            variantIndex={
+                                                                currentVariantIndex
+                                                            }
+                                                            storeHandle={
+                                                                storeHandle
+                                                            }
+                                                            productId={
+                                                                productId
+                                                            }
+                                                            onVariantImageUpload={
+                                                                handleVariantImageUpload
+                                                            }
+                                                        />
+                                                    )}
+                                                </div>
                                                 <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
                                                     {/* Variant ID HIDDEN*/}
                                                     <editProductForm.Field

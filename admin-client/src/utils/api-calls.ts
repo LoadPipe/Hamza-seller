@@ -15,12 +15,8 @@ export async function axiosCall(
             `calling ${verb.toUpperCase()} ${path} ${payload ? JSON.stringify(payload) : ''}`
         );
         let url = path;
-
-        // If the URL is not absolute, prepend BACKEND_URL.
-        if (!/^https?:\/\//.test(url)) {
-            if (!url.startsWith('/')) url = '/' + url;
-            url = `${BACKEND_URL}${url}`;
-        }
+        if (!url.startsWith('/')) url = '/' + url;
+        url = `${BACKEND_URL}${url}`;
 
         let config: any = {
             cache: false,

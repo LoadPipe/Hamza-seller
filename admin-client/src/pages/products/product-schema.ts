@@ -113,7 +113,11 @@ export const ProductSchema = z.object({
             length: z.number().nullable(),
             height: z.number().nullable(),
             width: z.number().nullable(),
-            metadata: z.any().nullable(),
+            metadata: z
+                .object({
+                    imgUrl: z.string().url().optional(),
+                })
+                .nullable(),
         })
     ),
 });

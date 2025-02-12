@@ -95,3 +95,31 @@ export const deleteImageFromdB = async (imageId: string) => {
         throw error;
     }
 };
+
+// Uploads the variant image to the CDN (Bunny or your CDN)
+export async function uploadVariantImageToCDN(
+    file: File,
+    storeHandle: string,
+    productId: string,
+    variantIndex: number
+): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Generate a filename using the variant index (e.g., variant_1.png)
+    const fileName = `variant_${variantIndex + 1}.png`;
+    formData.append('fileName', fileName);
+
+    // Construct the CDN upload URL (modify as needed)
+    const uploadUrl = `https://storage.bunnycdn.com/${storeHandle}/${productId}/variants`;
+
+    const response = await axios.post(uploadUrl, formData, {
+        headers: {
+            AccessKey: process.env.BUNNY_API_KEY, // or import your API key from your config
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+
+    // Assume the response returns the URL of the uploaded image
+    return response.data.url;
+}
