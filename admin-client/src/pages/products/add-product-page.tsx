@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { QuillEditor } from '@/components/ui/quill-editor';
 import {
     Select,
     SelectContent,
@@ -9,9 +10,11 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useNavigate } from '@tanstack/react-router';
+import { useState } from 'react';
 
 export default function AddProductPage() {
     const navigate = useNavigate();
+    const [description, setDescription] = useState('');
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
             <button
@@ -34,9 +37,10 @@ export default function AddProductPage() {
                             General Information
                         </h2>
                         <Input placeholder="Product Name" className="mb-4" />
-                        <Textarea
-                            placeholder="Provide a brief description of your product. (Max 300 characters)"
-                            rows={4}
+                        <QuillEditor
+                            value={description}
+                            onChange={setDescription}
+                            className="mb-10"
                         />
                     </div>
 
