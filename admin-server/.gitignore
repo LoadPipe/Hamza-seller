@@ -20,7 +20,7 @@ build
 .cache
 
 #lock files
-yarn.lock
+yarn.lock*
 package-lock.json
 
 .yarn/*
