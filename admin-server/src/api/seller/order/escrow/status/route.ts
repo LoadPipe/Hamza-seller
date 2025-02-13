@@ -68,7 +68,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                     handler.inputParams.refund_amount.toString()
                 );
                 const refundableAmount = getRefundableAmount(payment.payment);
-                if (amount >= refundableAmount) {
+                if (amount > refundableAmount) {
                     return `The amount of ${handler.inputParams.refund_amount} exceeds the refundable amount of ${refundableAmount}.`;
                 }
             }
