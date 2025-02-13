@@ -4,6 +4,7 @@ const BUNNY_STORAGE_ZONE = 'hamza-market'; // Storage Zone Name
 const BUNNY_CDN_URL = import.meta.env.VITE_BUNNY_CDN_URL; // Your CDN Public URL
 const BUNNY_API_KEY = import.meta.env.VITE_BUNNY_API_KEY;
 const BUNNY_STORAGE_REGION = 'storage.bunnycdn.com'; // Default Falkenstein Region
+const BUNNNY_SUBFOLDER = import.meta.env.VITE_BUNNY_SUBFOLDER;
 
 export const uploadProductThumbnail = async (
     file: File,
@@ -12,7 +13,7 @@ export const uploadProductThumbnail = async (
 ) => {
     const fileExtension = file.name.split('.').pop(); // Extract file extension
     const fileName = `thumbnail.${fileExtension}`; // Always overwrite old thumbnail
-    const uploadPath = `storedev/${storeSlug}/${productId}/${fileName}`; // Organized per product
+    const uploadPath = `${BUNNNY_SUBFOLDER}/${storeSlug}/${productId}/${fileName}`; // Organized per product
 
     // Bunny Storage Upload URL (private API)
     const storageUploadUrl = `https://${BUNNY_STORAGE_REGION}/${BUNNY_STORAGE_ZONE}/${uploadPath}`;

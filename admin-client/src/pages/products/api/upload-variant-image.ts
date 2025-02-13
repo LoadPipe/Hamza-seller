@@ -4,6 +4,7 @@ const BUNNY_STORAGE_ZONE = 'hamza-market';
 const BUNNY_CDN_URL = import.meta.env.VITE_BUNNY_CDN_URL;
 const BUNNY_API_KEY = import.meta.env.VITE_BUNNY_API_KEY;
 const BUNNY_STORAGE_REGION = 'storage.bunnycdn.com';
+const BUNNNY_SUBFOLDER = import.meta.env.VITE_BUNNY_SUBFOLDER;
 
 /**
  * Uploads a single variant image to the CDN.
@@ -27,7 +28,7 @@ export async function uploadVariantImageToCDN(
     const fileName = `variant_${variantIndex + 1}.${fileExtension}`;
     // Construct the upload path – you might want to include a folder similar to your gallery path.
     // For example, if your gallery uploads use "storedev", adjust as needed.
-    const uploadPath = `storedev/${storeHandle}/${productId}/variants/${fileName}`;
+    const uploadPath = `${BUNNNY_SUBFOLDER}/${storeHandle}/${productId}/variants/${fileName}`;
     // Construct the full storage upload URL and the CDN URL.
     const storageUploadUrl = `https://${BUNNY_STORAGE_REGION}/${BUNNY_STORAGE_ZONE}/${uploadPath}`;
     const cdnUrl = `${BUNNY_CDN_URL}/${uploadPath}`;
