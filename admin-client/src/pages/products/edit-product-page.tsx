@@ -276,18 +276,14 @@ export default function EditProductPage() {
             console.log(variables);
             toast({
                 title: 'Error',
-                description:
-                    `Failed to delete image, ${error.message}` ||
-                    'Failed to delete image. Please try again later.',
+                description: `Failed to delete image, ${error.message}`,
                 variant: 'destructive',
             });
         },
         onSuccess: (deletedImageUrl) => {
             toast({
                 title: 'Deleted',
-                description:
-                    `Removed ${deletedImageUrl} from gallery` ||
-                    'Image removed from gallery.',
+                description: `Removed ${deletedImageUrl} from gallery`,
             });
         },
         onSettled: () => {
