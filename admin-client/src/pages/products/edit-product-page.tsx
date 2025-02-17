@@ -886,18 +886,6 @@ export default function EditProductPage() {
                                                                                         .target
                                                                                         .value
                                                                                 );
-                                                                                if (
-                                                                                    field
-                                                                                        .state
-                                                                                        .meta
-                                                                                        .errors
-                                                                                        .length >
-                                                                                    0
-                                                                                ) {
-                                                                                    field.setError(
-                                                                                        undefined
-                                                                                    ); // Clear errors on change
-                                                                                }
                                                                             }}
                                                                             onBlur={
                                                                                 field.handleBlur
