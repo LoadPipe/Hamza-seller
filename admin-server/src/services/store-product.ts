@@ -5,7 +5,7 @@ import { ProductVariantRepository } from '../repositories/product-variant';
 import { PriceConverter } from '../utils/price-conversion';
 import StoreRepository from '../repositories/store';
 import SalesChannelRepository from '@medusajs/medusa/dist/repositories/sales-channel';
-import { In } from 'typeorm';
+import { In, Not } from 'typeorm';
 import { reverseCryptoPrice } from '../utils/price-formatter';
 import ProductCategoryRepository from '@medusajs/medusa/dist/repositories/product-category';
 import {
@@ -377,6 +377,20 @@ class StoreProductService extends MedusaProductService {
         } catch (e) {
             console.error(`Error querying product by ID: ${e.message}`);
             throw e; // Rethrow the error for the caller to handle
+        }
+    }
+
+    async validateUniqueSKU(sku: string, variant_id: string): Promise<boolean> {
+        try {
+            const existingProduct =
+                await this.productVariantRepository_.findOne({
+                    where: { sku, id: Not(variant_id) },
+                });
+
+            return !existingProduct;
+        } catch (e) {
+            console.error(`Error validating SKU: ${e.message}`);
+            throw e;
         }
     }
 

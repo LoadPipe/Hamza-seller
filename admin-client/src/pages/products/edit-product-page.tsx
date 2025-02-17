@@ -2,8 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
 import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
+import { validateSku } from '@/pages/products/api/validate-sku.ts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
     Accordion,
     AccordionContent,
@@ -50,6 +56,7 @@ export default function EditProductPage() {
 
     const { toast } = useToast();
 
+    // Fetch product data
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
         queryKey: ['view-product-form', productId],
         queryFn: () => fetchProductById(productId),
@@ -57,6 +64,7 @@ export default function EditProductPage() {
 
     const [isImageDialogOpen, setImageDialogOpen] = useState(false);
 
+    // Handle Thumbnail Upload
     const handleThumbnailUpload = (imageUrl: string) => {
         editProductForm.setFieldValue('thumbnail', imageUrl);
         updateEditForm.mutate({ thumbnail: imageUrl, preferredCurrency });
@@ -65,6 +73,7 @@ export default function EditProductPage() {
     const [isGalleryDialogOpen, setGalleryDialogOpen] = useState(false);
     const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
+    // Handle Gallery Upload
     const handleGalleryUpload = (uploadedImageUrls: string[]) => {
         const updatedGallery = [...galleryImages, ...uploadedImageUrls];
         setGalleryImages(updatedGallery);
@@ -200,6 +209,35 @@ export default function EditProductPage() {
                 inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
+        // validators: {
+        //     onSubmitAsync: async ({ value }) => {
+        //         const errors: Record<string, string> = {};
+        //         if (value.variants) {
+        //             for (let i = 0; i < value.variants.length; i++) {
+        //                 const sku = value.variants[i].sku;
+        //                 const defaultSku = editProductForm.getFieldValue.name;
+        //
+        //                 if (sku.trim() === '') {
+        //                     errors[`variants[${i}].sku`] = 'SKU is required.';
+        //                 } else if (sku !== defaultSku) {
+        //                     try {
+        //                         const response = await validateSku(Number(sku));
+        //                         if (response.data === false) {
+        //                             errors[`variants[${i}].sku`] =
+        //                                 'SKU already exists eh?';
+        //                         }
+        //                     } catch (error: any) {
+        //                         errors[`variants[${i}].sku`] =
+        //                             error.message || 'Failed to validate SKU';
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         return Object.keys(errors).length
+        //             ? { fields: errors }
+        //             : undefined;
+        //     },
+        // },
         // validators: (values) => {
         //     const result = ProductSchema.safeParse(values);
         //     return result.success ? {} : result.error.format();
@@ -770,32 +808,116 @@ export default function EditProductPage() {
                                                     {/* Variant SKU */}
                                                     <editProductForm.Field
                                                         name={`variants[${index}].sku`}
-                                                        key={`sku-${variant.id}`}
+                                                        asyncDebounceMs={100}
+                                                        validators={{
+                                                            // Synchronous check: ensure a value exists
+                                                            onBlur: ({
+                                                                value,
+                                                            }) =>
+                                                                value.trim() ===
+                                                                ''
+                                                                    ? 'SKU is required.'
+                                                                    : undefined,
+                                                            // Asynchronous check: call your API only if the SKU has changed
+                                                            onChangeAsync:
+                                                                async ({
+                                                                    value,
+                                                                }) => {
+                                                                    // Compare with the default SKU. If unchanged, skip the API call.
+                                                                    try {
+                                                                        const response =
+                                                                            await validateSku(
+                                                                                Number(
+                                                                                    value
+                                                                                ),
+                                                                                editProductForm.getFieldValue(
+                                                                                    `variants[${index}].id`
+                                                                                )
+                                                                            );
+
+                                                                        if (
+                                                                            response ===
+                                                                            false
+                                                                        ) {
+                                                                            return 'SKU already exists';
+                                                                        }
+                                                                        return undefined;
+                                                                    } catch (error) {
+                                                                        console.error(
+                                                                            'Failed to validate SKU:',
+                                                                            error
+                                                                        );
+
+                                                                        return 'Failed to validate SKU';
+                                                                    }
+                                                                },
+                                                        }}
                                                     >
                                                         {(field) => (
                                                             <div>
                                                                 <Label>
                                                                     SKU
                                                                 </Label>
-                                                                <Input
-                                                                    placeholder="SKU"
-                                                                    value={
+                                                                <Tooltip
+                                                                    open={
                                                                         field
                                                                             .state
-                                                                            .value ||
-                                                                        variant.sku ||
-                                                                        ''
+                                                                            .meta
+                                                                            .errors
+                                                                            .length >
+                                                                        0
                                                                     }
-                                                                    onChange={(
-                                                                        e
-                                                                    ) =>
-                                                                        field.handleChange(
-                                                                            e
-                                                                                .target
-                                                                                .value
-                                                                        )
-                                                                    }
-                                                                />
+                                                                >
+                                                                    <TooltipTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <Input
+                                                                            placeholder="SKU"
+                                                                            value={
+                                                                                field
+                                                                                    .state
+                                                                                    .value
+                                                                            }
+                                                                            onChange={(
+                                                                                e
+                                                                            ) => {
+                                                                                field.handleChange(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value
+                                                                                );
+                                                                                if (
+                                                                                    field
+                                                                                        .state
+                                                                                        .meta
+                                                                                        .errors
+                                                                                        .length >
+                                                                                    0
+                                                                                ) {
+                                                                                    field.setError(
+                                                                                        undefined
+                                                                                    ); // Clear errors on change
+                                                                                }
+                                                                            }}
+                                                                            onBlur={
+                                                                                field.handleBlur
+                                                                            }
+                                                                        />
+                                                                    </TooltipTrigger>
+                                                                    {field.state
+                                                                        .meta
+                                                                        .errors
+                                                                        .length >
+                                                                        0 && (
+                                                                        <TooltipContent>
+                                                                            <span className="text-red-500">
+                                                                                {field.state.meta.errors.join(
+                                                                                    ', '
+                                                                                )}
+                                                                            </span>
+                                                                        </TooltipContent>
+                                                                    )}
+                                                                </Tooltip>
                                                             </div>
                                                         )}
                                                     </editProductForm.Field>
