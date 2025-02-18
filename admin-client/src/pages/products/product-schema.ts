@@ -109,3 +109,42 @@ export const ProductSchema = z.object({
 
 // Generate TypeScript type from Zod schema
 export type Product = z.infer<typeof ProductSchema>;
+
+
+export const AddProductSchema = z.object({
+    title: z.string(),
+    subtitle: z.string(),
+    handle: z.string(),
+    description: z.string(),
+    weight: z.number(),
+    length: z.number(),
+    height: z.number(),
+    width: z.number(),
+    basePrice: z
+        .string()
+        .refine((val) => !isNaN(Number(val)) && Number(val) > 0),
+    discountPercentage: z
+        .string()
+        .optional()
+        .refine((val) => {
+            if (!val) return true;
+            const num = Number(val.replace('%', ''));
+            return !isNaN(num) && num >= 0 && num <= 100;
+        }),
+    discountType: z.enum(['flat', 'percentage']),
+    sku: z.string().optional(),
+    barcode: z.string().optional(),
+    quantity: z
+        .string()
+        .optional()
+        .refine((val) => {
+            if (!val) return true;
+            return !isNaN(Number(val)) && Number(val) >= 0;
+        }),
+    variants: z.array(z.any()),
+    status: z.enum(['active', 'draft', 'archived']),
+    productImages: z.array(z.string().url()),
+    productCategory: z.string(),
+});
+
+export type AddProductFormValues = z.infer<typeof AddProductSchema>;
