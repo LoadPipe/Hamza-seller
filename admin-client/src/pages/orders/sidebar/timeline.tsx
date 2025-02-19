@@ -1,6 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { formatDate, formatStatus } from '@/utils/format-data.ts';
+import {
+    convertFroDbToDisplay,
+    convertFromWeiToDisplay,
+} from '@/utils/web3-conversions';
 
 interface TimelineEvent {
     title: string;
@@ -31,6 +35,8 @@ interface TimelineProps {
             reason: string;
             created_at: string;
         }>;
+        currency_code?: string;
+        chain_id?: number;
     };
 }
 
@@ -127,11 +133,14 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
 
     // Add refund events from `refunds` array
     orderDetails.refunds?.forEach((refund) => {
+        const refundDisplay = convertFroDbToDisplay(
+            refund.amount.toString(),
+            orderDetails.currency_code || 'USDT',
+            orderDetails.chain_id || 1
+        );
         events.push({
             title: 'Refund Issued',
-            details: `Amount: ${
-                refund.amount / 100
-            } USDT, Reason: ${refund.reason}. Note: ${refund.note || 'No notes.'}`,
+            details: `Amount: ${refundDisplay} ${orderDetails.currency_code?.toUpperCase() || ''}, Reason: ${refund.reason}. Note: ${refund.note || 'No notes.'}`,
             timestamp: formatDate(refund.created_at),
         });
     });

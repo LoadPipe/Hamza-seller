@@ -185,6 +185,8 @@ export function OrderDetailsSidebar() {
         updated_at: orderDetails.updated_at,
         histories: orderDetails.histories,
         refunds: orderDetails.refunds,
+        currency_code: orderDetails?.payments?.[0]?.currency_code,  
+        chain_id: orderDetails?.payments?.[0]?.blockchain_data?.chain_id,
     };
 
     const shippingFee = formatCryptoPrice(
