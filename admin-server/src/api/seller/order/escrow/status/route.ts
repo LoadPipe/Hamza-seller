@@ -4,9 +4,7 @@ import StoreOrderService from '../../../../../services/store-order';
 import {
     EscrowPaymentDefinition,
     PaymentDefinition,
-} from 'src/web3/contracts/escrow';
-import { getCurrencyPrecision } from 'src/currency.config';
-import { BigNumberish, ethers } from 'ethers';
+} from '../../../../../web3/contracts/escrow';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const storeOrderService: StoreOrderService =
@@ -68,7 +66,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                     handler.inputParams.refund_amount.toString()
                 );
                 const refundableAmount = getRefundableAmount(payment.payment);
-                if (amount >= refundableAmount) {
+                if (amount > refundableAmount) {
                     return `The amount of ${handler.inputParams.refund_amount} exceeds the refundable amount of ${refundableAmount}.`;
                 }
             }
