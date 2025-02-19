@@ -5,6 +5,7 @@ import {
     EscrowPaymentDefinition,
     PaymentDefinition,
 } from '../../../../../web3/contracts/escrow';
+import { formatUnits } from 'ethers';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const storeOrderService: StoreOrderService =
@@ -18,9 +19,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     );
 
     const getRefundableAmount = (payment: PaymentDefinition) => {
-        const refundedAmount = BigInt(
-            payment.amountRefunded?.toString() ?? '0'
-        );
         const refundableAmount =
             BigInt(payment.amount?.toString() ?? '0') -
             BigInt(payment.amountRefunded?.toString() ?? '0');
@@ -67,7 +65,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                 );
                 const refundableAmount = getRefundableAmount(payment.payment);
                 if (amount > refundableAmount) {
-                    return `The amount of ${handler.inputParams.refund_amount} exceeds the refundable amount of ${refundableAmount}.`;
+                    const readableRequested = formatUnits(amount.toString());
+                    const readableRefundable = formatUnits(
+                        refundableAmount.toString()
+                    );
+                    return `The amount of ${readableRequested} exceeds the refundable amount of ${readableRefundable}.`;
                 }
             }
         } else if (validateRelease) {

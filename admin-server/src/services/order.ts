@@ -841,7 +841,9 @@ export default class OrderService extends MedusaOrderService {
             }
 
             // Calculate total order amount
-            const totalOrderAmount = order?.payments[0]?.amount ?? 0;
+            const totalOrderAmount = order?.payments
+                ? (order?.payments[0]?.amount ?? 0)
+                : 0;
 
             // Calculate refunded amount
             const refundedResult = await this.refundRepository_.find({
