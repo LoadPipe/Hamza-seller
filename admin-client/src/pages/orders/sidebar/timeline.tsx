@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { formatDate, formatStatus } from '@/utils/format-data.ts';
-import { convertFromWeiToDisplay } from '@/utils/web3-conversions';
+import {
+    convertFroDbToDisplay,
+    convertFromWeiToDisplay,
+} from '@/utils/web3-conversions';
 
 interface TimelineEvent {
     title: string;
@@ -130,7 +133,7 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
 
     // Add refund events from `refunds` array
     orderDetails.refunds?.forEach((refund) => {
-        const refundDisplay = convertFromWeiToDisplay(
+        const refundDisplay = convertFroDbToDisplay(
             refund.amount.toString(),
             orderDetails.currency_code || 'USDT',
             orderDetails.chain_id || 1
