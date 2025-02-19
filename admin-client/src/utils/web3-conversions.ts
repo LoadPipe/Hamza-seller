@@ -1,6 +1,13 @@
 import { getCurrencyPrecision } from '@/currency.config';
 import { BigNumber, ethers } from 'ethers';
 
+/**
+ * Converts from a blockchain-formatted amount (whole number, wei) to one that is suitable for human eyes.
+ * @param amount The amount db-formatted form in wei
+ * @param currencyCode currency code
+ * @param chainId Chain makes a difference - difference decimals on different chains (sometimes)
+ * @returns A human-readable number in string form
+ */
 export function convertFromWeiToDisplay(
     amount: string | number,
     currencyCode: string,
@@ -8,7 +15,7 @@ export function convertFromWeiToDisplay(
 ): string {
     const precision = getCurrencyPrecision(currencyCode, chainId);
 
-    if (precision) {
+    if (precision?.native && precision?.display) {
         const amountString = amount.toString().padStart(precision.native, '0');
         const differential = amountString.length - precision.native;
         let output = `${amountString.substring(
@@ -29,6 +36,29 @@ export function convertFromWeiToDisplay(
         return output;
     }
     return '';
+}
+
+/**
+ * Converts from a db-formatted amount to one that is suitable for human eyes.
+ * @param amount The amount db-formatted form
+ * @param currencyCode currency code
+ * @param chainId Chain makes a difference - difference decimals on different chains (sometimes)
+ * @returns A human-readable number in string form
+ */
+export function convertFroDbToDisplay(
+    amount: string | number,
+    currencyCode: string,
+    chainId: number
+): string {
+    const precision = getCurrencyPrecision(currencyCode, chainId);
+
+    if (precision?.db) {
+        amount = parseInt(amount.toString());
+        amount = (amount / Math.pow(10, precision.db)).toFixed(
+            precision.display
+        );
+    }
+    return amount?.toString();
 }
 
 /**
