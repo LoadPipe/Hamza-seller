@@ -126,9 +126,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                 return null; // Return with controlled value for verbose error handling
             }
 
-            const payloadAmount = isFullRefund
-                ? refundableAmount.toString() 
-                : getDbAmount(formData.refundAmount);
+            const payloadAmount = getDbAmount(formData.refundAmount);
 
             const payload = {
                 order_id: orderId,
@@ -150,7 +148,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                 //send refund request to escrow contract
                 const escrowRefundResult = await refundEscrowPayment(
                     order,
-                    getBlockchainAmount(formData.refundAmount)
+                    isFullRefund
+                        ? refundableAmount.toString()
+                        : getBlockchainAmount(formData.refundAmount)
                 );
 
                 console.log('escrowRefundResult is', escrowRefundResult);
@@ -235,11 +235,8 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
         };
 
         if (
-            !isFullRefund && 
-            (
-                formData.refundAmount === '' ||
-                Number(formData.refundAmount) <= 0
-            )
+            !isFullRefund &&
+            (formData.refundAmount === '' || Number(formData.refundAmount) <= 0)
         ) {
             newErrors.refundAmount = 'Refund amount must be greater than 0.';
         }
@@ -323,7 +320,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                                         border: 'none',
                                     }}
                                     type="number"
-                                     step="0.000001"
+                                    step="0.000001"
                                     min="0"
                                     name="refundAmount"
                                     value={formData.refundAmount}
@@ -342,21 +339,26 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                                 {refundableAmountToDisplay && (
                                     <p
                                         onClick={
-                                            order.payment_status === 'refunded' ||
-                                            order.payment_status === 'canceled' ||
+                                            order.payment_status ===
+                                                'refunded' ||
+                                            order.payment_status ===
+                                                'canceled' ||
                                             order.payment_status === 'not_paid'
                                                 ? undefined
                                                 : handleFullAmountClick
                                         }
                                         className={`text-sm underline cursor-pointer ${
-                                            order.payment_status === 'refunded' ||
-                                            order.payment_status === 'canceled' ||
+                                            order.payment_status ===
+                                                'refunded' ||
+                                            order.payment_status ===
+                                                'canceled' ||
                                             order.payment_status === 'not_paid'
                                                 ? 'text-gray-500'
                                                 : 'text-blue-500'
                                         }`}
                                     >
-                                        Use full refundable amount ({refundableAmountToDisplay})
+                                        Use full refundable amount (
+                                        {refundableAmountToDisplay})
                                     </p>
                                 )}
                             </div>

@@ -845,7 +845,7 @@ export default class OrderService extends MedusaOrderService {
 
             // Calculate refunded amount
             const refundedResult = await this.refundRepository_.find({
-                where: { order_id: orderId },
+                where: { order_id: orderId, confirmed: true },
             });
 
             //TODO: this can be done using the new methods
