@@ -39,7 +39,7 @@ const PaymentPreferencesStep: React.FC<PaymentPreferencesProps> = ({
     const navigate = useNavigate();
 
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-     const { authData, setCustomerAuthData } = useCustomerAuthStore();
+     const {setCustomerAuthData } = useCustomerAuthStore();
 
     const updateOnboardingMutation = useMutation({
         mutationFn: async (payload: any) => {
