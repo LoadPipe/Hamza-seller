@@ -2,8 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { formatDate, formatStatus } from '@/utils/format-data.ts';
 import {
-    convertFroDbToDisplay,
-    convertFromWeiToDisplay,
+    convertFroDbToDisplay
 } from '@/utils/web3-conversions';
 
 interface TimelineEvent {
