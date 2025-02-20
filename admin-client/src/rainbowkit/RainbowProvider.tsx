@@ -14,6 +14,7 @@ import {
     sendVerifyRequest,
     getNonce,
     setJwtCookie,
+    getJwtStoreId,
 } from '@/utils/authentication/';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import LoginPage from '@/pages/login/login-page.tsx';
@@ -52,7 +53,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 const response = await sendVerifyRequest(message, signature);
 
                 // Extract JWT from response
-                const token = response.data;
+                const { token, newUser } = response.data;
                 console.log('respnse data', response.data);
                 console.log('response', response);
                 console.log('token', token);
@@ -72,7 +73,13 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                     });
                 }
 
-                window.location.href = '/dashboard';
+                const storeId = getJwtStoreId();
+
+                if (newUser || !storeId) {
+                    window.location.href = '/onboarding';
+                } else {
+                    window.location.href = '/dashboard';
+                }
                 return response.data;                
             } catch (error) {
                 console.error('Verification failed:', error);
