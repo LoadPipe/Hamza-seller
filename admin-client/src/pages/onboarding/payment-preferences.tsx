@@ -39,7 +39,7 @@ const PaymentPreferencesStep: React.FC<PaymentPreferencesProps> = ({
     const navigate = useNavigate();
 
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-     const {setCustomerAuthData } = useCustomerAuthStore();
+    const { setCustomerAuthData } = useCustomerAuthStore();
 
     const updateOnboardingMutation = useMutation({
         mutationFn: async (payload: any) => {
@@ -64,10 +64,11 @@ const PaymentPreferencesStep: React.FC<PaymentPreferencesProps> = ({
                 is_verified: true,
                 status: 'authenticated',
             });
-            console.log("finish set cookie")
+            console.log('finish set cookie');
             setShowSuccessDialog(true);
         },
         onError: (error) => {
+            console.error(error);
             toast({
                 variant: 'destructive',
                 title: 'Error',
@@ -453,4 +454,3 @@ const PaymentPreferencesStep: React.FC<PaymentPreferencesProps> = ({
 };
 
 export default PaymentPreferencesStep;
-
