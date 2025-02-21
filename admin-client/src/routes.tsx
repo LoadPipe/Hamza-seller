@@ -17,6 +17,7 @@ import SettingsPage from '@/pages/settings/settings-page.tsx';
 import AnalyticsPage from '@/pages/analytics/analytics-page.tsx';
 import { authMiddleware } from './middleware/auth';
 import LogoutPage from '@/pages/logout/logout-page';
+import OnboardingWizard from '@/pages/onboarding/onboarding-wizard.tsx';
 
 export const OrderSearchSchema = z.object({
     page: z.coerce.number().catch(0),
@@ -119,6 +120,12 @@ const notFoundRoute = createRoute({
     beforeLoad: authMiddleware,
 });
 
+const onboardingRoute = createRoute({
+    path: '/onboarding',
+    component: OnboardingWizard,
+    getParentRoute: () => rootRoute,
+});
+
 // Add child routes to the root route
 rootRoute.addChildren([
     DashboardRoute,
@@ -130,6 +137,7 @@ rootRoute.addChildren([
     analyticsRoute,
     settingsRoute,
     logoutRoute,
+    onboardingRoute,
     notFoundRoute,
     homeRoute,
 ]);

@@ -22,6 +22,7 @@ interface FindOneOptions<Store> extends TypeOrmFindOneOptions<Store> {
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const storeRepository: typeof StoreRepository =
         req.scope.resolve('storeRepository');
+    const userService = req.scope.resolve('userService');
 
     const handler = new RouteHandler(req, res, 'POST', '/seller/auth', [
         'message',
@@ -50,13 +51,18 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         let storeUser = await UserRepository.findOne({
             where: { wallet_address },
         });
+         let isNewUser = false;
         handler.logger.debug('found user ' + storeUser?.id);
 
         if (!storeUser) {
-            return handler.returnStatusWithMessage(
-                404,
-                `User with wallet address ${wallet_address} not found.`
+            handler.logger.debug(
+                'User not found, creating new seller user via wallet...'
             );
+            storeUser = await userService.createSellerUserFromWallet({
+                wallet_address, 
+            });
+            isNewUser = true;
+            handler.logger.debug('new user created with id ' + storeUser.id);
         }
 
         //once authorized, return a JWT token
@@ -71,6 +77,6 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
             }
         );
 
-        return handler.returnStatus(200, token);
+        return handler.returnStatus(200, { token, newUser: isNewUser });
     });
 };
