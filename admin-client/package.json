@@ -1,7 +1,7 @@
 {
     "name": "admin-client",
     "private": true,
-    "version": "1.0.2",
+    "version": "1.0.3",
     "type": "module",
     "description": "Hamza Seller admin frontend",
     "author": "Garo Nazarian, Jonny Bajada, Chris Li, John R. Kosinski",
