@@ -151,7 +151,7 @@ class StoreService extends MedusaStoreService {
         return {
             ...store,
             ...store.metadata,
-            ...user
+            ...user,
         };
     }
 
@@ -218,7 +218,6 @@ class StoreService extends MedusaStoreService {
 
         return await this.getStoreById(store_id);
     }
-
 
     async getCollectionByStore(store_id: string): Promise<string> {
         const collectionRepo = this.manager_.withRepository(

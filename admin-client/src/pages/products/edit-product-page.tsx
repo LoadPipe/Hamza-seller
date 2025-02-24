@@ -808,7 +808,16 @@ export default function EditProductPage() {
                                                             <div>
                                                                 <Label>
                                                                     Price in{' '}
-                                                                    {['usdc', 'usdt'].includes(preferredCurrency?.toLowerCase() ?? '') ? 'USD' : preferredCurrency?.toUpperCase() ?? 'ETH'}
+                                                                    {[
+                                                                        'usdc',
+                                                                        'usdt',
+                                                                    ].includes(
+                                                                        preferredCurrency?.toLowerCase() ??
+                                                                            ''
+                                                                    )
+                                                                        ? 'USD'
+                                                                        : (preferredCurrency?.toUpperCase() ??
+                                                                          'ETH')}
                                                                 </Label>
                                                                 <Input
                                                                     type="number"
