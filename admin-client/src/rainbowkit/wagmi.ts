@@ -51,7 +51,7 @@ if (wagmiChains.length === 0) {
 let allowedWagmiChains: _chains = [wagmiChains[0], ...wagmiChains.slice(1)];
 
 export const config = getDefaultConfig({
-    appName: 'My RainbowKit App',
+    appName: 'My RainbowKit App', //TODO: change these defaults
     projectId: 'YOUR_PROJECT_ID',
     chains: allowedWagmiChains,
     ssr: true,

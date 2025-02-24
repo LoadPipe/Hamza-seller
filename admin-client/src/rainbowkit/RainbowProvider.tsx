@@ -80,7 +80,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 } else {
                     window.location.href = '/dashboard';
                 }
-                return response.data;                
+                return response.data;
             } catch (error) {
                 console.error('Verification failed:', error);
             }
