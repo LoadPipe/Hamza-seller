@@ -706,42 +706,6 @@ class ProductService extends MedusaProductService {
         return productCategory.products;
     }
 
-    async getProductCollectionAndSalesChannelIds(): Promise<{
-        collectionId: string;
-        salesChannelId: string;
-    }> {
-        try {
-            // Fetch the single sales channel
-            const salesChannel = await this.salesChannelRepository_.findOne({
-                where: {}, // Empty where clause to find any sales channel
-                order: { created_at: 'ASC' }, // Sort by creation time, oldest first
-            });
-
-            // Fetch a random product collection
-            const collection = await this.productCollectionRepository_.findOne({
-                where: {}, // Empty where clause to find any sales channel
-                order: { created_at: 'ASC' }, // Sort by creation time, oldest first
-            });
-
-            if (!collection) {
-                throw new Error('No collections available.');
-            }
-
-            return {
-                collectionId: collection.id,
-                salesChannelId: salesChannel.id,
-            };
-        } catch (error) {
-            this.logger.error(
-                'Error fetching collection and sales channel IDs:',
-                error
-            );
-            throw new Error(
-                'Failed to fetch collection and sales channel IDs.'
-            );
-        }
-    }
-
     /**
      * Fetches all product categories along with their associated products, variants, prices, and reviews.
      *
