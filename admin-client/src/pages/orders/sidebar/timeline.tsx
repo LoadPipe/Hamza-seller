@@ -1,6 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { formatDate, formatStatus } from '@/utils/format-data.ts';
+import {
+    convertFroDbToDisplay
+} from '@/utils/web3-conversions';
 
 interface TimelineEvent {
     title: string;
@@ -31,6 +34,8 @@ interface TimelineProps {
             reason: string;
             created_at: string;
         }>;
+        currency_code?: string;
+        chain_id?: number;
     };
 }
 
@@ -73,6 +78,24 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
     // Add historical events from `histories` array
     orderDetails.histories?.forEach((history) => {
         const details = [];
+        const ignoredStatuses = ['seller_released', 'in_escrow'];
+
+        console.log(`HIstory: ${JSON.stringify(history)}`);
+        // Convert history fields to lowercase before checking
+        const toStatusLower = history.to_status?.toLowerCase() || '';
+        const toPaymentLower = history.to_payment_status?.toLowerCase() || '';
+        const toFulfillmentLower =
+            history.to_fulfillment_status?.toLowerCase() || '';
+
+        // Skip if any of these are in the ignored list
+        if (
+            ignoredStatuses.includes(toStatusLower) ||
+            ignoredStatuses.includes(toPaymentLower) ||
+            ignoredStatuses.includes(toFulfillmentLower)
+        ) {
+            return; // Skip this history entry entirely
+        }
+
         if (history.to_status) {
             details.push(`Status: ${history.to_status}`);
         }
@@ -82,6 +105,22 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
         if (history.to_fulfillment_status) {
             details.push(`Fulfillment: ${history.to_fulfillment_status}`);
         }
+
+        // Check and transform `to_status`
+        if (history.to_status) {
+            // Convert to lowercase for case-insensitive comparisons
+            const toStatusLower = history.to_status.toLowerCase();
+
+            if (toStatusLower === 'buyer_released') {
+                details.push('Buyer released escrow');
+            } else if (!ignoredStatuses.includes(toStatusLower)) {
+                // Keep the original text if we’re displaying it
+                details.push(`Status: ${history.to_status}`);
+            }
+        }
+
+        // Skip the event if no valid details remain after filtering
+        if (details.length === 0) return;
 
         events.push({
             title:
@@ -93,11 +132,14 @@ const Timeline: React.FC<TimelineProps> = ({ orderDetails }) => {
 
     // Add refund events from `refunds` array
     orderDetails.refunds?.forEach((refund) => {
+        const refundDisplay = convertFroDbToDisplay(
+            refund.amount.toString(),
+            orderDetails.currency_code || 'USDT',
+            orderDetails.chain_id || 1
+        );
         events.push({
             title: 'Refund Issued',
-            details: `Amount: ${
-                refund.amount / 100
-            } USDT, Reason: ${refund.reason}. Note: ${refund.note || 'No notes.'}`,
+            details: `Amount: ${refundDisplay} ${orderDetails.currency_code?.toUpperCase() || ''}, Reason: ${refund.reason}. Note: ${refund.note || 'No notes.'}`,
             timestamp: formatDate(refund.created_at),
         });
     });

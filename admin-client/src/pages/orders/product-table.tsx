@@ -1,26 +1,28 @@
-import * as React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { Download, FilePlus } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import {
     ColumnDef,
     ColumnFiltersState,
     SortingState,
     flexRender,
-    VisibilityState,
     getCoreRowModel,
     getFilteredRowModel,
     getPaginationRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-// import { Search } from 'lucide-react';
-import { Download, RefreshCw, Settings } from 'lucide-react';
-import OrderTabs from '@/pages/orders/order-tabs.tsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
+import { ChevronDown, Settings, ChevronUp } from 'lucide-react';
 import {
-    PaymentStatus,
-    FulfillmentStatus,
-    OrderStatus,
-} from '@/utils/status-enum';
+    productStore,
+    setProductFilter,
+    clearProductFilter,
+} from '@/stores/product-filter/product-filter-store.tsx';
+import { useStore } from '@tanstack/react-store';
+import ProductImportModal from '@/pages/products/utils/product-import-dialog.tsx';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -28,7 +30,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
 import {
     Table,
     TableBody,
@@ -37,29 +38,42 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { useStore } from '@tanstack/react-store';
-import {
-    filterStore,
-    setFilter,
-    clearFilter,
-    clearAllFilters,
-    setDatePickerFilter,
-} from '@/stores/order-filter/order-filter-store.ts';
-import DatePickerFilter from '@/components/date-picker-filter/date-picker-filter.tsx';
-import { ChevronDown } from 'lucide-react';
-import { convertJSONToCSV, downloadCSV } from '@/utils/json-to-csv';
-import { Order } from '@/pages/orders/product-columns.tsx';
-import { useEffect } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 
-interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
-    data: TData[];
+type Product = z.infer<typeof ProductSchema>;
+
+interface Price {
+    id: string;
+    currency_code: string; // Use camelCase for consistency
+    amount: string; // Assuming amount is stored as a string
+    minQuantity?: number | null; // Optional
+    maxQuantity?: number | null; // Optional
+    priceListId?: string | null; // Optional
+    regionId?: string | null; // Optional
 }
 
-// Localstorage key for storing the user's preferred productColumns
+import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
+import { ProductCategory } from '@/utils/status-enum.ts';
+import { z } from 'zod';
+import { ProductSchema } from '@/pages/products/product-schema.ts';
 
-export function ProductTable<TData, TValue>({
+interface ProductTableProps {
+    columns: ColumnDef<Product, any>[];
+    data: Product[];
+    pageIndex: number;
+    pageSize: number;
+    productCategories: Record<string, string>;
+    setPageIndex: React.Dispatch<React.SetStateAction<number>>;
+    setPageSize: React.Dispatch<React.SetStateAction<number>>;
+    totalRecords: number;
+    filteredProductsCount: number;
+    sorting: SortingState;
+    setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
+    isLoading: boolean;
+}
+
+export function ProductTable({
     columns,
     data,
     pageIndex,
@@ -67,42 +81,35 @@ export function ProductTable<TData, TValue>({
     setPageIndex,
     setPageSize,
     totalRecords,
+    filteredProductsCount,
     sorting,
     setSorting,
     isLoading,
-}: DataTableProps<TData, TValue> & {
-    pageIndex: number;
-    pageSize: number;
-    setPageIndex: React.Dispatch<React.SetStateAction<number>>;
-    setPageSize: React.Dispatch<React.SetStateAction<number>>;
-    totalRecords: number;
-    sorting: SortingState;
-    setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
-    isLoading: boolean;
-}) {
-    // const { setSort } = useSortStore();
+}: ProductTableProps) {
     const [columnFilters, setColumnFilters] =
-        React.useState<ColumnFiltersState>([
-            { id: 'status', value: { notIn: ['archived'] } },
-        ]);
-
-    const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({});
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] = React.useState({});
     const [rowSelection, setRowSelection] = React.useState({});
-    const [isChecked, setIsChecked] = React.useState(false);
-    const { filters } = useStore(filterStore); // Subscribe to filter store
+    const pageCount = Math.ceil(filteredProductsCount / pageSize);
+    const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>(
+        {}
+    );
+    const [isModalOpen, setModalOpen] = useState(false);
 
-    const pageCount = Math.ceil(totalRecords / pageSize);
-    const getFilterValues = (key: string) => filters[key]?.in || [];
+    const { filters } = useStore(productStore);
+
+    const getFilterValues = (key: string) => filters?.[key]?.in || [];
+
     const table = useReactTable({
         data,
         columns,
+        getCoreRowModel: getCoreRowModel(),
         manualSorting: true,
+        manualPagination: true,
         pageCount,
         onSortingChange: setSorting,
         getPaginationRowModel: getPaginationRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
-        getCoreRowModel: getCoreRowModel(),
         onColumnFiltersChange: setColumnFilters,
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
@@ -118,14 +125,15 @@ export function ProductTable<TData, TValue>({
         },
     });
 
-    const localStorageColumnSettingsKey = 'tableColumnVisibility';
+    useEffect(() => {
+        console.log(table.getRowModel().rows);
+    }, [table]);
+    const navigate = useNavigate();
+    const localStorageProductColumnSettingsKey = 'productTableColumnVisibility';
 
     useEffect(() => {
-        // Ensure the filter for ARCHIVED is applied on mount
-        setFilter('status', { notIn: ['archived'] });
-
         const savedVisibility = JSON.parse(
-            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
+            localStorage.getItem(localStorageProductColumnSettingsKey) || '{}'
         );
         if (savedVisibility) {
             table.getAllColumns().forEach((column) => {
@@ -139,358 +147,203 @@ export function ProductTable<TData, TValue>({
         }
     }, [table]);
 
-    // Save column visibility settings to localStorage
-    const handleCheckedChange = (columnId: any, value: any) => {
-        const currentVisibility = JSON.parse(
-            localStorage.getItem(localStorageColumnSettingsKey) || '{}'
-        );
-        currentVisibility[columnId] = value;
-        localStorage.setItem(
-            localStorageColumnSettingsKey,
-            JSON.stringify(currentVisibility)
-        );
+    const toggleRowExpansion = (rowId: string) => {
+        setExpandedRows((prev) => ({
+            ...prev,
+            [rowId]: !prev[rowId],
+        }));
     };
 
-    // TODO: Can be moved to a utility function
-    const handleDownloadCSV = () => {
-        if (!data || data.length === 0) {
-            console.error('No data available for download.');
-            return;
-        }
+    const preferredCurrency = useCustomerAuthStore(
+        (state) => state.preferred_currency_code ?? 'eth'
+    );
 
-        // Extend the column type to include accessorKey
-        const extendedColumns = columns as Array<{
-            id: string;
-            accessorKey?: string;
-        }>;
-
-        const headers = extendedColumns
-            .filter((col) => col.id !== 'select' && col.id !== 'actions')
-            .map((col) => col.accessorKey || col.id)
-            .filter((key): key is string => !!key); // Ensure keys are non-null strings
-
-        if (headers.length === 0) {
-            console.error('No valid productColumns available for CSV export.');
-            return;
-        }
-
-        const columnTitles = extendedColumns
-            .filter((col) => headers.includes(col.accessorKey || col.id))
-            .map((col) => col.accessorKey || col.id);
-
-        const typedData = data as Order[];
-
-        // Prepare data rows
-        const filteredData = typedData.map((row) => {
-            const result: Record<string, any> = {};
-            headers.forEach((header) => {
-                if (header === 'customer') {
-                    result[header] =
-                        `${row.customer?.first_name || ''} ${row.customer?.last_name || ''}`.trim();
-                } else {
-                    result[header] = row[header as keyof Order] ?? '';
-                }
-            });
-            return result;
-        });
-
-        // const subtitle =
-        //     `Filters: ${JSON.stringify(filters, null, 2)} | Page Count: ${pageSize} | Page Index: ${
-        //         pageIndex + 1
-        //     } | Total Records: ${totalRecords} | Generated At: ${new Date().toISOString()}`
-        //         .replace(/\n/g, ' ') // Replace newlines with spaces
-        //         .replace(/"/g, '""'); // Escape double quotes for CSV format
-
-        // Convert data to CSV
-        const dataCSV = convertJSONToCSV(filteredData, columnTitles);
-
-        downloadCSV(`${dataCSV}`, 'orders.csv');
-    };
-
-    const handleClearFilters = () => {
-        clearAllFilters();
-        handleCheckboxChange(false);
-        console.log(`Clearing all the filters.`);
-    };
-
-    const handleCheckboxChange = (checked: boolean) => {
-        if (checked) {
-            setFilter('status', {
-                in: ['archived'],
-            });
-            setIsChecked(true);
-        } else {
-            clearFilter('status');
-            setFilter('status', {
-                notIn: ['archived'],
-            });
-            setIsChecked(false);
-        }
-        setPageIndex(0); // Reset to the first page
-    };
+    // const handleFilterChange = (selected: string[] | null) => {
+    //     if (selected) {
+    //         setProductFilter('categories', { isLoading: selected });
+    //     } else {
+    //         clearProductFilter('categories');
+    //     }
+    // };
 
     return (
         <div className="flex flex-col min-h-screen">
             <div className="max-w-[1280px] w-full mx-4 bg-primary-black-90 rounded-xl p-[24px]">
-                <OrderTabs setPageIndex={setPageIndex} />
-
-                <div className="flex flex-row">
-                    <div className="flex pb-[40px] gap-5">
-                        <DropdownMultiselectFilter
-                            title="Payment Status"
-                            optionsEnum={PaymentStatus}
-                            selectedFilters={getFilterValues('payment_status')} // Prepopulate selected filters
-                            onFilterChange={(values) => {
-                                if (values) {
-                                    setFilter('payment_status', { in: values });
-                                } else {
-                                    clearFilter('payment_status');
-                                }
-                                setPageIndex(0); // Reset to the first page
-                            }}
-                        />
-
-                        <DropdownMultiselectFilter
-                            title="Order Status"
-                            optionsEnum={Object.fromEntries(
-                                Object.entries(OrderStatus).filter(
-                                    ([key]) => key !== 'ARCHIVED'
-                                )
-                            )}
-                            // optionsEnum={OrderStatus}
-                            selectedFilters={getFilterValues('status')}
-                            onFilterChange={(values) => {
-                                if (values) {
-                                    setFilter('status', { in: values });
-                                } else {
-                                    clearFilter('status');
-                                }
-                                setPageIndex(0); // Reset to the first page
-                            }}
-                        />
-
-                        <DropdownMultiselectFilter
-                            title="Fulfillment Status"
-                            optionsEnum={FulfillmentStatus}
-                            selectedFilters={getFilterValues(
-                                'fulfillment_status'
-                            )}
-                            onFilterChange={(values) => {
-                                if (values) {
-                                    setFilter('fulfillment_status', {
-                                        in: values,
-                                    });
-                                } else {
-                                    clearFilter('fulfillment_status');
-                                }
-                                setPageIndex(0); // Reset to the first page
-                            }}
-                        />
-
-                        <DatePickerFilter
-                            title="Date Picker"
-                            selectedFilters={filters['created_at']}
-                            onDateRangeChange={(range, selectedOption) => {
-                                console.log('[Parent] Received range:', range);
-                                console.log(
-                                    '[Parent] Received option:',
-                                    selectedOption
-                                );
-
-                                if (range) {
-                                    setDatePickerFilter(
-                                        'created_at',
-                                        { gte: range.start, lte: range.end },
-                                        selectedOption || 'Custom Date Range' // Default if label is null
-                                    );
-                                } else {
-                                    clearFilter('created_at');
-                                }
-                            }}
-                        />
-                    </div>
-
-                    <div className="ml-auto flex flex-row relative mt-2">
-                        <Checkbox
-                            id="archived-status"
-                            className="mt-1 order-table-checkbox"
-                            checked={isChecked}
-                            onCheckedChange={handleCheckboxChange}
-                        />
-                        <label
-                            htmlFor="archived-status"
-                            className="ml-2 text-white"
+                {/* Filters and Actions */}
+                <div className="flex flex-row gap-4 ml-auto ">
+                    <div className="mb-4">
+                        <Button
+                            variant="outline"
+                            className="hover:text-primary-purple-90 hover:bg-white  whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] text-white"
+                            onClick={() =>
+                                navigate({
+                                    to: '/add-product',
+                                })
+                            }
                         >
-                            Archived
-                        </label>
+                            Add new product
+                            <FilePlus />
+                        </Button>
                     </div>
+                    <>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button className="hover:text-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] text-white">
+                                    <Download />
+                                    Import
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem
+                                    className="px-4 py-2 w-full "
+                                    onClick={() => setModalOpen(true)} // Open the modal
+                                >
+                                    Import product as CSV
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
+                        {/* Render the Modal */}
+                        <ProductImportModal
+                            open={isModalOpen}
+                            onClose={() => setModalOpen(false)} // Close the modal
+                        />
+                    </>
+
+                    <div className="flex justify-start">
+                        <DropdownMultiselectFilter
+                            title="Filter By Category"
+                            optionsEnum={ProductCategory} // Pass the enum directly
+                            selectedFilters={getFilterValues('categories')} // Extract `in` property as an array
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setProductFilter('categories', {
+                                        in: values,
+                                    }); // Apply filter
+                                } else {
+                                    clearProductFilter('categories'); // Clear filter if no values
+                                }
+                                setPageIndex(0); // Reset to the first page
+                            }}
+                        />
+                    </div>
                     <div className="ml-auto flex flex-row relative w-[376px]">
+                        {/*TODO: Improve this search.... yarn add [algoliasearch || @meilisearch/instant-meilisearch] pkgs. */}
                         <Input
-                            placeholder="Search Orders..."
+                            placeholder="Search Products..."
                             value={
                                 (table
-                                    .getColumn('id')
+                                    .getColumn('title')
                                     ?.getFilterValue() as string) ?? ''
                             }
                             onChange={(event) =>
                                 table
-                                    .getColumn('id')
+                                    .getColumn('title')
                                     ?.setFilterValue(event.target.value)
                             }
                             className="w-full h-[44px] pl-5 border-none placeholder-[#C2C2C2] active:border-primary-purple-90  text-white rounded bg-black pr-10"
                         />
                     </div>
                 </div>
-
-                <div className="flex items-center">
-                    <div className="flex text-sm text-muted-foreground m-2 ">
-                        <div className="flex items-center gap-4">
-                            <p className="text-sm text-white">Showing</p>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        className="bg-[#242424] text-white w-[72px] h-[36px] rounded"
-                                        size="sm"
+                <div className="flex text-sm text-muted-foreground m-2 justify-between">
+                    <div className="flex items-center gap-4">
+                        <p className="text-sm text-white">Showing</p>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="bg-[#242424] text-white w-[72px] h-[36px] rounded"
+                                    size="sm"
+                                >
+                                    {pageSize} {/* Display current page size */}
+                                    <ChevronDown className="w-4 h-4 text-white" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-[#242424]">
+                                {[5, 10, 20, 50, 100].map((size) => (
+                                    <DropdownMenuCheckboxItem
+                                        key={size}
+                                        checked={pageSize === size}
+                                        onCheckedChange={() => {
+                                            setPageSize(size); // Update page size
+                                            setPageIndex(0); // Reset to the first page
+                                        }}
+                                        onSelect={(e) => e.preventDefault()} // Prevent menu close on select
                                     >
-                                        {pageSize}{' '}
-                                        {/* Display current page size */}
-                                        <ChevronDown className="w-4 h-4 text-white" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-[#242424]">
-                                    {[5, 10, 20, 50, 100].map((size) => (
+                                        {size}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                            </DropdownMenuContent>
+                            <div className="text-sm text-white">
+                                of {filteredProductsCount} filtered entries.{' '}
+                                {''}
+                                {totalRecords} total entries.
+                            </div>
+                        </DropdownMenu>
+                    </div>
+                    <div className="flex">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="ml-auto whitespace-nowrap bg-[#242424] hover:border-primary-purple-90 text-white"
+                                >
+                                    <Settings />
+                                    Toggle Columns
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-[#242424] border-primary-purple-90">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
                                         <DropdownMenuCheckboxItem
-                                            key={size}
-                                            checked={pageSize === size}
-                                            onCheckedChange={() => {
-                                                setPageSize(size); // Update page size
-                                                setPageIndex(0); // Reset to the first page
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) => {
+                                                column.toggleVisibility(
+                                                    !!value
+                                                );
+                                                // handleCheckedChange(
+                                                //     column.id as any,
+                                                //     !!value as any
+                                                // );
                                             }}
                                             onSelect={(e) => e.preventDefault()} // Prevent menu close on select
                                         >
-                                            {size}
+                                            {column.id}
                                         </DropdownMenuCheckboxItem>
                                     ))}
-                                </DropdownMenuContent>
-                                <div className="text-sm text-white">
-                                    of {table.getFilteredRowModel().rows.length}{' '}
-                                    entries.
-                                </div>
-                            </DropdownMenu>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-row gap-4 ml-auto">
-                        <div className="flex justify-end">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69 mr-4 hover:border-primary-purple-90">
-                                        <RefreshCw />
-                                        Clear
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="border-primary-purple-90">
-                                    <DropdownMenuItem
-                                        className="hover:bg-primary-purple-90 px-4 py-2 w-full hover:border-primary-purple-90"
-                                        onClick={handleClearFilters}
-                                    >
-                                        Clear Filters
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="hover:bg-primary-purple-90 px-4 py-2 w-full hover:border-primary-purple-90">
-                                        Reset Columns
-                                    </DropdownMenuItem>
-                                    {/*<DropdownMenuItem*/}
-                                    {/*    className="hover:bg-primary-purple-90 px-4 py-2 w-full "*/}
-                                    {/*    onClick={handleClearDateFilter}*/}
-                                    {/*>*/}
-                                    {/*    Clear Date Picker*/}
-                                    {/*</DropdownMenuItem>*/}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button className="bg-secondary-charcoal-69 text-white hover:bg-secondary-charcoal-69 hover:border-primary-purple-90">
-                                        <Download />
-                                        Export
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="border-primary-purple-90">
-                                    <DropdownMenuItem
-                                        className="hover:bg-primary-purple-90 px-4 py-2 w-full"
-                                        onClick={handleDownloadCSV}
-                                    >
-                                        Export as CSV
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-
-                        <div className="flex">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="ml-auto whitespace-nowrap bg-[#242424] hover:border-primary-purple-90"
-                                    >
-                                        <Settings />
-                                        Toggle Columns
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-[#242424] border-primary-purple-90">
-                                    {table
-                                        .getAllColumns()
-                                        .filter((column) => column.getCanHide())
-                                        .map((column) => (
-                                            <DropdownMenuCheckboxItem
-                                                key={column.id}
-                                                checked={column.getIsVisible()}
-                                                onCheckedChange={(value) => {
-                                                    column.toggleVisibility(
-                                                        !!value
-                                                    );
-                                                    handleCheckedChange(
-                                                        column.id as any,
-                                                        !!value as any
-                                                    );
-                                                }}
-                                                onSelect={(e) =>
-                                                    e.preventDefault()
-                                                } // Prevent menu close on select
-                                            >
-                                                {column.id}
-                                            </DropdownMenuCheckboxItem>
-                                        ))}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
 
+                {/* Table */}
                 <div className="rounded-md mt-9 overflow-x-auto">
                     <Table className="min-w-full">
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
-                                        return (
-                                            <TableHead key={header.id}>
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                          header.column
-                                                              .columnDef.header,
-                                                          header.getContext()
-                                                      )}
-                                            </TableHead>
-                                        );
-                                    })}
+                                    {/* Extra header for collapsible button */}
+                                    <TableHead className="w-[40px]"></TableHead>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext()
+                                                  )}
+                                        </TableHead>
+                                    ))}
                                 </TableRow>
                             ))}
                         </TableHeader>
                         <TableBody>
+                            {/*{console.log('Table Rows:', table.getRowModel().rows)}*/}
                             {isLoading ? (
                                 [...Array(pageSize)].map((_, idx) => (
                                     <TableRow key={idx}>
@@ -501,38 +354,211 @@ export function ProductTable<TData, TValue>({
                                         ))}
                                     </TableRow>
                                 ))
-                            ) : table.getRowModel().rows?.length ? (
+                            ) : table.getRowModel().rows?.length > 0 ? (
                                 table.getRowModel().rows.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={
-                                            row.getIsSelected() && 'selected'
-                                        }
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
+                                    <React.Fragment key={row.id}>
+                                        <TableRow>
+                                            {/* Collapsible Button */}
+                                            <TableCell className="w-[40px]">
+                                                {row.original.variants &&
+                                                row.original.variants.length >
+                                                    1 ? (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            toggleRowExpansion(
+                                                                row.id
+                                                            )
+                                                        }
+                                                    >
+                                                        {expandedRows[
+                                                            row.id
+                                                        ] ? (
+                                                            <ChevronUp />
+                                                        ) : (
+                                                            <ChevronDown />
+                                                        )}
+                                                    </Button>
+                                                ) : null}
                                             </TableCell>
-                                        ))}
-                                    </TableRow>
+                                            {/* Main Row Data */}
+                                            {row
+                                                .getVisibleCells()
+                                                .map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column
+                                                                .columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                        </TableRow>
+
+                                        {/* Expanded Content for Variants */}
+                                        {expandedRows[row.id] && (
+                                            <TableRow>
+                                                <TableCell
+                                                    colSpan={columns.length + 1}
+                                                >
+                                                    <div className="p-4 border rounded-md bg-primary-dark text-white">
+                                                        {/* Scrollable Table Wrapper */}
+                                                        <div className="max-h-[300px] overflow-y-auto">
+                                                            <table className="w-full table-auto">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th className="text-left p-2">
+                                                                            Variant
+                                                                            ID
+                                                                        </th>
+                                                                        <th className="text-left p-2">
+                                                                            Title
+                                                                        </th>
+
+                                                                        {/*// TODO: show first index in row for multi-variant*/}
+                                                                        <th className="text-left p-2">
+                                                                            Price
+                                                                        </th>
+                                                                        <th className="text-left p-2">
+                                                                            Inventory
+                                                                        </th>
+
+                                                                        <th className="text-left p-2">
+                                                                            Created
+                                                                            At
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {row.original.variants?.map(
+                                                                        (
+                                                                            variant
+                                                                        ) => (
+                                                                            <tr
+                                                                                key={
+                                                                                    variant.id
+                                                                                }
+                                                                            >
+                                                                                <td className="p-2">
+                                                                                    {
+                                                                                        variant.id
+                                                                                    }
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {variant.title ||
+                                                                                        'N/A'}
+                                                                                </td>
+
+                                                                                <td className="p-2">
+                                                                                    {variant.prices
+                                                                                        ? variant.prices
+                                                                                              .filter(
+                                                                                                  (
+                                                                                                      price: Price
+                                                                                                  ) =>
+                                                                                                      price.currency_code ===
+                                                                                                      preferredCurrency
+                                                                                              )
+                                                                                              .map(
+                                                                                                  (
+                                                                                                      price,
+                                                                                                      idx
+                                                                                                  ) => (
+                                                                                                      <div
+                                                                                                          key={
+                                                                                                              idx
+                                                                                                          }
+                                                                                                      >
+                                                                                                          {[
+                                                                                                              'usdc',
+                                                                                                              'usdt',
+                                                                                                          ].includes(
+                                                                                                              price.currency_code.toLowerCase()
+                                                                                                          )
+                                                                                                              ? '≈ '
+                                                                                                              : ''}
+                                                                                                          {formatCryptoPrice(
+                                                                                                              Number(
+                                                                                                                  price.amount
+                                                                                                              ),
+                                                                                                              price.currency_code
+                                                                                                          )}{' '}
+                                                                                                          {[
+                                                                                                              'usdc',
+                                                                                                              'usdt',
+                                                                                                          ].includes(
+                                                                                                              price.currency_code.toLowerCase()
+                                                                                                          )
+                                                                                                              ? 'USD'
+                                                                                                              : price.currency_code.toUpperCase()}
+                                                                                                      </div>
+                                                                                                  )
+                                                                                              )
+                                                                                        : [] // Replace this with an empty array or another logic
+                                                                                              .filter(
+                                                                                                  (
+                                                                                                      price: any
+                                                                                                  ) =>
+                                                                                                      price.currency_code ===
+                                                                                                      'eth'
+                                                                                              )
+                                                                                              .map(
+                                                                                                  (
+                                                                                                      price: any,
+                                                                                                      idx: number
+                                                                                                  ) => (
+                                                                                                      <div
+                                                                                                          key={
+                                                                                                              idx
+                                                                                                          }
+                                                                                                      >
+                                                                                                          {formatCryptoPrice(
+                                                                                                              price.amount,
+                                                                                                              price.currency_code
+                                                                                                          )}{' '}
+                                                                                                          {price.currency_code.toUpperCase()}
+                                                                                                      </div>
+                                                                                                  )
+                                                                                              )}
+                                                                                </td>
+
+                                                                                <td className="p-2">
+                                                                                    {variant.inventory_quantity ||
+                                                                                        'N/A'}
+                                                                                </td>
+                                                                                <td className="p-2">
+                                                                                    {new Date(
+                                                                                        variant.created_at
+                                                                                    ).toLocaleString()}
+                                                                                </td>
+                                                                            </tr>
+                                                                        )
+                                                                    )}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </React.Fragment>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={columns.length}>
-                                        No results.
+                                    <TableCell
+                                        colSpan={columns.length + 1}
+                                        className="text-center"
+                                    >
+                                        No products found.
                                     </TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
                     </Table>
                 </div>
-                {/* </div> */}
-
-                {/* Pagination Controls */}
-            </div>
+            </div>{' '}
+            {/* Pagination */}
             <div className="max-w-[1280px] w-full mx-4 rounded-xl p-[24px]">
                 <div className="flex justify-center items-center gap-2">
                     {/* Previous Button */}

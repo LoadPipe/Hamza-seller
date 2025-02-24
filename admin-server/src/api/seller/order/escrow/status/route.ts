@@ -1,7 +1,11 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/medusa';
 import { RouteHandler } from '../../../../route-handler';
 import StoreOrderService from '../../../../../services/store-order';
-import { EscrowPaymentDefinition } from 'src/web3/contracts/escrow';
+import {
+    EscrowPaymentDefinition,
+    PaymentDefinition,
+} from '../../../../../web3/contracts/escrow';
+import { formatUnits } from 'ethers';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const storeOrderService: StoreOrderService =
@@ -13,6 +17,14 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         'GET',
         '/seller/order/escrow/status'
     );
+
+    const getRefundableAmount = (payment: PaymentDefinition) => {
+        const refundableAmount =
+            BigInt(payment.amount?.toString() ?? '0') -
+            BigInt(payment.amountRefunded?.toString() ?? '0');
+
+        return refundableAmount;
+    };
 
     const validateRequest = (
         orderId: string,
@@ -47,6 +59,19 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
         if (validateRefund) {
             //validate refund amount
+            if (handler.inputParams.refund_amount) {
+                const amount = BigInt(
+                    handler.inputParams.refund_amount.toString()
+                );
+                const refundableAmount = getRefundableAmount(payment.payment);
+                if (amount > refundableAmount) {
+                    const readableRequested = formatUnits(amount.toString());
+                    const readableRefundable = formatUnits(
+                        refundableAmount.toString()
+                    );
+                    return `The amount of ${readableRequested} exceeds the refundable amount of ${readableRefundable}.`;
+                }
+            }
         } else if (validateRelease) {
             //cannot be released by receiver if already released by receiver
             if (payment.payment.receiverReleased) {

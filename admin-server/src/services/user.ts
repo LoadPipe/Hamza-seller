@@ -1,6 +1,7 @@
 import { Lifetime } from 'awilix';
 import { User, UserService as MedusaUserService } from '@medusajs/medusa';
 import {
+    CreateUserInput,
     CreateUserInput as MedusaCreateUserInput,
     UpdateUserInput,
 } from '@medusajs/medusa/dist/types/user';
@@ -8,6 +9,10 @@ import StoreRepository from '../repositories/store';
 
 interface CustomUserInput extends MedusaCreateUserInput {
     store_id?: string;
+}
+
+interface CreateSellerUserInput extends Omit<CreateUserInput, 'password'> {
+    wallet_address: string;
 }
 
 class UserService extends MedusaUserService {
@@ -26,6 +31,19 @@ class UserService extends MedusaUserService {
         }
     }
 
+    async retrieveByWalletAddress(wallet_address: string): Promise<User> {
+        const userRepo = this.manager_.withRepository(this.userRepository_);
+        const user = await userRepo.findOne({
+            where: { wallet_address: wallet_address.toLowerCase() },
+        });
+        if (!user) {
+            throw new Error(
+                'User not found with wallet address: ' + wallet_address
+            );
+        }
+        return user;
+    }
+
     async update(
         userId: string,
         update: UpdateUserInput & {
@@ -33,6 +51,18 @@ class UserService extends MedusaUserService {
         }
     ): Promise<User> {
         return super.update(userId, update);
+    }
+
+    async createSellerUserFromWallet(
+        input: CreateSellerUserInput
+    ): Promise<User> {
+        const dummyPassword = 'wallet_default';
+        const email =
+            input.email || `${input.wallet_address}@wallet.example.com`;
+        return await super.create(
+            { ...input, email } as CreateUserInput,
+            dummyPassword
+        );
     }
 
     //   async create(

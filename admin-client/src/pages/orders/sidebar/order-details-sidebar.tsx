@@ -185,7 +185,15 @@ export function OrderDetailsSidebar() {
         updated_at: orderDetails.updated_at,
         histories: orderDetails.histories,
         refunds: orderDetails.refunds,
+        currency_code: orderDetails?.payments?.[0]?.currency_code,
+        chain_id: orderDetails?.payments?.[0]?.blockchain_data?.chain_id,
     };
+
+    const shippingFee = formatCryptoPrice(
+        orderDetails?.shipping_methods[0]?.price ?? 0,
+        currencyCode
+    );
+
     const totalPrice = (orderDetails?.items || []).reduce(
         (acc: number, item: any) => {
             const unitPrice = Number(item.unit_price) || 0; // Ensure it's a number
@@ -195,9 +203,17 @@ export function OrderDetailsSidebar() {
         0 // Initial accumulator value
     );
 
+    //Grand total calculated
+    const totalPriceFormatted = formatCryptoPrice(
+        totalPrice ?? 0,
+        currencyCode
+    );
+    const grandTotal = Number(totalPriceFormatted) + Number(shippingFee);
+
     const chainId = orderDetails?.payments[0]?.blockchain_data?.chain_id;
     const chainLogo = getChainLogo(chainId);
     const chainName = chainIdToName(chainId);
+
     return (
         <div>
             <Sidebar
@@ -464,10 +480,7 @@ export function OrderDetailsSidebar() {
                                     currencyCode
                                 )} // Adjust as needed
                                 currencyCode={currencyCode}
-                                total={formatCryptoPrice(
-                                    orderDetails?.payments[0]?.amount ?? 0,
-                                    currencyCode
-                                )}
+                                total={grandTotal ?? 0}
                             />
 
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />

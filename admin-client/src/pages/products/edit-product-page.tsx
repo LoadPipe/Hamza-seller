@@ -10,7 +10,6 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Textarea } from '@/components/ui/textarea';
 
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { z } from 'zod';
@@ -23,6 +22,7 @@ import { useForm, getBy, setBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
 import { PackageSearch, Bitcoin } from 'lucide-react';
+import { QuillEditor } from '@/components/ui/quill-editor';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -262,16 +262,10 @@ export default function EditProductPage() {
                                 {(field) => (
                                     <>
                                         <Label>Description</Label>
-                                        <Textarea
-                                            placeholder="Description"
-                                            rows={10}
+                                        <QuillEditor
                                             value={field.state.value}
-                                            onChange={(e) =>
-                                                field.handleChange(
-                                                    e.target.value
-                                                )
-                                            }
-                                            onBlur={field.handleBlur}
+                                            onChange={field.handleChange}
+                                            className="mb-4"
                                         />
                                         {field.state.meta.errors?.length >
                                             0 && (
@@ -814,7 +808,16 @@ export default function EditProductPage() {
                                                             <div>
                                                                 <Label>
                                                                     Price in{' '}
-                                                                    {['usdc', 'usdt'].includes(preferredCurrency?.toLowerCase() ?? '') ? 'USD' : preferredCurrency?.toUpperCase() ?? 'ETH'}
+                                                                    {[
+                                                                        'usdc',
+                                                                        'usdt',
+                                                                    ].includes(
+                                                                        preferredCurrency?.toLowerCase() ??
+                                                                            ''
+                                                                    )
+                                                                        ? 'USD'
+                                                                        : (preferredCurrency?.toUpperCase() ??
+                                                                          'ETH')}
                                                                 </Label>
                                                                 <Input
                                                                     type="number"

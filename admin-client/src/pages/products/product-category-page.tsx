@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getSecure } from '@/utils/api-calls';
 import {
     ColumnDef,
     flexRender,
@@ -19,6 +18,7 @@ import {
 } from '@/components/ui/table';
 import AddCategoryDialog from '@/pages/products/utils/add-category-dialog';
 import { useNavigate } from '@tanstack/react-router';
+import { fetchAllCategories } from '@/pages/products/api/product-categories';
 
 interface Category {
     id: string;
@@ -40,13 +40,10 @@ export default function ProductCategoryPage() {
         error,
     } = useQuery<Category[]>({
         queryKey: ['categories'],
-        queryFn: async () => {
-            const response = await getSecure('/seller/product/categories', {});
-            return response;
-        },
+        queryFn: async () => fetchAllCategories(),
     });
 
-    // Define table productColumns
+    // Define table orderColumns
     const columns: ColumnDef<Category>[] = [
         {
             accessorKey: 'id',

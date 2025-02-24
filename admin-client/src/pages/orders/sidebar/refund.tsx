@@ -8,7 +8,7 @@ import {
 import { Input } from '@/components/ui/input';
 // import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postSecure, putSecure } from '@/utils/api-calls';
 import { useToast } from '@/hooks/use-toast';
 import { refundEscrowPayment, getEscrowPayment } from '@/utils/order-escrow';
@@ -28,17 +28,21 @@ type RefundProps = {
 const reasonOptions = ['discount', 'return', 'swap', 'claim', 'other'];
 
 const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
+    const queryClient = useQueryClient();
     const { switchChain } = useSwitchChain();
+    const [isFullRefund, setIsFullRefund] = useState(false);
     const [formData, setFormData] = useState({
         refundAmount: refundAmount || '',
         reason: reasonOptions[0], // Default to the first option
         note: '',
     });
 
+    //get the payment
     const payment = order?.escrow_payment?.payment;
     let refundableAmount: BigInt = BigInt(0);
     let refundedAmount: BigInt = BigInt(0);
 
+    //convert the amount & refundable amount
     if (payment) {
         refundedAmount = BigInt(payment.amountRefunded?.toString() ?? '0');
         refundableAmount =
@@ -46,12 +50,14 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
             BigInt(payment.amountRefunded?.toString() ?? '0');
     }
 
+    //convert refundable to displayable string
     const refundableAmountToDisplay = convertFromWeiToDisplay(
         refundableAmount.toString(),
         order?.currency_code,
         order?.escrow_payment?.chain_id
     );
 
+    //convert refunded amount to displayable string
     const refundedAmountToDisplay = convertFromWeiToDisplay(
         refundedAmount.toString(),
         order?.currency_code,
@@ -76,18 +82,36 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
 
     //convert the amount to db units
     const getDbAmount = (amount: string | number) => {
+        console.log(
+            'DB AMOIUNT IS,',
+            Math.floor(parseFloat(amount.toString()) * 10 ** precision.db)
+        );
         return Math.floor(parseFloat(amount.toString()) * 10 ** precision.db);
     };
 
     //convert the amount to wei for blockchain use
     const getBlockchainAmount = (amount: string | number) => {
-        const dbAmount = getDbAmount(amount);
-        const bcAmount =
-            dbAmount.toString() +
-            ''.padEnd(precision?.native ?? 0 - precision?.db ?? 0, '0');
-        return bcAmount;
+        amount = parseFloat(amount.toString());
+        let numPlaces = 0;
+        while (amount.toString().indexOf('.') >= 0) {
+            numPlaces += 1;
+            amount *= 10;
+        }
+        const adjustmentFactor = Math.pow(10, precision.native - numPlaces);
+        const nativeAmount = BigInt(amount) * BigInt(adjustmentFactor);
+        return BigInt(nativeAmount);
     };
 
+    const handleFullAmountClick = () => {
+        // Override any manual input and mark full refund as selected.
+        setFormData((prev) => ({
+            ...prev,
+            refundAmount: refundableAmountToDisplay,
+        }));
+        setIsFullRefund(true);
+    };
+
+    //this mutation sends the refund request (createRefund) to the server (not the contract)
     const refundMutation = useMutation({
         mutationFn: async () => {
             const escrowPayment = await getEscrowPayment(order);
@@ -102,9 +126,11 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                 return null; // Return with controlled value for verbose error handling
             }
 
+            const payloadAmount = getDbAmount(formData.refundAmount);
+
             const payload = {
                 order_id: orderId,
-                amount: getDbAmount(formData.refundAmount),
+                amount: payloadAmount,
                 reason: formData.reason,
                 note: formData.note,
             };
@@ -122,7 +148,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                 //send refund request to escrow contract
                 const escrowRefundResult = await refundEscrowPayment(
                     order,
-                    getBlockchainAmount(formData.refundAmount)
+                    isFullRefund
+                        ? refundableAmount.toString()
+                        : getBlockchainAmount(formData.refundAmount)
                 );
 
                 console.log('escrowRefundResult is', escrowRefundResult);
@@ -144,6 +172,11 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                         ...formData,
                         refundAmount: '',
                         note: '',
+                    });
+
+                    // Force refresh order details to update the refund status
+                    queryClient.invalidateQueries({
+                        queryKey: ['orderDetails', orderId],
                     });
                 } else {
                     toast({
@@ -179,6 +212,10 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // If the user types a new value, unset the full refund flag.
+        if (e.target.name === 'refundAmount' && isFullRefund) {
+            setIsFullRefund(false);
+        }
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
 
@@ -190,6 +227,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
         setFormData({ ...formData, reason: e.target.value });
     };
 
+    //form validation
     const validateForm = () => {
         const newErrors = {
             refundAmount: '',
@@ -197,8 +235,8 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
         };
 
         if (
-            formData.refundAmount === '' ||
-            Number(formData.refundAmount) <= 0
+            !isFullRefund &&
+            (formData.refundAmount === '' || Number(formData.refundAmount) <= 0)
         ) {
             newErrors.refundAmount = 'Refund amount must be greater than 0.';
         }
@@ -217,8 +255,18 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
         const address = await getWalletAddress();
         const userChainId = await getChainId();
 
+        //get the escrow data (some validation is done on server side too)
         const payment: EscrowPaymentDefinitionWithError =
-            await getEscrowPaymentData(order?.id, true, false, address);
+            await getEscrowPaymentData(
+                order?.id,
+                true,
+                false,
+                address,
+                isFullRefund
+                    ? refundableAmount.toString()
+                    : getBlockchainAmount(formData.refundAmount).toString()
+            );
+
         if (!payment) {
             toast({
                 variant: 'destructive',
@@ -238,6 +286,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                     switchChain({ chainId: payment.chain_id });
                 }
 
+                //validate, and send refund request to server
                 if (validateForm()) {
                     refundMutation.mutate();
                 }
@@ -271,7 +320,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                                         border: 'none',
                                     }}
                                     type="number"
-                                    step="0.01"
+                                    step="0.000001"
                                     min="0"
                                     name="refundAmount"
                                     value={formData.refundAmount}
@@ -285,6 +334,31 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                                 {errors.refundAmount && (
                                     <p className="text-red-500 text-sm mt-1">
                                         {errors.refundAmount}
+                                    </p>
+                                )}
+                                {refundableAmountToDisplay && (
+                                    <p
+                                        onClick={
+                                            order.payment_status ===
+                                                'refunded' ||
+                                            order.payment_status ===
+                                                'canceled' ||
+                                            order.payment_status === 'not_paid'
+                                                ? undefined
+                                                : handleFullAmountClick
+                                        }
+                                        className={`text-sm underline cursor-pointer ${
+                                            order.payment_status ===
+                                                'refunded' ||
+                                            order.payment_status ===
+                                                'canceled' ||
+                                            order.payment_status === 'not_paid'
+                                                ? 'text-gray-500'
+                                                : 'text-blue-500'
+                                        }`}
+                                    >
+                                        Use full refundable amount (
+                                        {refundableAmountToDisplay})
                                     </p>
                                 )}
                             </div>
