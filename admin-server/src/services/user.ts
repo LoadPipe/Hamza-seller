@@ -1,5 +1,5 @@
 import { Lifetime } from 'awilix';
-import { User, UserService as MedusaUserService } from '@medusajs/medusa';
+import { User, UserService as MedusaUserService, UserRoles } from '@medusajs/medusa';
 import {
     CreateUserInput,
     CreateUserInput as MedusaCreateUserInput,
@@ -64,6 +64,27 @@ class UserService extends MedusaUserService {
             dummyPassword
         );
     }
+
+    async createStoreMember(input: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        store_id: string;
+        currency?: string;
+      }): Promise<User> {
+        const dummyPassword = 'member_default';
+        const memberData = {
+          first_name: input.firstName,
+          last_name: input.lastName,
+          email: input.email,
+          store_id: input.store_id,
+          currency: input.currency,
+          role: UserRoles.MEMBER,
+        };
+        return await super.create(memberData as CreateUserInput, dummyPassword);
+      }
+      
+
 
     //   async create(
     //     user: CreateUserInput,
