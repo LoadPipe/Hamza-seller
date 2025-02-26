@@ -398,6 +398,7 @@ export const generateColumns = (
 
 // Usage
 export const columns = generateColumns([
+    'actions',
     'select',
     'thumbnail',
     'id',
@@ -407,5 +408,4 @@ export const columns = generateColumns([
     'price',
     'inventory_quantity',
     'variants',
-    'actions',
 ]);
