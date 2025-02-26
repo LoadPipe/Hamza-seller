@@ -16,7 +16,6 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Textarea } from '@/components/ui/textarea';
 import { getJwtStoreId } from '@/utils/authentication';
 
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
