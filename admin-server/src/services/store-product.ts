@@ -5,7 +5,7 @@ import { ProductVariantRepository } from '../repositories/product-variant';
 import { PriceConverter } from '../utils/price-conversion';
 import StoreRepository from '../repositories/store';
 import SalesChannelRepository from '@medusajs/medusa/dist/repositories/sales-channel';
-import { In } from 'typeorm';
+import { In, Not } from 'typeorm';
 import { reverseCryptoPrice } from '../utils/price-formatter';
 import ProductCategoryRepository from '@medusajs/medusa/dist/repositories/product-category';
 import {
@@ -75,6 +75,7 @@ class StoreProductService extends MedusaProductService {
             // 2. Fetch and validate product
             const product = await this.productRepository_.findOne({
                 where: { id: productId, store_id: storeId },
+                relations: ['images'], // Fetch images for the product
             });
             if (!product) {
                 throw new Error(
@@ -93,7 +94,33 @@ class StoreProductService extends MedusaProductService {
             };
             await this.productRepository_.save(updatedProduct);
 
-            // 5. Update or create each variant
+            // 5. Handle Image Updates
+            if (Array.isArray(updates.images)) {
+                const existingImages = product.images.map((img) => img.url);
+                const newImages = updates.images.filter(
+                    (img) => !existingImages.includes(img)
+                );
+
+                if (newImages.length > 0) {
+                    for (const imageUrl of newImages) {
+                        // Create a new image entry
+                        const newImage = this.imageRepository_.create({
+                            url: imageUrl,
+                            metadata: {}, // Add metadata if needed
+                        });
+                        const savedImage =
+                            await this.imageRepository_.save(newImage);
+
+                        //  Instead of productImageRepository_, link directly to the product
+                        product.images.push(savedImage);
+                    }
+
+                    // Save the updated product with new images
+                    await this.productRepository_.save(product);
+                }
+            }
+
+            // 6. Update or create each variant
             if (Array.isArray(variants)) {
                 for (const variantUpdate of variants) {
                     let variantId: string | undefined;
@@ -129,6 +156,7 @@ class StoreProductService extends MedusaProductService {
                             variantUpdate.length ?? existingVariant.length;
                         existingVariant.sku =
                             variantUpdate.sku ?? existingVariant.sku;
+                        existingVariant.metadata = variantUpdate.metadata ?? {};
                         const savedVariant =
                             await this.productVariantRepository_.save(
                                 existingVariant
@@ -162,7 +190,7 @@ class StoreProductService extends MedusaProductService {
                 }
             }
 
-            // 6. Re-fetch the updated product with relations
+            // 7. Re-fetch the updated product with relations
             const refreshedProduct = await this.productRepository_.findOne({
                 where: { id: productId, store_id: storeId },
                 relations: ['variants', 'variants.prices', 'categories'],
@@ -173,7 +201,7 @@ class StoreProductService extends MedusaProductService {
                 );
             }
 
-            // 7. Fetch available categories
+            // 8. Fetch available categories
             const availableCategories = await this.productCategoryRepository_
                 .find({ select: ['id', 'name'] })
                 .then((categories) =>
@@ -183,7 +211,7 @@ class StoreProductService extends MedusaProductService {
                     }))
                 );
 
-            // 8. Return the updated product
+            // 9. Return the updated product
             return {
                 product: refreshedProduct,
                 availableCategories,
@@ -281,6 +309,30 @@ class StoreProductService extends MedusaProductService {
         }
     }
 
+    // The function deletes an image by image_id...
+
+    async deleteGalleryImage(imageId: string) {
+        // Ok we have table `product_images` && `image` we want to delete both
+        // if we just delete the image, it will remove the image from the `product_images` table
+        try {
+            const image = await this.imageRepository_.findOne({
+                where: { id: imageId },
+            });
+
+            if (!image) {
+                throw new Error(`Image with ID ${imageId} not found`);
+            }
+
+            // Delete the image from the `product_images` table
+            await this.imageRepository_.remove(image);
+
+            return true;
+        } catch (e) {
+            console.error(`Error deleting image: ${e.message}`);
+            throw e;
+        }
+    }
+
     // We need to get the specific product w/ variants
     // Fetch a specific product with its variants
     async querySellerProductById(
@@ -292,7 +344,12 @@ class StoreProductService extends MedusaProductService {
 
             const product = await this.productRepository_.findOne({
                 where: where,
-                relations: ['variants', 'variants.prices', 'categories'],
+                relations: [
+                    'variants',
+                    'variants.prices',
+                    'categories',
+                    'images',
+                ],
             });
 
             // Fetch all available categories
@@ -320,6 +377,20 @@ class StoreProductService extends MedusaProductService {
         } catch (e) {
             console.error(`Error querying product by ID: ${e.message}`);
             throw e; // Rethrow the error for the caller to handle
+        }
+    }
+
+    async validateUniqueSKU(sku: string, variant_id: string): Promise<boolean> {
+        try {
+            const existingProduct =
+                await this.productVariantRepository_.findOne({
+                    where: { sku, id: Not(variant_id) },
+                });
+
+            return !existingProduct;
+        } catch (e) {
+            console.error(`Error validating SKU: ${e.message}`);
+            throw e;
         }
     }
 
