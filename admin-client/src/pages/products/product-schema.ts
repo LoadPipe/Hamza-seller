@@ -29,6 +29,7 @@ export const ProductSchema = z.object({
     title: z.string(),
     created_at: z.string(),
     subtitle: z.string().optional().nullable(),
+    handle: z.string().optional().nullable(),
     description: z.string().optional(),
     thumbnail: z
         .string()
@@ -38,6 +39,16 @@ export const ProductSchema = z.object({
     length: z.number().nullable(),
     height: z.number().nullable(),
     width: z.number().nullable(),
+    images: z
+        .array(
+            z.object({
+                url: z.string().url({ message: 'Invalid image URL' }),
+                id: z.string(),
+                fileName: z.string(),
+            })
+        )
+        .optional()
+        .default([]),
     categories: z
         .array(
             z.object({
@@ -102,7 +113,11 @@ export const ProductSchema = z.object({
             length: z.number().nullable(),
             height: z.number().nullable(),
             width: z.number().nullable(),
-            metadata: z.any().nullable(),
+            metadata: z
+                .object({
+                    imgUrl: z.string().url().optional(),
+                })
+                .nullable(),
         })
     ),
 });

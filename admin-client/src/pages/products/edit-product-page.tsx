@@ -2,14 +2,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
 import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
+import { validateSku } from '@/pages/products/api/validate-sku.ts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
+import { getJwtStoreId } from '@/utils/authentication';
 
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { z } from 'zod';
@@ -21,8 +28,16 @@ import { Label } from '@/components/ui/label.tsx';
 import { useForm, getBy, setBy } from '@tanstack/react-form';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
-import { PackageSearch, Bitcoin } from 'lucide-react';
 import { QuillEditor } from '@/components/ui/quill-editor';
+import { PackageSearch, Bitcoin, Trash } from 'lucide-react';
+import ImageUploadDialog from '@/pages/products/utils/image-upload-dialog.tsx';
+import { useState } from 'react';
+import GalleryUploadDialog from '@/pages/products/utils/gallery-upload-dialog.tsx';
+import {
+    deleteImageFromCDN,
+    deleteImageFromdB,
+} from '@/pages/products/api/upload-gallery-images.ts';
+import VariantUploadDialog from '@/pages/products/utils/variant-upload-dialog.tsx';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -41,10 +56,79 @@ export default function EditProductPage() {
 
     const { toast } = useToast();
 
+    // Fetch product data
     const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
         queryKey: ['view-product-form', productId],
         queryFn: () => fetchProductById(productId),
     });
+
+    const [isImageDialogOpen, setImageDialogOpen] = useState(false);
+
+    // Handle Thumbnail Upload
+    const handleThumbnailUpload = (imageUrl: string) => {
+        editProductForm.setFieldValue('thumbnail', imageUrl);
+        updateEditForm.mutate({ thumbnail: imageUrl, preferredCurrency });
+    };
+
+    const [isGalleryDialogOpen, setGalleryDialogOpen] = useState(false);
+    const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
+    // Handle Gallery Upload
+    const handleGalleryUpload = (uploadedImageUrls: string[]) => {
+        const updatedGallery = [...galleryImages, ...uploadedImageUrls];
+        setGalleryImages(updatedGallery);
+
+        // Mutate backend (optional: depends if you want to update product immediately)
+        updateEditForm.mutate({ images: updatedGallery, preferredCurrency });
+    };
+
+    // The following section is variant image logic
+    const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+    const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
+
+    const openVariantUploadDialog = (index: number) => {
+        setCurrentVariantIndex(index);
+        setVariantDialogOpen(true);
+    };
+
+    const handleVariantImageUpload = (
+        imageUrl: string,
+        variantIndex: number
+    ) => {
+        // Update the variant's metadata in your form.
+        editProductForm.setFieldValue(`variants[${variantIndex}].metadata`, {
+            imgUrl: imageUrl,
+        });
+
+        // Create a sanitized copy of variants where we remove problematic fields like an empty SKU.
+        const sanitizedVariants = editProductForm?.state?.values?.variants?.map(
+            (variant) => ({
+                ...variant,
+                metadata: variant.metadata || {}, // Replace null with an empty object
+                sku:
+                    variant.sku && variant.sku.trim() !== ''
+                        ? variant.sku
+                        : undefined,
+            })
+        );
+
+        const payload = {
+            ...editProductForm.state.values,
+            variants: sanitizedVariants,
+            preferredCurrency,
+        };
+
+        updateEditForm.mutate(payload);
+    };
+
+    // ---- End of Variant Image Upload / handing logic
+
+    const cachedStore = queryClient.getQueryData<{ handle: string }>([
+        'store',
+        getJwtStoreId(),
+    ]);
+
+    const storeHandle = cachedStore?.handle ?? '';
 
     const updateEditForm = useMutation({
         mutationFn: async (payload: any) => {
@@ -121,10 +205,39 @@ export default function EditProductPage() {
                           )
                         : '';
                 })(),
-
+                metadata: variant.metadata || {},
                 inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
+        // validators: {
+        //     onSubmitAsync: async ({ value }) => {
+        //         const errors: Record<string, string> = {};
+        //         if (value.variants) {
+        //             for (let i = 0; i < value.variants.length; i++) {
+        //                 const sku = value.variants[i].sku;
+        //                 const defaultSku = editProductForm.getFieldValue.name;
+        //
+        //                 if (sku.trim() === '') {
+        //                     errors[`variants[${i}].sku`] = 'SKU is required.';
+        //                 } else if (sku !== defaultSku) {
+        //                     try {
+        //                         const response = await validateSku(Number(sku));
+        //                         if (response.data === false) {
+        //                             errors[`variants[${i}].sku`] =
+        //                                 'SKU already exists eh?';
+        //                         }
+        //                     } catch (error: any) {
+        //                         errors[`variants[${i}].sku`] =
+        //                             error.message || 'Failed to validate SKU';
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         return Object.keys(errors).length
+        //             ? { fields: errors }
+        //             : undefined;
+        //     },
+        // },
         // validators: (values) => {
         //     const result = ProductSchema.safeParse(values);
         //     return result.success ? {} : result.error.format();
@@ -143,6 +256,79 @@ export default function EditProductPage() {
         //
         //     return errors;
         // },
+    });
+
+    const deleteImageMutation = useMutation({
+        mutationFn: async ({
+            imageUrl,
+            imageId,
+        }: {
+            imageUrl: string;
+            imageId: string;
+        }) => {
+            try {
+                await deleteImageFromCDN(imageUrl);
+            } catch (error: any) {
+                if (error.response?.status !== 404) {
+                    throw error;
+                }
+                console.warn(
+                    'CDN image not found, skipping deletion:',
+                    imageUrl
+                );
+            }
+            await deleteImageFromdB(imageId);
+            return imageUrl;
+        },
+        onMutate: async ({ imageUrl }) => {
+            await queryClient.cancelQueries({
+                queryKey: ['view-product-form', productId],
+            });
+            const previousData = queryClient.getQueryData<FetchProductResponse>(
+                ['view-product-form', productId]
+            );
+            if (previousData) {
+                queryClient.setQueryData<FetchProductResponse>(
+                    ['view-product-form', productId],
+                    {
+                        ...previousData,
+                        product: {
+                            ...previousData.product,
+                            images: previousData.product.images.filter(
+                                (img) => img.url !== imageUrl
+                            ),
+                        },
+                    }
+                );
+            }
+            setGalleryImages((prev) => prev.filter((url) => url !== imageUrl));
+            return { previousData };
+        },
+        onError: (error, variables, context) => {
+            if (context?.previousData) {
+                queryClient.setQueryData(
+                    ['view-product-form', productId],
+                    context.previousData
+                );
+            }
+            console.log(variables);
+            toast({
+                title: 'Error',
+                description: `Failed to delete image, ${error.message}`,
+                variant: 'destructive',
+            });
+        },
+        onSuccess: (deletedImageUrl) => {
+            toast({
+                title: 'Deleted',
+                description: `Removed ${deletedImageUrl} from gallery`,
+            });
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['view-product-form', productId],
+            });
+        },
     });
 
     if (isLoading) return <div>Loading...</div>;
@@ -282,58 +468,126 @@ export default function EditProductPage() {
 
                         {/* Right side fields */}
                         <div>
-                            <h2 className="text-lg font-medium mb-4">
-                                Product Media
-                            </h2>
                             {/* Thumbnail */}
-                            <div>
-                                <editProductForm.Field
-                                    name="thumbnail"
-                                    validators={{
-                                        onBlur: ({ value }) => {
-                                            if (!value)
-                                                return 'Thumbnail URL is required.';
-                                            try {
-                                                new URL(value); // Validate if it's a valid URL
-                                                return undefined;
-                                            } catch {
-                                                return 'Invalid URL format.';
-                                            }
-                                        },
-                                    }}
+                            <div className="mb-6">
+                                <h2 className="text-lg font-medium mb-4">
+                                    Product Media
+                                </h2>
+
+                                {/* Show Thumbnail Preview if Available */}
+                                <editProductForm.Subscribe
+                                    selector={(formState) =>
+                                        formState.values.thumbnail
+                                    }
                                 >
-                                    {(field) => (
-                                        <>
-                                            <Label>Thumbnail URL</Label>
-                                            <Input
-                                                placeholder="Thumbnail URL"
-                                                value={field.state.value}
-                                                onChange={(e) =>
-                                                    field.handleChange(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                onBlur={field.handleBlur} // Handle blur event for validation
+                                    {(thumbnail) =>
+                                        thumbnail ? (
+                                            <img
+                                                src={thumbnail}
+                                                alt="Thumbnail Preview"
+                                                className="object-cover rounded-md mx-auto max-w-[200px] max-h-[200px] mb-4"
                                             />
-                                            {field.state.meta.errors?.length >
-                                                0 && (
-                                                <span className="text-red-500 mt-1">
-                                                    {field.state.meta.errors.join(
-                                                        ', '
-                                                    )}
-                                                </span>
-                                            )}
-                                            {field.state.value && (
+                                        ) : (
+                                            <p className="text-gray-400 text-sm text-center">
+                                                No image selected
+                                            </p>
+                                        )
+                                    }
+                                </editProductForm.Subscribe>
+
+                                {/* Upload Image Button */}
+                                <div className="flex justify-center">
+                                    <Button
+                                        className="mt-2"
+                                        onClick={() => setImageDialogOpen(true)} // Open Dialog
+                                    >
+                                        Upload Thumbnail Image
+                                    </Button>
+                                </div>
+
+                                {/* Image Upload Dialog */}
+                                <ImageUploadDialog
+                                    open={isImageDialogOpen}
+                                    onClose={() => setImageDialogOpen(false)}
+                                    onImageUpload={handleThumbnailUpload} // Pass uploaded image URL back to the form
+                                    storeHandle={storeHandle}
+                                    productId={productId}
+                                />
+                                {/* Gallery Section */}
+                                <div className="mt-6">
+                                    <h2 className="text-lg font-medium mb-4">
+                                        Gallery
+                                    </h2>
+
+                                    {/* Open Upload Dialog */}
+                                    <Button
+                                        onClick={() =>
+                                            setGalleryDialogOpen(true)
+                                        }
+                                    >
+                                        Upload Gallery Images
+                                    </Button>
+
+                                    {/* Display Gallery Images */}
+                                    <div className="grid grid-cols-3 gap-4 mt-4">
+                                        {product?.images?.map((image) => (
+                                            <div
+                                                key={image.id}
+                                                className="relative group"
+                                            >
                                                 <img
-                                                    src={field.state.value}
-                                                    alt="Thumbnail Preview"
-                                                    className="object-cover rounded-md mx-auto max-w-[200px] max-h-[200px] mt-4"
+                                                    src={image.url}
+                                                    alt="Gallery"
+                                                    className="rounded-lg object-cover w-full h-32"
                                                 />
-                                            )}
-                                        </>
-                                    )}
-                                </editProductForm.Field>
+                                                <button
+                                                    onClick={() =>
+                                                        deleteImageMutation.mutate(
+                                                            {
+                                                                imageUrl:
+                                                                    image.url,
+                                                                imageId:
+                                                                    image.id,
+                                                            }
+                                                        )
+                                                    }
+                                                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
+                                                >
+                                                    <Trash size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Upload Dialog */}
+                                    <GalleryUploadDialog
+                                        open={isGalleryDialogOpen}
+                                        onClose={() =>
+                                            setGalleryDialogOpen(false)
+                                        }
+                                        onGalleryUpload={handleGalleryUpload}
+                                        storeHandle={storeHandle}
+                                        productId={productId}
+                                        currentGallery={product?.images ?? []} // Now an array of { id: string; url: string }
+                                        onDeleteImage={(image) => {
+                                            if (!image?.id) {
+                                                toast({
+                                                    title: 'Error',
+                                                    description:
+                                                        'Image ID not found for deletion.',
+                                                    variant: 'destructive',
+                                                });
+                                                return;
+                                            }
+                                            deleteImageMutation.mutate({
+                                                imageUrl: image.url,
+                                                imageId: image.id,
+                                            });
+                                        }}
+                                    />
+                                </div>
                             </div>
+
                             {/* Show current categories & an "Add Category" button */}
                             <div className="mt-6 flex flex-col gap-4">
                                 <div className="flex justify-end">
@@ -378,173 +632,6 @@ export default function EditProductPage() {
                         </div>
                     </div>
 
-                    {/*Pricing Section*/}
-                    {/*<div className="bg-black p-[24px] my-8 rounded">*/}
-                    {/*<h2 className="text-2xl font-bold">Pricing</h2>*/}
-
-                    {/*<div className="my-4 font-semibold">*/}
-                    {/*    Preferred Currency:{' '}*/}
-                    {/*    {preferredCurrency?.toUpperCase() ?? 'ETH'}*/}
-                    {/*</div>*/}
-
-                    {/*<div className="mt-2">*/}
-                    {/*    <editProductForm.Field*/}
-                    {/*        name="basePrice"*/}
-                    {/*        validators={{*/}
-                    {/*            onBlur: ({ value }) => {*/}
-                    {/*                if (*/}
-                    {/*                    value === undefined ||*/}
-                    {/*                    value === null ||*/}
-                    {/*                    value === ''*/}
-                    {/*                ) {*/}
-                    {/*                    return 'Base Price is required.';*/}
-                    {/*                }*/}
-                    {/*                const parsedValue = parseFloat(value);*/}
-                    {/*                if (isNaN(parsedValue)) {*/}
-                    {/*                    return 'Base Price must be a valid number.';*/}
-                    {/*                }*/}
-                    {/*                if (parsedValue < 0) {*/}
-                    {/*                    return 'Base Price cannot be negative.';*/}
-                    {/*                }*/}
-                    {/*                if (parsedValue === 0) {*/}
-                    {/*                    return 'Base Price cannot be zero';*/}
-                    {/*                }*/}
-                    {/*                return undefined;*/}
-                    {/*            },*/}
-                    {/*        }}*/}
-                    {/*    >*/}
-                    {/*        {(field) => (*/}
-                    {/*            <>*/}
-                    {/*                <Label>*/}
-                    {/*                    Base Price in{' '}*/}
-                    {/*                    {typeof preferredCurrency ===*/}
-                    {/*                    'string'*/}
-                    {/*                        ? preferredCurrency.toUpperCase()*/}
-                    {/*                        : 'ETH'}*/}
-                    {/*                </Label>*/}
-                    {/*                <Input*/}
-                    {/*                    className="w-1/2"*/}
-                    {/*                    placeholder="Base Price"*/}
-                    {/*                    // Keep the raw string value in the field state*/}
-                    {/*                    value={field.state.value}*/}
-                    {/*                    onChange={(e) =>*/}
-                    {/*                        field.handleChange(*/}
-                    {/*                            e.target.value*/}
-                    {/*                        )*/}
-                    {/*                    }*/}
-                    {/*                    onBlur={(e) => {*/}
-                    {/*                        const trimmedValue =*/}
-                    {/*                            e.target.value.trim();*/}
-                    {/*                        if (trimmedValue !== '') {*/}
-                    {/*                            const parsedValue =*/}
-                    {/*                                parseFloat(*/}
-                    {/*                                    trimmedValue*/}
-                    {/*                                );*/}
-                    {/*                            field.handleChange(*/}
-                    {/*                                isNaN(parsedValue)*/}
-                    {/*                                    ? ''*/}
-                    {/*                                    : parsedValue*/}
-                    {/*                            );*/}
-                    {/*                        } else {*/}
-                    {/*                            field.handleChange('');*/}
-                    {/*                        }*/}
-                    {/*                        field.handleBlur(); // Trigger validation*/}
-                    {/*                    }}*/}
-                    {/*                />*/}
-                    {/*                {field.state.meta.errors?.length >*/}
-                    {/*                    0 && (*/}
-                    {/*                    <span className="text-red-500 mt-1 block">*/}
-                    {/*                        {field.state.meta.errors.join(*/}
-                    {/*                            ', '*/}
-                    {/*                        )}*/}
-                    {/*                    </span>*/}
-                    {/*                )}*/}
-                    {/*            </>*/}
-                    {/*        )}*/}
-                    {/*    </editProductForm.Field>*/}
-                    {/*</div>*/}
-                    {/*/!* Base Product Dimensions *!/*/}
-                    {/*<h2 className="mt-8 mb-4">Optional Fields:</h2>*/}
-
-                    {/*<div className="grid grid-cols-4 gap-2 mb-8">*/}
-                    {/*    <editProductForm.Field name="weight">*/}
-                    {/*        {(field) => (*/}
-                    {/*            <div>*/}
-                    {/*                <Label className="block text-sm font-medium">*/}
-                    {/*                    Weight (g)*/}
-                    {/*                </Label>*/}
-                    {/*                <Input*/}
-                    {/*                    type="number"*/}
-                    {/*                    value={field.state.value}*/}
-                    {/*                    onChange={(e) =>*/}
-                    {/*                        field.handleChange(*/}
-                    {/*                            Number(e.target.value)*/}
-                    {/*                        )*/}
-                    {/*                    }*/}
-                    {/*                />*/}
-                    {/*            </div>*/}
-                    {/*        )}*/}
-                    {/*    </editProductForm.Field>*/}
-
-                    {/*    <editProductForm.Field name="length">*/}
-                    {/*        {(field) => (*/}
-                    {/*            <div>*/}
-                    {/*                <Label className="block text-sm font-medium">*/}
-                    {/*                    Length (cm)*/}
-                    {/*                </Label>*/}
-                    {/*                <Input*/}
-                    {/*                    type="number"*/}
-                    {/*                    value={field.state.value}*/}
-                    {/*                    onChange={(e) =>*/}
-                    {/*                        field.handleChange(*/}
-                    {/*                            Number(e.target.value)*/}
-                    {/*                        )*/}
-                    {/*                    }*/}
-                    {/*                />*/}
-                    {/*            </div>*/}
-                    {/*        )}*/}
-                    {/*    </editProductForm.Field>*/}
-
-                    {/*    <editProductForm.Field name="height">*/}
-                    {/*        {(field) => (*/}
-                    {/*            <div>*/}
-                    {/*                <Label className="block text-sm font-medium">*/}
-                    {/*                    Height (cm)*/}
-                    {/*                </Label>*/}
-                    {/*                <Input*/}
-                    {/*                    type="number"*/}
-                    {/*                    value={field.state.value}*/}
-                    {/*                    onChange={(e) =>*/}
-                    {/*                        field.handleChange(*/}
-                    {/*                            Number(e.target.value)*/}
-                    {/*                        )*/}
-                    {/*                    }*/}
-                    {/*                />*/}
-                    {/*            </div>*/}
-                    {/*        )}*/}
-                    {/*    </editProductForm.Field>*/}
-
-                    {/*    <editProductForm.Field name="width">*/}
-                    {/*        {(field) => (*/}
-                    {/*            <div>*/}
-                    {/*                <Label className="block text-sm font-medium">*/}
-                    {/*                    Width (cm)*/}
-                    {/*                </Label>*/}
-                    {/*                <Input*/}
-                    {/*                    type="number"*/}
-                    {/*                    value={field.state.value}*/}
-                    {/*                    onChange={(e) =>*/}
-                    {/*                        field.handleChange(*/}
-                    {/*                            Number(e.target.value)*/}
-                    {/*                        )*/}
-                    {/*                    }*/}
-                    {/*                />*/}
-                    {/*            </div>*/}
-                    {/*        )}*/}
-                    {/*    </editProductForm.Field>*/}
-                    {/*</div>*/}
-                    {/*</div>*/}
-
                     {/* Preferred Currency */}
                     <div className="bg-black p-[24px] rounded">
                         <h2 className="text-2xl font-bold">Pricing</h2>
@@ -570,6 +657,58 @@ export default function EditProductPage() {
                                                 Variant #{index + 1}
                                             </AccordionTrigger>
                                             <AccordionContent>
+                                                <div className="flex items-center justify-between border-b border-gray-700 py-2 mb-4">
+                                                    <div className="flex items-center gap-4">
+                                                        {variant.metadata
+                                                            ?.imgUrl ? (
+                                                            <img
+                                                                src={
+                                                                    variant
+                                                                        .metadata
+                                                                        .imgUrl
+                                                                }
+                                                                alt={`Variant ${index + 1}`}
+                                                                className="w-16 h-16 rounded"
+                                                            />
+                                                        ) : null}
+                                                        <span className="text-lg font-medium">
+                                                            Variant {index + 1}
+                                                        </span>
+                                                    </div>
+                                                    <Button
+                                                        onClick={() =>
+                                                            openVariantUploadDialog(
+                                                                index
+                                                            )
+                                                        }
+                                                    >
+                                                        Upload Variant Image
+                                                    </Button>
+                                                    {variantDialogOpen && (
+                                                        <VariantUploadDialog
+                                                            open={
+                                                                variantDialogOpen
+                                                            }
+                                                            onClose={() =>
+                                                                setVariantDialogOpen(
+                                                                    false
+                                                                )
+                                                            }
+                                                            variantIndex={
+                                                                currentVariantIndex
+                                                            }
+                                                            storeHandle={
+                                                                storeHandle
+                                                            }
+                                                            productId={
+                                                                productId
+                                                            }
+                                                            onVariantImageUpload={
+                                                                handleVariantImageUpload
+                                                            }
+                                                        />
+                                                    )}
+                                                </div>
                                                 <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
                                                     {/* Variant ID HIDDEN*/}
                                                     <editProductForm.Field
@@ -663,32 +802,104 @@ export default function EditProductPage() {
                                                     {/* Variant SKU */}
                                                     <editProductForm.Field
                                                         name={`variants[${index}].sku`}
-                                                        key={`sku-${variant.id}`}
+                                                        asyncDebounceMs={100}
+                                                        validators={{
+                                                            // Synchronous check: ensure a value exists
+                                                            onBlur: ({
+                                                                value,
+                                                            }) =>
+                                                                value.trim() ===
+                                                                ''
+                                                                    ? 'SKU is required.'
+                                                                    : undefined,
+                                                            // Asynchronous check: call your API only if the SKU has changed
+                                                            onChangeAsync:
+                                                                async ({
+                                                                    value,
+                                                                }) => {
+                                                                    // Compare with the default SKU. If unchanged, skip the API call.
+                                                                    try {
+                                                                        const response =
+                                                                            await validateSku(
+                                                                                Number(
+                                                                                    value
+                                                                                ),
+                                                                                editProductForm.getFieldValue(
+                                                                                    `variants[${index}].id`
+                                                                                )
+                                                                            );
+
+                                                                        if (
+                                                                            response ===
+                                                                            false
+                                                                        ) {
+                                                                            return 'SKU already exists';
+                                                                        }
+                                                                        return undefined;
+                                                                    } catch (error) {
+                                                                        console.error(
+                                                                            'Failed to validate SKU:',
+                                                                            error
+                                                                        );
+
+                                                                        return 'Failed to validate SKU';
+                                                                    }
+                                                                },
+                                                        }}
                                                     >
                                                         {(field) => (
                                                             <div>
                                                                 <Label>
                                                                     SKU
                                                                 </Label>
-                                                                <Input
-                                                                    placeholder="SKU"
-                                                                    value={
+                                                                <Tooltip
+                                                                    open={
                                                                         field
                                                                             .state
-                                                                            .value ||
-                                                                        variant.sku ||
-                                                                        ''
+                                                                            .meta
+                                                                            .errors
+                                                                            .length >
+                                                                        0
                                                                     }
-                                                                    onChange={(
-                                                                        e
-                                                                    ) =>
-                                                                        field.handleChange(
-                                                                            e
-                                                                                .target
-                                                                                .value
-                                                                        )
-                                                                    }
-                                                                />
+                                                                >
+                                                                    <TooltipTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <Input
+                                                                            placeholder="SKU"
+                                                                            value={
+                                                                                field
+                                                                                    .state
+                                                                                    .value
+                                                                            }
+                                                                            onChange={(
+                                                                                e
+                                                                            ) => {
+                                                                                field.handleChange(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value
+                                                                                );
+                                                                            }}
+                                                                            onBlur={
+                                                                                field.handleBlur
+                                                                            }
+                                                                        />
+                                                                    </TooltipTrigger>
+                                                                    {field.state
+                                                                        .meta
+                                                                        .errors
+                                                                        .length >
+                                                                        0 && (
+                                                                        <TooltipContent>
+                                                                            <span className="text-red-500">
+                                                                                {field.state.meta.errors.join(
+                                                                                    ', '
+                                                                                )}
+                                                                            </span>
+                                                                        </TooltipContent>
+                                                                    )}
+                                                                </Tooltip>
                                                             </div>
                                                         )}
                                                     </editProductForm.Field>

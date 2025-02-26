@@ -61,6 +61,7 @@ export default function DashboardPage() {
         });
     }, [toast]);
 
+    // TODO: This useEffect/callback looks bad, needs to be refactoring
     useEffect(() => {
         if (isAuthenticated && !hasLoggedIn) {
             // console.log('RUN TOAST');
@@ -88,16 +89,17 @@ export default function DashboardPage() {
             getDashboardData(store_id, userData.authData.wallet_address),
     });
 
-    if (error) {
-        useEffect(() => {
+    useEffect(() => {
+        if (error) {
             toast({
                 title: 'Dashboard Data Not Loading',
                 description: 'Please refresh the page.',
                 variant: 'destructive',
                 duration: 5000,
             });
-        }, [error]);
-    }
+        }
+    }, [error, toast]);
+
     const lineChartData = [
         { name: 'Jan', revenue: 400 },
         { name: 'Feb', revenue: 600 },
