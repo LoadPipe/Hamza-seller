@@ -22,7 +22,6 @@ import { updateSettingsByWalletId } from '@/pages/settings/api/update-setting-by
 type Settings = z.infer<typeof SettingsSchema>;
 
 export default function SettingsPage() {
-
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const { data, isLoading, error } = useQuery({
@@ -35,7 +34,9 @@ export default function SettingsPage() {
 
     const defaultValues = {
         // Account Information
-        fullName: data ? `${data.first_name || ''} ${data.last_name || ''}`.trim() : '',
+        fullName: data
+            ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
+            : '',
         username: data?.username || '',
         phoneNumber: data?.phoneNumber || '',
         emailAddress: data?.email || '',
@@ -62,7 +63,7 @@ export default function SettingsPage() {
         mobileNumber: data?.mobileNumber || '',
         storeEmail: data?.storeEmail || '',
 
-        // Store Category 
+        // Store Category
         categoryElectronics: data?.categoryElectronics || false,
         categoryFashion: data?.categoryFashion || false,
         categoryHomeGarden: data?.categoryHomeGarden || false,
@@ -141,7 +142,8 @@ export default function SettingsPage() {
             toast({
                 variant: 'destructive',
                 title: 'Validation Error',
-                description: 'Some fields are invalid. Please review and try again.',
+                description:
+                    'Some fields are invalid. Please review and try again.',
             });
             console.error(result.error.formErrors.fieldErrors);
             return;
@@ -227,7 +229,8 @@ export default function SettingsPage() {
                                         </Button>
                                     </div>
                                     <p className="text-sm text-gray-400">
-                                        At least 125 x 125 px PNG or JPG file. 1 MB maximum file size.
+                                        At least 125 x 125 px PNG or JPG file. 1
+                                        MB maximum file size.
                                     </p>
                                 </div>
 
@@ -236,7 +239,9 @@ export default function SettingsPage() {
                                         name="fullName"
                                         validators={{
                                             onBlur: ({ value }) =>
-                                                !value ? 'Full Name is required.' : undefined,
+                                                !value
+                                                    ? 'Full Name is required.'
+                                                    : undefined,
                                         }}
                                     >
                                         {(field) => (
@@ -247,14 +252,28 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Enter your name"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-2 h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {((field.state.meta.errors && field.state.meta.errors.length > 0) || (showErrors && !field.state.value)) && (
+                                                {((field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0) ||
+                                                    (showErrors &&
+                                                        !field.state
+                                                            .value)) && (
                                                     <span className="text-red-500 text-sm mt-1">
-                                                        {(field.state.meta.errors && field.state.meta.errors.length > 0)
-                                                            ? field.state.meta.errors.join(', ')
+                                                        {field.state.meta
+                                                            .errors &&
+                                                        field.state.meta.errors
+                                                            .length > 0
+                                                            ? field.state.meta.errors.join(
+                                                                  ', '
+                                                              )
                                                             : 'This field is required.'}
                                                     </span>
                                                 )}
@@ -277,15 +296,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Enter your username"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-2 h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -305,15 +332,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Enter your phone number"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-2 h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -322,7 +357,9 @@ export default function SettingsPage() {
                                         name="emailAddress"
                                         validators={{
                                             onBlur: ({ value }) =>
-                                                !value ? 'Email is required.' : undefined,
+                                                !value
+                                                    ? 'Email is required.'
+                                                    : undefined,
                                         }}
                                     >
                                         {(field) => (
@@ -333,14 +370,28 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Enter your email address"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-2 h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {((field.state.meta.errors && field.state.meta.errors.length > 0) || (showErrors && !field.state.value)) && (
+                                                {((field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0) ||
+                                                    (showErrors &&
+                                                        !field.state
+                                                            .value)) && (
                                                     <span className="text-red-500 text-sm mt-1">
-                                                        {(field.state.meta.errors && field.state.meta.errors.length > 0)
-                                                            ? field.state.meta.errors.join(', ')
+                                                        {field.state.meta
+                                                            .errors &&
+                                                        field.state.meta.errors
+                                                            .length > 0
+                                                            ? field.state.meta.errors.join(
+                                                                  ', '
+                                                              )
                                                             : 'This field is required.'}
                                                     </span>
                                                 )}
@@ -360,7 +411,12 @@ export default function SettingsPage() {
                                     Discard
                                 </Button>
                                 {createUpdateButton(
-                                    ['fullName', 'username', 'phoneNumber', 'emailAddress'],
+                                    [
+                                        'fullName',
+                                        'username',
+                                        'phoneNumber',
+                                        'emailAddress',
+                                    ],
                                     'Update'
                                 )}
                             </div>
@@ -392,15 +448,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Enter your business name"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -420,15 +484,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Enter your registration number"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -448,15 +520,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Enter your tax identification number"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -468,22 +548,38 @@ export default function SettingsPage() {
                                                     <label className="font-sora font-normal text-[16px] pl-[16px] text-white">
                                                         Business Structure
                                                     </label>
-                                                    <Select value={field.state.value} onValueChange={(newValue) => {
-                                                        if (newValue === "") return;
-                                                        field.handleChange(newValue);
-                                                    }}>
+                                                    <Select
+                                                        value={
+                                                            field.state.value
+                                                        }
+                                                        onValueChange={(
+                                                            newValue
+                                                        ) => {
+                                                            if (newValue === '')
+                                                                return;
+                                                            field.handleChange(
+                                                                newValue
+                                                            );
+                                                        }}
+                                                    >
                                                         <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 h-[50px] py-[10px] mt-[20px]">
                                                             <SelectValue>
-                                                                {field.state.value
-                                                                    ? field.state.value
+                                                                {field.state
+                                                                    .value
+                                                                    ? field
+                                                                          .state
+                                                                          .value
                                                                     : 'Select business structure'}
                                                             </SelectValue>
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="sole-proprietor">
-                                                                Sole Proprietorship
+                                                                Sole
+                                                                Proprietorship
                                                             </SelectItem>
-                                                            <SelectItem value="llc">LLC</SelectItem>
+                                                            <SelectItem value="llc">
+                                                                LLC
+                                                            </SelectItem>
                                                             <SelectItem value="corporation">
                                                                 Corporation
                                                             </SelectItem>
@@ -499,21 +595,45 @@ export default function SettingsPage() {
                                                     <label className="font-sora font-normal text-[16px] pl-[16px] text-white">
                                                         Industry
                                                     </label>
-                                                    <Select value={field.state.value} onValueChange={(newValue) => {
-                                                        if (newValue === "") return;
-                                                        field.handleChange(newValue);
-                                                    }}>
+                                                    <Select
+                                                        value={
+                                                            field.state.value
+                                                        }
+                                                        onValueChange={(
+                                                            newValue
+                                                        ) => {
+                                                            if (newValue === '')
+                                                                return;
+                                                            field.handleChange(
+                                                                newValue
+                                                            );
+                                                        }}
+                                                    >
                                                         <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 h-[50px] py-[10px] mt-[20px]">
                                                             <SelectValue>
-                                                                {field.state.value
-                                                                    ? field.state.value.charAt(0).toUpperCase() + field.state.value.slice(1)
+                                                                {field.state
+                                                                    .value
+                                                                    ? field.state.value
+                                                                          .charAt(
+                                                                              0
+                                                                          )
+                                                                          .toUpperCase() +
+                                                                      field.state.value.slice(
+                                                                          1
+                                                                      )
                                                                     : 'Select industry'}
                                                             </SelectValue>
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="retail">Retail</SelectItem>
-                                                            <SelectItem value="tech">Tech</SelectItem>
-                                                            <SelectItem value="finance">Finance</SelectItem>
+                                                            <SelectItem value="retail">
+                                                                Retail
+                                                            </SelectItem>
+                                                            <SelectItem value="tech">
+                                                                Tech
+                                                            </SelectItem>
+                                                            <SelectItem value="finance">
+                                                                Finance
+                                                            </SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -532,7 +652,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Address Line 1"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -543,7 +667,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Address Line 2"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -556,7 +684,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="City"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -567,7 +699,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="State"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -580,7 +716,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Country"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -591,7 +731,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Zip Code"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -616,15 +760,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Name"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A] mb-[12px] mt-[20px]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </>
                                         )}
                                     </settingsForm.Field>
@@ -640,15 +792,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Email"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A] mb-[12px] "
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </>
                                         )}
                                     </settingsForm.Field>
@@ -664,15 +824,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Contact Number"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </>
                                         )}
                                     </settingsForm.Field>
@@ -725,7 +893,9 @@ export default function SettingsPage() {
                                         name="storeName"
                                         validators={{
                                             onBlur: ({ value }) =>
-                                                !value ? 'Store Name is required.' : undefined,
+                                                !value
+                                                    ? 'Store Name is required.'
+                                                    : undefined,
                                         }}
                                     >
                                         {(field) => (
@@ -736,14 +906,28 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Ex. Lily's Clothing"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {((field.state.meta.errors && field.state.meta.errors.length > 0) || (showErrors && !field.state.value)) && (
+                                                {((field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0) ||
+                                                    (showErrors &&
+                                                        !field.state
+                                                            .value)) && (
                                                     <span className="text-red-500 text-sm mt-1">
-                                                        {(field.state.meta.errors && field.state.meta.errors.length > 0)
-                                                            ? field.state.meta.errors.join(', ')
+                                                        {field.state.meta
+                                                            .errors &&
+                                                        field.state.meta.errors
+                                                            .length > 0
+                                                            ? field.state.meta.errors.join(
+                                                                  ', '
+                                                              )
                                                             : 'This field is required.'}
                                                     </span>
                                                 )}
@@ -763,7 +947,8 @@ export default function SettingsPage() {
                                             Drag and drop or click to upload
                                         </p>
                                         <p className="text-xs text-gray-400">
-                                            Recommended size: 350 x 350. File types: JPG, PNG, SVG or PNG.
+                                            Recommended size: 350 x 350. File
+                                            types: JPG, PNG, SVG or PNG.
                                         </p>
                                     </div>
                                 </div>
@@ -772,7 +957,9 @@ export default function SettingsPage() {
                                         name="storeDescription"
                                         validators={{
                                             onBlur: ({ value }) =>
-                                                !value ? 'Store Description is required.' : undefined,
+                                                !value
+                                                    ? 'Store Description is required.'
+                                                    : undefined,
                                         }}
                                     >
                                         {(field) => (
@@ -783,15 +970,29 @@ export default function SettingsPage() {
                                                 <Textarea
                                                     placeholder="Provide a brief description of your business..."
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-[12px] bg-black text-white border-[#040404] placeholder-gray-500 px-[16px] py-[16px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                     style={{ height: '215px' }}
                                                 />
-                                                {((field.state.meta.errors && field.state.meta.errors.length > 0) || (showErrors && !field.state.value)) && (
+                                                {((field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0) ||
+                                                    (showErrors &&
+                                                        !field.state
+                                                            .value)) && (
                                                     <span className="text-red-500 text-sm mt-1">
-                                                        {(field.state.meta.errors && field.state.meta.errors.length > 0)
-                                                            ? field.state.meta.errors.join(', ')
+                                                        {field.state.meta
+                                                            .errors &&
+                                                        field.state.meta.errors
+                                                            .length > 0
+                                                            ? field.state.meta.errors.join(
+                                                                  ', '
+                                                              )
                                                             : 'This field is required.'}
                                                     </span>
                                                 )}
@@ -815,15 +1016,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Ex. 0123-456-789"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 mt-[20px] h-[42px] py-[10px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -842,15 +1051,23 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Ex. abc@xyz.com"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] mt-[20px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
-                                                {(field.state.meta.errors && field.state.meta.errors.length > 0) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta.errors.join(', ')}
-                                                    </span>
-                                                )}
+                                                {field.state.meta.errors &&
+                                                    field.state.meta.errors
+                                                        .length > 0 && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors.join(
+                                                                ', '
+                                                            )}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -866,11 +1083,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <div className="flex items-center gap-2">
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Electronics</span>
+                                                        <span className="text-white">
+                                                            Electronics
+                                                        </span>
                                                     </div>
                                                 )}
                                             </settingsForm.Field>
@@ -878,11 +1107,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <div className="flex items-center gap-2">
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Fashion</span>
+                                                        <span className="text-white">
+                                                            Fashion
+                                                        </span>
                                                     </div>
                                                 )}
                                             </settingsForm.Field>
@@ -890,11 +1131,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <div className="flex items-center gap-2">
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Home &amp; Garden</span>
+                                                        <span className="text-white">
+                                                            Home &amp; Garden
+                                                        </span>
                                                     </div>
                                                 )}
                                             </settingsForm.Field>
@@ -902,11 +1155,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <div className="flex items-center gap-2">
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Health &amp; Beauty</span>
+                                                        <span className="text-white">
+                                                            Health &amp; Beauty
+                                                        </span>
                                                     </div>
                                                 )}
                                             </settingsForm.Field>
@@ -914,11 +1179,24 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <div className="flex items-center gap-2">
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Sports &amp; Outdoors</span>
+                                                        <span className="text-white">
+                                                            Sports &amp;
+                                                            Outdoors
+                                                        </span>
                                                     </div>
                                                 )}
                                             </settingsForm.Field>
@@ -926,11 +1204,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <div className="flex items-center gap-2">
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Digital Goods</span>
+                                                        <span className="text-white">
+                                                            Digital Goods
+                                                        </span>
                                                     </div>
                                                 )}
                                             </settingsForm.Field>
@@ -938,11 +1228,24 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <div className="flex items-center gap-2">
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Art &amp; Collectibles</span>
+                                                        <span className="text-white">
+                                                            Art &amp;
+                                                            Collectibles
+                                                        </span>
                                                     </div>
                                                 )}
                                             </settingsForm.Field>
@@ -953,14 +1256,17 @@ export default function SettingsPage() {
                                             <Input
                                                 placeholder="Others (please specify)"
                                                 value={field.state.value}
-                                                onChange={(e) => field.handleChange(e.target.value)}
+                                                onChange={(e) =>
+                                                    field.handleChange(
+                                                        e.target.value
+                                                    )
+                                                }
                                                 onBlur={field.handleBlur}
                                                 className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] mt-[20px] h-[44px] focus:ring-2 focus:ring-[#94D42A]"
                                             />
                                         )}
                                     </settingsForm.Field>
                                 </div>
-
 
                                 <div>
                                     <label className="font-sora font-normal text-[16px] text-white mb-[20px]">
@@ -972,7 +1278,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Facebook"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -983,7 +1293,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="LinkedIn"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -994,7 +1308,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="X"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -1005,7 +1323,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Instagram"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -1016,7 +1338,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Others"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -1077,18 +1403,34 @@ export default function SettingsPage() {
                                                 <label className="font-sora font-normal text-[16px] text-white">
                                                     Protocol
                                                 </label>
-                                                <Select value={field.state.value} onValueChange={(newValue) => {
-                                                    if (newValue === "") return;
-                                                    field.handleChange(newValue);
-                                                }}>
+                                                <Select
+                                                    value={field.state.value}
+                                                    onValueChange={(
+                                                        newValue
+                                                    ) => {
+                                                        if (newValue === '')
+                                                            return;
+                                                        field.handleChange(
+                                                            newValue
+                                                        );
+                                                    }}
+                                                >
                                                     <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 py-[10px] mt-[20px] h-[42px]">
                                                         <SelectValue>
-                                                            {field.state.value === 'other' ? 'Other' : 'Loadpipe'}
+                                                            {field.state
+                                                                .value ===
+                                                            'other'
+                                                                ? 'Other'
+                                                                : 'Loadpipe'}
                                                         </SelectValue>
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="loadpipe">Loadpipe</SelectItem>
-                                                        <SelectItem value="other">Other</SelectItem>
+                                                        <SelectItem value="loadpipe">
+                                                            Loadpipe
+                                                        </SelectItem>
+                                                        <SelectItem value="other">
+                                                            Other
+                                                        </SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -1106,11 +1448,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <>
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Bitcoin (BTC)</span>
+                                                        <span className="text-white">
+                                                            Bitcoin (BTC)
+                                                        </span>
                                                     </>
                                                 )}
                                             </settingsForm.Field>
@@ -1120,11 +1474,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <>
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">USDT (Tether)</span>
+                                                        <span className="text-white">
+                                                            USDT (Tether)
+                                                        </span>
                                                     </>
                                                 )}
                                             </settingsForm.Field>
@@ -1134,11 +1500,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <>
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Ethereum (ETH)</span>
+                                                        <span className="text-white">
+                                                            Ethereum (ETH)
+                                                        </span>
                                                     </>
                                                 )}
                                             </settingsForm.Field>
@@ -1148,11 +1526,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <>
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">Binance Coin (BNB)</span>
+                                                        <span className="text-white">
+                                                            Binance Coin (BNB)
+                                                        </span>
                                                     </>
                                                 )}
                                             </settingsForm.Field>
@@ -1162,11 +1552,23 @@ export default function SettingsPage() {
                                                 {(field) => (
                                                     <>
                                                         <Checkbox
-                                                            checked={field.state.value || false}
-                                                            onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                            checked={
+                                                                field.state
+                                                                    .value ||
+                                                                false
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked: boolean
+                                                            ) =>
+                                                                field.handleChange(
+                                                                    checked
+                                                                )
+                                                            }
                                                             className="text-white"
                                                         />
-                                                        <span className="text-white">USDC (USD Coin)</span>
+                                                        <span className="text-white">
+                                                            USDC (USD Coin)
+                                                        </span>
                                                     </>
                                                 )}
                                             </settingsForm.Field>
@@ -1184,7 +1586,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Bitcoin (BTC)"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -1195,7 +1601,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="USDT (Tether)"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -1206,7 +1616,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Ethereum (ETH)"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -1217,7 +1631,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="Binance Coin (BNB)"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -1228,7 +1646,11 @@ export default function SettingsPage() {
                                                 <Input
                                                     placeholder="USDC (USD Coin)"
                                                     value={field.state.value}
-                                                    onChange={(e) => field.handleChange(e.target.value)}
+                                                    onChange={(e) =>
+                                                        field.handleChange(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
                                                 />
@@ -1242,19 +1664,32 @@ export default function SettingsPage() {
                                         Automatic Conversion Options
                                     </label>
                                     <p className="text-sm text-gray-400 mb-[20px]">
-                                        Would you like to automatically convert received cryptocurrencies into a preferred one?
+                                        Would you like to automatically convert
+                                        received cryptocurrencies into a
+                                        preferred one?
                                     </p>
                                     <settingsForm.Field name="autoConvert">
                                         {(field) => (
                                             <div className="flex flex-col gap-2">
                                                 <div className="flex items-center gap-2 mb-[20px]">
                                                     <Checkbox
-                                                        checked={field.state.value || false}
-                                                        onCheckedChange={(checked: boolean) => field.handleChange(checked)}
+                                                        checked={
+                                                            field.state.value ||
+                                                            false
+                                                        }
+                                                        onCheckedChange={(
+                                                            checked: boolean
+                                                        ) =>
+                                                            field.handleChange(
+                                                                checked
+                                                            )
+                                                        }
                                                         className="text-white"
                                                     />
                                                     <span className="text-white">
-                                                        Yes (please specify the preferred cryptocurrency)
+                                                        Yes (please specify the
+                                                        preferred
+                                                        cryptocurrency)
                                                     </span>
                                                 </div>
                                                 <div>
@@ -1262,9 +1697,20 @@ export default function SettingsPage() {
                                                         {(cryptoField) => (
                                                             <Input
                                                                 placeholder="Ex. BTC"
-                                                                value={cryptoField.state.value}
-                                                                onChange={(e) => cryptoField.handleChange(e.target.value)}
-                                                                onBlur={cryptoField.handleBlur}
+                                                                value={
+                                                                    cryptoField
+                                                                        .state
+                                                                        .value
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cryptoField.handleChange(
+                                                                        e.target
+                                                                            .value
+                                                                    )
+                                                                }
+                                                                onBlur={
+                                                                    cryptoField.handleBlur
+                                                                }
                                                                 className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A] mb-[20px]"
                                                             />
                                                         )}
@@ -1272,16 +1718,24 @@ export default function SettingsPage() {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Checkbox
-                                                        checked={!field.state.value}
-                                                        onCheckedChange={(checked: boolean) => {
+                                                        checked={
+                                                            !field.state.value
+                                                        }
+                                                        onCheckedChange={(
+                                                            checked: boolean
+                                                        ) => {
                                                             if (checked) {
-                                                                field.handleChange(false);
+                                                                field.handleChange(
+                                                                    false
+                                                                );
                                                             }
                                                         }}
                                                         className="text-white"
                                                     />
                                                     <span className="text-white">
-                                                        No, I want to receive payments in the original cryptocurrency.
+                                                        No, I want to receive
+                                                        payments in the original
+                                                        cryptocurrency.
                                                     </span>
                                                 </div>
                                             </div>
@@ -1296,21 +1750,40 @@ export default function SettingsPage() {
                                                 <label className="font-sora font-normal text-[16px] text-white">
                                                     Minimum Payout Threshold
                                                 </label>
-                                                <Select value={field.state.value} onValueChange={(newValue) => {
-                                                    if (newValue === "") return;
-                                                    field.handleChange(newValue);
-                                                }}>
+                                                <Select
+                                                    value={field.state.value}
+                                                    onValueChange={(
+                                                        newValue
+                                                    ) => {
+                                                        if (newValue === '')
+                                                            return;
+                                                        field.handleChange(
+                                                            newValue
+                                                        );
+                                                    }}
+                                                >
                                                     <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 py-[10px] mt-[20px] h-[44px]">
                                                         <SelectValue>
                                                             {field.state.value
-                                                                ? field.state.value.charAt(0).toUpperCase() + field.state.value.slice(1)
+                                                                ? field.state.value
+                                                                      .charAt(0)
+                                                                      .toUpperCase() +
+                                                                  field.state.value.slice(
+                                                                      1
+                                                                  )
                                                                 : 'Threshold (in selected cryptocurrency)'}
                                                         </SelectValue>
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="daily">Daily</SelectItem>
-                                                        <SelectItem value="weekly">Weekly</SelectItem>
-                                                        <SelectItem value="monthly">Monthly</SelectItem>
+                                                        <SelectItem value="daily">
+                                                            Daily
+                                                        </SelectItem>
+                                                        <SelectItem value="weekly">
+                                                            Weekly
+                                                        </SelectItem>
+                                                        <SelectItem value="monthly">
+                                                            Monthly
+                                                        </SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -1325,21 +1798,40 @@ export default function SettingsPage() {
                                                 <label className="font-sora font-normal text-[16px] text-white">
                                                     Payment Frequency
                                                 </label>
-                                                <Select value={field.state.value} onValueChange={(newValue) => {
-                                                    if (newValue === "") return;
-                                                    field.handleChange(newValue);
-                                                }}>
+                                                <Select
+                                                    value={field.state.value}
+                                                    onValueChange={(
+                                                        newValue
+                                                    ) => {
+                                                        if (newValue === '')
+                                                            return;
+                                                        field.handleChange(
+                                                            newValue
+                                                        );
+                                                    }}
+                                                >
                                                     <SelectTrigger className="rounded-lg bg-black text-white border-[#040404] px-4 py-[10px] mt-[20px] h-[42px]">
                                                         <SelectValue>
                                                             {field.state.value
-                                                                ? field.state.value.charAt(0).toUpperCase() + field.state.value.slice(1)
+                                                                ? field.state.value
+                                                                      .charAt(0)
+                                                                      .toUpperCase() +
+                                                                  field.state.value.slice(
+                                                                      1
+                                                                  )
                                                                 : 'Daily'}
                                                         </SelectValue>
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="daily">Daily</SelectItem>
-                                                        <SelectItem value="weekly">Weekly</SelectItem>
-                                                        <SelectItem value="monthly">Monthly</SelectItem>
+                                                        <SelectItem value="daily">
+                                                            Daily
+                                                        </SelectItem>
+                                                        <SelectItem value="weekly">
+                                                            Weekly
+                                                        </SelectItem>
+                                                        <SelectItem value="monthly">
+                                                            Monthly
+                                                        </SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -1380,7 +1872,6 @@ export default function SettingsPage() {
                             </div>
                         </CardContent>
                     </Card>
-
                 </div>
             </form>
         </div>

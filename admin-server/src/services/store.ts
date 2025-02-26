@@ -70,6 +70,8 @@ class StoreService extends MedusaStoreService {
         newStore.store_description = store_description;
         newStore.default_currency_code = 'eth';
         newStore.escrow_metadata = escrow_metadata;
+        // newStore.default_sales_channel_id =
+        //       process.env.DEFAULT_SALES_CHANNEL_ID;
         newStore.handle = handle;
         newStore = await storeRepo.save(newStore);
         this.logger.debug('New Store Saved:' + newStore);
@@ -96,9 +98,7 @@ class StoreService extends MedusaStoreService {
         return stores.map((store) => store.name);
     }
 
-    async getStoreDetailsById(
-        store_id: string
-    ): Promise<{ name: string; handle: string }> {
+    async getStoreNameById(store_id: string): Promise<{ name: string; handle: string }> {
         const store = await this.storeRepository_.findOne({
             where: { id: store_id },
             select: ['name', 'handle'], // Include handle
@@ -144,6 +144,10 @@ class StoreService extends MedusaStoreService {
             );
         }
 
+        if (!user.store_id) {
+            return { message: 'Store not created yet for this user.' };
+        }
+
         const store = await this.getStoreById(user.store_id);
 
         return {
@@ -155,17 +159,21 @@ class StoreService extends MedusaStoreService {
 
     async updateSellerStoreDetails(
         store_id: string,
-        updates: any
+        updates: any,
+        updatingUserId: string
     ): Promise<Store> {
         const existingStore = await this.getStoreById(store_id);
 
         const {
             storeName,
             storeDescription,
+            handle,
             fullName,
             username,
             phoneNumber,
             emailAddress,
+            firstName,
+            lastName,
             ...rest
         } = updates;
 
@@ -179,10 +187,36 @@ class StoreService extends MedusaStoreService {
             store_description:
                 storeDescription || existingStore.store_description,
             metadata: updatedMetadata,
+            handle: handle,
         };
 
         const storeRepo = this.manager_.withRepository(this.storeRepository_);
+
+        // Check if handle is changing and if so, ensure its uniqueness.
+        if (handle && handle !== existingStore.handle) {
+            const conflictingStore = await storeRepo.findOne({
+                where: { handle },
+            });
+            if (conflictingStore) {
+                throw new Error(`Store handle "${handle}" is already taken.`);
+            }
+        }
+
         await storeRepo.update({ id: store_id }, updateObj);
+
+        const userFirstName =
+            firstName || (fullName ? fullName.trim().split(' ')[0] : '');
+        const userLastName =
+            lastName ||
+            (fullName ? fullName.trim().split(' ').slice(1).join(' ') : '');
+
+        if (updatingUserId) {
+            await this.userRepository_.update(updatingUserId, {
+                email: emailAddress,
+                first_name: userFirstName,
+                last_name: userLastName,
+            });
+        }
 
         return await this.getStoreById(store_id);
     }
