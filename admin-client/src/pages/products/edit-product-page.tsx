@@ -212,6 +212,12 @@ export default function EditProductPage() {
                 inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
+        validators: {
+            onSubmit: (values) => {
+                const result = ProductSchema.safeParse(values);
+                return result.success ? {} : result.error.format();
+            },
+        },
         // validators: (values) => {
         //     const result = ProductSchema.safeParse(values);
         //     return result.success ? {} : result.error.format();
@@ -781,19 +787,14 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
-                                                            onBlur: ({
-                                                                         value,
-                                                                     }) =>
-                                                                value.trim() ===
-                                                                ''
-                                                                    ? 'SKU is required.'
-                                                                    : undefined,
+                                                            onBlur: ({value}) => { return undefined },
                                                             // Asynchronous check: call your API only if the SKU has changed
                                                             onChangeAsync:
                                                                 async ({
                                                                            value,
                                                                        }) => {
                                                                     // Compare with the default SKU. If unchanged, skip the API call.
+                                                                    if (value.trim() === '') return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateSku(
@@ -886,19 +887,14 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
-                                                            onBlur: ({
-                                                                         value,
-                                                                     }) =>
-                                                                value.trim() ===
-                                                                ''
-                                                                    ? 'Barcode is required.'
-                                                                    : undefined,
+                                                            onBlur: ({value}) => { return undefined },
                                                             // Asynchronous check: call your API only if the Barcode has changed
                                                             onChangeAsync:
                                                                 async ({
                                                                            value,
                                                                        }) => {
                                                                     // Compare with the default SKU. If unchanged, skip the API call.
+                                                                    if (value.trim() === '') return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateBarcode(
@@ -989,19 +985,15 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
-                                                            onBlur: ({
-                                                                         value,
-                                                                     }) =>
-                                                                value.trim() ===
-                                                                ''
-                                                                    ? 'EAN is required.'
-                                                                    : undefined,
+                                                            // Allow empty value on blur
+                                                            onBlur: ({value}) => { return undefined },
                                                             // Asynchronous check: call your API only if the Barcode has changed
                                                             onChangeAsync:
                                                                 async ({
                                                                            value,
                                                                        }) => {
                                                                     // Compare with the default SKU. If unchanged, skip the API call.
+                                                                    if (value.trim() === '') return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateEan(
@@ -1092,20 +1084,15 @@ export default function EditProductPage() {
                                                         name={`variants[${index}].upc`}
                                                         asyncDebounceMs={100}
                                                         validators={{
-                                                            // Synchronous check: ensure a value exists
-                                                            onBlur: ({
-                                                                         value,
-                                                                     }) =>
-                                                                value.trim() ===
-                                                                ''
-                                                                    ? 'UPC is required.'
-                                                                    : undefined,
+                                                            // Allow empty value on blur
+                                                            onBlur: ({value}) => { return undefined },
                                                             // Asynchronous check: call your API only if the UPC has changed
                                                             onChangeAsync:
                                                                 async ({
                                                                            value,
                                                                        }) => {
                                                                     // Compare with the default UPC. If unchanged, skip the API call.
+                                                                    if (value.trim() === '') return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateUpc(
@@ -1581,6 +1568,38 @@ export default function EditProductPage() {
                                           isSubmitting,
                                       }) => {
                                         const handleSubmit = async () => {
+                                            // Motivation: Validation errors only show when the variant's accordion section is
+                                            // expanded, but they don't properly show when you submit the form
+                                            // which makes the UX bad...
+
+                                            // onBlur field only triggers when a user interacts with the field
+                                            // Since only one variant can be expanded at a time, errors are hidden when submitting
+
+                                            // TODO: FORM VALIDATION IS INCOMPLETE FOR EAN UPC BARCODE...
+                                            // const validationErrors = await editProductForm.validate();
+                                            //
+                                            //
+                                            // if (Object.keys(validationErrors).length > 0) {
+                                            //     const firstInvalidVariantIndex = product.variants.findIndex((_, i) =>
+                                            //         Object.keys(validationErrors).some((errorField) =>
+                                            //             errorField.startsWith(`variants[${i}]`)
+                                            //         )
+                                            //     );
+                                            //
+                                            //     if (firstInvalidVariantIndex !== -1) {
+                                            //         setOpenAccordionItem(`variant-${firstInvalidVariantIndex}`);
+                                            //     }
+                                            //
+                                            //     toast({
+                                            //         variant: "destructive",
+                                            //         title: "Validation Errors",
+                                            //         description: "Please fix the errors before submitting.",
+                                            //     });
+                                            //
+                                            //     return;
+                                            // }
+
+
                                             // If nothing is dirty at all:
                                             if (
                                                 Object.keys(dirtyFields)
