@@ -212,7 +212,12 @@ export default function EditProductPage() {
                 inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
-
+        // validators: {
+        //     onSubmit: (values) => {
+        //         const result = ProductSchema.safeParse(values);
+        //         return result.success ? undefined : result.error.format();
+        //     },
+        // },
         // validators: (values) => {
         //     const result = ProductSchema.safeParse(values);
         //     return result.success ? {} : result.error.format();
