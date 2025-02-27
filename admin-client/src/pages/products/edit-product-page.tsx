@@ -212,12 +212,7 @@ export default function EditProductPage() {
                 inventory_quantity: variant.inventory_quantity || 0, // If you want to track quantity
             })),
         },
-        validators: {
-            onSubmit: (values) => {
-                const result = ProductSchema.safeParse(values);
-                return result.success ? {} : result.error.format();
-            },
-        },
+
         // validators: (values) => {
         //     const result = ProductSchema.safeParse(values);
         //     return result.success ? {} : result.error.format();
@@ -787,7 +782,7 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
-                                                            onBlur: ({value}) => { return undefined },
+                                                            onBlur: () => { return undefined },
                                                             // Asynchronous check: call your API only if the SKU has changed
                                                             onChangeAsync:
                                                                 async ({
@@ -887,7 +882,7 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
-                                                            onBlur: ({value}) => { return undefined },
+                                                            onBlur: () => { return undefined },
                                                             // Asynchronous check: call your API only if the Barcode has changed
                                                             onChangeAsync:
                                                                 async ({
@@ -986,7 +981,7 @@ export default function EditProductPage() {
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
                                                             // Allow empty value on blur
-                                                            onBlur: ({value}) => { return undefined },
+                                                            onBlur: () => { return undefined },
                                                             // Asynchronous check: call your API only if the Barcode has changed
                                                             onChangeAsync:
                                                                 async ({
@@ -1085,7 +1080,7 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Allow empty value on blur
-                                                            onBlur: ({value}) => { return undefined },
+                                                            onBlur: () => { return undefined },
                                                             // Asynchronous check: call your API only if the UPC has changed
                                                             onChangeAsync:
                                                                 async ({
