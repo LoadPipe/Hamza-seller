@@ -1048,7 +1048,7 @@ export default function EditProductPage() {
                                                                         asChild
                                                                     >
                                                                         <Input
-                                                                            placeholder="Ean"
+                                                                            placeholder="EAN"
                                                                             value={
                                                                                 field
                                                                                     .state
@@ -1152,7 +1152,7 @@ export default function EditProductPage() {
                                                                         asChild
                                                                     >
                                                                         <Input
-                                                                            placeholder="Ean"
+                                                                            placeholder="UPC"
                                                                             value={
                                                                                 field
                                                                                     .state
