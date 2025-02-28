@@ -16,12 +16,17 @@ import {
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
+import { useStoreValidate } from './utils/use-store-validate';
 
 const StoreCustomizationSchema = z.object({
     storeName: z.string().min(1, { message: 'Store name is required.' }),
     storeDescription: z
         .string()
         .min(1, { message: 'Store description is required.' }),
+    handle: z
+        .string()
+        .min(1, { message: 'Store handle is required.' })
+        .regex(/^[a-zA-Z0-9-]+$/, { message: 'Only alphanumerics and "-" are allowed in store handle.' }),
 });
 
 interface StoreCustomizationProps {
@@ -40,6 +45,7 @@ const StoreCustomizationStep: React.FC<StoreCustomizationProps> = ({
 }) => {
     const { toast } = useToast();
     const [handleEdited, setHandleEdited] = useState(false);
+    const storeValidate = useStoreValidate();
 
     const handleStoreNameChange = (value: string, field: any) => {
         field.handleChange(value);
@@ -48,11 +54,13 @@ const StoreCustomizationStep: React.FC<StoreCustomizationProps> = ({
         }
     };
 
-    const handleNext = () => {
-        const { storeName, storeDescription } = form.state.values;
+    const handleNext = async () => {
+        const { storeName, storeDescription, handle } = form.state.values;
+
         const result = StoreCustomizationSchema.safeParse({
             storeName,
             storeDescription,
+            handle,
         });
         if (!result.success) {
             toast({
@@ -63,7 +71,15 @@ const StoreCustomizationStep: React.FC<StoreCustomizationProps> = ({
             });
             return;
         }
-        onUpdate({ storeName, storeDescription });
+
+        try {
+            await storeValidate.mutateAsync({ storeName, handle });
+        } catch (error) {
+            return;
+        }
+
+        // If validation passes, update and proceed
+        onUpdate({ storeName, storeDescription, handle });
         onNext();
     };
 

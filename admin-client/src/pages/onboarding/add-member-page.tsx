@@ -3,13 +3,6 @@ import { Field } from '@tanstack/react-form';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { TrashIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,7 +10,7 @@ interface Member {
     firstName: string;
     lastName: string;
     email: string;
-    currency: string;
+    walletAddress: string;
 }
 
 interface AddMemberPageProps {
@@ -25,10 +18,7 @@ interface AddMemberPageProps {
     onFinish: () => void;
 }
 
-const AddMemberPage: React.FC<AddMemberPageProps> = ({
-    form,
-    onFinish,
-}) => {
+const AddMemberPage: React.FC<AddMemberPageProps> = ({ form, onFinish }) => {
     const [members, setMembers] = useState<Member[]>([]);
     const { toast } = useToast();
 
@@ -36,11 +26,11 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({
         form.setFieldValue('memberFirstName', '');
         form.setFieldValue('memberLastName', '');
         form.setFieldValue('memberEmail', '');
-        form.setFieldValue('memberCurrency', 'eth');
+        form.setFieldValue('memberWalletAddress', '');
     };
 
     const handleAddMember = () => {
-        const { memberFirstName, memberLastName, memberEmail, memberCurrency } =
+        const { memberFirstName, memberLastName, memberEmail, memberWalletAddress } =
             form.state.values;
 
         if (!memberFirstName) {
@@ -67,7 +57,6 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({
             });
             return;
         }
-
         const emailRegex = /\S+@\S+\.\S+/;
         if (!emailRegex.test(memberEmail)) {
             toast({
@@ -77,13 +66,20 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({
             });
             return;
         }
-
+        if (!memberWalletAddress) {
+            toast({
+                variant: 'destructive',
+                title: 'Validation Error',
+                description: 'Please enter the wallet address for the member.',
+            });
+            return;
+        }
 
         const newMember: Member = {
             firstName: memberFirstName,
             lastName: memberLastName,
             email: memberEmail,
-            currency: memberCurrency || 'eth',
+            walletAddress: memberWalletAddress.toLowerCase(),
         };
 
         setMembers((prev) => [...prev, newMember]);
@@ -137,7 +133,7 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({
                                                 ({member.email})
                                             </span>
                                             <span className="text-gray-400 text-sm ml-2">
-                                                - {member.currency.toUpperCase()}
+                                                - {member.walletAddress}
                                             </span>
                                         </div>
                                         <Button
@@ -161,11 +157,7 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({
                                     <label className="block mb-2 text-white">First Name</label>
                                     <Input
                                         placeholder="John"
-                                        value={
-                                            typeof field.state.value === 'string'
-                                                ? field.state.value
-                                                : ''
-                                        }
+                                        value={typeof field.state.value === 'string' ? field.state.value : ''}
                                         onChange={(e) => field.handleChange(e.target.value)}
                                         className="rounded-lg bg-black text-white border border-white placeholder-gray-500 px-4 py-2 h-[42px] focus:ring-2 focus:ring-[#94D42A] w-full"
                                     />
@@ -180,11 +172,7 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({
                                     <label className="block mb-2 text-white">Last Name</label>
                                     <Input
                                         placeholder="Doe"
-                                        value={
-                                            typeof field.state.value === 'string'
-                                                ? field.state.value
-                                                : ''
-                                        }
+                                        value={typeof field.state.value === 'string' ? field.state.value : ''}
                                         onChange={(e) => field.handleChange(e.target.value)}
                                         className="rounded-lg bg-black text-white border border-white placeholder-gray-500 px-4 py-2 h-[42px] focus:ring-2 focus:ring-[#94D42A] w-full"
                                     />
@@ -228,28 +216,18 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({
                     </Field>
 
 
-                    {/* Default Currency */}
-                    <Field form={form} name="memberCurrency">
+                    {/* New Wallet Address Field */}
+                    <Field form={form} name="memberWalletAddress">
                         {(field) => (
                             <div className="mt-6 mb-8">
-                                <label className="block mb-2 text-white">Default Currency</label>
-                                <Select
-                                    value={
-                                        typeof field.state.value === 'string'
-                                            ? field.state.value
-                                            : 'eth'
-                                    }
-                                    onValueChange={(val) => field.handleChange(val)}
-                                >
-                                    <SelectTrigger className="rounded-lg bg-black text-white border border-white px-4 py-2 h-[42px] focus:ring-2 focus:ring-[#94D42A]">
-                                        <SelectValue placeholder="Select currency" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="eth">ETH</SelectItem>
-                                        <SelectItem value="usdt">USDT</SelectItem>
-                                        <SelectItem value="usdc">USDC</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <label className="block mb-2 text-white">Wallet Address</label>
+                                <Input
+                                    type="text"
+                                    placeholder="0x123..."
+                                    value={(field.state.value as string) || ""}
+                                    onChange={(e) => field.handleChange(e.target.value)}
+                                    className="rounded-lg bg-black text-white border border-white placeholder-gray-500 px-4 py-2 h-[42px] focus:ring-2 focus:ring-[#94D42A] w-full"
+                                />
                             </div>
                         )}
                     </Field>

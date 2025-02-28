@@ -1,11 +1,10 @@
-// src/pages/onboarding/onboarding-schema.ts
 import { z } from 'zod';
 
 const MemberSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required.' }),
   lastName: z.string().min(1, { message: 'Last name is required.' }),
   email: z.string().email({ message: 'A valid email is required.' }),
-  currency: z.string().default('eth'),
+  walletAddress: z.string().min(1, { message: 'Wallet address is required.' }),
 });
 
 export const OnboardingSchema = z.object({

@@ -15,7 +15,7 @@ export const useOnboardingSubmit = () => {
             if (!payload || Object.keys(payload).length === 0) {
                 throw new Error('No changes detected to update.');
             }
-            console.log('payload:',payload);
+            console.log('payload:', payload);
             return updateOnboardingByWalletId(payload);
         },
         onSuccess: (data: { token: string }) => {
@@ -33,12 +33,20 @@ export const useOnboardingSubmit = () => {
                 status: 'authenticated',
             });
         },
-        onError: (error) => {
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Failed to complete onboarding.',
-            });
+        onError: (error: any) => {
+            if (error?.response?.status === 403 && error.response.data.error) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Whitelist Error',
+                    description: error.response.data.error,
+                });
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'Failed to complete onboarding.',
+                });
+            }
             console.error('Update error:', error);
         },
     });
