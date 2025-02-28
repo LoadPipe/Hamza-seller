@@ -369,10 +369,16 @@ export default function EditProductPage() {
                             <editProductForm.Field
                                 name="title"
                                 validators={{
-                                    onBlur: ({ value }) =>
-                                        value?.trim().length === 0
-                                            ? 'Product name is required.'
-                                            : undefined,
+                                    onBlur: ({ value }) => {
+                                        const trimmed = value?.trim() || '';
+                                        if (trimmed.length === 0) {
+                                            return 'Product name is required.';
+                                        }
+                                        if (trimmed.length > 200) {
+                                            return 'Product name must be 200 characters or fewer.';
+                                        }
+                                        return undefined;
+                                    },
                                 }}
                             >
                                 {(field) => (
@@ -405,8 +411,8 @@ export default function EditProductPage() {
                                 name="subtitle"
                                 validators={{
                                     onBlur: ({ value }) =>
-                                        value?.trim().length > 200
-                                            ? 'Subtitle must not exceed 200 characters.'
+                                        value?.trim().length > 1000
+                                            ? 'Subtitle must not exceed 1000 characters.'
                                             : undefined,
                                 }}
                             >
@@ -439,10 +445,17 @@ export default function EditProductPage() {
                             <editProductForm.Field
                                 name="description"
                                 validators={{
-                                    onBlur: ({ value }) =>
-                                        value?.trim().length === 0
-                                            ? 'Description is required.'
-                                            : undefined,
+                                    onBlur: ({ value }) => {
+                                        const trimmed = value?.trim() || '';
+                                        if (trimmed.length === 0) {
+                                            return 'Description is required.';
+                                        }
+                                        const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+                                        if (wordCount > 3000) {
+                                            return 'Description must not exceed 3000 words.';
+                                        }
+                                        return undefined;
+                                    },
                                 }}
                             >
                                 {(field) => (
