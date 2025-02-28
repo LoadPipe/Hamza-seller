@@ -405,8 +405,8 @@ export default function EditProductPage() {
                                 name="subtitle"
                                 validators={{
                                     onBlur: ({ value }) =>
-                                        value?.trim().length > 200
-                                            ? 'Subtitle must not exceed 200 characters.'
+                                        value?.trim().length > 1000
+                                            ? 'Subtitle must not exceed 1000 characters.'
                                             : undefined,
                                 }}
                             >
