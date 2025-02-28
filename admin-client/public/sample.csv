@@ -1,5 +1,7 @@
 category,images,title,subtitle,description,status,thumbnail,weight,discountable,handle,variant,variant_price,variant_inventory_quantity,variant_allow_backorder,variant_manage_inventory,variant_sku,variant_barcode,variant_ean,variant_upc,variant_hs_code,variant_origin_country,variant_mid_code,variant_material,variant_weight,variant_length,variant_height,variant_width
-books,image1.jpg|image2.jpg|image3.jpg,Your product title,"This content displays in the product details page, under, “Product Info”.  No HTML can be used here.","This is the product description under “About this item”.  <br /><br />
+books,image1.jpg|image2.jpg|image3.jpg,Your,product,title,"This content displays in the product details page, under, “Product Info”.  No HTML can be used here.
+
+For category tab, we have the following options: electronics, merch, books, health and wellness, black-friday, gift-cards, art, automotive","This is the product description under “About this item”.  <br /><br />
 You may use HTML here.<br /><br />
-<p>Please note that if you use <p> tags.  The tag does not product bottom padding.  If you want seperate from the next paragraph, remember to use an additional <br > tag.</p>",published,large.jpg,0,0,product-large,Size[Large],10,10,0,1,,,,,,,,,,,,
+<p>Please note that if you use <p> tags.  The tag does not product bottom padding.  If you want seperate from the next paragraph, remember to use an additional <br > tag.</p>",published,large.jpg,0,0,product-large,Size[Large],10,10,0,1,,,,,,,,,,
 ,,,,,,small.jpg,,,product-small,Size[Small],5,10,0,1,,,,,,,,,,,,
