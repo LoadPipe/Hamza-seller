@@ -425,6 +425,21 @@ export function OrderDetailsSidebar() {
                                 {/* )} */}
                             </div>
 
+                            {orderDetails?.shipping_address?.phone && (
+                                <div className="flex justify-between mt-2">
+                                    <div className="w-1/3">
+                                        <span className="text-primary-black-60">
+                                            Phone Number:
+                                        </span>
+                                    </div>
+                                    <div className="w-2/3 text-left">
+                                        <span className="text-white">
+                                            {orderDetails.shipping_address.phone}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
                             <hr className="border-primary-black-65 w-full mx-auto my-[32px]" />
 
                             {/* Timeline */}
@@ -460,9 +475,9 @@ export function OrderDetailsSidebar() {
                                             />
                                             {index !==
                                                 orderDetails?.items?.length -
-                                                    1 && (
-                                                <div className="border-t border-dashed border-primary-black-60 my-[16px]"></div>
-                                            )}
+                                                1 && (
+                                                    <div className="border-t border-dashed border-primary-black-60 my-[16px]"></div>
+                                                )}
                                         </div>
                                     )
                                 )}
@@ -476,7 +491,7 @@ export function OrderDetailsSidebar() {
                                 discount={0} // Adjust as needed
                                 shippingFee={formatCryptoPrice(
                                     orderDetails?.shipping_methods[0]?.price ??
-                                        0,
+                                    0,
                                     currencyCode
                                 )} // Adjust as needed
                                 currencyCode={currencyCode}
