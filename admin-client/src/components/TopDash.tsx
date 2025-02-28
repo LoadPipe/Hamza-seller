@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSecure } from '@/utils/api-calls';
 import { getJwtStoreId } from '@/utils/authentication';
 import { Button } from './ui/button';
+import packageJson from '../../package.json';
 
 const TopDash = () => {
     const store_id = getJwtStoreId();
@@ -22,6 +23,10 @@ const TopDash = () => {
     return (
         <div className="flex flex-col text-white">
             {/* Top Navigation */}
+
+            <div className="absolute top-2 right-2 text-gray-300 text-sm z-10">
+                v {packageJson.version}
+            </div>
 
             <nav className="w-full py-4">
                 <div className="max-w-[1280px] flex items-center justify-between mx-4 ">
