@@ -19,6 +19,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 
 const items = [
     {
@@ -70,6 +71,8 @@ const items = [
 ];
 
 export function AppSidebar() {
+    const { authData } = useCustomerAuthStore();
+    const isNewUser = authData?.isNewUser;
     const { expandedItem, toggleDropdown } = useSidebarStore();
 
     return (
@@ -93,10 +96,19 @@ export function AppSidebar() {
                                             <>
                                                 <SidebarMenuButton
                                                     asChild
-                                                    onClick={() =>
+                                                    onClick={(e) => {
+                                                        if (isNewUser) {
+                                                            e.preventDefault();
+                                                            return;
+                                                        }
                                                         toggleDropdown(
                                                             item.title
-                                                        )
+                                                        );
+                                                    }}
+                                                    className={
+                                                        isNewUser
+                                                            ? 'opacity-50 cursor-not-allowed'
+                                                            : ''
                                                     }
                                                 >
                                                     <a href="#">
@@ -106,42 +118,60 @@ export function AppSidebar() {
                                                         </span>
                                                     </a>
                                                 </SidebarMenuButton>
-                                                {expandedItem ===
-                                                    item.title && (
-                                                    <div className="pl-4">
-                                                        <ul>
-                                                            {item.submenu.map(
-                                                                (
-                                                                    submenuItem
-                                                                ) => (
-                                                                    <SidebarMenuItem
-                                                                        key={
-                                                                            submenuItem.title
-                                                                        }
-                                                                    >
-                                                                        <SidebarMenuButton
-                                                                            asChild
+                                                {expandedItem === item.title &&
+                                                    !isNewUser && (
+                                                        <div className="pl-4">
+                                                            <ul>
+                                                                {item.submenu.map(
+                                                                    (
+                                                                        submenuItem
+                                                                    ) => (
+                                                                        <SidebarMenuItem
+                                                                            key={
+                                                                                submenuItem.title
+                                                                            }
                                                                         >
-                                                                            <a
-                                                                                href={
-                                                                                    submenuItem.url
-                                                                                }
+                                                                            <SidebarMenuButton
+                                                                                asChild
                                                                             >
-                                                                                {
-                                                                                    submenuItem.title
-                                                                                }
-                                                                            </a>
-                                                                        </SidebarMenuButton>
-                                                                    </SidebarMenuItem>
-                                                                )
-                                                            )}
-                                                        </ul>
-                                                    </div>
-                                                )}
+                                                                                <a
+                                                                                    href={
+                                                                                        submenuItem.url
+                                                                                    }
+                                                                                >
+                                                                                    {
+                                                                                        submenuItem.title
+                                                                                    }
+                                                                                </a>
+                                                                            </SidebarMenuButton>
+                                                                        </SidebarMenuItem>
+                                                                    )
+                                                                )}
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                             </>
                                         ) : (
-                                            <SidebarMenuButton asChild>
-                                                <a href={item.url}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                onClick={(e) => {
+                                                    if (isNewUser) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                className={
+                                                    isNewUser
+                                                        ? 'opacity-50 cursor-not-allowed'
+                                                        : ''
+                                                }
+                                            >
+                                                <a
+                                                    href={
+                                                        isNewUser
+                                                            ? '#'
+                                                            : item.url
+                                                    }
+                                                >
                                                     <item.icon />
                                                     <span>{item.title}</span>
                                                 </a>

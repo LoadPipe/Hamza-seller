@@ -63,6 +63,9 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
 
                 const lines = message.split('\n');
                 const walletAddress = lines[1]?.trim();
+                const storeId = getJwtStoreId();
+
+                const isNewUser = newUser || !storeId;
 
                 if (response.status === 200) {
                     setCustomerAuthData({
@@ -70,12 +73,11 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                         wallet_address: walletAddress.toLowerCase(),
                         is_verified: true,
                         status: 'authenticated',
+                        isNewUser: isNewUser,
                     });
                 }
 
-                const storeId = getJwtStoreId();
-
-                if (newUser || !storeId) {
+                if (isNewUser) {
                     window.location.href = '/onboarding';
                 } else {
                     window.location.href = '/dashboard';
@@ -97,6 +99,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 wallet_address: '',
                 is_verified: false,
                 status: 'unauthenticated',
+                isNewUser: false,
             });
 
             await fetch('/api/logout');

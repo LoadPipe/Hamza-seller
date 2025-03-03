@@ -31,6 +31,7 @@ export const useOnboardingSubmit = () => {
                 wallet_address: getJwtWalletAddress() ?? '',
                 is_verified: true,
                 status: 'authenticated',
+                isNewUser: false,
             });
         },
         onError: (error: any) => {
