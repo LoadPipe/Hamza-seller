@@ -11,6 +11,7 @@ type State = {
         token: string;
         status: AuthenticationStatus;
         is_verified: boolean;
+        isNewUser?: boolean;
     };
     preferred_currency_code: string | null;
     hasLoggedIn: boolean;
@@ -38,6 +39,7 @@ export const useCustomerAuthStore = create<State & Actions>()(
                 status: 'unauthenticated' as AuthenticationStatus, // Make sure to cast if needed
                 token: '',
                 wallet_address: '',
+                isNewUser: false,
             },
 
             preferred_currency_code: null,
