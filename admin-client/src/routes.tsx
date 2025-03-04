@@ -2,7 +2,7 @@ import NotFoundComponent from './pages/NotFoundComponent.tsx';
 import {
     createRootRoute,
     createRoute,
-    createRouter,
+    createRouter as TanStackCreateRouter,
 } from '@tanstack/react-router';
 import OrdersPage from '@/pages/orders/orders-page.tsx';
 import ProductsPage from '@/pages/products/products-page.tsx';
@@ -18,6 +18,7 @@ import AnalyticsPage from '@/pages/analytics/analytics-page.tsx';
 import { authMiddleware } from './middleware/auth';
 import LogoutPage from '@/pages/logout/logout-page';
 import OnboardingWizard from '@/pages/onboarding/onboarding-wizard.tsx';
+import {DefaultCatchBoundary} from "@/components/DefaultCatchBoundary.tsx";
 
 export const OrderSearchSchema = z.object({
     page: z.coerce.number().catch(0),
@@ -143,6 +144,8 @@ rootRoute.addChildren([
 ]);
 
 // Create the router
-export const router = createRouter({
+export const router = TanStackCreateRouter({
     routeTree: rootRoute,
+    // DOCUMENTATION: https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType
+    defaultErrorComponent: DefaultCatchBoundary,
 });
