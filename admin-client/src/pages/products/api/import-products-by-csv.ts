@@ -1,7 +1,13 @@
 import { getJwtStoreId } from '@/utils/authentication';
 import { postSecure } from '@/utils/api-calls';
 
-export const importProductsByCsv = async (file: File) => {
+export const importProductsByCsv = async (
+    file: File
+): Promise<{
+    success: boolean;
+    message: string;
+    errors: string[];
+}> => {
     try {
         const store_id = getJwtStoreId() as string;
 
@@ -17,12 +23,41 @@ export const importProductsByCsv = async (file: File) => {
 
         // Pass FormData directly to the postSecure function
         const response = await postSecure('seller/product/csv', formData);
-        return response.success;
+        return {
+            success: response.success,
+            message:
+                response.errors?.length > 0
+                    ? 'Products imported successfully. But with some errors: <br />' +
+                      '<ul style="list-style: number; padding: 20px;">' +
+                      response.errors
+                          .map(
+                              (error: string) =>
+                                  `<li style="margin-bottom: 10px;">${error}</li>`
+                          )
+                          .join('') +
+                      '</ul>'
+                    : 'Products imported successfully.',
+            errors: response.errors,
+        };
     } catch (e: any) {
-        const errorMessage =
-            JSON.stringify(e?.response?.data?.message) ||
-            e?.response?.data?.updateMessage;
-        ('Failed to import products by CSV.');
+        const responseData = e?.response?.data;
+
+        let errorMessage =
+            JSON.stringify(responseData?.message) ||
+            responseData?.updateMessage;
+
+        if (e?.response?.data?.errors.length > 0) {
+            errorMessage +=
+                '<ul style="list-style: number; padding: 20px;">' +
+                responseData?.errors
+                    .map(
+                        (error: string) =>
+                            `<li style="margin-bottom: 10px;">${error}</li>`
+                    )
+                    .join('') +
+                '</ul>';
+        }
+
         console.error('Error importing products by CSV:', errorMessage);
         // Throw the error message
         throw new Error(errorMessage);

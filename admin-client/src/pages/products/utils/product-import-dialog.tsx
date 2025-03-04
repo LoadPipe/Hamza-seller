@@ -50,18 +50,33 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
             const response = await importProductsByCsv(file);
             toast({
                 title: 'Success',
-                description: 'Products imported successfully!',
+                description: (
+                    <div
+                        dangerouslySetInnerHTML={{
+                            __html: response.message,
+                        }}
+                    />
+                ),
             });
             console.log(response);
-            onClose(); // Close dialog on success
+            // onClose(); // Close dialog on success
         } catch (error: any) {
             // Display the error message from the caught exception
+            const errorResponse = error?.response?.data;
             toast({
                 title: 'Upload Failed',
-                description: error.message || 'An unexpected error occurred.',
+                description: (
+                    <div
+                        dangerouslySetInnerHTML={{
+                            __html:
+                                error.message ||
+                                errorResponse?.message ||
+                                'An unexpected error occurred.',
+                        }}
+                    />
+                ),
                 variant: 'destructive',
             });
-            console.error(error);
         }
     };
 
