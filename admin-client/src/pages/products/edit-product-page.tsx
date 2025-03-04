@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
 import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
-import { validateSku } from '@/pages/products/api/validate-sku.ts';
+import { validateSku, validateBarcode, validateEan, validateUpc } from '@/pages/products/api/validate-product-fields.ts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
