@@ -1,8 +1,8 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
-import {Download, FilePlus} from 'lucide-react';
-import {useNavigate} from '@tanstack/react-router';
+import React, { useEffect, useState } from 'react';
+import { Download, FilePlus } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -13,15 +13,15 @@ import {
     getPaginationRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {ChevronDown, Settings, ChevronUp} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChevronDown, Settings, ChevronUp } from 'lucide-react';
 import {
     productStore,
     setProductFilter,
     clearProductFilter,
 } from '@/stores/product-filter/product-filter-store.tsx';
-import {useStore} from '@tanstack/react-store';
+import { useStore } from '@tanstack/react-store';
 import ProductImportModal from '@/pages/products/utils/product-import-dialog.tsx';
 import {
     DropdownMenu,
@@ -38,8 +38,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {formatCryptoPrice} from '@/utils/get-product-price.ts';
-import {useCustomerAuthStore} from '@/stores/authentication/customer-auth.ts';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -54,9 +54,9 @@ interface Price {
 }
 
 import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
-import {ProductCategory} from '@/utils/status-enum.ts';
-import {z} from 'zod';
-import {ProductSchema} from '@/pages/products/product-schema.ts';
+import { ProductCategory } from '@/utils/status-enum.ts';
+import { z } from 'zod';
+import { ProductSchema } from '@/pages/products/product-schema.ts';
 
 interface ProductTableProps {
     columns: ColumnDef<Product, any>[];
@@ -74,18 +74,18 @@ interface ProductTableProps {
 }
 
 export function ProductTable({
-                                 columns,
-                                 data,
-                                 pageIndex,
-                                 pageSize,
-                                 setPageIndex,
-                                 setPageSize,
-                                 totalRecords,
-                                 filteredProductsCount,
-                                 sorting,
-                                 setSorting,
-                                 isLoading,
-                             }: ProductTableProps) {
+    columns,
+    data,
+    pageIndex,
+    pageSize,
+    setPageIndex,
+    setPageSize,
+    totalRecords,
+    filteredProductsCount,
+    sorting,
+    setSorting,
+    isLoading,
+}: ProductTableProps) {
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState({});
@@ -96,7 +96,7 @@ export function ProductTable({
     );
     const [isModalOpen, setModalOpen] = useState(false);
 
-    const {filters} = useStore(productStore);
+    const { filters } = useStore(productStore);
 
     const getFilterValues = (key: string) => filters?.[key]?.in || [];
 
@@ -182,15 +182,14 @@ export function ProductTable({
                             }
                         >
                             Add new product
-                            <FilePlus/>
+                            <FilePlus />
                         </Button>
                     </div>
-                    <>
+                    <div className="text-center">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button
-                                    className="hover:text-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] text-white">
-                                    <Download/>
+                                <Button className="hover:text-primary-purple-90 whitespace-nowrap bg-[#242424] hover:border-none w-[200px] h-[44px] text-white">
+                                    <Download />
                                     Import
                                 </Button>
                             </DropdownMenuTrigger>
@@ -203,13 +202,22 @@ export function ProductTable({
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        <br />
+                        <a
+                            href="/sample.csv"
+                            download="sample.csv"
+                            className="text-xs underline"
+                            style={{ fontSize: '0.7rem' }}
+                        >
+                            Download sample CSV
+                        </a>
+                    </div>
 
-                        {/* Render the Modal */}
-                        <ProductImportModal
-                            open={isModalOpen}
-                            onClose={() => setModalOpen(false)} // Close the modal
-                        />
-                    </>
+                    {/* Render the Modal */}
+                    <ProductImportModal
+                        open={isModalOpen}
+                        onClose={() => setModalOpen(false)} // Close the modal
+                    />
 
                     <div className="flex justify-start">
                         <DropdownMultiselectFilter
@@ -257,7 +265,7 @@ export function ProductTable({
                                     size="sm"
                                 >
                                     {pageSize} {/* Display current page size */}
-                                    <ChevronDown className="w-4 h-4 text-white"/>
+                                    <ChevronDown className="w-4 h-4 text-white" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="bg-[#242424]">
@@ -289,7 +297,7 @@ export function ProductTable({
                                     variant="outline"
                                     className="ml-auto whitespace-nowrap bg-[#242424] hover:border-primary-purple-90 text-white"
                                 >
-                                    <Settings/>
+                                    <Settings />
                                     Toggle Columns
                                 </Button>
                             </DropdownMenuTrigger>
@@ -334,10 +342,10 @@ export function ProductTable({
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
-                                                    header.column.columnDef
-                                                        .header,
-                                                    header.getContext()
-                                                )}
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext()
+                                                  )}
                                         </TableHead>
                                     ))}
                                 </TableRow>
@@ -361,15 +369,28 @@ export function ProductTable({
                                         <TableRow>
                                             {/* Collapsible Button */}
                                             <TableCell className="w-[40px]">
-                                                {row.original.variants && row.original.variants.length > 1 ? (
+                                                {row.original.variants &&
+                                                row.original.variants.length >
+                                                    1 ? (
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => toggleRowExpansion(row.id)}
+                                                        onClick={() =>
+                                                            toggleRowExpansion(
+                                                                row.id
+                                                            )
+                                                        }
                                                     >
-                                                        {expandedRows[row.id] ? <ChevronUp/> : <ChevronDown/>}
+                                                        {expandedRows[
+                                                            row.id
+                                                        ] ? (
+                                                            <ChevronUp />
+                                                        ) : (
+                                                            <ChevronDown />
+                                                        )}
                                                     </Button>
-                                                ) : null} {/* Prevents button from rendering for non-variant products */}
+                                                ) : null}{' '}
+                                                {/* Prevents button from rendering for non-variant products */}
                                             </TableCell>
 
                                             {/* Main Row Data */}
@@ -387,122 +408,152 @@ export function ProductTable({
                                         </TableRow>
 
                                         {/* Expanded Content for Variants */}
-                                        {expandedRows[row.id] && row.original.variants?.length > 1 && (
-                                            <TableRow>
-                                                <TableCell
-                                                    colSpan={columns.length + 1}
-                                                >
-                                                    <div className="p-4 border rounded-md bg-primary-dark text-white">
-                                                        {/* Scrollable Table Wrapper */}
-                                                        <div className="max-h-[300px] overflow-y-auto">
-                                                            <table className="w-full table-auto">
-                                                                <thead>
-                                                                <tr>
-                                                                    <th className="text-left p-2">Variant ID</th>
-                                                                    <th className="text-left p-2">Title</th>
-                                                                    <th className="text-left p-2">Price</th>
-                                                                    <th className="text-left p-2">Inventory</th>
-                                                                    <th className="text-left p-2">Created At</th>
-                                                                </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                {row.original.variants?.map(
-                                                                    (
-                                                                        variant
-                                                                    ) => (
-                                                                        <tr
-                                                                            key={
-                                                                                variant.id
-                                                                            }
-                                                                        >
-                                                                            <td className="p-2">
-                                                                                {
-                                                                                    variant.id
-                                                                                }
-                                                                            </td>
-                                                                            <td className="p-2">
-                                                                                {variant.title ||
-                                                                                    'N/A'}
-                                                                            </td>
-
-                                                                            <td className="p-2">
-                                                                                {variant.prices
-                                                                                    ? variant.prices
-                                                                                        .filter(
-                                                                                            (
-                                                                                                price: Price
-                                                                                            ) =>
-                                                                                                price.currency_code ===
-                                                                                                preferredCurrency
-                                                                                        )
-                                                                                        .map(
-                                                                                            (
-                                                                                                price,
-                                                                                                idx
-                                                                                            ) => (
-                                                                                                <div
-                                                                                                    key={
-                                                                                                        idx
-                                                                                                    }
-                                                                                                >
-                                                                                                    {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? '≈ ' : ''}
-                                                                                                    {formatCryptoPrice(
-                                                                                                        Number(
-                                                                                                            price.amount
-                                                                                                        ),
-                                                                                                        price.currency_code
-                                                                                                    )}{' '}
-                                                                                                    {['usdc', 'usdt'].includes(price.currency_code.toLowerCase()) ? 'USD' : price.currency_code.toUpperCase()}
-                                                                                                </div>
-                                                                                            )
-                                                                                        )
-                                                                                    : [] // Replace this with an empty array or another logic
-                                                                                        .filter(
-                                                                                            (
-                                                                                                price: any
-                                                                                            ) =>
-                                                                                                price.currency_code ===
-                                                                                                'eth'
-                                                                                        )
-                                                                                        .map(
-                                                                                            (
-                                                                                                price: any,
-                                                                                                idx: number
-                                                                                            ) => (
-                                                                                                <div
-                                                                                                    key={
-                                                                                                        idx
-                                                                                                    }
-                                                                                                >
-                                                                                                    {formatCryptoPrice(
-                                                                                                        price.amount,
-                                                                                                        price.currency_code
-                                                                                                    )}{' '}
-                                                                                                    {price.currency_code.toUpperCase()}
-                                                                                                </div>
-                                                                                            )
-                                                                                        )}
-                                                                            </td>
-
-                                                                            <td className="p-2">
-                                                                                {variant.inventory_quantity ||
-                                                                                    'N/A'}
-                                                                            </td>
-                                                                            <td className="p-2">
-                                                                                {new Date(
-                                                                                    variant.created_at
-                                                                                ).toLocaleString()}
-                                                                            </td>
+                                        {expandedRows[row.id] &&
+                                            row.original.variants?.length >
+                                                1 && (
+                                                <TableRow>
+                                                    <TableCell
+                                                        colSpan={
+                                                            columns.length + 1
+                                                        }
+                                                    >
+                                                        <div className="p-4 border rounded-md bg-primary-dark text-white">
+                                                            {/* Scrollable Table Wrapper */}
+                                                            <div className="max-h-[300px] overflow-y-auto">
+                                                                <table className="w-full table-auto">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th className="text-left p-2">
+                                                                                Variant
+                                                                                ID
+                                                                            </th>
+                                                                            <th className="text-left p-2">
+                                                                                Title
+                                                                            </th>
+                                                                            <th className="text-left p-2">
+                                                                                Price
+                                                                            </th>
+                                                                            <th className="text-left p-2">
+                                                                                Inventory
+                                                                            </th>
+                                                                            <th className="text-left p-2">
+                                                                                Created
+                                                                                At
+                                                                            </th>
                                                                         </tr>
-                                                                    )
-                                                                )}
-                                                                </tbody>
-                                                            </table>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {row.original.variants?.map(
+                                                                            (
+                                                                                variant
+                                                                            ) => (
+                                                                                <tr
+                                                                                    key={
+                                                                                        variant.id
+                                                                                    }
+                                                                                >
+                                                                                    <td className="p-2">
+                                                                                        {
+                                                                                            variant.id
+                                                                                        }
+                                                                                    </td>
+                                                                                    <td className="p-2">
+                                                                                        {variant.title ||
+                                                                                            'N/A'}
+                                                                                    </td>
+
+                                                                                    <td className="p-2">
+                                                                                        {variant.prices
+                                                                                            ? variant.prices
+                                                                                                  .filter(
+                                                                                                      (
+                                                                                                          price: Price
+                                                                                                      ) =>
+                                                                                                          price.currency_code ===
+                                                                                                          preferredCurrency
+                                                                                                  )
+                                                                                                  .map(
+                                                                                                      (
+                                                                                                          price,
+                                                                                                          idx
+                                                                                                      ) => (
+                                                                                                          <div
+                                                                                                              key={
+                                                                                                                  idx
+                                                                                                              }
+                                                                                                          >
+                                                                                                              {[
+                                                                                                                  'usdc',
+                                                                                                                  'usdt',
+                                                                                                              ].includes(
+                                                                                                                  price.currency_code.toLowerCase()
+                                                                                                              )
+                                                                                                                  ? '≈ '
+                                                                                                                  : ''}
+                                                                                                              {formatCryptoPrice(
+                                                                                                                  Number(
+                                                                                                                      price.amount
+                                                                                                                  ),
+                                                                                                                  price.currency_code
+                                                                                                              )}{' '}
+                                                                                                              {[
+                                                                                                                  'usdc',
+                                                                                                                  'usdt',
+                                                                                                              ].includes(
+                                                                                                                  price.currency_code.toLowerCase()
+                                                                                                              )
+                                                                                                                  ? 'USD'
+                                                                                                                  : price.currency_code.toUpperCase()}
+                                                                                                          </div>
+                                                                                                      )
+                                                                                                  )
+                                                                                            : [] // Replace this with an empty array or another logic
+                                                                                                  .filter(
+                                                                                                      (
+                                                                                                          price: any
+                                                                                                      ) =>
+                                                                                                          price.currency_code ===
+                                                                                                          'eth'
+                                                                                                  )
+                                                                                                  .map(
+                                                                                                      (
+                                                                                                          price: any,
+                                                                                                          idx: number
+                                                                                                      ) => (
+                                                                                                          <div
+                                                                                                              key={
+                                                                                                                  idx
+                                                                                                              }
+                                                                                                          >
+                                                                                                              {formatCryptoPrice(
+                                                                                                                  price.amount,
+                                                                                                                  price.currency_code
+                                                                                                              )}{' '}
+                                                                                                              {price.currency_code.toUpperCase()}
+                                                                                                          </div>
+                                                                                                      )
+                                                                                                  )}
+                                                                                    </td>
+
+                                                                                    <td className="p-2">
+                                                                                        {variant.inventory_quantity ||
+                                                                                            'N/A'}
+                                                                                    </td>
+                                                                                    <td className="p-2">
+                                                                                        {new Date(
+                                                                                            variant.created_at
+                                                                                        ).toLocaleString()}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            )
+                                                                        )}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
                                     </React.Fragment>
                                 ))
                             ) : (
@@ -518,8 +569,7 @@ export function ProductTable({
                         </TableBody>
                     </Table>
                 </div>
-            </div>
-            {' '}
+            </div>{' '}
             {/* Pagination */}
             <div className="max-w-[1280px] w-full mx-4 rounded-xl p-[24px]">
                 <div className="flex justify-center items-center gap-2">
