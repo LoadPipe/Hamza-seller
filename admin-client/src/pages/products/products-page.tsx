@@ -16,6 +16,10 @@ type Product = z.infer<typeof ProductSchema>;
 export default function ProductsPage() {
     const navigate = useNavigate();
     const search = useSearch({ from: '/products' });
+
+    // TODO: Remove after testing
+    throw new Error("Test error from render phase");
+
     // Extract pagination, sorting, and filters from URL
     const { page, count, sort, filter } = ProductSearchSchema.parse(search);
     const [sortField, sortDirection] = sort
@@ -72,10 +76,6 @@ export default function ProductsPage() {
     if (error instanceof Error) {
         return <div>Error: {error.message}</div>;
     }
-
-    // TODO: Remove after testing
-    throw new Error("Test error from render phase");
-
 
     return (
         <>
