@@ -169,24 +169,16 @@ class StoreService extends MedusaStoreService {
             storeDescription,
             handle,
             fullName,
-            username,
-            phoneNumber,
             emailAddress,
             firstName,
             lastName,
-            ...rest
         } = updates;
 
-        const updatedMetadata = {
-            ...existingStore.metadata,
-            ...rest,
-        };
 
         const updateObj = {
             name: storeName || existingStore.name,
             store_description:
                 storeDescription || existingStore.store_description,
-            metadata: updatedMetadata,
             handle: handle,
         };
 

@@ -1,10 +1,10 @@
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {useNavigate, useParams} from '@tanstack/react-router';
-import {fetchProductById} from '@/pages/products/api/product-by-id.ts';
-import {updateProductById} from '@/pages/products/api/update-product-by-id.ts';
-import {validateSku, validateBarcode, validateEan, validateUpc} from '@/pages/products/api/validate-product-fields.ts';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
+import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
+import { validateSku } from '@/pages/products/api/validate-sku.ts';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Tooltip,
     TooltipContent,
@@ -16,22 +16,22 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import {getJwtStoreId} from '@/utils/authentication';
+import { getJwtStoreId } from '@/utils/authentication';
 
-import {formatCryptoPrice} from '@/utils/get-product-price.ts';
-import {z} from 'zod';
+import { formatCryptoPrice } from '@/utils/get-product-price.ts';
+import { z } from 'zod';
 import {
     ProductSchema,
     // validateInput,
 } from '@/pages/products/product-schema.ts';
-import {Label} from '@/components/ui/label.tsx';
-import {useForm, getBy, setBy} from '@tanstack/react-form';
-import {useCustomerAuthStore} from '@/stores/authentication/customer-auth.ts';
-import {useToast} from '@/hooks/use-toast.ts';
-import {QuillEditor} from '@/components/ui/quill-editor';
-import {PackageSearch, Bitcoin, Trash} from 'lucide-react';
+import { Label } from '@/components/ui/label.tsx';
+import { useForm, getBy, setBy } from '@tanstack/react-form';
+import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
+import { useToast } from '@/hooks/use-toast.ts';
+import { QuillEditor } from '@/components/ui/quill-editor';
+import { PackageSearch, Bitcoin, Trash } from 'lucide-react';
 import ImageUploadDialog from '@/pages/products/utils/image-upload-dialog.tsx';
-import {useState} from 'react';
+import { useState } from 'react';
 import GalleryUploadDialog from '@/pages/products/utils/gallery-upload-dialog.tsx';
 import {
     deleteImageFromCDN,
@@ -48,16 +48,16 @@ type FetchProductResponse = {
 
 export default function EditProductPage() {
     const queryClient = useQueryClient();
-    const {id: productId} = useParams({from: '/products/$id/edit'});
+    const { id: productId } = useParams({ from: '/products/$id/edit' });
     const navigate = useNavigate();
     const preferredCurrency = useCustomerAuthStore(
         (state) => state.preferred_currency_code ?? 'eth'
     );
 
-    const {toast} = useToast();
+    const { toast } = useToast();
 
     // Fetch product data
-    const {data, isLoading, error} = useQuery<FetchProductResponse, Error>({
+    const { data, isLoading, error } = useQuery<FetchProductResponse, Error>({
         queryKey: ['view-product-form', productId],
         queryFn: () => fetchProductById(productId),
     });
@@ -67,7 +67,7 @@ export default function EditProductPage() {
     // Handle Thumbnail Upload
     const handleThumbnailUpload = (imageUrl: string) => {
         editProductForm.setFieldValue('thumbnail', imageUrl);
-        updateEditForm.mutate({thumbnail: imageUrl, preferredCurrency});
+        updateEditForm.mutate({ thumbnail: imageUrl, preferredCurrency });
     };
 
     const [isGalleryDialogOpen, setGalleryDialogOpen] = useState(false);
@@ -79,7 +79,7 @@ export default function EditProductPage() {
         setGalleryImages(updatedGallery);
 
         // Mutate backend (optional: depends if you want to update product immediately)
-        updateEditForm.mutate({images: updatedGallery, preferredCurrency});
+        updateEditForm.mutate({ images: updatedGallery, preferredCurrency });
     };
 
     // The following section is variant image logic
@@ -142,7 +142,7 @@ export default function EditProductPage() {
         },
         onSuccess: () => {
             // Invalidate or refetch to keep cache in sync
-            queryClient.invalidateQueries({queryKey: ['view-product-form']});
+            queryClient.invalidateQueries({ queryKey: ['view-product-form'] });
             // Optionally navigate away
             toast({
                 variant: 'default',
@@ -180,9 +180,9 @@ export default function EditProductPage() {
                 );
                 return matchingPrice
                     ? formatCryptoPrice(
-                        Number(matchingPrice.amount),
-                        preferredCurrency ?? 'eth'
-                    )
+                          Number(matchingPrice.amount),
+                          preferredCurrency ?? 'eth'
+                      )
                     : '';
             })(),
             variants: product?.variants?.map((variant) => ({
@@ -203,9 +203,9 @@ export default function EditProductPage() {
                     );
                     return matchingPrice
                         ? formatCryptoPrice(
-                            Number(matchingPrice.amount || '0'),
-                            preferredCurrency ?? 'eth'
-                        )
+                              Number(matchingPrice.amount || '0'),
+                              preferredCurrency ?? 'eth'
+                          )
                         : '';
                 })(),
                 metadata: variant.metadata || {},
@@ -213,9 +213,32 @@ export default function EditProductPage() {
             })),
         },
         // validators: {
-        //     onSubmit: (values) => {
-        //         const result = ProductSchema.safeParse(values);
-        //         return result.success ? undefined : result.error.format();
+        //     onSubmitAsync: async ({ value }) => {
+        //         const errors: Record<string, string> = {};
+        //         if (value.variants) {
+        //             for (let i = 0; i < value.variants.length; i++) {
+        //                 const sku = value.variants[i].sku;
+        //                 const defaultSku = editProductForm.getFieldValue.name;
+        //
+        //                 if (sku.trim() === '') {
+        //                     errors[`variants[${i}].sku`] = 'SKU is required.';
+        //                 } else if (sku !== defaultSku) {
+        //                     try {
+        //                         const response = await validateSku(Number(sku));
+        //                         if (response.data === false) {
+        //                             errors[`variants[${i}].sku`] =
+        //                                 'SKU already exists eh?';
+        //                         }
+        //                     } catch (error: any) {
+        //                         errors[`variants[${i}].sku`] =
+        //                             error.message || 'Failed to validate SKU';
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         return Object.keys(errors).length
+        //             ? { fields: errors }
+        //             : undefined;
         //     },
         // },
         // validators: (values) => {
@@ -240,9 +263,9 @@ export default function EditProductPage() {
 
     const deleteImageMutation = useMutation({
         mutationFn: async ({
-                               imageUrl,
-                               imageId,
-                           }: {
+            imageUrl,
+            imageId,
+        }: {
             imageUrl: string;
             imageId: string;
         }) => {
@@ -260,7 +283,7 @@ export default function EditProductPage() {
             await deleteImageFromdB(imageId);
             return imageUrl;
         },
-        onMutate: async ({imageUrl}) => {
+        onMutate: async ({ imageUrl }) => {
             await queryClient.cancelQueries({
                 queryKey: ['view-product-form', productId],
             });
@@ -282,7 +305,7 @@ export default function EditProductPage() {
                 );
             }
             setGalleryImages((prev) => prev.filter((url) => url !== imageUrl));
-            return {previousData};
+            return { previousData };
         },
         onError: (error, variables, context) => {
             if (context?.previousData) {
@@ -321,10 +344,10 @@ export default function EditProductPage() {
                 <Button
                     className="bg-[#1A1A1A] p-8 rounded-lg shadow-md mt-4 justify-end"
                     variant="ghost"
-                    onClick={() => navigate({to: '/products'})}
+                    onClick={() => navigate({ to: '/products' })}
                 >
                     Back to All Products
-                    <PackageSearch size={18}/>
+                    <PackageSearch size={18} />
                 </Button>
             </div>
 
@@ -349,10 +372,16 @@ export default function EditProductPage() {
                             <editProductForm.Field
                                 name="title"
                                 validators={{
-                                    onBlur: ({value}) =>
-                                        value?.trim().length === 0
-                                            ? 'Product name is required.'
-                                            : undefined,
+                                    onBlur: ({ value }) => {
+                                        const trimmed = value?.trim() || '';
+                                        if (trimmed.length === 0) {
+                                            return 'Product name is required.';
+                                        }
+                                        if (trimmed.length > 200) {
+                                            return 'Product name must be 200 characters or fewer.';
+                                        }
+                                        return undefined;
+                                    },
                                 }}
                             >
                                 {(field) => (
@@ -370,12 +399,12 @@ export default function EditProductPage() {
                                         />
                                         {field.state.meta.errors?.length >
                                             0 && (
-                                                <span className="text-red-500 mt-1 mb-4 block">
+                                            <span className="text-red-500 mt-1 mb-4 block">
                                                 {field.state.meta.errors.join(
                                                     ', '
                                                 )}
                                             </span>
-                                            )}
+                                        )}
                                     </>
                                 )}
                             </editProductForm.Field>
@@ -384,7 +413,7 @@ export default function EditProductPage() {
                             <editProductForm.Field
                                 name="subtitle"
                                 validators={{
-                                    onBlur: ({value}) =>
+                                    onBlur: ({ value }) =>
                                         value?.trim().length > 1000
                                             ? 'Subtitle must not exceed 1000 characters.'
                                             : undefined,
@@ -405,12 +434,12 @@ export default function EditProductPage() {
                                         />
                                         {field.state.meta.errors?.length >
                                             0 && (
-                                                <span className="text-red-500 mt-1 mb-4 block">
+                                            <span className="text-red-500 mt-1 mb-4 block">
                                                 {field.state.meta.errors.join(
                                                     ', '
                                                 )}
                                             </span>
-                                            )}
+                                        )}
                                     </>
                                 )}
                             </editProductForm.Field>
@@ -419,10 +448,17 @@ export default function EditProductPage() {
                             <editProductForm.Field
                                 name="description"
                                 validators={{
-                                    onBlur: ({value}) =>
-                                        value?.trim().length === 0
-                                            ? 'Description is required.'
-                                            : undefined,
+                                    onBlur: ({ value }) => {
+                                        const trimmed = value?.trim() || '';
+                                        if (trimmed.length === 0) {
+                                            return 'Description is required.';
+                                        }
+                                        const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+                                        if (wordCount > 3000) {
+                                            return 'Description must not exceed 3000 words.';
+                                        }
+                                        return undefined;
+                                    },
                                 }}
                             >
                                 {(field) => (
@@ -435,12 +471,12 @@ export default function EditProductPage() {
                                         />
                                         {field.state.meta.errors?.length >
                                             0 && (
-                                                <span className="text-red-500 mt-1 mb-4 block">
+                                            <span className="text-red-500 mt-1 mb-4 block">
                                                 {field.state.meta.errors.join(
                                                     ', '
                                                 )}
                                             </span>
-                                            )}
+                                        )}
                                     </>
                                 )}
                             </editProductForm.Field>
@@ -525,15 +561,15 @@ export default function EditProductPage() {
                                                         deleteImageMutation.mutate(
                                                             {
                                                                 imageUrl:
-                                                                image.url,
+                                                                    image.url,
                                                                 imageId:
-                                                                image.id,
+                                                                    image.id,
                                                             }
                                                         )
                                                     }
                                                     className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"
                                                 >
-                                                    <Trash size={16}/>
+                                                    <Trash size={16} />
                                                 </button>
                                             </div>
                                         ))}
@@ -637,8 +673,7 @@ export default function EditProductPage() {
                                                 Variant #{index + 1}
                                             </AccordionTrigger>
                                             <AccordionContent>
-                                                <div
-                                                    className="flex items-center justify-between border-b border-gray-700 py-2 mb-4">
+                                                <div className="flex items-center justify-between border-b border-gray-700 py-2 mb-4">
                                                     <div className="flex items-center gap-4">
                                                         {variant.metadata
                                                             ?.imgUrl ? (
@@ -690,8 +725,7 @@ export default function EditProductPage() {
                                                         />
                                                     )}
                                                 </div>
-                                                <div
-                                                    className="grid grid-cols-4 gap-4 items-center border-b border-gray-700 py-2">
+                                                <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
                                                     {/* Variant ID HIDDEN*/}
                                                     <editProductForm.Field
                                                         name={`variants[${index}].id`}
@@ -712,13 +746,13 @@ export default function EditProductPage() {
                                                         name={`variants[${index}].title`}
                                                         validators={{
                                                             onBlur: ({
-                                                                         value,
-                                                                     }) => {
+                                                                value,
+                                                            }) => {
                                                                 if (
                                                                     !value ||
                                                                     value.trim()
                                                                         .length ===
-                                                                    0
+                                                                        0
                                                                 ) {
                                                                     return 'Title is required.';
                                                                 }
@@ -733,7 +767,7 @@ export default function EditProductPage() {
                                                                     !value ||
                                                                     value.trim()
                                                                         .length ===
-                                                                    0
+                                                                        0
                                                                 ) {
                                                                     return 'Title is required.';
                                                                 }
@@ -768,15 +802,15 @@ export default function EditProductPage() {
                                                                     }
                                                                 />
                                                                 {field.state
-                                                                        .meta.errors
-                                                                        ?.length >
+                                                                    .meta.errors
+                                                                    ?.length >
                                                                     0 && (
-                                                                        <span className="text-red-500 mt-1 block">
+                                                                    <span className="text-red-500 mt-1 block">
                                                                         {field.state.meta.errors.join(
                                                                             ', '
                                                                         )}
                                                                     </span>
-                                                                    )}
+                                                                )}
                                                             </div>
                                                         )}
                                                     </editProductForm.Field>
@@ -864,18 +898,18 @@ export default function EditProductPage() {
                                                                         />
                                                                     </TooltipTrigger>
                                                                     {field.state
-                                                                            .meta
-                                                                            .errors
-                                                                            .length >
+                                                                        .meta
+                                                                        .errors
+                                                                        .length >
                                                                         0 && (
-                                                                            <TooltipContent>
+                                                                        <TooltipContent>
                                                                             <span className="text-red-500">
                                                                                 {field.state.meta.errors.join(
                                                                                     ', '
                                                                                 )}
                                                                             </span>
-                                                                            </TooltipContent>
-                                                                        )}
+                                                                        </TooltipContent>
+                                                                    )}
                                                                 </Tooltip>
                                                             </div>
                                                         )}
@@ -1183,8 +1217,8 @@ export default function EditProductPage() {
                                                         key={`inventory_quantity-${variant.id}`}
                                                         validators={{
                                                             onBlur: ({
-                                                                         value,
-                                                                     }) => {
+                                                                value,
+                                                            }) => {
                                                                 if (
                                                                     value ===
                                                                     undefined
@@ -1234,15 +1268,15 @@ export default function EditProductPage() {
                                                                     }
                                                                 />
                                                                 {field.state
-                                                                        .meta.errors
-                                                                        ?.length >
+                                                                    .meta.errors
+                                                                    ?.length >
                                                                     0 && (
-                                                                        <span className="text-red-500 mt-1 block">
+                                                                    <span className="text-red-500 mt-1 block">
                                                                         {field.state.meta.errors.join(
                                                                             ', '
                                                                         )}
                                                                     </span>
-                                                                    )}
+                                                                )}
                                                             </div>
                                                         )}
                                                     </editProductForm.Field>
@@ -1251,8 +1285,8 @@ export default function EditProductPage() {
                                                         key={`price-${variant.id}`}
                                                         validators={{
                                                             onBlur: ({
-                                                                         value,
-                                                                     }) => {
+                                                                value,
+                                                            }) => {
                                                                 // Convert the union string | number to a number
                                                                 const numericValue =
                                                                     Number(
@@ -1262,7 +1296,7 @@ export default function EditProductPage() {
                                                                 // If value is undefined or NaN, handle that first
                                                                 if (
                                                                     value ===
-                                                                    undefined ||
+                                                                        undefined ||
                                                                     isNaN(
                                                                         numericValue
                                                                     )
@@ -1297,11 +1331,11 @@ export default function EditProductPage() {
                                                                         'usdt',
                                                                     ].includes(
                                                                         preferredCurrency?.toLowerCase() ??
-                                                                        ''
+                                                                            ''
                                                                     )
                                                                         ? 'USD'
                                                                         : (preferredCurrency?.toUpperCase() ??
-                                                                            'ETH')}
+                                                                          'ETH')}
                                                                 </Label>
                                                                 <Input
                                                                     type="number"
@@ -1327,15 +1361,15 @@ export default function EditProductPage() {
                                                                     }
                                                                 />
                                                                 {field.state
-                                                                        .meta.errors
-                                                                        ?.length >
+                                                                    .meta.errors
+                                                                    ?.length >
                                                                     0 && (
-                                                                        <span className="text-red-500 mt-1 block">
+                                                                    <span className="text-red-500 mt-1 block">
                                                                         {field.state.meta.errors.join(
                                                                             ', '
                                                                         )}
                                                                     </span>
-                                                                    )}
+                                                                )}
                                                             </div>
                                                         )}
                                                     </editProductForm.Field>
@@ -1482,20 +1516,20 @@ export default function EditProductPage() {
                                     variant="ghost"
                                     className="hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
                                     onClick={() =>
-                                        navigate({to: '/products'})
+                                        navigate({ to: '/products' })
                                     }
                                 >
                                     Back to All Products
-                                    <PackageSearch size={18}/>
+                                    <PackageSearch size={18} />
                                 </Button>
 
                                 <Button
                                     variant="ghost"
                                     className="hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
-                                    onClick={() => navigate({to: '/'})}
+                                    onClick={() => navigate({ to: '/' })}
                                 >
                                     Change Currency
-                                    <Bitcoin size={18}/>
+                                    <Bitcoin size={18} />
                                 </Button>
 
                                 <editProductForm.Subscribe
@@ -1544,7 +1578,7 @@ export default function EditProductPage() {
                                             const variantData =
                                                 formState.values.variants?.[
                                                     index
-                                                    ];
+                                                ];
                                             if (variantData) {
                                                 dirtyVariantArray.push(
                                                     variantData
@@ -1557,16 +1591,16 @@ export default function EditProductPage() {
                                             dirtyFields,
                                             canSubmit: formState.canSubmit,
                                             isSubmitting:
-                                            formState.isSubmitting,
+                                                formState.isSubmitting,
                                         };
                                     }}
                                 >
                                     {({
-                                          dirtyVariantArray,
-                                          dirtyFields,
-                                          canSubmit,
-                                          isSubmitting,
-                                      }) => {
+                                        dirtyVariantArray,
+                                        dirtyFields,
+                                        canSubmit,
+                                        isSubmitting,
+                                    }) => {
                                         const handleSubmit = async () => {
                                             // Motivation: Validation errors only show when the variant's accordion section is
                                             // expanded, but they don't properly show when you submit the form
