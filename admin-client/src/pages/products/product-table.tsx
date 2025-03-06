@@ -228,7 +228,8 @@ export function ProductTable({
                             Sample CSV
                         </a>
                         &nbsp;|&nbsp;
-                        <button
+                        <a
+                            href="javascript: void();"
                             onClick={(e) => {
                                 e.preventDefault();
                                 setCategoryModalOpen(true);
@@ -237,7 +238,7 @@ export function ProductTable({
                             style={{ fontSize: '0.7rem' }}
                         >
                             Category List
-                        </button>
+                        </a>
                     </div>
 
                     {/* Render the Modal */}
