@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
 import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
-import { validateSku } from '@/pages/products/api/validate-sku.ts';
+import { validateSku, validateBarcode, validateEan, validateUpc } from '@/pages/products/api/validate-product-fields.ts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -190,6 +190,9 @@ export default function EditProductPage() {
                 product_id: variant.product_id,
                 title: variant.title || '',
                 sku: variant.sku || '',
+                barcode: variant.barcode || '',
+                ean: variant.ean || '',
+                upc: variant.upc || '',
                 weight: variant.weight || 0,
                 length: variant.length || 0,
                 height: variant.height || 0,
@@ -818,24 +821,19 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
-                                                            onBlur: ({
-                                                                value,
-                                                            }) =>
-                                                                value.trim() ===
-                                                                ''
-                                                                    ? 'SKU is required.'
-                                                                    : undefined,
+                                                            onBlur: () => { return undefined },
                                                             // Asynchronous check: call your API only if the SKU has changed
                                                             onChangeAsync:
                                                                 async ({
-                                                                    value,
-                                                                }) => {
+                                                                           value,
+                                                                       }) => {
                                                                     // Compare with the default SKU. If unchanged, skip the API call.
+                                                                    if (value.trim() === '') return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateSku(
-                                                                                Number(
-                                                                                    value
+                                                                                (
+                                                                                    value.toString()
                                                                                 ),
                                                                                 editProductForm.getFieldValue(
                                                                                     `variants[${index}].id`
@@ -912,6 +910,302 @@ export default function EditProductPage() {
                                                                             </span>
                                                                         </TooltipContent>
                                                                     )}
+                                                                </Tooltip>
+                                                            </div>
+                                                        )}
+                                                    </editProductForm.Field>
+
+                                                    {/* Variant Barcode */}
+                                                    <editProductForm.Field
+                                                        name={`variants[${index}].barcode`}
+                                                        asyncDebounceMs={100}
+                                                        validators={{
+                                                            // Synchronous check: ensure a value exists
+                                                            onBlur: () => { return undefined },
+                                                            // Asynchronous check: call your API only if the Barcode has changed
+                                                            onChangeAsync:
+                                                                async ({
+                                                                           value,
+                                                                       }) => {
+                                                                    // Compare with the default SKU. If unchanged, skip the API call.
+                                                                    if (value.trim() === '') return undefined;
+                                                                    try {
+                                                                        const response =
+                                                                            await validateBarcode(
+                                                                                (value.toString()),
+                                                                                editProductForm.getFieldValue(
+                                                                                    `variants[${index}].id`
+                                                                                )
+                                                                            );
+
+                                                                        if (
+                                                                            response ===
+                                                                            false
+                                                                        ) {
+                                                                            return 'Barcode already exists';
+                                                                        }
+                                                                        return undefined;
+                                                                    } catch (error) {
+                                                                        console.error(
+                                                                            'Failed to validate Barcode:',
+                                                                            error
+                                                                        );
+
+                                                                        return 'Failed to validate Barcode';
+                                                                    }
+                                                                },
+                                                        }}
+                                                    >
+                                                        {(field) => (
+                                                            <div>
+                                                                <Label>
+                                                                    Barcode
+                                                                </Label>
+                                                                <Tooltip
+                                                                    open={
+                                                                        field
+                                                                            .state
+                                                                            .meta
+                                                                            .errors
+                                                                            .length >
+                                                                        0
+                                                                    }
+                                                                >
+                                                                    <TooltipTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <Input
+                                                                            placeholder="Barcode"
+                                                                            value={
+                                                                                field
+                                                                                    .state
+                                                                                    .value
+                                                                            }
+                                                                            onChange={(
+                                                                                e
+                                                                            ) => {
+                                                                                field.handleChange(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value
+                                                                                );
+                                                                            }}
+                                                                            onBlur={
+                                                                                field.handleBlur
+                                                                            }
+                                                                        />
+                                                                    </TooltipTrigger>
+                                                                    {field.state
+                                                                            .meta
+                                                                            .errors
+                                                                            .length >
+                                                                        0 && (
+                                                                            <TooltipContent>
+                                                                            <span className="text-red-500">
+                                                                                {field.state.meta.errors.join(
+                                                                                    ', '
+                                                                                )}
+                                                                            </span>
+                                                                            </TooltipContent>
+                                                                        )}
+                                                                </Tooltip>
+                                                            </div>
+                                                        )}
+                                                    </editProductForm.Field>
+
+                                                    {/* Variant EAN */}
+                                                    <editProductForm.Field
+                                                        name={`variants[${index}].ean`}
+                                                        asyncDebounceMs={100}
+                                                        validators={{
+                                                            // Synchronous check: ensure a value exists
+                                                            // Allow empty value on blur
+                                                            onBlur: () => { return undefined },
+                                                            // Asynchronous check: call your API only if the Barcode has changed
+                                                            onChangeAsync:
+                                                                async ({
+                                                                           value,
+                                                                       }) => {
+                                                                    // Compare with the default SKU. If unchanged, skip the API call.
+                                                                    if (value.trim() === '') return undefined;
+                                                                    try {
+                                                                        const response =
+                                                                            await validateEan(
+                                                                                (value.toString()),
+                                                                                editProductForm.getFieldValue(
+                                                                                    `variants[${index}].id`
+                                                                                )
+                                                                            );
+
+                                                                        if (
+                                                                            response ===
+                                                                            false
+                                                                        ) {
+                                                                            return 'EAN already exists';
+                                                                        }
+                                                                        return undefined;
+                                                                    } catch (error) {
+                                                                        console.error(
+                                                                            'Failed to validate EAN:',
+                                                                            error
+                                                                        );
+
+                                                                        return 'Failed to validate EAN';
+                                                                    }
+                                                                },
+                                                        }}
+                                                    >
+                                                        {(field) => (
+                                                            <div>
+                                                                <Label>
+                                                                    EAN
+                                                                </Label>
+                                                                <Tooltip
+                                                                    open={
+                                                                        field
+                                                                            .state
+                                                                            .meta
+                                                                            .errors
+                                                                            .length >
+                                                                        0
+                                                                    }
+                                                                >
+                                                                    <TooltipTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <Input
+                                                                            placeholder="EAN"
+                                                                            value={
+                                                                                field
+                                                                                    .state
+                                                                                    .value
+                                                                            }
+                                                                            onChange={(
+                                                                                e
+                                                                            ) => {
+                                                                                field.handleChange(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value
+                                                                                );
+                                                                            }}
+                                                                            onBlur={
+                                                                                field.handleBlur
+                                                                            }
+                                                                        />
+                                                                    </TooltipTrigger>
+                                                                    {field.state
+                                                                            .meta
+                                                                            .errors
+                                                                            .length >
+                                                                        0 && (
+                                                                            <TooltipContent>
+                                                                            <span className="text-red-500">
+                                                                                {field.state.meta.errors.join(
+                                                                                    ', '
+                                                                                )}
+                                                                            </span>
+                                                                            </TooltipContent>
+                                                                        )}
+                                                                </Tooltip>
+                                                            </div>
+                                                        )}
+                                                    </editProductForm.Field>
+
+
+                                                    {/* Variant UPC*/}
+                                                    <editProductForm.Field
+                                                        name={`variants[${index}].upc`}
+                                                        asyncDebounceMs={100}
+                                                        validators={{
+                                                            // Allow empty value on blur
+                                                            onBlur: () => { return undefined },
+                                                            // Asynchronous check: call your API only if the UPC has changed
+                                                            onChangeAsync:
+                                                                async ({
+                                                                           value,
+                                                                       }) => {
+                                                                    // Compare with the default UPC. If unchanged, skip the API call.
+                                                                    if (value.trim() === '') return undefined;
+                                                                    try {
+                                                                        const response =
+                                                                            await validateUpc(
+                                                                                (value.toString()),
+                                                                                editProductForm.getFieldValue(
+                                                                                    `variants[${index}].id`
+                                                                                )
+                                                                            );
+
+                                                                        if (
+                                                                            response ===
+                                                                            false
+                                                                        ) {
+                                                                            return 'UPC already exists';
+                                                                        }
+                                                                        return undefined;
+                                                                    } catch (error) {
+                                                                        console.error(
+                                                                            'Failed to validate UPC:',
+                                                                            error
+                                                                        );
+
+                                                                        return 'Failed to validate UPC';
+                                                                    }
+                                                                },
+                                                        }}
+                                                    >
+                                                        {(field) => (
+                                                            <div>
+                                                                <Label>
+                                                                    UPC
+                                                                </Label>
+                                                                <Tooltip
+                                                                    open={
+                                                                        field
+                                                                            .state
+                                                                            .meta
+                                                                            .errors
+                                                                            .length >
+                                                                        0
+                                                                    }
+                                                                >
+                                                                    <TooltipTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <Input
+                                                                            placeholder="UPC"
+                                                                            value={
+                                                                                field
+                                                                                    .state
+                                                                                    .value
+                                                                            }
+                                                                            onChange={(
+                                                                                e
+                                                                            ) => {
+                                                                                field.handleChange(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value
+                                                                                );
+                                                                            }}
+                                                                            onBlur={
+                                                                                field.handleBlur
+                                                                            }
+                                                                        />
+                                                                    </TooltipTrigger>
+                                                                    {field.state
+                                                                            .meta
+                                                                            .errors
+                                                                            .length >
+                                                                        0 && (
+                                                                            <TooltipContent>
+                                                                            <span className="text-red-500">
+                                                                                {field.state.meta.errors.join(
+                                                                                    ', '
+                                                                                )}
+                                                                            </span>
+                                                                            </TooltipContent>
+                                                                        )}
                                                                 </Tooltip>
                                                             </div>
                                                         )}
@@ -1308,6 +1602,38 @@ export default function EditProductPage() {
                                         isSubmitting,
                                     }) => {
                                         const handleSubmit = async () => {
+                                            // Motivation: Validation errors only show when the variant's accordion section is
+                                            // expanded, but they don't properly show when you submit the form
+                                            // which makes the UX bad...
+
+                                            // onBlur field only triggers when a user interacts with the field
+                                            // Since only one variant can be expanded at a time, errors are hidden when submitting
+
+                                            // TODO: FORM VALIDATION IS INCOMPLETE FOR EAN UPC BARCODE...
+                                            // const validationErrors = await editProductForm.validate();
+                                            //
+                                            //
+                                            // if (Object.keys(validationErrors).length > 0) {
+                                            //     const firstInvalidVariantIndex = product.variants.findIndex((_, i) =>
+                                            //         Object.keys(validationErrors).some((errorField) =>
+                                            //             errorField.startsWith(`variants[${i}]`)
+                                            //         )
+                                            //     );
+                                            //
+                                            //     if (firstInvalidVariantIndex !== -1) {
+                                            //         setOpenAccordionItem(`variant-${firstInvalidVariantIndex}`);
+                                            //     }
+                                            //
+                                            //     toast({
+                                            //         variant: "destructive",
+                                            //         title: "Validation Errors",
+                                            //         description: "Please fix the errors before submitting.",
+                                            //     });
+                                            //
+                                            //     return;
+                                            // }
+
+
                                             // If nothing is dirty at all:
                                             if (
                                                 Object.keys(dirtyFields)
