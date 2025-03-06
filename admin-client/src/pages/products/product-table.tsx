@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { SetStateAction, Dispatch, useEffect, useState, Fragment } from 'react';
 import { Download, FilePlus } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import {
@@ -57,7 +57,7 @@ interface Price {
 }
 
 import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
-import { ProductCategory } from '@/utils/status-enum.ts';
+// import { ProductCategory } from '@/utils/status-enum.ts';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { fetchAllCategories } from './api/product-categories';
@@ -69,12 +69,12 @@ interface ProductTableProps {
     pageIndex: number;
     pageSize: number;
     productCategories: Record<string, string>;
-    setPageIndex: React.Dispatch<React.SetStateAction<number>>;
-    setPageSize: React.Dispatch<React.SetStateAction<number>>;
+    setPageIndex: Dispatch<SetStateAction<number>>;
+    setPageSize: Dispatch<SetStateAction<number>>;
     totalRecords: number;
     filteredProductsCount: number;
     sorting: SortingState;
-    setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
+    setSorting: Dispatch<SetStateAction<SortingState>>;
     isLoading: boolean;
 }
 
@@ -91,16 +91,16 @@ export function ProductTable({
     setSorting,
     isLoading,
 }: ProductTableProps) {
-    const [columnFilters, setColumnFilters] =
-        React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = React.useState({});
-    const [rowSelection, setRowSelection] = React.useState({});
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] = useState({});
+    const [rowSelection, setRowSelection] = useState({});
     const pageCount = Math.ceil(filteredProductsCount / pageSize);
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>(
         {}
     );
     const [isModalOpen, setModalOpen] = useState(false);
     const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
+    const [categoryNames, setCategoryNames] = useState<string[]>([]);
 
     const { filters } = useStore(productStore);
 
@@ -140,6 +140,14 @@ export function ProductTable({
             },
         },
     });
+
+    useEffect(() => {
+        if (!catIsLoading) {
+            setCategoryNames(
+                categories?.map((category) => category.name) || []
+            );
+        }
+    }, [catIsLoading]);
 
     useEffect(() => {
         console.log(table.getRowModel().rows);
@@ -290,21 +298,23 @@ export function ProductTable({
                     )}
 
                     <div className="flex justify-start">
-                        <DropdownMultiselectFilter
-                            title="Filter By Category"
-                            optionsEnum={ProductCategory} // Pass the enum directly
-                            selectedFilters={getFilterValues('categories')} // Extract `in` property as an array
-                            onFilterChange={(values) => {
-                                if (values) {
-                                    setProductFilter('categories', {
-                                        in: values,
-                                    }); // Apply filter
-                                } else {
-                                    clearProductFilter('categories'); // Clear filter if no values
-                                }
-                                setPageIndex(0); // Reset to the first page
-                            }}
-                        />
+                        {categoryNames && (
+                            <DropdownMultiselectFilter
+                                title="Filter By Category"
+                                catOptions={categoryNames} // Pass the enum directly
+                                selectedFilters={getFilterValues('categories')} // Extract `in` property as an array
+                                onFilterChange={(values) => {
+                                    if (values) {
+                                        setProductFilter('categories', {
+                                            in: values,
+                                        }); // Apply filter
+                                    } else {
+                                        clearProductFilter('categories'); // Clear filter if no values
+                                    }
+                                    setPageIndex(0); // Reset to the first page
+                                }}
+                            />
+                        )}
                     </div>
                     <div className="ml-auto flex flex-row relative w-[376px]">
                         {/*TODO: Improve this search.... yarn add [algoliasearch || @meilisearch/instant-meilisearch] pkgs. */}
@@ -435,7 +445,7 @@ export function ProductTable({
                                 ))
                             ) : table.getRowModel().rows?.length > 0 ? (
                                 table.getRowModel().rows.map((row) => (
-                                    <React.Fragment key={row.id}>
+                                    <Fragment key={row.id}>
                                         <TableRow>
                                             {/* Collapsible Button */}
                                             <TableCell className="w-[40px]">
@@ -624,7 +634,7 @@ export function ProductTable({
                                                     </TableCell>
                                                 </TableRow>
                                             )}
-                                    </React.Fragment>
+                                    </Fragment>
                                 ))
                             ) : (
                                 <TableRow>
