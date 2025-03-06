@@ -42,6 +42,9 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 
 type Product = z.infer<typeof ProductSchema>;
+type Category = NonNullable<
+    z.infer<typeof ProductSchema>['categories']
+>[number];
 
 interface Price {
     id: string;
@@ -57,6 +60,8 @@ import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-m
 import { ProductCategory } from '@/utils/status-enum.ts';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
+import { fetchAllCategories } from './api/product-categories';
+import { useQuery } from '@tanstack/react-query';
 
 interface ProductTableProps {
     columns: ColumnDef<Product, any>[];
@@ -95,10 +100,21 @@ export function ProductTable({
         {}
     );
     const [isModalOpen, setModalOpen] = useState(false);
+    const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
 
     const { filters } = useStore(productStore);
 
     const getFilterValues = (key: string) => filters?.[key]?.in || [];
+
+    // Fetch categories using getSecure and useQuery
+    const {
+        data: categories,
+        isLoading: catIsLoading,
+        error: catError,
+    } = useQuery<Category[]>({
+        queryKey: ['categories'],
+        queryFn: async () => fetchAllCategories(),
+    });
 
     const table = useReactTable({
         data,
@@ -209,8 +225,19 @@ export function ProductTable({
                             className="text-xs underline"
                             style={{ fontSize: '0.7rem' }}
                         >
-                            Download sample CSV
+                            Sample CSV
                         </a>
+                        &nbsp;|&nbsp;
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setCategoryModalOpen(true);
+                            }}
+                            className="text-xs underline"
+                            style={{ fontSize: '0.7rem' }}
+                        >
+                            Category List
+                        </button>
                     </div>
 
                     {/* Render the Modal */}
@@ -218,6 +245,48 @@ export function ProductTable({
                         open={isModalOpen}
                         onClose={() => setModalOpen(false)} // Close the modal
                     />
+
+                    {/* Add this new modal */}
+                    {isCategoryModalOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-[#242424] p-6 rounded-lg max-w-md w-full">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-lg font-semibold">
+                                        Category List
+                                    </h3>
+                                    <button
+                                        onClick={() =>
+                                            setCategoryModalOpen(false)
+                                        }
+                                        className="text-gray-400 hover:text-white"
+                                        style={{ padding: '5px 10px' }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                                <div className="text-white">
+                                    <ul
+                                        style={{
+                                            listStyle: 'disc',
+                                            padding: '0rem 2rem 1rem',
+                                        }}
+                                    >
+                                        {!catError && catIsLoading && (
+                                            <span>Loading...</span>
+                                        )}
+                                        {catError && (
+                                            <span>Sorry, error occurred.</span>
+                                        )}
+                                        {!catError &&
+                                            !catIsLoading &&
+                                            categories?.map((category) => (
+                                                <li>{category.handle}</li>
+                                            ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex justify-start">
                         <DropdownMultiselectFilter
