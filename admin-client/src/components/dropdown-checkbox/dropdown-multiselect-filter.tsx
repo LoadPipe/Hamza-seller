@@ -4,14 +4,14 @@ import { ChevronDown } from 'lucide-react';
 
 type DropdownMultiselectFilterProps = {
     title: string;
-    catOptions: string[];
+    optionsEnum: Record<string, string>;
     onFilterChange: (selected: string[] | null) => void;
     selectedFilters: string[];
 };
 
 export default function DropdownMultiselectFilter({
     title,
-    catOptions,
+    optionsEnum,
     onFilterChange,
     selectedFilters = [],
 }: DropdownMultiselectFilterProps) {
@@ -19,11 +19,12 @@ export default function DropdownMultiselectFilter({
         string[]
     >(selectedFilters || []);
     // console.log(
-    //     `DUCK DUCK: ${title} \n ENUM: ${JSON.stringify(catOptions)} \n FILTER FUNC
+    //     `DUCK DUCK: ${title} \n ENUM: ${JSON.stringify(optionsEnum)} \n FILTER FUNC
     //    \n SELECTED FILTERS${JSON.stringify(selectedFilters)}`
     // );
 
     const [isOpen, setIsOpen] = React.useState(false);
+    const options = Object.values(optionsEnum);
 
     const handleToggle = (option: string) => {
         setTemporarySelection((prev) =>
@@ -46,7 +47,7 @@ export default function DropdownMultiselectFilter({
 
     const selectAllFilters = () => {
         //onFilterChange(options);
-        setTemporarySelection(catOptions);
+        setTemporarySelection(options);
         setIsOpen(true);
     };
 
@@ -84,25 +85,25 @@ export default function DropdownMultiselectFilter({
                         align="start"
                         sideOffset={5}
                     >
-                        {catOptions.map((catOption) => (
+                        {options.map((option) => (
                             <div
-                                key={catOption}
+                                key={option}
                                 className="flex items-center gap-2 p-2 cursor-pointer hover:bg-secondary-onyx-900 rounded-md"
                             >
                                 <input
                                     type="checkbox"
-                                    id={catOption}
+                                    id={option}
                                     checked={temporarySelection.includes(
-                                        catOption
+                                        option
                                     )} // Reflect temporary state
-                                    onChange={() => handleToggle(catOption)}
+                                    onChange={() => handleToggle(option)}
                                     className="form-checkbox h-5 w-5 text-blue-500 border-gray-300 rounded"
                                 />
                                 <label
-                                    htmlFor={catOption}
+                                    htmlFor={option}
                                     className="cursor-pointer"
                                 >
-                                    {catOption}
+                                    {option}
                                 </label>
                             </div>
                         ))}
