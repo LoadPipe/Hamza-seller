@@ -57,7 +57,6 @@ interface Price {
 }
 
 import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
-// import { ProductCategory } from '@/utils/status-enum.ts';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { fetchAllCategories } from './api/product-categories';
@@ -100,7 +99,9 @@ export function ProductTable({
     );
     const [isModalOpen, setModalOpen] = useState(false);
     const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
-    const [categoryNames, setCategoryNames] = useState<string[]>([]);
+    const [categoryNames, setCategoryNames] = useState<Record<string, string>>(
+        {}
+    );
 
     const { filters } = useStore(productStore);
 
@@ -142,12 +143,18 @@ export function ProductTable({
     });
 
     useEffect(() => {
-        if (!catIsLoading) {
-            setCategoryNames(
-                categories?.map((category) => category.name) || []
+        if (!catIsLoading && categories) {
+            const categoryMap = categories.reduce(
+                (acc, category) => ({
+                    ...acc,
+                    [category.handle]: category.name,
+                }),
+                {} as Record<string, string>
             );
+
+            setCategoryNames(categoryMap);
         }
-    }, [catIsLoading]);
+    }, [catIsLoading, categories]);
 
     useEffect(() => {
         console.log(table.getRowModel().rows);
@@ -298,23 +305,21 @@ export function ProductTable({
                     )}
 
                     <div className="flex justify-start">
-                        {categoryNames && (
-                            <DropdownMultiselectFilter
-                                title="Filter By Category"
-                                catOptions={categoryNames} // Pass the enum directly
-                                selectedFilters={getFilterValues('categories')} // Extract `in` property as an array
-                                onFilterChange={(values) => {
-                                    if (values) {
-                                        setProductFilter('categories', {
-                                            in: values,
-                                        }); // Apply filter
-                                    } else {
-                                        clearProductFilter('categories'); // Clear filter if no values
-                                    }
-                                    setPageIndex(0); // Reset to the first page
-                                }}
-                            />
-                        )}
+                        <DropdownMultiselectFilter
+                            title="Filter By Category"
+                            optionsEnum={categoryNames}
+                            selectedFilters={getFilterValues('categories')}
+                            onFilterChange={(values) => {
+                                if (values) {
+                                    setProductFilter('categories', {
+                                        in: values,
+                                    });
+                                } else {
+                                    clearProductFilter('categories');
+                                }
+                                setPageIndex(0);
+                            }}
+                        />
                     </div>
                     <div className="ml-auto flex flex-row relative w-[376px]">
                         {/*TODO: Improve this search.... yarn add [algoliasearch || @meilisearch/instant-meilisearch] pkgs. */}
