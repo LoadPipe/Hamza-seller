@@ -11,12 +11,14 @@ interface ProductInfoStepProps {
   form: any;
   onUpdate: (updates: Partial<OnboardingValues>) => void;
   onNext: () => void;
+  onSkipAll: () => void; 
 }
 
 const ProductInfoStep: React.FC<ProductInfoStepProps> = ({
   form,
   onUpdate,
   onNext,
+  onSkipAll
 }) => {
   const { toast } = useToast();
 
@@ -185,13 +187,19 @@ const ProductInfoStep: React.FC<ProductInfoStepProps> = ({
             <div className="w-3 h-3 rounded-full bg-gray-600" />
           </div>
 
-          {/* Next Button */}
-          <div className="mt-6">
+          {/* Action Buttons*/}
+          <div className="mt-6 flex space-x-4">
             <Button
               onClick={handleNext}
-              className="w-full h-10 bg-[#94D42A] text-black font-semibold px-6 py-2 rounded-full"
+              className="w-[80%] h-10 bg-[#94D42A] text-black font-semibold px-6 py-2 rounded-full"
             >
               Next
+            </Button>
+            <Button
+              onClick={onSkipAll} 
+              className="w-[20%] h-10 bg-[#242424] text-white font-semibold px-6 py-2 rounded-full"
+            >
+              Skip
             </Button>
           </div>
         </CardContent>

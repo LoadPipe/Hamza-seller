@@ -30,9 +30,16 @@ export const OnboardingSchema = z.object({
       (val) => /^(\d+(\.\d+)?|\.\d+)$/.test(val),
       { message: 'Price must be a valid number.' }
     ),
-  productSKU: z.string().min(1, { message: 'SKU is required.' }),
+  productSKU: z.string().optional().default(''),
   productQuantity: z.number({ invalid_type_error: 'Quantity must be a number.' }),
   productCategory: z.string().min(1, { message: 'Category is required.' }),
+
+  //File data for product media
+  productMedia: z.any().optional(),
+
+  productBarcode: z.string().optional().default(''),
+  productUPC: z.string().optional().default(''),
+  productEAN: z.string().optional().default(''),
 
   // Multiple Members
   members: z.array(MemberSchema).optional(),
@@ -62,6 +69,12 @@ export const onboardingDefaultValues: OnboardingValues = {
   productSKU: '',
   productQuantity: 0,
   productCategory: '',
+
+  productBarcode: '',
+  productUPC: '',
+  productEAN: '',
+
+  productMedia: null,
 
   // Multiple Members
   members: [],
