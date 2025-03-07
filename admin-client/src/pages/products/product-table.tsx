@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Download, FilePlus } from 'lucide-react';
+import { SetStateAction, Dispatch, useEffect, useState, Fragment } from 'react';
+import { Download, FilePlus, FileSpreadsheet } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import {
     ColumnDef,
@@ -42,6 +42,9 @@ import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
 
 type Product = z.infer<typeof ProductSchema>;
+type Category = NonNullable<
+    z.infer<typeof ProductSchema>['categories']
+>[number];
 
 interface Price {
     id: string;
@@ -54,9 +57,11 @@ interface Price {
 }
 
 import DropdownMultiselectFilter from '@/components/dropdown-checkbox/dropdown-multiselect-filter.tsx';
-import { ProductCategory } from '@/utils/status-enum.ts';
 import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
+import { fetchAllCategories } from './api/product-categories';
+import { useQuery } from '@tanstack/react-query';
+import { downloadProductsCSV } from './utils/export-product-csv';
 
 interface ProductTableProps {
     columns: ColumnDef<Product, any>[];
@@ -64,12 +69,12 @@ interface ProductTableProps {
     pageIndex: number;
     pageSize: number;
     productCategories: Record<string, string>;
-    setPageIndex: React.Dispatch<React.SetStateAction<number>>;
-    setPageSize: React.Dispatch<React.SetStateAction<number>>;
+    setPageIndex: Dispatch<SetStateAction<number>>;
+    setPageSize: Dispatch<SetStateAction<number>>;
     totalRecords: number;
     filteredProductsCount: number;
     sorting: SortingState;
-    setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
+    setSorting: Dispatch<SetStateAction<SortingState>>;
     isLoading: boolean;
 }
 
@@ -86,19 +91,32 @@ export function ProductTable({
     setSorting,
     isLoading,
 }: ProductTableProps) {
-    const [columnFilters, setColumnFilters] =
-        React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = React.useState({});
-    const [rowSelection, setRowSelection] = React.useState({});
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] = useState({});
+    const [rowSelection, setRowSelection] = useState({});
     const pageCount = Math.ceil(filteredProductsCount / pageSize);
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>(
         {}
     );
     const [isModalOpen, setModalOpen] = useState(false);
+    const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
+    const [categoryNames, setCategoryNames] = useState<Record<string, string>>(
+        {}
+    );
 
     const { filters } = useStore(productStore);
 
     const getFilterValues = (key: string) => filters?.[key]?.in || [];
+
+    // Fetch categories using getSecure and useQuery
+    const {
+        data: categories,
+        isLoading: catIsLoading,
+        error: catError,
+    } = useQuery<Category[]>({
+        queryKey: ['categories'],
+        queryFn: async () => fetchAllCategories(),
+    });
 
     const table = useReactTable({
         data,
@@ -124,6 +142,20 @@ export function ProductTable({
             },
         },
     });
+
+    useEffect(() => {
+        if (!catIsLoading && categories) {
+            const categoryMap = categories.reduce(
+                (acc, category) => ({
+                    ...acc,
+                    [category.handle]: category.name,
+                }),
+                {} as Record<string, string>
+            );
+
+            setCategoryNames(categoryMap);
+        }
+    }, [catIsLoading, categories]);
 
     useEffect(() => {
         console.log(table.getRowModel().rows);
@@ -209,7 +241,40 @@ export function ProductTable({
                             className="text-xs underline"
                             style={{ fontSize: '0.7rem' }}
                         >
-                            Download sample CSV
+                            Sample CSV
+                        </a>
+                        &nbsp;|&nbsp;
+                        <a
+                            href="javascript: void();"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setCategoryModalOpen(true);
+                            }}
+                            className="text-xs underline"
+                            style={{ fontSize: '0.7rem' }}
+                        >
+                            Categories
+                        </a>
+                        &nbsp;|&nbsp;
+                        <a
+                            href="javascript: void();"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                downloadProductsCSV();
+                            }}
+                            className="text-xs underline group relative"
+                            style={{ fontSize: '0.7rem' }}
+                            target="_blank"
+                        >
+                            <FileSpreadsheet
+                                style={{
+                                    width: '15px',
+                                    display: 'inline-block',
+                                }}
+                            />
+                            <span className="absolute invisible group-hover:visible bg-white text-black text-xs rounded py-1 px-2 -top-11 left-1/2 transform -translate-x-1/2">
+                                Export Products
+                            </span>
                         </a>
                     </div>
 
@@ -219,20 +284,62 @@ export function ProductTable({
                         onClose={() => setModalOpen(false)} // Close the modal
                     />
 
+                    {/* Add this new modal */}
+                    {isCategoryModalOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-[#242424] p-6 rounded-lg max-w-md w-full">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-lg font-semibold">
+                                        Category List
+                                    </h3>
+                                    <button
+                                        onClick={() =>
+                                            setCategoryModalOpen(false)
+                                        }
+                                        className="text-gray-400 hover:text-white"
+                                        style={{ padding: '5px 10px' }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                                <div className="text-white">
+                                    <ul
+                                        style={{
+                                            listStyle: 'disc',
+                                            padding: '0rem 2rem 1rem',
+                                        }}
+                                    >
+                                        {!catError && catIsLoading && (
+                                            <span>Loading...</span>
+                                        )}
+                                        {catError && (
+                                            <span>Sorry, error occurred.</span>
+                                        )}
+                                        {!catError &&
+                                            !catIsLoading &&
+                                            categories?.map((category) => (
+                                                <li>{category.handle}</li>
+                                            ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-start">
                         <DropdownMultiselectFilter
                             title="Filter By Category"
-                            optionsEnum={ProductCategory} // Pass the enum directly
-                            selectedFilters={getFilterValues('categories')} // Extract `in` property as an array
+                            optionsEnum={categoryNames}
+                            selectedFilters={getFilterValues('categories')}
                             onFilterChange={(values) => {
                                 if (values) {
                                     setProductFilter('categories', {
                                         in: values,
-                                    }); // Apply filter
+                                    });
                                 } else {
-                                    clearProductFilter('categories'); // Clear filter if no values
+                                    clearProductFilter('categories');
                                 }
-                                setPageIndex(0); // Reset to the first page
+                                setPageIndex(0);
                             }}
                         />
                     </div>
@@ -365,7 +472,7 @@ export function ProductTable({
                                 ))
                             ) : table.getRowModel().rows?.length > 0 ? (
                                 table.getRowModel().rows.map((row) => (
-                                    <React.Fragment key={row.id}>
+                                    <Fragment key={row.id}>
                                         <TableRow>
                                             {/* Collapsible Button */}
                                             <TableCell className="w-[40px]">
@@ -554,7 +661,7 @@ export function ProductTable({
                                                     </TableCell>
                                                 </TableRow>
                                             )}
-                                    </React.Fragment>
+                                    </Fragment>
                                 ))
                             ) : (
                                 <TableRow>
