@@ -174,7 +174,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                         note: '',
                     });
 
-                    // Force refresh order details to update the refund status
+                    // Invalidate Query for orderDetails global queryKey to update the refund status
                     queryClient.invalidateQueries({
                         queryKey: ['orderDetails', orderId],
                     });
@@ -196,6 +196,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                 });
                 console.error('Error in escrow refund:', error);
             } finally {
+                queryClient.invalidateQueries({
+                    queryKey: ['orders'],
+                });
                 setTimeout(() => setShowSuccessMessage(false), 5000);
             }
         },
