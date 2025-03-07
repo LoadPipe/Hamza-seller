@@ -40,7 +40,6 @@ import {
 } from '@/components/ui/table';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
-import { getSecure } from '@/utils/api-calls.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 type Category = NonNullable<
@@ -62,7 +61,7 @@ import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { fetchAllCategories } from './api/product-categories';
 import { useQuery } from '@tanstack/react-query';
-import { getJwtStoreId } from '@/utils/authentication';
+import { downloadProductsCSV } from './utils/export-product-csv';
 
 interface ProductTableProps {
     columns: ColumnDef<Product, any>[];
@@ -118,35 +117,6 @@ export function ProductTable({
         queryKey: ['categories'],
         queryFn: async () => fetchAllCategories(),
     });
-
-    const downloadProductsCSV = async () => {
-        try {
-            const storeId = getJwtStoreId();
-            const response = await getSecure('/seller/product/csv/export', {
-                store_id: storeId,
-            });
-
-            const downloadFile = (data: any, filename: string) => {
-                const blob = new Blob([data], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-
-                link.href = url;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-
-                // Cleanup
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-            };
-
-            const filename = `products-${new Date().toISOString()}.csv`;
-            downloadFile(response, filename);
-        } catch (error) {
-            console.error('Failed to download CSV:', error);
-        }
-    };
 
     const table = useReactTable({
         data,
