@@ -1,7 +1,7 @@
 'use client';
 
 import { SetStateAction, Dispatch, useEffect, useState, Fragment } from 'react';
-import { Download, FilePlus } from 'lucide-react';
+import { Download, FilePlus, FileSpreadsheet } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import {
     ColumnDef,
@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/table';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
+import { getSecure } from '@/utils/api-calls.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 type Category = NonNullable<
@@ -61,6 +62,7 @@ import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { fetchAllCategories } from './api/product-categories';
 import { useQuery } from '@tanstack/react-query';
+import { getJwtStoreId } from '@/utils/authentication';
 
 interface ProductTableProps {
     columns: ColumnDef<Product, any>[];
@@ -116,6 +118,35 @@ export function ProductTable({
         queryKey: ['categories'],
         queryFn: async () => fetchAllCategories(),
     });
+
+    const downloadProductsCSV = async () => {
+        try {
+            const storeId = getJwtStoreId();
+            const response = await getSecure('/seller/product/csv/export', {
+                store_id: storeId,
+            });
+
+            const downloadFile = (data: any, filename: string) => {
+                const blob = new Blob([data], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+
+                // Cleanup
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            };
+
+            const filename = `products-${new Date().toISOString()}.csv`;
+            downloadFile(response, filename);
+        } catch (error) {
+            console.error('Failed to download CSV:', error);
+        }
+    };
 
     const table = useReactTable({
         data,
@@ -252,7 +283,28 @@ export function ProductTable({
                             className="text-xs underline"
                             style={{ fontSize: '0.7rem' }}
                         >
-                            Category List
+                            Categories
+                        </a>
+                        &nbsp;|&nbsp;
+                        <a
+                            href="javascript: void();"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                downloadProductsCSV();
+                            }}
+                            className="text-xs underline group relative"
+                            style={{ fontSize: '0.7rem' }}
+                            target="_blank"
+                        >
+                            <FileSpreadsheet
+                                style={{
+                                    width: '15px',
+                                    display: 'inline-block',
+                                }}
+                            />
+                            <span className="absolute invisible group-hover:visible bg-white text-black text-xs rounded py-1 px-2 -top-11 left-1/2 transform -translate-x-1/2">
+                                Export Products
+                            </span>
                         </a>
                     </div>
 
