@@ -16,6 +16,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 
+import { downloadProductsCSV } from './utils/export-product-csv';
+
 // Generate TypeScript type
 export type Product = z.infer<typeof ProductSchema>;
 
@@ -366,6 +368,13 @@ export const generateColumns = (
                                         >
                                             Copy Product ID
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                downloadProductsCSV(product.id)
+                                            }
+                                        >
+                                            Export Product CSV
+                                        </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             onClick={() =>
@@ -398,6 +407,7 @@ export const generateColumns = (
 
 // Usage
 export const columns = generateColumns([
+    'variants',
     'actions',
     'select',
     'thumbnail',
@@ -407,5 +417,4 @@ export const columns = generateColumns([
     'created_at',
     'price',
     'inventory_quantity',
-    'variants',
 ]);

@@ -1,7 +1,7 @@
 'use client';
 
 import { SetStateAction, Dispatch, useEffect, useState, Fragment } from 'react';
-import { Download, FilePlus } from 'lucide-react';
+import { Download, FilePlus, FileSpreadsheet } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import {
     ColumnDef,
@@ -61,6 +61,7 @@ import { z } from 'zod';
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { fetchAllCategories } from './api/product-categories';
 import { useQuery } from '@tanstack/react-query';
+import { downloadProductsCSV } from './utils/export-product-csv';
 
 interface ProductTableProps {
     columns: ColumnDef<Product, any>[];
@@ -252,7 +253,28 @@ export function ProductTable({
                             className="text-xs underline"
                             style={{ fontSize: '0.7rem' }}
                         >
-                            Category List
+                            Categories
+                        </a>
+                        &nbsp;|&nbsp;
+                        <a
+                            href="javascript: void();"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                downloadProductsCSV();
+                            }}
+                            className="text-xs underline group relative"
+                            style={{ fontSize: '0.7rem' }}
+                            target="_blank"
+                        >
+                            <FileSpreadsheet
+                                style={{
+                                    width: '15px',
+                                    display: 'inline-block',
+                                }}
+                            />
+                            <span className="absolute invisible group-hover:visible bg-white text-black text-xs rounded py-1 px-2 -top-11 left-1/2 transform -translate-x-1/2">
+                                Export Products
+                            </span>
                         </a>
                     </div>
 
