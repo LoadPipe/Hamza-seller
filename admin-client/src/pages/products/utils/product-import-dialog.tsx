@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { importProductsByCsv } from '@/pages/products/api/import-products-by-csv';
 import { FilePlus, CircleAlert } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductImportDialogProps {
     open: boolean;
@@ -16,6 +17,7 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
 }) => {
     const [file, setFile] = useState<File | null>(null);
     const { toast } = useToast();
+    const queryClient = useQueryClient();
 
     const onDrop = (acceptedFiles: File[]) => {
         const csvFile = acceptedFiles[0];
@@ -58,7 +60,11 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
                     />
                 ),
             });
-            console.log(response);
+            // console.log(response);
+
+            // Invalidate products query to refresh the list
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+
             // onClose(); // Close dialog on success
         } catch (error: any) {
             // Display the error message from the caught exception

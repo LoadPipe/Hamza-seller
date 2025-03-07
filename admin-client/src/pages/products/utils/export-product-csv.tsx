@@ -4,7 +4,6 @@ import { getSecure } from '@/utils/api-calls';
 import { getJwtStoreId } from '@/utils/authentication';
 export const downloadProductsCSV = async (productId?: string) => {
     try {
-        alert(productId);
         const storeId = getJwtStoreId();
         const response = await getSecure('/seller/product/csv/export', {
             store_id: storeId,
