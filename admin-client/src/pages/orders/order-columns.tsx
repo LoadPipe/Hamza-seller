@@ -12,7 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
+// import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store.ts';
 import { formatStatus, formatDate, customerName } from '@/utils/format-data.ts';
 // import { openOrderEscrowDialog } from '@/stores/order-escrow/order-escrow-store.ts';
 import {
@@ -547,14 +547,14 @@ export const generateColumns = (
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
 
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            openOrderSidebar(order.id)
-                                        }
-                                    >
-                                        View order details
-                                    </DropdownMenuItem>
-                                    {/*TODO: We have temp removed this for now.. it will be back*/}
+                                    {/*<DropdownMenuItem*/}
+                                    {/*    onClick={() =>*/}
+                                    {/*        openOrderSidebar(order.id)*/}
+                                    {/*    }*/}
+                                    {/*>*/}
+                                    {/*    View order details*/}
+                                    {/*</DropdownMenuItem>*/}
+                                    {/*/!*TODO: We have temp removed this for now.. it will be back*!/*/}
                                     {/*{order.payment_status !== 'refunded' &&*/}
                                     {/*    order.payment_status !== 'canceled' &&*/}
                                     {/*    order.payment_status !== 'not_paid' && (*/}

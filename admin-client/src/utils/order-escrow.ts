@@ -14,7 +14,7 @@ import { BigNumberish, ethers, providers, Signer } from 'ethers';
  *
  * @returns True if it was possible to make the contract call.
  */
-export async function releaseEscrowPayment(order: any): Promise<void> {
+export async function releaseEscrowPayment(order: any): Promise<string> {
     if (window.ethereum) {
         const escrow: EscrowClient = await createEscrowContract(order);
 
@@ -29,6 +29,7 @@ export async function releaseEscrowPayment(order: any): Promise<void> {
             await escrow.releaseEscrow(
                 ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id))
             );
+            return payment?.id as string
         } catch (error) {
             console.error('Error during escrow release:', error); // Log the error
             throw error; // Ensure the error is propagated
@@ -56,13 +57,14 @@ export async function releaseEscrowPayment(order: any): Promise<void> {
 export async function refundEscrowPayment(
     order: any,
     amount: BigNumberish
-): Promise<boolean | undefined> {
+): Promise<[boolean, string | undefined] | undefined> {
     if (window.ethereum) {
         try {
             const escrow: EscrowClient = await createEscrowContract(order);
 
             if (escrow) {
                 const payment = await getEscrowPayment(order);
+                // TOOD: we aren't using typescript here... we also don't check if
                 console.log('escrow payment to refund is:', payment);
 
                 //validate before refunding
@@ -73,9 +75,9 @@ export async function refundEscrowPayment(
                     ethers.utils.keccak256(ethers.utils.toUtf8Bytes(order.id)),
                     amount
                 );
-                return true;
+                return [true, payment?.id.toString()];
             } else {
-                return false;
+                return [false, undefined];
             }
         } catch (error) {
             throw error; // Ensure the error propagates to the caller
