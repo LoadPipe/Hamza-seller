@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { TrashIcon } from 'lucide-react';
 import { OnboardingValues } from '../onboarding-schema';
-import { uploadGalleryImages } from '@/pages/products/api/upload-gallery-images';
 import { useMutation } from '@tanstack/react-query';
+import { uploadProductImages } from '../utils/upload-product-image-onboarding';
+import { getJwtWalletAddress } from '@/utils/authentication';
 
 interface ProductImageStepProps {
   form: any;
@@ -24,14 +25,12 @@ const ProductImageStep: React.FC<ProductImageStepProps> = ({
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
-
-  const storeSlug = 'temp-store'; 
-  const productId = 'temp-product';
+  const walletAddress = getJwtWalletAddress() || 'temp-wallet';
 
 
   const uploadMutation = useMutation({
     mutationFn: async (files: File[]) => {
-      const urls = await uploadGalleryImages(files, storeSlug, productId);
+      const urls = await uploadProductImages(files, walletAddress || 'temp-wallet');
       if (!urls || urls.length === 0) {
         throw new Error('Upload failed: no image URLs returned.');
       }
