@@ -20,6 +20,7 @@ import { getEscrowPaymentData } from '@/api/get-escrow-payment';
 import { useSwitchChain } from 'wagmi';
 import { getChainId, getWalletAddress } from '@/web3';
 import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
+import { setTransactionId } from '@/pages/orders/api/set-transaction-id.ts';
 
 export function ReleaseEscrow() {
     const { isOpen, order } = useStore(orderEscrowStore);
@@ -29,14 +30,15 @@ export function ReleaseEscrow() {
     const releaseEscrowMutation = useMutation({
         mutationFn: async (order: any) => {
             // Escrow release logic
-            await releaseEscrowPayment(order);
+            return await releaseEscrowPayment(order);
         },
-        onSuccess: () => {
+        onSuccess: (response: string) => {
             toast({
                 variant: 'default',
                 title: 'Success!',
                 description: 'The escrow has been successfully released.',
             });
+            setTransactionId(response, order.id, "release")
         },
         onError: (error: any) => {
             console.log(error);

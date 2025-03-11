@@ -19,6 +19,7 @@ import { getEscrowPaymentData } from '@/api/get-escrow-payment';
 import { getChainId, getWalletAddress } from '@/web3';
 import { EscrowPaymentDefinitionWithError } from '@/web3/contracts/escrow';
 import { useSwitchChain } from 'wagmi';
+import { setTransactionId } from '@/pages/orders/api/set-transaction-id.ts';
 
 type RefundProps = {
     refundAmount?: number;
@@ -54,14 +55,14 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
     const refundableAmountToDisplay = convertFromWeiToDisplay(
         refundableAmount.toString(),
         order?.currency_code,
-        order?.escrow_payment?.chain_id
+        order?.escrow_payment?.chain_id,
     );
 
     //convert refunded amount to displayable string
     const refundedAmountToDisplay = convertFromWeiToDisplay(
         refundedAmount.toString(),
         order?.currency_code,
-        order?.escrow_payment?.chain_id
+        order?.escrow_payment?.chain_id,
     );
 
     //get order id
@@ -77,14 +78,14 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
     const currencyCode = order?.payments[0]?.currency_code ?? 'usdc';
     const precision = getCurrencyPrecision(
         currencyCode,
-        order?.escrow_payment?.chain_id
+        order?.escrow_payment?.chain_id,
     );
 
     //convert the amount to db units
     const getDbAmount = (amount: string | number) => {
         console.log(
             'DB AMOIUNT IS,',
-            Math.floor(parseFloat(amount.toString()) * 10 ** precision.db)
+            Math.floor(parseFloat(amount.toString()) * 10 ** precision.db),
         );
         return Math.floor(parseFloat(amount.toString()) * 10 ** precision.db);
     };
@@ -142,6 +143,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                 console.log(`Escrow validation failed, skipped`);
                 return;
             }
+            // alert(`Jesus is King`)
             try {
                 const { metadata } = data;
 
@@ -150,7 +152,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                     order,
                     isFullRefund
                         ? refundableAmount.toString()
-                        : getBlockchainAmount(formData.refundAmount)
+                        : getBlockchainAmount(formData.refundAmount),
                 );
 
                 console.log('escrowRefundResult is', escrowRefundResult);
@@ -174,7 +176,11 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                         note: '',
                     });
 
-                    // Force refresh order details to update the refund status
+                    // Instead of awaiting setTransactionId, fire it off and catch errors separately.
+                    setTransactionId(orderId, escrowRefundResult[1], "refund")
+
+
+                    // Invalidate Query for orderDetails global queryKey to update the refund status
                     queryClient.invalidateQueries({
                         queryKey: ['orderDetails', orderId],
                     });
@@ -196,6 +202,9 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                 });
                 console.error('Error in escrow refund:', error);
             } finally {
+                queryClient.invalidateQueries({
+                    queryKey: ['orders'],
+                });
                 setTimeout(() => setShowSuccessMessage(false), 5000);
             }
         },
@@ -264,7 +273,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                 address,
                 isFullRefund
                     ? refundableAmount.toString()
-                    : getBlockchainAmount(formData.refundAmount).toString()
+                    : getBlockchainAmount(formData.refundAmount).toString(),
             );
 
         if (!payment) {
@@ -340,18 +349,18 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                                     <p
                                         onClick={
                                             order.payment_status ===
-                                                'refunded' ||
+                                            'refunded' ||
                                             order.payment_status ===
-                                                'canceled' ||
+                                            'canceled' ||
                                             order.payment_status === 'not_paid'
                                                 ? undefined
                                                 : handleFullAmountClick
                                         }
                                         className={`text-sm underline cursor-pointer ${
                                             order.payment_status ===
-                                                'refunded' ||
+                                            'refunded' ||
                                             order.payment_status ===
-                                                'canceled' ||
+                                            'canceled' ||
                                             order.payment_status === 'not_paid'
                                                 ? 'text-gray-500'
                                                 : 'text-blue-500'
@@ -374,7 +383,7 @@ const Refund: React.FC<RefundProps> = ({ refundAmount, order }) => {
                                             backgroundColor: '#242424',
                                             height: '40px',
                                             backgroundImage:
-                                                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E\")",
+                                                'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'white\'%3E%3Cpath d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")',
                                             backgroundRepeat: 'no-repeat',
                                             backgroundPosition: '10px center',
                                             backgroundSize: '12px',
