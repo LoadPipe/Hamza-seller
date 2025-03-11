@@ -35,7 +35,6 @@ const ProductImageStep: React.FC<ProductImageStepProps> = ({
       if (!urls || urls.length === 0) {
         throw new Error('Upload failed: no image URLs returned.');
       }
-      console.log("Uploaded URLs:", urls);
       return urls;
     },
     onSuccess: (urls: string[]) => {
