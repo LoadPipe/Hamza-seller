@@ -554,7 +554,7 @@ export const generateColumns = (
                                     >
                                         View order details
                                     </DropdownMenuItem>
-                                    {/*TODO: We have temp removed this for now.. it will be back*/}
+                                    {/*/!*TODO: We have temp removed this for now.. it will be back*!/*/}
                                     {/*{order.payment_status !== 'refunded' &&*/}
                                     {/*    order.payment_status !== 'canceled' &&*/}
                                     {/*    order.payment_status !== 'not_paid' && (*/}
