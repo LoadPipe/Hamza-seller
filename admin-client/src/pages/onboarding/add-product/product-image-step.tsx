@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { TrashIcon } from 'lucide-react';
 import { OnboardingValues } from '../onboarding-schema';
+import { uploadGalleryImages } from '@/pages/products/api/upload-gallery-images';
+import { useMutation } from '@tanstack/react-query';
 
 interface ProductImageStepProps {
   form: any;
@@ -23,6 +25,37 @@ const ProductImageStep: React.FC<ProductImageStepProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
 
+  const storeSlug = 'temp-store'; 
+  const productId = 'temp-product';
+
+
+  const uploadMutation = useMutation({
+    mutationFn: async (files: File[]) => {
+      const urls = await uploadGalleryImages(files, storeSlug, productId);
+      if (!urls || urls.length === 0) {
+        throw new Error('Upload failed: no image URLs returned.');
+      }
+      console.log("Uploaded URLs:", urls);
+      return urls;
+    },
+    onSuccess: (urls: string[]) => {
+      toast({
+        title: 'Success',
+        description: 'Product images uploaded successfully!',
+      });
+      form.setFieldValue('productMedia', urls);
+      onUpdate({ productMedia: urls });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Upload Failed',
+        description: error.message || 'An unexpected error occurred during upload.',
+        variant: 'destructive',
+      });
+      setFiles([]);
+    },
+  });
+
   const handleProceed = () => {
     const { productCategory } = form.state.values;
     if (!productCategory) {
@@ -33,8 +66,6 @@ const ProductImageStep: React.FC<ProductImageStepProps> = ({
       });
       return;
     }
-    form.setFieldValue('productMedia', files);
-    onUpdate({ productCategory, productMedia: files });
     onFinish();
   };
 
@@ -49,9 +80,10 @@ const ProductImageStep: React.FC<ProductImageStepProps> = ({
       form.setFieldValue('productMedia', fileArray);
       toast({
         variant: 'default',
-        title: 'Files Uploaded',
+        title: 'Files Selected',
         description: `${fileArray.length} file(s) selected.`,
       });
+      uploadMutation.mutate(fileArray);
     }
   };
 
