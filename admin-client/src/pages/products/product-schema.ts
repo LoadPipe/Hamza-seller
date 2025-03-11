@@ -16,6 +16,9 @@ export const sqlInjectionCheck = (value: string) => {
     return !sqlKeywords.some((kw) => value.toUpperCase().includes(kw));
 };
 
+// Enum for product status
+export const ProductStatusSchema = z.enum(['draft', 'proposed', 'published', 'rejected']);
+
 // Validation function
 export const validateInput = (fieldName: string, value: string) => {
     const sanitized = sqlInjectionCheck(value);
@@ -39,6 +42,7 @@ export const ProductSchema = z.object({
     length: z.number().nullable(),
     height: z.number().nullable(),
     width: z.number().nullable(),
+    status: ProductStatusSchema,
     images: z
         .array(
             z.object({
