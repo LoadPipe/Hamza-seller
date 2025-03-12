@@ -46,7 +46,7 @@ export const importProductsByCsv = async (
             JSON.stringify(responseData?.message) ||
             responseData?.updateMessage;
 
-        if (e?.response?.data?.errors.length > 0) {
+        if (e?.response?.data?.errors?.length > 0) {
             errorMessage +=
                 '<ul style="list-style: number; padding: 20px;">' +
                 responseData?.errors
