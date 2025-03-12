@@ -39,7 +39,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -154,7 +154,7 @@ export function ProductTable({
         }));
     };
 
-    const preferredCurrency = useCustomerAuthStore(
+    const preferredCurrency = useUserAuthStore(
         (state) => state.preferred_currency_code ?? 'eth'
     );
 

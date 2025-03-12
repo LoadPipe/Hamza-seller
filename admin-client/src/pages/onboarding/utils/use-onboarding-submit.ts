@@ -2,13 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { setJwtCookie } from '@/utils/authentication';
 import { getJwtWalletAddress } from '@/utils/authentication';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 import { updateOnboardingByWalletId } from '../api/create-store';
 
 export const useOnboardingSubmit = () => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
-    const { setCustomerAuthData } = useCustomerAuthStore();
+    const { setUserAuthData } = useUserAuthStore();
 
     return useMutation({
         mutationFn: async (payload: any) => {
@@ -26,7 +26,7 @@ export const useOnboardingSubmit = () => {
                 description: 'Onboarding completed successfully.',
             });
             setJwtCookie(data.token);
-            setCustomerAuthData({
+            setUserAuthData({
                 token: data.token,
                 wallet_address: getJwtWalletAddress() ?? '',
                 is_verified: true,

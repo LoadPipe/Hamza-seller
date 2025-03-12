@@ -21,14 +21,14 @@ type Actions = {
     setWalletAddress: (walletAddress: string) => void;
     setHnsAvatar: (hnsAvatar: string | null) => void;
     setHnsName: (hnsName: string | null) => void;
-    setCustomerAuthData: (authData: State['authData']) => void;
-    setCustomerPreferredCurrency: (currency: string) => void;
+    setUserAuthData: (authData: State['authData']) => void;
+    setUserPreferredCurrency: (currency: string) => void;
     setIsVerified: (isVerified: boolean) => void;
     setHasLoggedIn: (value: boolean) => void;
     setStatus: (status: AuthenticationStatus) => void;
 };
 
-export const useCustomerAuthStore = create<State & Actions>()(
+export const useUserAuthStore = create<State & Actions>()(
     persist(
         (set) => ({
             walletAddress: '',
@@ -66,15 +66,15 @@ export const useCustomerAuthStore = create<State & Actions>()(
                 });
             },
 
-            // Define setCustomerAuthData
-            setCustomerAuthData: (authData) => {
+            // Define setUserAuthData
+            setUserAuthData: (authData) => {
                 set({
                     authData: authData,
                 });
             },
 
-            // Define setCustomerPreferredCurrency
-            setCustomerPreferredCurrency: (currency) => {
+            // Define setUserPreferredCurrency
+            setUserPreferredCurrency: (currency) => {
                 set({ preferred_currency_code: currency });
             },
 
@@ -99,7 +99,7 @@ export const useCustomerAuthStore = create<State & Actions>()(
         }),
 
         {
-            name: '__hamza_customer', // name of the item in the storage (must be unique)
+            name: '__hamza_user', // name of the item in the storage (must be unique)
             storage: createJSONStorage(() => localStorage), // Use localStorage by default
         }
     )

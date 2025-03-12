@@ -13,7 +13,7 @@ import {
 import { ProductSchema } from '@/pages/products/product-schema.ts';
 import { formatCryptoPrice } from '@/utils/get-product-price.ts';
 import { useNavigate } from '@tanstack/react-router';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 
 // Generate TypeScript type
@@ -260,7 +260,7 @@ export const generateColumns = (
                     ),
                     cell: ({ row }) => {
                         const variants = row.original.variants || [];
-                        const preferredCurrency = useCustomerAuthStore(
+                        const preferredCurrency = useUserAuthStore(
                             (state) => state.preferred_currency_code ?? 'eth'
                         );
                         if (variants.length === 1) {

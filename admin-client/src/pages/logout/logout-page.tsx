@@ -1,29 +1,28 @@
 import { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 import { deleteJwtCookie } from '@/utils/authentication';
 
-
 export default function LogoutPage() {
-		const navigate = useNavigate();
-    const setCustomerAuthData = useCustomerAuthStore(state => state.setCustomerAuthData);
-		
+    const navigate = useNavigate();
+    const setUserAuthData = useUserAuthStore((state) => state.setUserAuthData);
+
     useEffect(() => {
         // Clear auth data
-        setCustomerAuthData({
+        setUserAuthData({
             token: '',
             wallet_address: '',
             is_verified: false,
-            status: 'unauthenticated'
+            status: 'unauthenticated',
         });
-        
+
         // Delete JWT cookie
         deleteJwtCookie();
-        
+
         // Redirect to login
         navigate({ to: '/' });
         window.location.href = '/';
-    }, [navigate, setCustomerAuthData]);
+    }, [navigate, setUserAuthData]);
 
     return <div>Logging out...</div>;
-} 
+}
