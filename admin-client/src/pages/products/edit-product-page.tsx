@@ -2,7 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { fetchProductById } from '@/pages/products/api/product-by-id.ts';
 import { updateProductById } from '@/pages/products/api/update-product-by-id.ts';
-import { validateSku, validateBarcode, validateEan, validateUpc } from '@/pages/products/api/validate-product-fields.ts';
+import {
+    validateSku,
+    validateBarcode,
+    validateEan,
+    validateUpc,
+} from '@/pages/products/api/validate-product-fields.ts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,7 +31,7 @@ import {
 } from '@/pages/products/product-schema.ts';
 import { Label } from '@/components/ui/label.tsx';
 import { useForm, getBy, setBy } from '@tanstack/react-form';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 import { useToast } from '@/hooks/use-toast.ts';
 import { QuillEditor } from '@/components/ui/quill-editor';
 import { PackageSearch, Bitcoin, Trash } from 'lucide-react';
@@ -52,7 +57,7 @@ export default function EditProductPage() {
     const queryClient = useQueryClient();
     const { id: productId } = useParams({ from: '/products/$id/edit' });
     const navigate = useNavigate();
-    const preferredCurrency = useCustomerAuthStore(
+    const preferredCurrency = useUserAuthStore(
         (state) => state.preferred_currency_code ?? 'eth'
     );
 
@@ -456,7 +461,9 @@ export default function EditProductPage() {
                                         if (trimmed.length === 0) {
                                             return 'Description is required.';
                                         }
-                                        const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+                                        const wordCount = trimmed
+                                            .split(/\s+/)
+                                            .filter(Boolean).length;
                                         if (wordCount > 3000) {
                                             return 'Description must not exceed 3000 words.';
                                         }
@@ -855,20 +862,24 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
-                                                            onBlur: () => { return undefined },
+                                                            onBlur: () => {
+                                                                return undefined;
+                                                            },
                                                             // Asynchronous check: call your API only if the SKU has changed
                                                             onChangeAsync:
                                                                 async ({
-                                                                           value,
-                                                                       }) => {
+                                                                    value,
+                                                                }) => {
                                                                     // Compare with the default SKU. If unchanged, skip the API call.
-                                                                    if (value.trim() === '') return undefined;
+                                                                    if (
+                                                                        value.trim() ===
+                                                                        ''
+                                                                    )
+                                                                        return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateSku(
-                                                                                (
-                                                                                    value.toString()
-                                                                                ),
+                                                                                value.toString(),
                                                                                 editProductForm.getFieldValue(
                                                                                     `variants[${index}].id`
                                                                                 )
@@ -955,18 +966,24 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
-                                                            onBlur: () => { return undefined },
+                                                            onBlur: () => {
+                                                                return undefined;
+                                                            },
                                                             // Asynchronous check: call your API only if the Barcode has changed
                                                             onChangeAsync:
                                                                 async ({
-                                                                           value,
-                                                                       }) => {
+                                                                    value,
+                                                                }) => {
                                                                     // Compare with the default SKU. If unchanged, skip the API call.
-                                                                    if (value.trim() === '') return undefined;
+                                                                    if (
+                                                                        value.trim() ===
+                                                                        ''
+                                                                    )
+                                                                        return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateBarcode(
-                                                                                (value.toString()),
+                                                                                value.toString(),
                                                                                 editProductForm.getFieldValue(
                                                                                     `variants[${index}].id`
                                                                                 )
@@ -1030,18 +1047,18 @@ export default function EditProductPage() {
                                                                         />
                                                                     </TooltipTrigger>
                                                                     {field.state
-                                                                            .meta
-                                                                            .errors
-                                                                            .length >
+                                                                        .meta
+                                                                        .errors
+                                                                        .length >
                                                                         0 && (
-                                                                            <TooltipContent>
+                                                                        <TooltipContent>
                                                                             <span className="text-red-500">
                                                                                 {field.state.meta.errors.join(
                                                                                     ', '
                                                                                 )}
                                                                             </span>
-                                                                            </TooltipContent>
-                                                                        )}
+                                                                        </TooltipContent>
+                                                                    )}
                                                                 </Tooltip>
                                                             </div>
                                                         )}
@@ -1054,18 +1071,24 @@ export default function EditProductPage() {
                                                         validators={{
                                                             // Synchronous check: ensure a value exists
                                                             // Allow empty value on blur
-                                                            onBlur: () => { return undefined },
+                                                            onBlur: () => {
+                                                                return undefined;
+                                                            },
                                                             // Asynchronous check: call your API only if the Barcode has changed
                                                             onChangeAsync:
                                                                 async ({
-                                                                           value,
-                                                                       }) => {
+                                                                    value,
+                                                                }) => {
                                                                     // Compare with the default SKU. If unchanged, skip the API call.
-                                                                    if (value.trim() === '') return undefined;
+                                                                    if (
+                                                                        value.trim() ===
+                                                                        ''
+                                                                    )
+                                                                        return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateEan(
-                                                                                (value.toString()),
+                                                                                value.toString(),
                                                                                 editProductForm.getFieldValue(
                                                                                     `variants[${index}].id`
                                                                                 )
@@ -1129,23 +1152,22 @@ export default function EditProductPage() {
                                                                         />
                                                                     </TooltipTrigger>
                                                                     {field.state
-                                                                            .meta
-                                                                            .errors
-                                                                            .length >
+                                                                        .meta
+                                                                        .errors
+                                                                        .length >
                                                                         0 && (
-                                                                            <TooltipContent>
+                                                                        <TooltipContent>
                                                                             <span className="text-red-500">
                                                                                 {field.state.meta.errors.join(
                                                                                     ', '
                                                                                 )}
                                                                             </span>
-                                                                            </TooltipContent>
-                                                                        )}
+                                                                        </TooltipContent>
+                                                                    )}
                                                                 </Tooltip>
                                                             </div>
                                                         )}
                                                     </editProductForm.Field>
-
 
                                                     {/* Variant UPC*/}
                                                     <editProductForm.Field
@@ -1153,18 +1175,24 @@ export default function EditProductPage() {
                                                         asyncDebounceMs={100}
                                                         validators={{
                                                             // Allow empty value on blur
-                                                            onBlur: () => { return undefined },
+                                                            onBlur: () => {
+                                                                return undefined;
+                                                            },
                                                             // Asynchronous check: call your API only if the UPC has changed
                                                             onChangeAsync:
                                                                 async ({
-                                                                           value,
-                                                                       }) => {
+                                                                    value,
+                                                                }) => {
                                                                     // Compare with the default UPC. If unchanged, skip the API call.
-                                                                    if (value.trim() === '') return undefined;
+                                                                    if (
+                                                                        value.trim() ===
+                                                                        ''
+                                                                    )
+                                                                        return undefined;
                                                                     try {
                                                                         const response =
                                                                             await validateUpc(
-                                                                                (value.toString()),
+                                                                                value.toString(),
                                                                                 editProductForm.getFieldValue(
                                                                                     `variants[${index}].id`
                                                                                 )
@@ -1228,18 +1256,18 @@ export default function EditProductPage() {
                                                                         />
                                                                     </TooltipTrigger>
                                                                     {field.state
-                                                                            .meta
-                                                                            .errors
-                                                                            .length >
+                                                                        .meta
+                                                                        .errors
+                                                                        .length >
                                                                         0 && (
-                                                                            <TooltipContent>
+                                                                        <TooltipContent>
                                                                             <span className="text-red-500">
                                                                                 {field.state.meta.errors.join(
                                                                                     ', '
                                                                                 )}
                                                                             </span>
-                                                                            </TooltipContent>
-                                                                        )}
+                                                                        </TooltipContent>
+                                                                    )}
                                                                 </Tooltip>
                                                             </div>
                                                         )}
@@ -1666,7 +1694,6 @@ export default function EditProductPage() {
                                             //
                                             //     return;
                                             // }
-
 
                                             // If nothing is dirty at all:
                                             if (

@@ -1,43 +1,47 @@
 import { redirect } from '@tanstack/react-router';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 import { getJwtToken, getJwtWalletAddress } from '@/utils/authentication';
 
 export const authMiddleware = () => {
-  const { authData } = useCustomerAuthStore.getState();
-  const token = authData.token;
-  const jwtToken = getJwtToken();
+    const { authData } = useUserAuthStore.getState();
+    const token = authData.token;
+    const jwtToken = getJwtToken();
 
-  // Check token first and return early if invalid
-  if (!token || !jwtToken || token !== jwtToken) {
-    throw redirect({
-      to: '/logout',
-      // search: {
-      //   redirect: window.location.pathname + window.location.search,
-      // },
-    });
-  }
+    // Check token first and return early if invalid
+    if (!token || !jwtToken || token !== jwtToken) {
+        throw redirect({
+            to: '/logout',
+            // search: {
+            //   redirect: window.location.pathname + window.location.search,
+            // },
+        });
+    }
 
-  // Check wallet address next
-  const storedWalletAddress = authData.wallet_address;
-  const jwtWalletAddress = getJwtWalletAddress();
-  if (!storedWalletAddress || !jwtWalletAddress || storedWalletAddress !== jwtWalletAddress) {
-    throw redirect({
-      to: '/logout', 
-      // search: {
-      //   redirect: window.location.pathname + window.location.search,
-      // },
-    });
-  }
+    // Check wallet address next
+    const storedWalletAddress = authData.wallet_address;
+    const jwtWalletAddress = getJwtWalletAddress();
+    if (
+        !storedWalletAddress ||
+        !jwtWalletAddress ||
+        storedWalletAddress !== jwtWalletAddress
+    ) {
+        throw redirect({
+            to: '/logout',
+            // search: {
+            //   redirect: window.location.pathname + window.location.search,
+            // },
+        });
+    }
 
-  // Finally check authentication status
-  if (authData.status !== 'authenticated') {
-    throw redirect({
-      to: '/logout',
-      // search: {
-      //   redirect: window.location.pathname + window.location.search,
-      // },
-    });
-  }
+    // Finally check authentication status
+    if (authData.status !== 'authenticated') {
+        throw redirect({
+            to: '/logout',
+            // search: {
+            //   redirect: window.location.pathname + window.location.search,
+            // },
+        });
+    }
 };
 
 // Configure which paths middleware will run on
@@ -53,4 +57,4 @@ export const authMiddleware = () => {
 //      */
 //     '/((?!login|api|_next|static|.*\\..*$).*)',
 //   ],
-// } 
+// }

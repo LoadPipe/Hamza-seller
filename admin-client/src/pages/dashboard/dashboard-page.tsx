@@ -22,7 +22,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 import { getJwtStoreId } from '@/utils/authentication';
 import { getSecure } from '@/utils/api-calls.ts';
 import { useQuery } from '@tanstack/react-query';
@@ -48,12 +48,10 @@ async function getDashboardData(store_id: string, wallet_address: string) {
 export default function DashboardPage() {
     const { toast } = useToast();
 
-    const userData = useCustomerAuthStore();
+    const userData = useUserAuthStore();
     const isAuthenticated = userData.authData.status === 'authenticated';
-    const hasLoggedIn = useCustomerAuthStore((state) => state.hasLoggedIn);
-    const setHasLoggedIn = useCustomerAuthStore(
-        (state) => state.setHasLoggedIn
-    );
+    const hasLoggedIn = useUserAuthStore((state) => state.hasLoggedIn);
+    const setHasLoggedIn = useUserAuthStore((state) => state.setHasLoggedIn);
     const showWelcomeToast = useCallback(() => {
         toast({
             title: 'Welcome!',
@@ -163,11 +161,11 @@ export default function DashboardPage() {
         { name: 'Jun', logins: 9 },
     ];
 
-    const { preferred_currency_code, setCustomerPreferredCurrency } =
-        useCustomerAuthStore();
+    const { preferred_currency_code, setUserPreferredCurrency } =
+        useUserAuthStore();
 
     const handleCurrencyChange = (value: string) => {
-        setCustomerPreferredCurrency(value); // Update the store
+        setUserPreferredCurrency(value); // Update the store
         console.log(`Preferred Currency updated to: ${value}`); // Log for debugging
     };
 

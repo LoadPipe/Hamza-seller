@@ -16,11 +16,11 @@ import {
     setJwtCookie,
     getJwtStoreId,
 } from '@/utils/authentication/';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth.ts';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 import LoginPage from '@/pages/login/login-page.tsx';
 
 export function RainbowWrapper({ children }: { children: React.ReactNode }) {
-    const { authData, setCustomerAuthData } = useCustomerAuthStore();
+    const { authData, setUserAuthData } = useUserAuthStore();
 
     const walletSignature = createAuthenticationAdapter({
         getNonce: async () => {
@@ -68,7 +68,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
                 const isNewUser = newUser || !storeId;
 
                 if (response.status === 200) {
-                    setCustomerAuthData({
+                    setUserAuthData({
                         token: token,
                         wallet_address: walletAddress.toLowerCase(),
                         is_verified: true,
@@ -94,7 +94,7 @@ export function RainbowWrapper({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('filter_store');
             localStorage.removeItem('status_count_store');
             localStorage.removeItem('sidebar-store');
-            setCustomerAuthData({
+            setUserAuthData({
                 token: '',
                 wallet_address: '',
                 is_verified: false,

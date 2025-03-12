@@ -19,7 +19,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useCustomerAuthStore } from '@/stores/authentication/customer-auth';
+import { useUserAuthStore } from '@/stores/authentication/user-auth.ts';
 
 const items = [
     {
@@ -71,7 +71,7 @@ const items = [
 ];
 
 export function AppSidebar() {
-    const { authData } = useCustomerAuthStore();
+    const { authData } = useUserAuthStore();
     const isNewUser = authData?.isNewUser;
     const { expandedItem, toggleDropdown } = useSidebarStore();
 
