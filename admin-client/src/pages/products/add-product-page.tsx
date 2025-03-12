@@ -109,7 +109,7 @@ export default function AddProductPage() {
         },
     });
 
-    function handleOpenThumbnailDialog() {
+    const ensureProductName = () => {
         const folder = addProductForm.getFieldValue('title')?.trim() ?? '';
         if (!folder) {
             toast({
@@ -117,10 +117,29 @@ export default function AddProductPage() {
                 title: 'Missing Product Name',
                 description: 'Please fill in the product name first.',
             });
-            return;
+            return null;
         }
+        return folder;
+    };
+
+    function handleOpenThumbnailDialog() {
+        const folder = ensureProductName();
+        if (!folder) return;
         setThumbnailDialogOpen(true);
     }
+
+    function handleOpenGalleryDialog() {
+        const folder = ensureProductName();
+        if (!folder) return;
+        setGalleryDialogOpen(true);
+    }
+
+    const openVariantUploadDialog = (index: number) => {
+        const folder = ensureProductName();
+        if (!folder) return;
+        setCurrentVariantIndex(index);
+        setVariantDialogOpen(true);
+    };
 
     const handleAddVariant = () => {
         const newVariant = {
@@ -170,21 +189,6 @@ export default function AddProductPage() {
         },
     });
 
-    const openVariantUploadDialog = (index: number) => {
-        const folder = addProductForm.getFieldValue('title')?.trim() ?? '';
-        if (!folder) {
-            toast({
-                variant: 'destructive',
-                title: 'Missing Product Name',
-                description:
-                    'Please fill in the product name before uploading images.',
-            });
-            return;
-        }
-
-        setCurrentVariantIndex(index);
-        setVariantDialogOpen(true);
-    };
 
 
     const handleVariantImageUpload = (
@@ -227,9 +231,11 @@ export default function AddProductPage() {
         const newGalleryImages: GalleryImage[] = uploadedImageUrls.map((url, index) => ({
                 id: url,
                 url,
-            fileName: `gallery_${Date.now()}_${index}`
-        }));
-        setGalleryImages([...galleryImages, ...newGalleryImages]);
+      fileName: `gallery_${Date.now()}_${index}`
+            }));
+        const updatedGalleryImages = [...galleryImages, ...newGalleryImages];
+        setGalleryImages(updatedGalleryImages);
+        addProductForm.setFieldValue('images', updatedGalleryImages);
     };
 
     const handleDeleteGalleryImage = (image: GalleryImage) => {
@@ -394,7 +400,7 @@ export default function AddProductPage() {
                                 <h2 className="text-lg font-medium mb-4">
                                     Gallery
                                 </h2>
-                                <Button onClick={handleOpenThumbnailDialog}>
+                                <Button onClick={handleOpenGalleryDialog}>
                                     Upload Gallery Images
                                 </Button>
                                 <GalleryAddUploadDialog
