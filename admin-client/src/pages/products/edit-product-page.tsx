@@ -38,6 +38,8 @@ import {
     deleteImageFromdB,
 } from '@/pages/products/api/upload-gallery-images.ts';
 import VariantUploadDialog from '@/pages/products/utils/variant-upload-dialog.tsx';
+import { ProductStatus } from '@/utils/status-enum';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Product = z.infer<typeof ProductSchema>;
 
@@ -185,6 +187,7 @@ export default function EditProductPage() {
                       )
                     : '';
             })(),
+            status: product?.status || ProductStatus.DRAFT,
             variants: product?.variants?.map((variant) => ({
                 id: variant.id,
                 product_id: variant.product_id,
@@ -477,6 +480,37 @@ export default function EditProductPage() {
                                                 )}
                                             </span>
                                         )}
+                                    </>
+                                )}
+                            </editProductForm.Field>
+
+                            <editProductForm.Field name="status">
+                                {(field) => (
+                                    <>
+                                    <Label>Status</Label>
+                                    <Select
+                                        value={field.state.value}
+                                        onValueChange={(newValue) => {
+                                            if (newValue === '') return;
+                                            field.handleChange(newValue as ProductStatus);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                        <SelectValue placeholder="Select a status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                        {Object.values(ProductStatus).map((status: string) => (
+                                            <SelectItem key={status} value={status}>
+                                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                                            </SelectItem>
+                                        ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {field.state.meta.errors?.length > 0 && (
+                                        <span className="text-red-500 mt-1 mb-4 block">
+                                        {field.state.meta.errors.join(', ')}
+                                        </span>
+                                    )}
                                     </>
                                 )}
                             </editProductForm.Field>
