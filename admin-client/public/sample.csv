@@ -4,4 +4,4 @@ books,https://your.server.com/image1.jpg|https://your.server.com/image2.jpg|http
 For category tab, we have the following options: electronics, merch, books, health and wellness, black-friday, gift-cards, art, automotive","This is the product description under “About this item”.  <br /><br />
 You may use HTML here.<br /><br />
 <p>Please note that if you use <p> tags.  The tag does not product bottom padding.  If you want seperate from the next paragraph, remember to use an additional <br > tag.</p>",published,https://your.server.com/large.jpg,0,product-large,Size[Large],10,10,0,1,,,,,,,,
-,,,,,,https://your.server.com/small.jpg,,Product-large,Size[Small],5,10,0,1,,,,,,,,
+,,,,,,https://your.server.com/small.jpg,,product-large,Size[Small],5,10,0,1,,,,,,,,
