@@ -1,10 +1,10 @@
 {
     "name": "admin-client",
     "private": true,
-    "version": "1.0.4",
+    "version": "1.0.5",
     "type": "module",
     "description": "Hamza Seller admin frontend",
-    "author": "Garo Nazarian, Jonny Bajada, Chris Li, John R. Kosinski",
+    "author": "Garo Nazarian, Jonny Bajada, Chris Li, John R. Kosinski, Gun",
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
