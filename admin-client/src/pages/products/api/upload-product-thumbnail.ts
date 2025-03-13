@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const BUNNY_STORAGE_ZONE = 'hamza-market'; // Storage Zone Name
+const BUNNY_STORAGE_ZONE = import.meta.env.VITE_BUNNY_STORAGE_ZONE; // Storage Zone Name
 const BUNNY_CDN_URL = import.meta.env.VITE_BUNNY_CDN_URL; // Your CDN Public URL
 const BUNNY_API_KEY = import.meta.env.VITE_BUNNY_API_KEY;
-const BUNNY_STORAGE_REGION = 'storage.bunnycdn.com'; // Default Falkenstein Region
+const BUNNY_STORAGE_REGION = import.meta.env.VITE_BUNNY_STORAGE_REGION; // Default Falkenstein Region
 const BUNNNY_SUBFOLDER = import.meta.env.VITE_BUNNY_SUBFOLDER;
 
 export const uploadProductThumbnail = async (

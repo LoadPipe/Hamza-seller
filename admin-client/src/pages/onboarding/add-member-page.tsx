@@ -91,14 +91,6 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({ form, onFinish }) => {
     };
 
     const handleFinish = () => {
-        if (members.length === 0) {
-            toast({
-                variant: 'destructive',
-                title: 'Validation Error',
-                description: 'Please add at least one member or choose to skip.',
-            });
-            return;
-        }
         form.setFieldValue('members', members);
         onFinish();
     };
@@ -244,7 +236,7 @@ const AddMemberPage: React.FC<AddMemberPageProps> = ({ form, onFinish }) => {
                             onClick={handleFinish}
                             className="bg-[#94D42A] text-black font-semibold px-6 py-3 rounded-full w-full h-12"
                         >
-                            Proceed
+                            {members.length === 0 ? 'Skip' : 'Proceed'}
                         </Button>
                     </div>
                 </CardContent>
