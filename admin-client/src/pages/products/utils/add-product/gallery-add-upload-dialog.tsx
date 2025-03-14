@@ -41,6 +41,7 @@ const GalleryAddUploadDialog: React.FC<GalleryAddUploadDialogProps> = ({
                 title: 'Limit Exceeded',
                 description: 'New images will replace the oldest ones.',
                 variant: 'destructive',
+                duration: 3000
             });
         }
         setFiles(acceptedFiles);
@@ -69,6 +70,7 @@ const GalleryAddUploadDialog: React.FC<GalleryAddUploadDialogProps> = ({
             toast({
                 title: 'Success',
                 description: 'Gallery images uploaded!',
+                duration: 3000
             });
             onGalleryUpload(uploadedImageUrls);
             setFiles([]);
@@ -79,6 +81,7 @@ const GalleryAddUploadDialog: React.FC<GalleryAddUploadDialogProps> = ({
                 title: 'Upload Failed',
                 description: error.message || 'An unexpected error occurred.',
                 variant: 'destructive',
+                duration: 3000
             });
         },
     });
@@ -89,6 +92,7 @@ const GalleryAddUploadDialog: React.FC<GalleryAddUploadDialogProps> = ({
                 title: 'Error',
                 description: 'Please select at least one image file.',
                 variant: 'destructive',
+                duration: 3000
             });
             return;
         }
@@ -159,6 +163,7 @@ const GalleryAddUploadDialog: React.FC<GalleryAddUploadDialogProps> = ({
                         Cancel
                     </Button>
                     <Button
+                        type='button'
                         onClick={handleUpload}
                         disabled={uploadGalleryMutation.isPending}
                         className="w-[200px]"

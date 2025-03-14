@@ -9,8 +9,8 @@ import { FilePlus, CircleAlert, Loader2 } from 'lucide-react';
 interface ImageAddUploadDialogProps {
     open: boolean;
     onClose: () => void;
-    onImageUpload: (imageUrl: string) => void; 
-    storeHandle: string; 
+    onImageUpload: (imageUrl: string) => void;
+    storeHandle: string;
     productFolder: string;
 }
 
@@ -33,6 +33,7 @@ const ImageAddUploadDialog: React.FC<ImageAddUploadDialogProps> = ({
                 title: 'Invalid File Type',
                 description: 'Only image files (JPG, PNG, WEBP) are allowed.',
                 variant: 'destructive',
+                duration: 3000
             });
         }
     };
@@ -51,8 +52,9 @@ const ImageAddUploadDialog: React.FC<ImageAddUploadDialogProps> = ({
             toast({
                 title: 'Success',
                 description: 'Image uploaded successfully!',
+                duration: 3000
             });
-            onImageUpload(uploadedImageUrl); 
+            onImageUpload(uploadedImageUrl);
             onClose(); // Close dialog
         },
         onError: (error: any) => {
@@ -60,6 +62,7 @@ const ImageAddUploadDialog: React.FC<ImageAddUploadDialogProps> = ({
                 title: 'Upload Failed',
                 description: error.message || 'An unexpected error occurred.',
                 variant: 'destructive',
+                duration: 3000
             });
             console.error(error);
         },
@@ -71,6 +74,7 @@ const ImageAddUploadDialog: React.FC<ImageAddUploadDialogProps> = ({
                 title: 'Error',
                 description: 'Please select an image file.',
                 variant: 'destructive',
+                duration: 3000
             });
             return;
         }
@@ -88,11 +92,10 @@ const ImageAddUploadDialog: React.FC<ImageAddUploadDialogProps> = ({
 
                 <div
                     {...getRootProps()}
-                    className={`p-6 text-center rounded-lg text-white border-2 border-dashed ${
-                        isDragActive
+                    className={`p-6 text-center rounded-lg text-white border-2 border-dashed ${isDragActive
                             ? 'bg-gray-100 border-primary-purple-90'
                             : 'bg-primary-black-90 border-gray-400'
-                    }`}
+                        }`}
                 >
                     <input {...getInputProps()} />
                     {file ? (
@@ -122,6 +125,7 @@ const ImageAddUploadDialog: React.FC<ImageAddUploadDialogProps> = ({
                         Cancel
                     </Button>
                     <Button
+                        type='button'
                         onClick={handleUpload}
                         disabled={!file || uploadThumbnailMutation.isPending}
                         className="bg-primary-purple-90 rounded-[53px] hover:border-none w-[200px] h-[52px] hover:bg-primary-green-900"

@@ -40,6 +40,7 @@ const AddProductVariantUploadDialog: React.FC<AddProductVariantUploadDialogProps
             toast({
                 title: 'Success',
                 description: 'Variant image uploaded for new product!',
+                duration: 3000
             });
             onVariantImageUpload(cdnUrl, variantIndex);
             onClose();
@@ -49,6 +50,7 @@ const AddProductVariantUploadDialog: React.FC<AddProductVariantUploadDialogProps
                 title: 'Upload Failed',
                 description: error.message || 'An error occurred while uploading.',
                 variant: 'destructive',
+                duration: 3000
             });
         },
     });
@@ -65,6 +67,7 @@ const AddProductVariantUploadDialog: React.FC<AddProductVariantUploadDialogProps
                 title: 'Error',
                 description: 'Please select a file to upload.',
                 variant: 'destructive',
+                duration: 3000
             });
             return;
         }
@@ -104,6 +107,7 @@ const AddProductVariantUploadDialog: React.FC<AddProductVariantUploadDialogProps
                         Cancel
                     </Button>
                     <Button
+                        type='button'
                         onClick={handleUpload}
                         disabled={!selectedFile || variantUploadMutation.isPending}
                         className="w-[120px]"

@@ -27,18 +27,21 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import {
-    validateSku,
-    validateBarcode,
-    validateEan,
-    validateUpc,
-} from '@/pages/products/api/validate-product-fields.ts';
 import { useForm, getBy, setBy } from '@tanstack/react-form';
 import GalleryAddUploadDialog from './utils/add-product/gallery-add-upload-dialog';
 import ImageAddUploadDialog from './utils/add-product/image-add-upload-dialog';
 import VariantAddUploadDialog from './utils/add-product/variant-add-upload-dialog';
 import { getJwtStoreId } from '@/utils/authentication';
 import { useUserAuthStore } from '@/stores/authentication/user-auth';
+import { ProductSchema } from './product-schema';
+import { fetchAllCategories } from './api/product-categories';
+import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
+import CategorySelectDialog from './utils/category-select-dialog';
+import { CreateProductInput, CreateProductSchema } from './add-product-schema';
+import { validateBarcodeForNewProduct, validateEanForNewProduct, validateSkuForNewProduct, validateUpcForNewProduct } from './api/validate-add-product-fields';
+
+type Category = NonNullable<z.infer<typeof ProductSchema>['categories']>[number];
 
 interface GalleryImage {
     id: string;
@@ -67,9 +70,36 @@ export default function AddProductPage() {
     const [isGalleryDialogOpen, setGalleryDialogOpen] = useState(false);
     const [isVariantDialogOpen, setVariantDialogOpen] = useState(false);
     const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const { toast } = useToast();
+    const [renderTrigger, setRenderTrigger] = useState(0);
 
-    const addProductForm = useForm({
+    const {
+        data: categories,
+    } = useQuery<Category[]>({
+        queryKey: ['categories'],
+        queryFn: async () => fetchAllCategories(),
+    });
+
+    const [isCategoryDialogOpen, setCategoryDialogOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+    const handleSelectCategory = (category: Category) => {
+        if (!category) {
+            return;
+        }
+        setSelectedCategory(category);
+
+        addProductForm.setFieldValue('categoryHandle', category.handle);
+
+        setFormErrors((prev) => {
+            const updated = { ...prev };
+            delete updated['categoryHandle'];
+            return updated;
+        });
+    };
+
+    const addProductForm = useForm<CreateProductInput>({
         defaultValues: {
             title: '',
             subtitle: '',
@@ -85,11 +115,10 @@ export default function AddProductPage() {
             sku: '',
             barcode: '',
             quantity: '',
-            category: '',
+            categoryHandle: '',
             productTags: '',
             variants: [
                 {
-                    id: '',
                     product_id: '',
                     title: '',
                     sku: '',
@@ -116,6 +145,7 @@ export default function AddProductPage() {
                 variant: 'destructive',
                 title: 'Missing Product Name',
                 description: 'Please fill in the product name first.',
+                duration: 3000
             });
             return null;
         }
@@ -143,7 +173,6 @@ export default function AddProductPage() {
 
     const handleAddVariant = () => {
         const newVariant = {
-            id: '',
             product_id: '',
             title: '',
             sku: '',
@@ -158,10 +187,12 @@ export default function AddProductPage() {
             metadata: { imgUrl: '' },
             inventory_quantity: 0,
         };
+        const currentVariants = addProductForm.getFieldValue('variants') || [];
         addProductForm.setFieldValue('variants', [
-            ...addProductForm.state.values.variants,
+            ...currentVariants,
             newVariant,
         ]);
+        setRenderTrigger((prev) => prev + 1);
     };
 
     const handleRemoveVariant = (indexToRemove: number) => {
@@ -169,6 +200,7 @@ export default function AddProductPage() {
             (_: any, index: number) => index !== indexToRemove
         );
         addProductForm.setFieldValue('variants', updatedVariants);
+        setRenderTrigger((prev) => prev + 1);
     };
 
     // Mutation for creating a product.
@@ -199,28 +231,7 @@ export default function AddProductPage() {
         addProductForm.setFieldValue(`variants[${variantIndex}].metadata`, {
             imgUrl: imageUrl,
         });
-
-        const sanitizedVariants = addProductForm?.state?.values?.variants?.map(
-            (variant) => ({
-                ...variant,
-                metadata: variant.metadata || {},
-                sku:
-                    variant.sku && variant.sku.trim() !== ''
-                        ? variant.sku
-                        : undefined,
-            })
-        );
-
-        const payload = {
-            ...addProductForm.state.values,
-            variants: sanitizedVariants,
-            preferredCurrency,
-        };
-
-        addProductMutation.mutate(payload);
     };
-
-
 
     // Handler for thumbnail upload.
     const handleThumbnailUpload = (imageUrl: string) => {
@@ -229,10 +240,10 @@ export default function AddProductPage() {
 
     const handleGalleryUpload = (uploadedImageUrls: string[]) => {
         const newGalleryImages: GalleryImage[] = uploadedImageUrls.map((url, index) => ({
-                id: url,
-                url,
-      fileName: `gallery_${Date.now()}_${index}`
-            }));
+            id: url,
+            url,
+            fileName: `gallery_${Date.now()}_${index}`
+        }));
         const updatedGalleryImages = [...galleryImages, ...newGalleryImages];
         setGalleryImages(updatedGalleryImages);
         addProductForm.setFieldValue('images', updatedGalleryImages);
@@ -240,6 +251,55 @@ export default function AddProductPage() {
 
     const handleDeleteGalleryImage = (image: GalleryImage) => {
         setGalleryImages((prev) => prev.filter((img) => img.id !== image.id));
+    };
+
+    const convertZodPathToTanstackPath = (zodPath: Array<string | number>): string => {
+        let path = '';
+        for (const segment of zodPath) {
+            if (typeof segment === 'number') {
+                path += `[${segment}]`;
+            } else {
+                path += path === '' ? segment : `.${segment}`;
+            }
+        }
+        return path;
+    };
+
+    const finalizeAndSave = async (payload: any) => {
+        // 1) Run the payload through CreateProductSchema
+        setFormErrors({});
+        const parseResult = CreateProductSchema.safeParse(payload);
+        if (!parseResult.success) {
+            const zodIssues = parseResult.error.issues;
+            const newErrors: Record<string, string> = {};
+            zodIssues.forEach((issue) => {
+                const pathKey = convertZodPathToTanstackPath(issue.path);
+                newErrors[pathKey] = issue.message;
+            });
+
+            zodIssues.forEach((issue) => {
+                const pathKey = convertZodPathToTanstackPath(issue.path);
+                addProductForm.setFieldMeta(pathKey as any, (prev) => ({
+                    ...prev,
+                    errors: [issue.message],
+                    touched: true,
+                    isDirty: true,
+                }));
+            });
+
+            setFormErrors(newErrors);
+            toast({
+                variant: 'destructive',
+                title: 'Validation error',
+                description: 'Please correct the errors and try again.',
+                duration: 3000
+            });
+            return;
+        }
+
+        // 2) If it succeeds, you have a typed object:
+        const validData = parseResult.data;
+        addProductMutation.mutate(validData);
     };
 
     return (
@@ -271,7 +331,17 @@ export default function AddProductPage() {
                         {/* General Information */}
                         <div>
                             <h2 className="text-lg font-medium mb-4">General Information</h2>
-                            <addProductForm.Field name="title">
+                            <addProductForm.Field
+                                name="title"
+                                validators={{
+                                    onBlur: ({ value }) => {
+                                        if (!value || value.trim().length === 0) {
+                                            return 'Title is required.';
+                                        }
+                                        return undefined;
+                                    },
+                                }}
+                            >
                                 {(field) => (
                                     <>
                                         <Label>Product Name</Label>
@@ -290,7 +360,17 @@ export default function AddProductPage() {
                                     </>
                                 )}
                             </addProductForm.Field>
-                            <addProductForm.Field name="subtitle">
+                            <addProductForm.Field
+                                name="subtitle"
+                                validators={{
+                                    onBlur: ({ value }) => {
+                                        if (!value || value.trim().length === 0) {
+                                            return 'Product Information is required.';
+                                        }
+                                        return undefined;
+                                    },
+                                }}
+                            >
                                 {(field) => (
                                     <>
                                         <Label>Product Information</Label>
@@ -309,7 +389,17 @@ export default function AddProductPage() {
                                     </>
                                 )}
                             </addProductForm.Field>
-                            <addProductForm.Field name="description">
+                            <addProductForm.Field
+                                name="description"
+                                validators={{
+                                    onChange: ({ value }) => {
+                                        if (!value?.trim()) {
+                                            return 'Description is required.';
+                                        }
+                                        return undefined;
+                                    },
+                                }}
+                            >
                                 {(field) => (
                                     <>
                                         <Label>Description</Label>
@@ -326,7 +416,6 @@ export default function AddProductPage() {
                                     </>
                                 )}
                             </addProductForm.Field>
-
 
                             <addProductForm.Field name="status">
                                 {(field) => (
@@ -361,9 +450,9 @@ export default function AddProductPage() {
                         </div>
 
                         {/* Product Media Section */}
-                        <div>
-                            <h2 className="text-lg font-medium mb-4">Product Media</h2>
-                            <div className="mb-6">
+                        <div >
+                            <h2 className="text-lg font-medium mb-4 text-center">Product Media</h2>
+                            <div className="mb-6 ">
                                 <addProductForm.Subscribe
                                     selector={(formState) => formState.values.thumbnail}
                                 >
@@ -382,7 +471,7 @@ export default function AddProductPage() {
                                     }
                                 </addProductForm.Subscribe>
                                 <div className="flex justify-center">
-                                    <Button onClick={handleOpenThumbnailDialog}>
+                                    <Button type='button' onClick={handleOpenThumbnailDialog}>
                                         Upload Thumbnail Image
                                     </Button>
                                 </div>
@@ -396,41 +485,69 @@ export default function AddProductPage() {
                                         ?.trim()}
                                 />
                             </div>
-                            <div>
-                                <h2 className="text-lg font-medium mb-4">
-                                    Gallery
-                                </h2>
-                                <Button onClick={handleOpenGalleryDialog}>
-                                    Upload Gallery Images
-                                </Button>
-                                <GalleryAddUploadDialog
-                                    open={isGalleryDialogOpen}
-                                    onClose={() => setGalleryDialogOpen(false)}
-                                    onGalleryUpload={handleGalleryUpload}
-                                    productFolder={addProductForm
-                                        .getFieldValue('title')
-                                        ?.trim()}
-                                    storeHandle={storeHandle}
-                                    currentGallery={galleryImages}
-                                    onDeleteImage={handleDeleteGalleryImage}
-                                />
+                            <div className="flex justify-center">
+                                <div>
+                                    <h2 className="text-lg font-medium mb-4 text-center">
+                                        Gallery
+                                    </h2>
+                                    <div className="grid grid-cols-3 gap-2 mb-4">
+                                        {galleryImages.map((image) => (
+                                            <img
+                                                key={image.id}
+                                                src={image.url}
+                                                alt="Preview"
+                                                className="w-24 h-24 object-cover rounded"
+                                            />
+                                        ))}
+                                    </div>
+                                    <div className="flex justify-center">
+                                        <Button type="button" onClick={handleOpenGalleryDialog}>
+                                            Upload Gallery Images
+                                        </Button>
+                                    </div>
+                                    <GalleryAddUploadDialog
+                                        open={isGalleryDialogOpen}
+                                        onClose={() => setGalleryDialogOpen(false)}
+                                        onGalleryUpload={handleGalleryUpload}
+                                        productFolder={addProductForm.getFieldValue('title')?.trim()}
+                                        storeHandle={storeHandle}
+                                        currentGallery={galleryImages}
+                                        onDeleteImage={handleDeleteGalleryImage}
+                                    />
+                                </div>
                             </div>
-                            <div className="mt-6 flex flex-col gap-4">
-                                <div className="flex justify-end">
-                                    <Label className="text-lg font-medium">
-                                        Categories:
-                                    </Label>
-                                </div>
-                                <div className="flex justify-end">
-                                    <Button
-                                        className="mt-2"
-                                        onClick={() => {
-                                            alert('TODO: Add Category flow here.');
-                                        }}
-                                    >
-                                        Add New Category
-                                    </Button>
-                                </div>
+                            <div className="mt-6 flex flex-col gap-4 items-center ">
+                                <addProductForm.Field name="categoryHandle">
+                                    {() => (
+                                        <>
+                                            <div className="flex justify-end">
+                                                <Label className="text-lg font-medium">Categories:</Label>
+                                            </div>
+
+                                            <p className="text-right mt-2">
+                                                {selectedCategory ? `Selected: ${selectedCategory.name}` : <span className="text-gray-400">No category selected</span>}
+                                            </p>
+
+                                            <div className="flex justify-end items-center">
+                                                <Button type='button' className="mt-2" onClick={() => setCategoryDialogOpen(true)}>
+                                                    Select Category
+                                                </Button>
+                                            </div>
+
+                                            {formErrors["categoryHandle"] && (
+                                                <span className="text-red-500 mt-2">{formErrors["categoryHandle"]}</span>
+                                            )}
+
+                                            <CategorySelectDialog
+                                                open={isCategoryDialogOpen}
+                                                onClose={() => setCategoryDialogOpen(false)}
+                                                categories={categories || []}
+                                                onSelect={handleSelectCategory}
+                                            />
+                                        </>
+                                    )}
+                                </addProductForm.Field>
+
                             </div>
                         </div>
                     </div>
@@ -447,466 +564,455 @@ export default function AddProductPage() {
                         <div className="mt-8">
                             <div className="mt-8 flex items-center justify-between">
                                 <h2 className="text-lg font-medium mb-4">Variants</h2>
-                                <Button onClick={handleAddVariant}>Add Variant</Button>
+                                <Button type="button" onClick={handleAddVariant}>Add Variant</Button>
                             </div>
-                            <Accordion type="single" collapsible>
+                            <Accordion type="single" collapsible defaultValue="variant-0">
                                 {addProductForm.state.values.variants?.map((variant, index) => (
-                                        <AccordionItem
-                                            key={variant.id || index}
-                                            value={`variant-${index}`}
-                                            className="my-2"
-                                        >
+                                    <AccordionItem
+                                        key={index}
+                                        value={`variant-${index}`}
+                                        className="my-2"
+                                    >
                                         <AccordionTrigger>Variant #{index + 1}</AccordionTrigger>
-                                            <AccordionContent>
-                                                <div className="flex items-center justify-between border-b border-gray-700 py-2 mb-4">
-                                                    <div className="flex items-center gap-4">
+                                        <AccordionContent>
+                                            <div className="flex items-center justify-between border-b border-gray-700 py-2 mb-4">
+                                                <div className="flex items-center gap-4">
                                                     {variant.metadata?.imgUrl ? (
-                                                            <img
+                                                        <img
                                                             src={variant.metadata.imgUrl}
-                                                                alt={`Variant ${index + 1}`}
-                                                                className="w-16 h-16 rounded"
-                                                            />
-                                                        ) : null}
-                                                        <span className="text-lg font-medium">
-                                                            Variant {index + 1}
-                                                        </span>
-                                                    </div>
-                                                <Button onClick={() => openVariantUploadDialog(index)}>
-                                                        Upload Variant Image
-                                                    </Button>
-                                                    {isVariantDialogOpen && (
-                                                        <VariantAddUploadDialog
+                                                            alt={`Variant ${index + 1}`}
+                                                            className="w-16 h-16 rounded"
+                                                        />
+                                                    ) : null}
+                                                    <span className="text-lg font-medium">
+                                                        Variant {index + 1}
+                                                    </span>
+                                                </div>
+                                                <Button type='button' onClick={() => openVariantUploadDialog(index)}>
+                                                    Upload Variant Image
+                                                </Button>
+                                                {isVariantDialogOpen && (
+                                                    <VariantAddUploadDialog
                                                         open={isVariantDialogOpen}
-                                                            onClose={() =>
-                                                                setVariantDialogOpen(
-                                                                    false
-                                                                )
-                                                            }
+                                                        onClose={() =>
+                                                            setVariantDialogOpen(
+                                                                false
+                                                            )
+                                                        }
                                                         variantIndex={currentVariantIndex}
                                                         storeHandle={storeHandle}
                                                         onVariantImageUpload={handleVariantImageUpload}
-                                                                 productFolder={addProductForm
-                                                                .getFieldValue(
-                                                                    'title'
-                                                                )
-                                                                ?.trim()}
-                                                        />
-                                                    )}
-                                                </div>
-                                                <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
-                                                    {/* Hidden Variant ID */}
-                                                <addProductForm.Field name={`variants[${index}].id`}>
-                                                    {(field) => <input type="hidden" value={field.state.value} />}
-                                                    </addProductForm.Field>
-
-                                                    {/* Variant Title */}
-                                                    <addProductForm.Field
-                                                        name={`variants[${index}].title`}
-                                                        validators={{
+                                                        productFolder={addProductForm
+                                                            .getFieldValue(
+                                                                'title'
+                                                            )
+                                                            ?.trim()}
+                                                    />
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-6 gap-4 items-center border-b border-gray-700 py-2">
+                                                {/* Variant Title */}
+                                                <addProductForm.Field
+                                                    name={`variants[${index}].title`}
+                                                    validators={{
                                                         onBlur: ({ value }) => {
                                                             if (!value || value.trim().length === 0) {
-                                                                    return 'Title is required.';
-                                                                }
+                                                                return 'Title is required.';
+                                                            }
                                                             if (value.trim().length < 1) {
-                                                                    return 'Title must be at least 1 character long.';
-                                                                }
-                                                                return undefined;
-                                                            },
-                                                        }}
-                                                    >
-                                                        {(field) => (
-                                                            <div>
+                                                                return 'Title must be at least 1 character long.';
+                                                            }
+                                                            return undefined;
+                                                        },
+                                                    }}
+                                                >
+                                                    {(field) => (
+                                                        <div>
                                                             <Label>Title</Label>
-                                                                <Input
-                                                                    placeholder="Variant Title"
+                                                            <Input
+                                                                placeholder="Variant Title"
                                                                 value={field.state.value}
                                                                 onChange={(e) =>
                                                                     field.handleChange(e.target.value)
-                                                                    }
+                                                                }
                                                                 onBlur={field.handleBlur}
-                                                                />
+                                                            />
                                                             {field.state.meta.errors?.length > 0 && (
-                                                                    <span className="text-red-500 mt-1 block">
+                                                                <span className="text-red-500 mt-1 block">
                                                                     {field.state.meta.errors.join(', ')}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Variant SKU */}
-                                                    <addProductForm.Field
-                                                        name={`variants[${index}].sku`}
-                                                        asyncDebounceMs={100}
-                                                        validators={{
+                                                {/* Variant SKU */}
+                                                <addProductForm.Field
+                                                    name={`variants[${index}].sku`}
+                                                    asyncDebounceMs={100}
+                                                    validators={{
                                                         onBlur: () => undefined,
                                                         onChangeAsync: async ({ value }) => {
-                                                            if (value.trim() === '') return undefined;
-                                                                    try {
-                                                                const response = await validateSku(
-                                                                                value.toString(),
-                                                                    addProductForm.getFieldValue(`variants[${index}].id`)
-                                                                            );
+                                                            if (!value?.trim()) return undefined;
+                                                            try {
+                                                                const response = await validateSkuForNewProduct(
+                                                                    value.toString(),
+                                                                );
                                                                 if (response === false) {
-                                                                            return 'SKU already exists';
-                                                                        }
-                                                                        return undefined;
-                                                                    } catch (error) {
+                                                                    return 'SKU already exists';
+                                                                }
+                                                                return undefined;
+                                                            } catch (error) {
                                                                 console.error('Failed to validate SKU:', error);
-                                                                        return 'Failed to validate SKU';
-                                                                    }
-                                                                },
-                                                        }}
-                                                    >
-                                                        {(field) => (
-                                                            <div>
+                                                                return 'Failed to validate SKU';
+                                                            }
+                                                        },
+                                                    }}
+                                                >
+                                                    {(field) => (
+                                                        <div>
                                                             <Label>SKU</Label>
                                                             <Tooltip open={field.state.meta.errors?.length > 0}>
                                                                 <TooltipTrigger asChild>
-                                                                        <Input
-                                                                            placeholder="SKU"
-                                                                        value={field.state.value}
-                                                                        onChange={(e) =>
-                                                                            field.handleChange(e.target.value)
-                                                                            }
+                                                                    <Input
+                                                                        placeholder="SKU"
+                                                                        value={field.state.value ?? ''}
+                                                                        onChange={(e) => field.handleChange(e.target.value)}
                                                                         onBlur={field.handleBlur}
-                                                                        />
-                                                                    </TooltipTrigger>
+                                                                    />
+                                                                </TooltipTrigger>
                                                                 {field.state.meta.errors?.length > 0 && (
-                                                                        <TooltipContent>
-                                                                            <span className="text-red-500">
+                                                                    <TooltipContent>
+                                                                        <span className="text-red-500">
                                                                             {field.state.meta.errors.join(', ')}
-                                                                            </span>
-                                                                        </TooltipContent>
-                                                                    )}
-                                                                </Tooltip>
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                        </span>
+                                                                    </TooltipContent>
+                                                                )}
+                                                            </Tooltip>
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Variant Barcode */}
-                                                    <addProductForm.Field
-                                                        name={`variants[${index}].barcode`}
-                                                        asyncDebounceMs={100}
-                                                        validators={{
+                                                {/* Variant Barcode */}
+                                                <addProductForm.Field
+                                                    name={`variants[${index}].barcode`}
+                                                    asyncDebounceMs={100}
+                                                    validators={{
                                                         onBlur: () => undefined,
                                                         onChangeAsync: async ({ value }) => {
-                                                            if (value.trim() === '') return undefined;
-                                                                    try {
-                                                                const response = await validateBarcode(
-                                                                                value.toString(),
-                                                                    addProductForm.getFieldValue(`variants[${index}].id`)
-                                                                            );
+                                                            if (!value?.trim()) return undefined;
+                                                            try {
+                                                                const response = await validateBarcodeForNewProduct(
+                                                                    value.toString(),
+                                                                );
                                                                 if (response === false) {
-                                                                            return 'Barcode already exists';
-                                                                        }
-                                                                        return undefined;
-                                                                    } catch (error) {
+                                                                    return 'Barcode already exists';
+                                                                }
+                                                                return undefined;
+                                                            } catch (error) {
                                                                 console.error('Failed to validate Barcode:', error);
-                                                                        return 'Failed to validate Barcode';
-                                                                    }
-                                                                },
-                                                        }}
-                                                    >
-                                                        {(field) => (
-                                                            <div>
+                                                                return 'Failed to validate Barcode';
+                                                            }
+                                                        },
+                                                    }}
+                                                >
+                                                    {(field) => (
+                                                        <div>
                                                             <Label>Barcode</Label>
                                                             <Tooltip open={field.state.meta.errors?.length > 0}>
                                                                 <TooltipTrigger asChild>
-                                                                        <Input
-                                                                            placeholder="Barcode"
+                                                                    <Input
+                                                                        placeholder="Barcode"
                                                                         value={field.state.value}
                                                                         onChange={(e) =>
                                                                             field.handleChange(e.target.value)
-                                                                            }
+                                                                        }
                                                                         onBlur={field.handleBlur}
-                                                                        />
-                                                                    </TooltipTrigger>
+                                                                    />
+                                                                </TooltipTrigger>
                                                                 {field.state.meta.errors?.length > 0 && (
-                                                                        <TooltipContent>
-                                                                            <span className="text-red-500">
+                                                                    <TooltipContent>
+                                                                        <span className="text-red-500">
                                                                             {field.state.meta.errors.join(', ')}
-                                                                            </span>
-                                                                        </TooltipContent>
-                                                                    )}
-                                                                </Tooltip>
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                        </span>
+                                                                    </TooltipContent>
+                                                                )}
+                                                            </Tooltip>
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Variant EAN */}
-                                                    <addProductForm.Field
-                                                        name={`variants[${index}].ean`}
-                                                        asyncDebounceMs={100}
-                                                        validators={{
+                                                {/* Variant EAN */}
+                                                <addProductForm.Field
+                                                    name={`variants[${index}].ean`}
+                                                    asyncDebounceMs={100}
+                                                    validators={{
                                                         onBlur: () => undefined,
                                                         onChangeAsync: async ({ value }) => {
-                                                            if (value.trim() === '') return undefined;
-                                                                    try {
-                                                                const response = await validateEan(
-                                                                                value.toString(),
-                                                                    addProductForm.getFieldValue(`variants[${index}].id`)
-                                                                            );
+                                                            if (!value?.trim()) return undefined;
+                                                            try {
+                                                                const response = await validateEanForNewProduct(
+                                                                    value.toString(),
+                                                                );
                                                                 if (response === false) {
-                                                                            return 'EAN already exists';
-                                                                        }
-                                                                        return undefined;
-                                                                    } catch (error) {
+                                                                    return 'EAN already exists';
+                                                                }
+                                                                return undefined;
+                                                            } catch (error) {
                                                                 console.error('Failed to validate EAN:', error);
-                                                                        return 'Failed to validate EAN';
-                                                                    }
-                                                                },
-                                                        }}
-                                                    >
-                                                        {(field) => (
-                                                            <div>
+                                                                return 'Failed to validate EAN';
+                                                            }
+                                                        },
+                                                    }}
+                                                >
+                                                    {(field) => (
+                                                        <div>
                                                             <Label>EAN</Label>
                                                             <Tooltip open={field.state.meta.errors?.length > 0}>
                                                                 <TooltipTrigger asChild>
-                                                                        <Input
-                                                                            placeholder="EAN"
+                                                                    <Input
+                                                                        placeholder="EAN"
                                                                         value={field.state.value}
                                                                         onChange={(e) =>
                                                                             field.handleChange(e.target.value)
-                                                                            }
+                                                                        }
                                                                         onBlur={field.handleBlur}
-                                                                        />
-                                                                    </TooltipTrigger>
+                                                                    />
+                                                                </TooltipTrigger>
                                                                 {field.state.meta.errors?.length > 0 && (
-                                                                        <TooltipContent>
-                                                                            <span className="text-red-500">
+                                                                    <TooltipContent>
+                                                                        <span className="text-red-500">
                                                                             {field.state.meta.errors.join(', ')}
-                                                                            </span>
-                                                                        </TooltipContent>
-                                                                    )}
-                                                                </Tooltip>
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                        </span>
+                                                                    </TooltipContent>
+                                                                )}
+                                                            </Tooltip>
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Variant UPC */}
-                                                    <addProductForm.Field
-                                                        name={`variants[${index}].upc`}
-                                                        asyncDebounceMs={100}
-                                                        validators={{
+                                                {/* Variant UPC */}
+                                                <addProductForm.Field
+                                                    name={`variants[${index}].upc`}
+                                                    asyncDebounceMs={100}
+                                                    validators={{
                                                         onBlur: () => undefined,
                                                         onChangeAsync: async ({ value }) => {
-                                                            if (value.trim() === '') return undefined;
-                                                                    try {
-                                                                const response = await validateUpc(
-                                                                                value.toString(),
-                                                                    addProductForm.getFieldValue(`variants[${index}].id`)
-                                                                            );
+                                                            if (!value?.trim()) return undefined;
+                                                            try {
+                                                                const response = await validateUpcForNewProduct(
+                                                                    value.toString(),
+                                                                );
                                                                 if (response === false) {
-                                                                            return 'UPC already exists';
-                                                                        }
-                                                                        return undefined;
-                                                                    } catch (error) {
+                                                                    return 'UPC already exists';
+                                                                }
+                                                                return undefined;
+                                                            } catch (error) {
                                                                 console.error('Failed to validate UPC:', error);
-                                                                        return 'Failed to validate UPC';
-                                                                    }
-                                                                },
-                                                        }}
-                                                    >
-                                                        {(field) => (
-                                                            <div>
+                                                                return 'Failed to validate UPC';
+                                                            }
+                                                        },
+                                                    }}
+                                                >
+                                                    {(field) => (
+                                                        <div>
                                                             <Label>UPC</Label>
                                                             <Tooltip open={field.state.meta.errors?.length > 0}>
                                                                 <TooltipTrigger asChild>
-                                                                        <Input
-                                                                            placeholder="UPC"
+                                                                    <Input
+                                                                        placeholder="UPC"
                                                                         value={field.state.value}
                                                                         onChange={(e) =>
                                                                             field.handleChange(e.target.value)
-                                                                            }
+                                                                        }
                                                                         onBlur={field.handleBlur}
-                                                                        />
-                                                                    </TooltipTrigger>
+                                                                    />
+                                                                </TooltipTrigger>
                                                                 {field.state.meta.errors?.length > 0 && (
-                                                                        <TooltipContent>
-                                                                            <span className="text-red-500">
+                                                                    <TooltipContent>
+                                                                        <span className="text-red-500">
                                                                             {field.state.meta.errors.join(', ')}
-                                                                            </span>
-                                                                        </TooltipContent>
-                                                                    )}
-                                                                </Tooltip>
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                        </span>
+                                                                    </TooltipContent>
+                                                                )}
+                                                            </Tooltip>
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Variant Quantity */}
-                                                    <addProductForm.Field
-                                                        name={`variants[${index}].inventory_quantity`}
-                                                        key={`inventory_quantity-${index}`}
-                                                        validators={{
+                                                {/* Variant Quantity */}
+                                                <addProductForm.Field
+                                                    name={`variants[${index}].inventory_quantity`}
+                                                    key={`inventory_quantity-${index}`}
+                                                    validators={{
                                                         onBlur: ({ value }) => {
                                                             if (value === undefined) {
-                                                                    return 'Quantity is required.';
-                                                                }
-                                                                if (value < 0) {
-                                                                    return 'Quantity cannot be negative.';
-                                                                }
+                                                                return 'Quantity is required.';
+                                                            }
+                                                            if (value < 0) {
+                                                                return 'Quantity cannot be negative.';
+                                                            }
                                                             if (value === 0) {
-                                                                    return 'Quantity cannot be zero';
-                                                                }
-                                                                return undefined;
-                                                            },
-                                                        }}
-                                                    >
-                                                        {(field) => (
-                                                            <div>
+                                                                return 'Quantity cannot be zero';
+                                                            }
+                                                            return undefined;
+                                                        },
+                                                    }}
+                                                >
+                                                    {(field) => (
+                                                        <div>
                                                             <Label>Quantity</Label>
-                                                                <Input
-                                                                    type="number"
-                                                                    placeholder="Quantity"
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="Quantity"
                                                                 value={field.state.value || ''}
                                                                 onChange={(e) =>
-                                                                        // Wrap the conversion in an updater function:
                                                                     field.handleChange(() => Number(e.target.value))
-                                                                    }
+                                                                }
                                                                 onBlur={field.handleBlur}
-                                                                />
+                                                            />
                                                             {field.state.meta.errors?.length > 0 && (
-                                                                    <span className="text-red-500 mt-1 block">
+                                                                <span className="text-red-500 mt-1 block">
                                                                     {field.state.meta.errors.join(', ')}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Variant Price */}
-                                                    <addProductForm.Field
-                                                        name={`variants[${index}].price`}
-                                                        key={`price-${index}`}
-                                                        validators={{
+                                                {/* Variant Price */}
+                                                <addProductForm.Field
+                                                    name={`variants[${index}].price`}
+                                                    key={`price-${index}`}
+                                                    validators={{
                                                         onBlur: ({ value }) => {
                                                             const numericValue = Number(value);
                                                             if (value === undefined || isNaN(numericValue)) {
-                                                                    return 'Price is required and must be a number.';
-                                                                }
+                                                                return 'Price is required and must be a number.';
+                                                            }
                                                             if (numericValue < 0) {
-                                                                    return 'Price cannot be negative.';
-                                                                }
+                                                                return 'Price cannot be negative.';
+                                                            }
                                                             if (numericValue === 0) {
-                                                                    return 'Price cannot be zero.';
-                                                                }
-                                                                return undefined;
-                                                            },
-                                                        }}
-                                                    >
-                                                        {(field) => (
-                                                            <div>
-                                                                <Label>
-                                                                    Price in{' '}
+                                                                return 'Price cannot be zero.';
+                                                            }
+                                                            return undefined;
+                                                        },
+                                                    }}
+                                                >
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label>
+                                                                Price in{' '}
                                                                 {['usdc', 'usdt'].includes(
                                                                     preferredCurrency?.toLowerCase() ?? ''
-                                                                    )
-                                                                        ? 'USD'
+                                                                )
+                                                                    ? 'USD'
                                                                     : preferredCurrency?.toUpperCase() ?? 'ETH'}
-                                                                </Label>
-                                                                <Input
-                                                                    type="number"
-                                                                    placeholder="Price"
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="Price"
                                                                 value={field.state.value}
                                                                 onChange={(e) => field.handleChange(e.target.value)}
                                                                 onBlur={field.handleBlur}
-                                                                />
+                                                            />
                                                             {field.state.meta.errors?.length > 0 && (
-                                                                    <span className="text-red-500 mt-1 block">
+                                                                <span className="text-red-500 mt-1 block">
                                                                     {field.state.meta.errors.join(', ')}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
-                                                </div>
-                                                <div className="grid grid-cols-4 gap-4 mt-4 border-b border-gray-700 pb-4">
-                                                    {/* Weight */}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-4 mt-4 border-b border-gray-700 pb-4">
+                                                {/* Weight */}
                                                 <addProductForm.Field name={`variants[${index}].weight`} key={`weight-${index}`}>
-                                                        {(field) => (
-                                                            <div>
-                                                                <Label className="block text-sm font-medium">
-                                                                    Weight (g)
-                                                                </Label>
-                                                                <Input
-                                                                    type="number"
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label className="block text-sm font-medium">
+                                                                Weight (g)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
                                                                 value={field.state.value}
                                                                 onChange={(e) =>
                                                                     field.handleChange(() => Number(e.target.value))
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Length */}
+                                                {/* Length */}
                                                 <addProductForm.Field name={`variants[${index}].length`} key={`length-${index}`}>
-                                                        {(field) => (
-                                                            <div>
-                                                                <Label className="block text-sm font-medium">
-                                                                    Length (cm)
-                                                                </Label>
-                                                                <Input
-                                                                    type="number"
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label className="block text-sm font-medium">
+                                                                Length (cm)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
                                                                 value={field.state.value}
                                                                 onChange={(e) =>
                                                                     field.handleChange(() => Number(e.target.value))
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Height */}
+                                                {/* Height */}
                                                 <addProductForm.Field name={`variants[${index}].height`} key={`height-${index}`}>
-                                                        {(field) => (
-                                                            <div>
-                                                                <Label className="block text-sm font-medium">
-                                                                    Height (cm)
-                                                                </Label>
-                                                                <Input
-                                                                    type="number"
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label className="block text-sm font-medium">
+                                                                Height (cm)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
                                                                 value={field.state.value}
                                                                 onChange={(e) =>
                                                                     field.handleChange(() => Number(e.target.value))
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
 
-                                                    {/* Width */}
+                                                {/* Width */}
                                                 <addProductForm.Field name={`variants[${index}].width`} key={`width-${index}`}>
-                                                        {(field) => (
-                                                            <div>
-                                                                <Label className="block text-sm font-medium">
-                                                                    Width (cm)
-                                                                </Label>
-                                                                <Input
-                                                                    type="number"
+                                                    {(field) => (
+                                                        <div>
+                                                            <Label className="block text-sm font-medium">
+                                                                Width (cm)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
                                                                 value={field.state.value}
                                                                 onChange={(e) =>
                                                                     field.handleChange(() => Number(e.target.value))
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </addProductForm.Field>
-                                                </div>
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </addProductForm.Field>
+                                            </div>
 
-                                                <div className="mt-4">
+                                            <div className="mt-4">
+                                                {addProductForm.state.values.variants.length > 1 && (
                                                     <Button
+                                                        type='button'
                                                         variant="destructive"
-                                                    onClick={() => handleRemoveVariant(index)}
+                                                        onClick={() => handleRemoveVariant(index)}
                                                     >
                                                         Remove Variant
                                                     </Button>
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-
-
+                                                )}
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
                                 ))}
                             </Accordion>
                         </div>
@@ -981,7 +1087,7 @@ export default function AddProductPage() {
                                         for (const index of dirtyVariantIndices) {
                                             const variantData =
                                                 formState.values.variants?.[
-                                                    index
+                                                index
                                                 ];
                                             if (variantData) {
                                                 dirtyVariantArray.push(
@@ -1018,6 +1124,7 @@ export default function AddProductPage() {
                                                     title: 'No Changes!',
                                                     description:
                                                         'No Changes to submit',
+                                                    duration: 3000
                                                 });
                                                 return;
                                             }
@@ -1030,25 +1137,37 @@ export default function AddProductPage() {
                                                     .variants;
                                             }
 
+                                            // Transform the changed variants so that if `metadata.imgUrl` is empty,
+                                            // we set `metadata = null`.
+                                            const cleanedVariants = dirtyVariantArray.map((variant) => {
+                                                if (variant.metadata?.imgUrl === '') {
+                                                    const newVariant = { ...variant };
+                                                    delete newVariant.metadata;
+                                                    return newVariant;
+                                                }
+                                                return variant;
+                                            });
+
                                             // Merge top-level dirtyFields + dirtyVariantArray
                                             const payload = {
                                                 ...dirtyFields, // merges title, thumbnail, description, etc.
-                                                variants: dirtyVariantArray, // replaced with changed variants only
-                                                preferredCurrency,
+                                                status: dirtyFields.status || ProductStatus.DRAFT,
+                                                variants: cleanedVariants, // replaced with changed variants only
+                                                defaultCurrencyCode: preferredCurrency,
                                             };
 
                                             console.log(
                                                 'Final Payload:',
                                                 payload
                                             );
-                                            addProductMutation.mutate(payload);
+                                            finalizeAndSave(payload);
                                         };
 
                                         return (
                                             <Button
                                                 onClick={handleSubmit}
                                                 disabled={
-                                                    !canSubmit || isSubmitting
+                                                    !canSubmit || isSubmitting || (Object.keys(dirtyFields).length === 0 && dirtyVariantArray.length === 0)
                                                 }
                                             >
                                                 Save Changes
