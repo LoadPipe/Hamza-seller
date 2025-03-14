@@ -16,8 +16,8 @@ export const validateInput = (fieldName: string, value: string) => {
 // Define the Zod schema for Settings
 export const SettingsSchema = z.object({
   // Account Information
-  fullName: z.string().min(1),
-  username: z.string().optional(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
   phoneNumber: z.string().optional(),
   emailAddress: z.string().email(),
 
@@ -36,12 +36,11 @@ export const SettingsSchema = z.object({
   primaryContactName: z.string().optional(),
   primaryContactEmail: z.string().optional(),
   primaryContactNumber: z.string().optional(),
+  preferredCurrency: z.string().optional(),
 
   // Store Information
   storeName: z.string().min(1),
   storeDescription: z.string().min(1),
-  mobileNumber: z.string().optional(),
-  storeEmail: z.string().optional(),
 
   // Store Category 
   categoryElectronics: z.boolean().default(false),
