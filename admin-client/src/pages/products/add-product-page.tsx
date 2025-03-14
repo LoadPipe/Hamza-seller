@@ -72,7 +72,7 @@ export default function AddProductPage() {
     const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const { toast } = useToast();
-    const [renderTrigger, setRenderTrigger] = useState(0);
+    const [, setRenderTrigger] = useState(0);
 
     const {
         data: categories,
