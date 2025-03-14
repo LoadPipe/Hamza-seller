@@ -21,7 +21,14 @@ const ProductAmountStep: React.FC<ProductAmountStepProps> = ({
     const { toast } = useToast();
 
     const handleNext = () => {
-        const { productPrice, productSKU, productQuantity } = form.state.values;
+        const {
+            productPrice,
+            productSKU,
+            productQuantity,
+            productBarcode,
+            productUPC,
+            productEAN,
+        } = form.state.values;
 
         if (!productPrice) {
             toast({
@@ -31,15 +38,7 @@ const ProductAmountStep: React.FC<ProductAmountStepProps> = ({
             });
             return;
         }
-        if (!productSKU) {
-            toast({
-                variant: 'destructive',
-                title: 'Validation Error',
-                description: 'Please enter a SKU.',
-            });
-            return;
-        }
-        if (!productQuantity) {
+        if (!productQuantity && productQuantity !== 0) {
             toast({
                 variant: 'destructive',
                 title: 'Validation Error',
@@ -48,7 +47,14 @@ const ProductAmountStep: React.FC<ProductAmountStepProps> = ({
             return;
         }
 
-        onUpdate({ productPrice, productSKU, productQuantity });
+        onUpdate({
+            productPrice,
+            productSKU,
+            productQuantity,
+            productBarcode,
+            productUPC,
+            productEAN,
+        });
         onNext();
     };
 
@@ -111,22 +117,16 @@ const ProductAmountStep: React.FC<ProductAmountStepProps> = ({
                             )}
                         </Field>
 
-
-
                         {/* SKU & Quantity */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* SKU */}
+                            {/* SKU (Optional) */}
                             <Field
                                 form={form}
                                 name="productSKU"
-                                validators={{
-                                    onBlur: ({ value }) =>
-                                        !value ? 'SKU is required.' : undefined,
-                                }}
                             >
                                 {(field) => (
                                     <div>
-                                        <label className="block mb-2 text-white">SKU</label>
+                                        <label className="block mb-2 text-white">SKU (optional)</label>
                                         <Input
                                             placeholder="Ex. ST-001"
                                             value={
@@ -136,27 +136,19 @@ const ProductAmountStep: React.FC<ProductAmountStepProps> = ({
                                             }
                                             onChange={(e) => field.handleChange(e.target.value)}
                                             onBlur={field.handleBlur}
-                                            className="rounded-lg bg-black text-white border border-white
-                                 placeholder-gray-500 px-4 py-2 h-[42px]
-                                 focus:ring-2 focus:ring-[#94D42A] w-full"
+                                            className="rounded-lg bg-black text-white border border-white placeholder-gray-500 px-4 py-2 h-[42px] focus:ring-2 focus:ring-[#94D42A] w-full"
                                         />
-                                        {field.state.meta.errors &&
-                                            field.state.meta.errors.length > 0 && (
-                                                <span className="text-red-500 text-sm mt-1">
-                                                    {field.state.meta.errors.join(', ')}
-                                                </span>
-                                            )}
                                     </div>
                                 )}
                             </Field>
 
-                            {/* Quantity */}
+                            {/* Quantity (Required) */}
                             <Field
                                 form={form}
                                 name="productQuantity"
                                 validators={{
                                     onBlur: ({ value }) =>
-                                        !value ? 'Quantity is required.' : undefined,
+                                        !value && value !== 0 ? 'Quantity is required.' : undefined,
                                 }}
                             >
                                 {(field) => (
@@ -182,8 +174,69 @@ const ProductAmountStep: React.FC<ProductAmountStepProps> = ({
                                 )}
                             </Field>
                         </div>
+
+                        {/* Additional Fields: Barcode, UPC, EAN (all optional) */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Barcode */}
+                            <Field form={form} name="productBarcode">
+                                {(field) => (
+                                    <div>
+                                        <label className="block mb-2 text-white">Barcode (optional)</label>
+                                        <Input
+                                            placeholder="Ex. 123456789"
+                                            value={
+                                                typeof field.state.value === 'string'
+                                                    ? field.state.value
+                                                    : ''
+                                            }
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            className="rounded-lg bg-black text-white border border-white placeholder-gray-500 px-4 py-2 h-[42px] focus:ring-2 focus:ring-[#94D42A] w-full"
+                                        />
+                                    </div>
+                                )}
+                            </Field>
+
+                            {/* UPC */}
+                            <Field form={form} name="productUPC">
+                                {(field) => (
+                                    <div>
+                                        <label className="block mb-2 text-white">UPC (optional)</label>
+                                        <Input
+                                            placeholder="Ex. 0987654321"
+                                            value={
+                                                typeof field.state.value === 'string'
+                                                    ? field.state.value
+                                                    : ''
+                                            }
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            className="rounded-lg bg-black text-white border border-white placeholder-gray-500 px-4 py-2 h-[42px] focus:ring-2 focus:ring-[#94D42A] w-full"
+                                        />
+                                    </div>
+                                )}
+                            </Field>
+
+                            {/* EAN */}
+                            <Field form={form} name="productEAN">
+                                {(field) => (
+                                    <div>
+                                        <label className="block mb-2 text-white">EAN (optional)</label>
+                                        <Input
+                                            placeholder="Ex. 0123456789123"
+                                            value={
+                                                typeof field.state.value === 'string'
+                                                    ? field.state.value
+                                                    : ''
+                                            }
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            className="rounded-lg bg-black text-white border border-white placeholder-gray-500 px-4 py-2 h-[42px] focus:ring-2 focus:ring-[#94D42A] w-full"
+                                        />
+                                    </div>
+                                )}
+                            </Field>
+                        </div>
                     </div>
 
+                    {/* Step Indicator */}
                     <div className="flex items-center justify-center space-x-2 mt-6">
                         <div className="w-3 h-3 rounded-full bg-gray-600" />
                         <div className="w-3 h-3 rounded-full bg-[#94D42A]" />

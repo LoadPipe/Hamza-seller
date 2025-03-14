@@ -31,6 +31,7 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
             form={form}
             onUpdate={onUpdate}
             onNext={goNext}
+            onSkipAll={finish} 
           />
         );
       case 1:
