@@ -904,16 +904,18 @@ export default function SettingsPage() {
                                                     Select Preferred Currency:
                                                 </label>
                                                 <Select
-                                                    onValueChange={(newValue) => field.handleChange(newValue)}
-                                                    defaultValue={field.state.value || 'eth'}
+                                                    value={field.state.value}
+                                                    onValueChange={(newValue) => {
+                                                        if (newValue === '') return;
+                                                        field.handleChange(newValue);
+                                                    }}
                                                 >
                                                     <SelectTrigger
                                                         className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                     >
                                                         <SelectValue>
                                                             {field.state.value
-                                                                ? field.state.value.charAt(0).toUpperCase() +
-                                                                field.state.value.slice(1)
+                                                                ? field.state.value.toUpperCase()
                                                                 : 'Threshold (in selected cryptocurrency)'}
                                                         </SelectValue>
                                                     </SelectTrigger>
