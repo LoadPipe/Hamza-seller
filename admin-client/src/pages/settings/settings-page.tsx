@@ -29,15 +29,12 @@ export default function SettingsPage() {
         queryFn: () => sellerStoreDetailsQuery(),
     });
 
-    // console.log("data : ", data)
     const [showErrors, setShowErrors] = useState(false);
 
     const defaultValues = {
         // Account Information
-        fullName: data
-            ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
-            : '',
-        username: data?.username || '',
+        firstName: data?.first_name || '',
+        lastName: data?.last_name || '',
         phoneNumber: data?.phoneNumber || '',
         emailAddress: data?.email || '',
 
@@ -56,12 +53,11 @@ export default function SettingsPage() {
         primaryContactName: data?.primaryContactName || '',
         primaryContactEmail: data?.primaryContactEmail || '',
         primaryContactNumber: data?.primaryContactNumber || '',
+        preferredCurrency: data?.default_currency_code || 'eth',
 
         // Store Information
         storeName: data?.name || '',
         storeDescription: data?.store_description || '',
-        mobileNumber: data?.mobileNumber || '',
-        storeEmail: data?.storeEmail || '',
 
         // Store Category
         categoryElectronics: data?.categoryElectronics || false,
@@ -138,6 +134,7 @@ export default function SettingsPage() {
     const handleSubmit = () => {
         const values = settingsForm.state.values;
         const result = SettingsSchema.safeParse(values);
+        console.log("result", result)
         if (!result.success) {
             toast({
                 variant: 'destructive',
@@ -235,82 +232,55 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <settingsForm.Field
-                                        name="fullName"
-                                        validators={{
-                                            onBlur: ({ value }) =>
-                                                !value
-                                                    ? 'Full Name is required.'
-                                                    : undefined,
-                                        }}
-                                    >
+                                    <settingsForm.Field name="firstName" validators={{
+                                        onBlur: ({ value }) => !value ? 'First Name is required.' : undefined,
+                                    }}>
                                         {(field) => (
                                             <div>
                                                 <label className="font-sora font-normal text-[16px] pl-[16px] text-white">
-                                                    Full Name
+                                                    First Name
                                                 </label>
                                                 <Input
-                                                    placeholder="Enter your name"
+                                                    placeholder="Enter your first name"
                                                     value={field.state.value}
-                                                    onChange={(e) =>
-                                                        field.handleChange(
-                                                            e.target.value
-                                                        )
-                                                    }
+                                                    onChange={(e) => field.handleChange(e.target.value)}
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-2 h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {((field.state.meta.errors &&
-                                                    field.state.meta.errors
-                                                        .length > 0) ||
-                                                    (showErrors &&
-                                                        !field.state
-                                                            .value)) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta
-                                                            .errors &&
-                                                        field.state.meta.errors
-                                                            .length > 0
-                                                            ? field.state.meta.errors.join(
-                                                                  ', '
-                                                              )
-                                                            : 'This field is required.'}
-                                                    </span>
-                                                )}
+                                                {((field.state.meta.errors && field.state.meta.errors.length > 0) ||
+                                                    (showErrors && !field.state.value)) && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors && field.state.meta.errors.length > 0
+                                                                ? field.state.meta.errors.join(', ')
+                                                                : 'This field is required.'}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
 
-                                    <settingsForm.Field
-                                        name="username"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Username is required.' : undefined,
-                                        // }}
-                                    >
+                                    {/* New Last Name Field */}
+                                    <settingsForm.Field name="lastName" validators={{
+                                        onBlur: ({ value }) => !value ? 'Last Name is required.' : undefined,
+                                    }}>
                                         {(field) => (
                                             <div>
                                                 <label className="font-sora font-normal text-[16px] pl-[16px] text-white">
-                                                    Username
+                                                    Last Name
                                                 </label>
                                                 <Input
-                                                    placeholder="Enter your username"
+                                                    placeholder="Enter your last name"
                                                     value={field.state.value}
-                                                    onChange={(e) =>
-                                                        field.handleChange(
-                                                            e.target.value
-                                                        )
-                                                    }
+                                                    onChange={(e) => field.handleChange(e.target.value)}
                                                     onBlur={field.handleBlur}
                                                     className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-2 h-[50px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
                                                 />
-                                                {field.state.meta.errors &&
-                                                    field.state.meta.errors
-                                                        .length > 0 && (
+                                                {((field.state.meta.errors && field.state.meta.errors.length > 0) ||
+                                                    (showErrors && !field.state.value)) && (
                                                         <span className="text-red-500 text-sm mt-1">
-                                                            {field.state.meta.errors.join(
-                                                                ', '
-                                                            )}
+                                                            {field.state.meta.errors && field.state.meta.errors.length > 0
+                                                                ? field.state.meta.errors.join(', ')
+                                                                : 'This field is required.'}
                                                         </span>
                                                     )}
                                             </div>
@@ -319,10 +289,6 @@ export default function SettingsPage() {
 
                                     <settingsForm.Field
                                         name="phoneNumber"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Phone number is required.' : undefined,
-                                        // }}
                                     >
                                         {(field) => (
                                             <div>
@@ -384,17 +350,17 @@ export default function SettingsPage() {
                                                     (showErrors &&
                                                         !field.state
                                                             .value)) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta
-                                                            .errors &&
-                                                        field.state.meta.errors
-                                                            .length > 0
-                                                            ? field.state.meta.errors.join(
-                                                                  ', '
-                                                              )
-                                                            : 'This field is required.'}
-                                                    </span>
-                                                )}
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta
+                                                                .errors &&
+                                                                field.state.meta.errors
+                                                                    .length > 0
+                                                                ? field.state.meta.errors.join(
+                                                                    ', '
+                                                                )
+                                                                : 'This field is required.'}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -412,8 +378,8 @@ export default function SettingsPage() {
                                 </Button>
                                 {createUpdateButton(
                                     [
-                                        'fullName',
-                                        'username',
+                                        'firstName',
+                                        'lastName',
                                         'phoneNumber',
                                         'emailAddress',
                                     ],
@@ -424,7 +390,7 @@ export default function SettingsPage() {
                     </Card>
 
                     {/* Business Information */}
-                    <Card className="bg-primary-black-90 border-[#040404]">
+                    {/* <Card className="bg-primary-black-90 border-[#040404]">
                         <CardHeader>
                             <CardTitle className="text-white text-lg font-semibold">
                                 Business Information
@@ -435,10 +401,6 @@ export default function SettingsPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <settingsForm.Field
                                         name="businessName"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Business Name is required.' : undefined,
-                                        // }}
                                     >
                                         {(field) => (
                                             <div>
@@ -471,10 +433,6 @@ export default function SettingsPage() {
 
                                     <settingsForm.Field
                                         name="registrationNumber"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Registration Number is required.' : undefined,
-                                        // }}
                                     >
                                         {(field) => (
                                             <div>
@@ -507,10 +465,6 @@ export default function SettingsPage() {
 
                                     <settingsForm.Field
                                         name="taxId"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Tax Identification Number is required.' : undefined,
-                                        // }}
                                     >
                                         {(field) => (
                                             <div>
@@ -567,8 +521,8 @@ export default function SettingsPage() {
                                                                 {field.state
                                                                     .value
                                                                     ? field
-                                                                          .state
-                                                                          .value
+                                                                        .state
+                                                                        .value
                                                                     : 'Select business structure'}
                                                             </SelectValue>
                                                         </SelectTrigger>
@@ -614,13 +568,13 @@ export default function SettingsPage() {
                                                                 {field.state
                                                                     .value
                                                                     ? field.state.value
-                                                                          .charAt(
-                                                                              0
-                                                                          )
-                                                                          .toUpperCase() +
-                                                                      field.state.value.slice(
-                                                                          1
-                                                                      )
+                                                                        .charAt(
+                                                                            0
+                                                                        )
+                                                                        .toUpperCase() +
+                                                                    field.state.value.slice(
+                                                                        1
+                                                                    )
                                                                     : 'Select industry'}
                                                             </SelectValue>
                                                         </SelectTrigger>
@@ -747,10 +701,6 @@ export default function SettingsPage() {
                                 <div className="md:col-span-2 mt-6">
                                     <settingsForm.Field
                                         name="primaryContactName"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Contact name is required.' : undefined,
-                                        // }}
                                     >
                                         {(field) => (
                                             <>
@@ -782,10 +732,6 @@ export default function SettingsPage() {
                                     </settingsForm.Field>
                                     <settingsForm.Field
                                         name="primaryContactEmail"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Contact email is required.' : undefined,
-                                        // }}
                                     >
                                         {(field) => (
                                             <>
@@ -814,10 +760,6 @@ export default function SettingsPage() {
                                     </settingsForm.Field>
                                     <settingsForm.Field
                                         name="primaryContactNumber"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Contact number is required.' : undefined,
-                                        // }}
                                     >
                                         {(field) => (
                                             <>
@@ -847,7 +789,6 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            {/* Action Buttons for Business Info */}
                             <div className="flex justify-start gap-4 mt-6">
                                 <Button
                                     type="reset"
@@ -877,7 +818,7 @@ export default function SettingsPage() {
                                 )}
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
 
                     {/* Store Information */}
                     <Card className="bg-primary-black-90 border-[#040404]">
@@ -920,17 +861,17 @@ export default function SettingsPage() {
                                                     (showErrors &&
                                                         !field.state
                                                             .value)) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta
-                                                            .errors &&
-                                                        field.state.meta.errors
-                                                            .length > 0
-                                                            ? field.state.meta.errors.join(
-                                                                  ', '
-                                                              )
-                                                            : 'This field is required.'}
-                                                    </span>
-                                                )}
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta
+                                                                .errors &&
+                                                                field.state.meta.errors
+                                                                    .length > 0
+                                                                ? field.state.meta.errors.join(
+                                                                    ', '
+                                                                )
+                                                                : 'This field is required.'}
+                                                        </span>
+                                                    )}
                                             </div>
                                         )}
                                     </settingsForm.Field>
@@ -952,6 +893,50 @@ export default function SettingsPage() {
                                         </p>
                                     </div>
                                 </div>
+                                <div>
+                                    <settingsForm.Field name="preferredCurrency">
+                                        {(field) => (
+                                            <div>
+                                                <label
+                                                    htmlFor="preferredCurrency"
+                                                    className="font-sora font-normal text-[16px] text-white"
+                                                >
+                                                    Select Preferred Currency:
+                                                </label>
+                                                <Select
+                                                    onValueChange={(newValue) => field.handleChange(newValue)}
+                                                    defaultValue={field.state.value || 'eth'}
+                                                >
+                                                    <SelectTrigger
+                                                        className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] h-[42px] focus:ring-2 focus:ring-[#94D42A] mt-[20px]"
+                                                    >
+                                                        <SelectValue>
+                                                            {field.state.value
+                                                                ? field.state.value.charAt(0).toUpperCase() +
+                                                                field.state.value.slice(1)
+                                                                : 'Threshold (in selected cryptocurrency)'}
+                                                        </SelectValue>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="eth">ETH</SelectItem>
+                                                        <SelectItem value="usdc">USDC</SelectItem>
+                                                        <SelectItem value="usdt">USDT</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                {((field.state.meta.errors &&
+                                                    field.state.meta.errors.length > 0) ||
+                                                    (showErrors && !field.state.value)) && (
+                                                        <span className="text-red-500 text-sm mt-1">
+                                                            {field.state.meta.errors && field.state.meta.errors.length > 0
+                                                                ? field.state.meta.errors.join(', ')
+                                                                : 'This field is required.'}
+                                                        </span>
+                                                    )}
+                                            </div>
+                                        )}
+                                    </settingsForm.Field>
+                                </div>
+
                                 <div>
                                     <settingsForm.Field
                                         name="storeDescription"
@@ -985,87 +970,15 @@ export default function SettingsPage() {
                                                     (showErrors &&
                                                         !field.state
                                                             .value)) && (
-                                                    <span className="text-red-500 text-sm mt-1">
-                                                        {field.state.meta
-                                                            .errors &&
-                                                        field.state.meta.errors
-                                                            .length > 0
-                                                            ? field.state.meta.errors.join(
-                                                                  ', '
-                                                              )
-                                                            : 'This field is required.'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
-                                    </settingsForm.Field>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <settingsForm.Field
-                                        name="mobileNumber"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Mobile number is required.' : undefined,
-                                        // }}
-                                    >
-                                        {(field) => (
-                                            <div>
-                                                <label className="font-sora font-normal text-[16px] text-white ">
-                                                    Mobile Number
-                                                </label>
-                                                <Input
-                                                    placeholder="Ex. 0123-456-789"
-                                                    value={field.state.value}
-                                                    onChange={(e) =>
-                                                        field.handleChange(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    onBlur={field.handleBlur}
-                                                    className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 mt-[20px] h-[42px] py-[10px] focus:ring-2 focus:ring-[#94D42A]"
-                                                />
-                                                {field.state.meta.errors &&
-                                                    field.state.meta.errors
-                                                        .length > 0 && (
                                                         <span className="text-red-500 text-sm mt-1">
-                                                            {field.state.meta.errors.join(
-                                                                ', '
-                                                            )}
-                                                        </span>
-                                                    )}
-                                            </div>
-                                        )}
-                                    </settingsForm.Field>
-                                    <settingsForm.Field
-                                        name="storeEmail"
-                                        // validators={{
-                                        //     onBlur: ({ value }) =>
-                                        //         !value ? 'Email is required.' : undefined,
-                                        // }}
-                                    >
-                                        {(field) => (
-                                            <div>
-                                                <label className="font-sora font-normal text-[16px] text-white ">
-                                                    Email
-                                                </label>
-                                                <Input
-                                                    placeholder="Ex. abc@xyz.com"
-                                                    value={field.state.value}
-                                                    onChange={(e) =>
-                                                        field.handleChange(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    onBlur={field.handleBlur}
-                                                    className="rounded-lg bg-black text-white border-[#040404] placeholder-gray-500 px-4 py-[10px] mt-[20px] h-[42px] focus:ring-2 focus:ring-[#94D42A]"
-                                                />
-                                                {field.state.meta.errors &&
-                                                    field.state.meta.errors
-                                                        .length > 0 && (
-                                                        <span className="text-red-500 text-sm mt-1">
-                                                            {field.state.meta.errors.join(
-                                                                ', '
-                                                            )}
+                                                            {field.state.meta
+                                                                .errors &&
+                                                                field.state.meta.errors
+                                                                    .length > 0
+                                                                ? field.state.meta.errors.join(
+                                                                    ', '
+                                                                )
+                                                                : 'This field is required.'}
                                                         </span>
                                                     )}
                                             </div>
@@ -1267,7 +1180,7 @@ export default function SettingsPage() {
                                         )}
                                     </settingsForm.Field>
                                 </div>
-
+                                {/* 
                                 <div>
                                     <label className="font-sora font-normal text-[16px] text-white mb-[20px]">
                                         Social Media Links
@@ -1349,7 +1262,7 @@ export default function SettingsPage() {
                                             )}
                                         </settingsForm.Field>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
 
                             {/* Action Buttons for Store Info */}
@@ -1365,8 +1278,7 @@ export default function SettingsPage() {
                                     [
                                         'storeName',
                                         'storeDescription',
-                                        'mobileNumber',
-                                        'storeEmail',
+                                        'preferredCurrency',
                                         'categoryElectronics',
                                         'categoryFashion',
                                         'categoryHomeGarden',
@@ -1375,11 +1287,11 @@ export default function SettingsPage() {
                                         'categoryDigitalGoods',
                                         'categoryArtCollectibles',
                                         'otherCategory',
-                                        'facebook',
-                                        'linkedIn',
-                                        'x',
-                                        'instagram',
-                                        'otherSocial',
+                                        // 'facebook',
+                                        // 'linkedIn',
+                                        // 'x',
+                                        // 'instagram',
+                                        // 'otherSocial',
                                     ],
                                     'Update'
                                 )}
@@ -1388,7 +1300,7 @@ export default function SettingsPage() {
                     </Card>
 
                     {/* Wallet/Payment Settings */}
-                    <Card className="bg-primary-black-90 border-[#040404]">
+                    {/* <Card className="bg-primary-black-90 border-[#040404]">
                         <CardHeader>
                             <CardTitle className="text-white text-lg font-semibold">
                                 Wallet/Payments Settings
@@ -1419,7 +1331,7 @@ export default function SettingsPage() {
                                                         <SelectValue>
                                                             {field.state
                                                                 .value ===
-                                                            'other'
+                                                                'other'
                                                                 ? 'Other'
                                                                 : 'Loadpipe'}
                                                         </SelectValue>
@@ -1766,11 +1678,11 @@ export default function SettingsPage() {
                                                         <SelectValue>
                                                             {field.state.value
                                                                 ? field.state.value
-                                                                      .charAt(0)
-                                                                      .toUpperCase() +
-                                                                  field.state.value.slice(
-                                                                      1
-                                                                  )
+                                                                    .charAt(0)
+                                                                    .toUpperCase() +
+                                                                field.state.value.slice(
+                                                                    1
+                                                                )
                                                                 : 'Threshold (in selected cryptocurrency)'}
                                                         </SelectValue>
                                                     </SelectTrigger>
@@ -1814,11 +1726,11 @@ export default function SettingsPage() {
                                                         <SelectValue>
                                                             {field.state.value
                                                                 ? field.state.value
-                                                                      .charAt(0)
-                                                                      .toUpperCase() +
-                                                                  field.state.value.slice(
-                                                                      1
-                                                                  )
+                                                                    .charAt(0)
+                                                                    .toUpperCase() +
+                                                                field.state.value.slice(
+                                                                    1
+                                                                )
                                                                 : 'Daily'}
                                                         </SelectValue>
                                                     </SelectTrigger>
@@ -1840,7 +1752,6 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            {/* Action Buttons for Wallet/Payment Settings */}
                             <div className="flex justify-start gap-4 mt-6">
                                 <Button
                                     type="reset"
@@ -1871,7 +1782,7 @@ export default function SettingsPage() {
                                 )}
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
                 </div>
             </form>
         </div>
