@@ -161,13 +161,13 @@ export default function DashboardPage() {
         { name: 'Jun', logins: 9 },
     ];
 
-    const { preferred_currency_code, setUserPreferredCurrency } =
-        useUserAuthStore();
+    // const { preferred_currency_code, setUserPreferredCurrency } =
+    //     useUserAuthStore();
 
-    const handleCurrencyChange = (value: string) => {
-        setUserPreferredCurrency(value); // Update the store
-        console.log(`Preferred Currency updated to: ${value}`); // Log for debugging
-    };
+    // const handleCurrencyChange = (value: string) => {
+    //     setUserPreferredCurrency(value); // Update the store
+    //     console.log(`Preferred Currency updated to: ${value}`); // Log for debugging
+    // };
 
     const navigate = useNavigate();
     const router = useRouter();
