@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { importProductsByCsv } from '@/pages/products/api/import-products-by-csv';
 import { FilePlus, CircleAlert } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import DOMPurify from 'dompurify';
 
 interface ProductImportDialogProps {
     open: boolean;
@@ -50,12 +51,13 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
 
         try {
             const response = await importProductsByCsv(file);
+            const sanitizeSuccessMessage = DOMPurify.sanitize(response.message);
             toast({
                 title: 'Success',
                 description: (
                     <div
                         dangerouslySetInnerHTML={{
-                            __html: response.message,
+                            __html: sanitizeSuccessMessage,
                         }}
                     />
                 ),
@@ -69,15 +71,18 @@ const ProductImportDialog: React.FC<ProductImportDialogProps> = ({
         } catch (error: any) {
             // Display the error message from the caught exception
             const errorResponse = error?.response?.data;
+            const rawErrorMessage =
+                error.message ||
+                errorResponse?.message ||
+                'An unexpected error occurred.';
+            const sanitizeErrorMessage = DOMPurify.sanitize(rawErrorMessage);
+
             toast({
                 title: 'Upload Failed',
                 description: (
                     <div
                         dangerouslySetInnerHTML={{
-                            __html:
-                                error.message ||
-                                errorResponse?.message ||
-                                'An unexpected error occurred.',
+                            __html: sanitizeErrorMessage,
                         }}
                     />
                 ),
