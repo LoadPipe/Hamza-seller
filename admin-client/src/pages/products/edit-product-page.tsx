@@ -674,7 +674,7 @@ export default function EditProductPage() {
                                 </div>
 
                                 <div className="flex justify-end">
-                                    <Button
+                                    {/* <Button
                                         className="mt-2"
                                         onClick={() => {
                                             alert(
@@ -683,7 +683,7 @@ export default function EditProductPage() {
                                         }}
                                     >
                                         Add New Category
-                                    </Button>
+                                    </Button> */}
                                 </div>
                             </div>
                         </div>
@@ -1588,7 +1588,7 @@ export default function EditProductPage() {
                                 <Button
                                     variant="ghost"
                                     className="hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
-                                    onClick={() => navigate({ to: '/' })}
+                                    onClick={() => navigate({ to: '/settings' })}
                                 >
                                     Change Currency
                                     <Bitcoin size={18} />
