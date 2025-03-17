@@ -10,7 +10,6 @@ interface AddProductVariantUploadDialogProps {
     onClose: () => void;
     onVariantImageUpload: (imageUrl: string, variantIndex: number) => void;
     variantIndex: number;
-    storeHandle: string;
     productFolder: string;
 }
 
@@ -19,7 +18,6 @@ const AddProductVariantUploadDialog: React.FC<AddProductVariantUploadDialogProps
     onClose,
     onVariantImageUpload,
     variantIndex,
-    storeHandle,
     productFolder,
 }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -30,7 +28,6 @@ const AddProductVariantUploadDialog: React.FC<AddProductVariantUploadDialogProps
             // Upload file to CDN and then return the image URL.
             const cdnUrl = await uploadAddProductVariantImageToCDN(
                 file,
-                storeHandle,
                 variantIndex,
                 productFolder
             );

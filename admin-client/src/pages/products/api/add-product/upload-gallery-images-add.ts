@@ -9,14 +9,12 @@ const BUNNNY_SUBFOLDER = import.meta.env.VITE_BUNNY_SUBFOLDER;
 
 /**
  * @param files - Array of image files to upload.
- * @param storeSlug - The store handle/slug.
  * @param productFolder - The folder name for the product (e.g. derived from the product name).
  * @param options - Optional settings (such as replacement file name).
  * @returns An array of uploaded image URLs.
  */
 export const uploadGalleryImagesAdd = async (
     files: File[],
-    storeSlug: string,
     productFolder: string,
     options?: { replacementFileName?: string }
 ): Promise<string[]> => {
@@ -30,7 +28,7 @@ export const uploadGalleryImagesAdd = async (
                 ? options.replacementFileName
                 : `gallery_${i + 1}.${fileExtension}`;
 
-        const uploadPath = `${BUNNNY_SUBFOLDER}/${storeSlug}/${productFolder}/${fileName}`;
+        const uploadPath = `${BUNNNY_SUBFOLDER}/${productFolder}/${fileName}`;
         const storageUploadUrl = `https://${BUNNY_STORAGE_REGION}/${BUNNY_STORAGE_ZONE}/${uploadPath}`;
         const cdnUrl = `${BUNNY_CDN_URL}/${uploadPath}`;
 

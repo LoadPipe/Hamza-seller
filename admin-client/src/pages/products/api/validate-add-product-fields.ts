@@ -51,3 +51,16 @@ export const validateUpcForNewProduct = async (upc: string) => {
         throw new Error('Failed to check UPC list');
     }
 };
+
+
+export const validateHandleForNewProduct = async (title: string) => {
+    try {
+        const response = await getSecure('/seller/product/validate-handle-new-product', {
+            title,
+        });
+        return response;
+    } catch (e) {
+        console.error('Failed to check product handle uniqueness:', e);
+        throw new Error('Failed to check product handle uniqueness');
+    }
+};
