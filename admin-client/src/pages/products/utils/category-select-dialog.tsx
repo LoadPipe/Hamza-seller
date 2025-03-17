@@ -39,23 +39,23 @@ export default function CategorySelectDialog({
 
     if (!open) return null;
 
-    const handleAddNew = () => {
-        const newCategory: Category = {
-            id: `${searchTerm.toLowerCase().replace(/\s+/g, '-')}`,
-            name: searchTerm,
-            handle: searchTerm.toLowerCase().replace(/\s+/g, '-'),
-            parent_category_id: null,
-            is_active: true,
-            rank: 0,
-            description: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            is_internal: false,
-            metadata: {},
-        };
-        onSelect(newCategory);
-        onClose();
-    };
+    // const handleAddNew = () => {
+    //     const newCategory: Category = {
+    //         id: `${searchTerm.toLowerCase().replace(/\s+/g, '-')}`,
+    //         name: searchTerm,
+    //         handle: searchTerm.toLowerCase().replace(/\s+/g, '-'),
+    //         parent_category_id: null,
+    //         is_active: true,
+    //         rank: 0,
+    //         description: null,
+    //         created_at: new Date().toISOString(),
+    //         updated_at: new Date().toISOString(),
+    //         is_internal: false,
+    //         metadata: {},
+    //     };
+    //     onSelect(newCategory);
+    //     onClose();
+    // };
 
 
     return (
@@ -91,14 +91,15 @@ export default function CategorySelectDialog({
                                 </Button>
                             ))
                         ) : (
-                            <Button
-                                onClick={handleAddNew}
-                                variant="outline"
-                                style={{ borderRadius: '8px' }}
-                                className="w-full justify-start bg-white text-black hover:bg-gray-100"
-                            >
-                                Add New Category "{searchTerm}"
-                            </Button>
+                            <div className="text-white">No categories found.</div>
+                            // <Button
+                            //     onClick={handleAddNew}
+                            //     variant="outline"
+                            //     style={{ borderRadius: '8px' }}
+                            //     className="w-full justify-start bg-white text-black hover:bg-gray-100"
+                            // >
+                            //     Add New Category "{searchTerm}"
+                            // </Button>
                         )}
                     </div>
                 </div>

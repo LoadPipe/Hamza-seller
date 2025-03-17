@@ -197,7 +197,7 @@ export default function DashboardPage() {
                         : `Welcome back, ${data?.name || 'User'}!`}
                 </motion.h1>
 
-                <div className="flex justify-end items-center space-x-2">
+                {/* <div className="flex justify-end items-center space-x-2">
                     <label
                         htmlFor="preferredCurrency"
                         className="text-white text-sm"
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                             <SelectItem value="usdt">USDT</SelectItem>
                         </SelectContent>
                     </Select>
-                </div>
+                </div> */}
 
                 <h1 className="text-3xl font-bold">Overview</h1>
 

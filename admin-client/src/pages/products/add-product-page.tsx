@@ -1036,7 +1036,7 @@ export default function AddProductPage() {
                                 <Button
                                     variant="ghost"
                                     className="hover:bg-primary-green-900 w-[180px] h-[44px] px-[24px] py-[16px]"
-                                    onClick={() => navigate({ to: '/' })}
+                                    onClick={() => navigate({ to: '/settings' })}
                                 >
                                     Change Currency
                                     <Bitcoin size={18} />
