@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { SettingsSchema } from '@/pages/settings/settings-schema';
 import { useState } from 'react';
 import { updateSettingsByWalletId } from '@/pages/settings/api/update-setting-by-id';
+import LogoUpload from './logo-upload';
 
 type Settings = z.infer<typeof SettingsSchema>;
 
@@ -30,6 +31,7 @@ export default function SettingsPage() {
     });
 
     const [showErrors, setShowErrors] = useState(false);
+    const [logoUrl, setLogoUrl] = useState<string | undefined>(data?.icon);
 
     const defaultValues = {
         // Account Information
@@ -58,6 +60,7 @@ export default function SettingsPage() {
         // Store Information
         storeName: data?.name || '',
         storeDescription: data?.store_description || '',
+        icon: data?.icon || '',
 
         // Store Category
         categoryElectronics: data?.categoryElectronics || false,
@@ -132,7 +135,7 @@ export default function SettingsPage() {
     if (error instanceof Error) return <div>Error: {error.message}</div>;
 
     const handleSubmit = () => {
-        const values = settingsForm.state.values;
+        const values = { ...settingsForm.state.values, logoUrl };
         const result = SettingsSchema.safeParse(values);
         console.log("result", result)
         if (!result.success) {
@@ -187,6 +190,14 @@ export default function SettingsPage() {
             </settingsForm.Subscribe>
         );
     }
+
+    const handleLogoUpload = (newLogoUrl: string) => {
+        setLogoUrl(newLogoUrl);
+        updateSettingsMutation.mutate({
+            ...data,
+            icon: newLogoUrl,
+        });
+    };
 
     return (
         <div className="min-h-screen bg-black px-8 py-12 text-white">
@@ -876,23 +887,11 @@ export default function SettingsPage() {
                                         )}
                                     </settingsForm.Field>
                                 </div>
-                                <div>
-                                    <label className="font-sora font-normal text-[16px] text-white ">
-                                        Upload Logo
-                                    </label>
-                                    <div
-                                        className="border border-gray-500 rounded-[12px] p-[24px] text-center mt-[20px]"
-                                        style={{ height: '184px' }}
-                                    >
-                                        <p className="text-sm text-[#94D42A] font-semibold">
-                                            Drag and drop or click to upload
-                                        </p>
-                                        <p className="text-xs text-gray-400">
-                                            Recommended size: 350 x 350. File
-                                            types: JPG, PNG, SVG or PNG.
-                                        </p>
-                                    </div>
-                                </div>
+                                <LogoUpload
+                                    storeHandle={data?.handle} 
+                                    onLogoUpload={handleLogoUpload} 
+                                    existingLogoUrl={data?.icon}
+                                />
                                 <div>
                                     <settingsForm.Field name="preferredCurrency">
                                         {(field) => (
