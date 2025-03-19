@@ -41,6 +41,7 @@ export const SettingsSchema = z.object({
   // Store Information
   storeName: z.string().min(1),
   storeDescription: z.string().min(1),
+  logoUrl: z.string().optional(),
 
   // Store Category 
   categoryElectronics: z.boolean().default(false),
