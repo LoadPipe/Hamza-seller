@@ -13,6 +13,7 @@ import { ReleaseEscrow } from '@/pages/orders/sidebar/release-escrow.tsx';
 import { getSellerOrders } from '@/pages/orders/api/seller-orders.ts';
 import { OrderSchema } from '@/pages/orders/order-schema.ts';
 import { openOrderSidebar } from '@/stores/order-sidebar/order-sidebar-store';
+import { verifyOrderAccess } from './api/order-validation';
 
 type Order = z.infer<typeof OrderSchema>;
 
@@ -44,12 +45,28 @@ export default function OrdersPage() {
         // Path parameter takes precedence over query parameter
         const orderId = orderIdFromPath || orderIdFromQuery;
 
-        if (orderId) {
+        const checkOrderAccess = async () => {
+            if (!orderId) return;
+
             const formattedOrderId = formatOrderId(orderId);
-            if (formattedOrderId) {
-                openOrderSidebar(formattedOrderId);
+            if (!formattedOrderId) return;
+
+            try {
+                const response = await verifyOrderAccess(formattedOrderId);
+
+                if (response) {
+                    openOrderSidebar(formattedOrderId);
+                } else {
+                    console.error("Access denied: Order not found or doesn't belong to this store");
+                    navigate({ to: '/orders' });
+                }
+            } catch (error) {
+                console.error('Error verifying order access:', error);
+                navigate({ to: '/orders' });
             }
-        }
+        };
+
+        checkOrderAccess();
     }, [orderIdFromPath, orderIdFromQuery]);
 
     // Parse sort into field and direction
