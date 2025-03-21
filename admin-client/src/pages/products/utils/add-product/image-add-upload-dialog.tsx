@@ -10,7 +10,6 @@ interface ImageAddUploadDialogProps {
     open: boolean;
     onClose: () => void;
     onImageUpload: (imageUrl: string) => void;
-    storeHandle: string;
     productFolder: string;
 }
 
@@ -18,7 +17,6 @@ const ImageAddUploadDialog: React.FC<ImageAddUploadDialogProps> = ({
     open,
     onClose,
     onImageUpload,
-    storeHandle,
     productFolder,
 }) => {
     const [file, setFile] = useState<File | null>(null);
@@ -46,7 +44,7 @@ const ImageAddUploadDialog: React.FC<ImageAddUploadDialogProps> = ({
 
     const uploadThumbnailMutation = useMutation({
         mutationFn: async (file: File) => {
-            return await uploadProductThumbnailAdd(file, storeHandle, productFolder);
+            return await uploadProductThumbnailAdd(file, productFolder);
         },
         onSuccess: (uploadedImageUrl) => {
             toast({
