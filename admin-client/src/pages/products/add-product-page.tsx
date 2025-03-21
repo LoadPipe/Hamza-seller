@@ -31,7 +31,6 @@ import { useForm, getBy, setBy } from '@tanstack/react-form';
 import GalleryAddUploadDialog from './utils/add-product/gallery-add-upload-dialog';
 import ImageAddUploadDialog from './utils/add-product/image-add-upload-dialog';
 import VariantAddUploadDialog from './utils/add-product/variant-add-upload-dialog';
-import { getJwtStoreId } from '@/utils/authentication';
 import { useUserAuthStore } from '@/stores/authentication/user-auth';
 import { ProductSchema } from './product-schema';
 import { fetchAllCategories } from './api/product-categories';
@@ -39,7 +38,7 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import CategorySelectDialog from './utils/category-select-dialog';
 import { CreateProductInput, CreateProductSchema } from './add-product-schema';
-import { validateBarcodeForNewProduct, validateEanForNewProduct, validateSkuForNewProduct, validateUpcForNewProduct } from './api/validate-add-product-fields';
+import { validateBarcodeForNewProduct, validateEanForNewProduct, validateHandleForNewProduct, validateSkuForNewProduct, validateUpcForNewProduct } from './api/validate-add-product-fields';
 
 type Category = NonNullable<z.infer<typeof ProductSchema>['categories']>[number];
 
@@ -52,13 +51,6 @@ interface GalleryImage {
 export default function AddProductPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-
-    const cachedStore = queryClient.getQueryData<{ handle: string }>([
-        'store',
-        getJwtStoreId(),
-    ]);
-
-    const storeHandle = cachedStore?.handle ?? '';
 
     const preferredCurrency = useUserAuthStore(
         (state) => state.preferred_currency_code ?? 'eth'
@@ -140,6 +132,8 @@ export default function AddProductPage() {
 
     const ensureProductName = () => {
         const folder = addProductForm.getFieldValue('title')?.trim() ?? '';
+        const titleMeta = addProductForm.getFieldMeta('title');
+
         if (!folder) {
             toast({
                 variant: 'destructive',
@@ -149,6 +143,17 @@ export default function AddProductPage() {
             });
             return null;
         }
+
+        if (titleMeta?.errors?.length) {
+            toast({
+                variant: 'destructive',
+                title: 'Invalid Product Name',
+                description: titleMeta.errors.join(', '),
+                duration: 3000
+            });
+            return null;
+        }
+
         return folder;
     };
 
@@ -333,7 +338,21 @@ export default function AddProductPage() {
                             <h2 className="text-lg font-medium mb-4">General Information</h2>
                             <addProductForm.Field
                                 name="title"
+                                asyncDebounceMs={100}
                                 validators={{
+                                    onChangeAsync: async ({ value }) => {
+                                        if (!value || value.trim().length === 0) return undefined;
+                                        try {
+                                            const isUnique = await validateHandleForNewProduct(value.toString());
+                                            if (!isUnique) {
+                                                return 'Product name already exists';
+                                            }
+                                            return undefined;
+                                        } catch (error) {
+                                            console.error('Failed to validate product name uniqueness:', error);
+                                            return 'Failed to validate product name uniqueness';
+                                        }
+                                    },
                                     onBlur: ({ value }) => {
                                         if (!value || value.trim().length === 0) {
                                             return 'Title is required.';
@@ -479,10 +498,12 @@ export default function AddProductPage() {
                                     open={isThumbnailDialogOpen}
                                     onClose={() => setThumbnailDialogOpen(false)}
                                     onImageUpload={handleThumbnailUpload}
-                                    storeHandle={storeHandle}
                                     productFolder={addProductForm
                                         .getFieldValue('title')
-                                        ?.trim()}
+                                        ?.trim()
+                                        .toLowerCase()
+                                        .replace(/\s+/g, '-')
+                                    }
                                 />
                             </div>
                             <div className="flex justify-center">
@@ -509,8 +530,7 @@ export default function AddProductPage() {
                                         open={isGalleryDialogOpen}
                                         onClose={() => setGalleryDialogOpen(false)}
                                         onGalleryUpload={handleGalleryUpload}
-                                        productFolder={addProductForm.getFieldValue('title')?.trim()}
-                                        storeHandle={storeHandle}
+                                        productFolder={addProductForm.getFieldValue('title')?.trim().toLowerCase().replace(/\s+/g, '-')}
                                         currentGallery={galleryImages}
                                         onDeleteImage={handleDeleteGalleryImage}
                                     />
@@ -600,13 +620,8 @@ export default function AddProductPage() {
                                                             )
                                                         }
                                                         variantIndex={currentVariantIndex}
-                                                        storeHandle={storeHandle}
                                                         onVariantImageUpload={handleVariantImageUpload}
-                                                        productFolder={addProductForm
-                                                            .getFieldValue(
-                                                                'title'
-                                                            )
-                                                            ?.trim()}
+                                                        productFolder={addProductForm.getFieldValue('title')?.trim().toLowerCase().replace(/\s+/g, '-')}
                                                     />
                                                 )}
                                             </div>

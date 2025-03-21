@@ -16,7 +16,6 @@ interface GalleryAddUploadDialogProps {
     open: boolean;
     onClose: () => void;
     onGalleryUpload: (imageUrls: string[]) => void;
-    storeHandle: string;
     currentGallery: GalleryImage[]; 
     onDeleteImage: (image: GalleryImage) => void;
     productFolder: string;
@@ -26,7 +25,6 @@ const GalleryAddUploadDialog: React.FC<GalleryAddUploadDialogProps> = ({
     open,
     onClose,
     onGalleryUpload,
-    storeHandle,
     currentGallery,
     onDeleteImage,
     productFolder,
@@ -62,7 +60,7 @@ const GalleryAddUploadDialog: React.FC<GalleryAddUploadDialogProps> = ({
             files: File[];
             replacementFileName?: string;
         }) => {
-            return await uploadGalleryImagesAdd(files, storeHandle, productFolder, {
+            return await uploadGalleryImagesAdd(files, productFolder, {
                 replacementFileName,
             });
         },
