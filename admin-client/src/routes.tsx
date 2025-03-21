@@ -18,13 +18,14 @@ import AnalyticsPage from '@/pages/analytics/analytics-page.tsx';
 import { authMiddleware } from './middleware/auth';
 import LogoutPage from '@/pages/logout/logout-page';
 import OnboardingWizard from '@/pages/onboarding/onboarding-wizard.tsx';
-import {DefaultCatchBoundary} from "@/components/DefaultCatchBoundary.tsx";
+import { DefaultCatchBoundary } from "@/components/DefaultCatchBoundary.tsx";
 
 export const OrderSearchSchema = z.object({
     page: z.coerce.number().catch(0),
     count: z.coerce.number().catch(10),
     filter: z.string().optional(),
     sort: z.string().optional(),
+    order_id: z.string().optional(),
 });
 
 export const ProductSearchSchema = z.object({
@@ -53,6 +54,15 @@ const ordersRoute = createRoute({
     beforeLoad: authMiddleware,
 
     // Use Zod Validator to validate the search parameters
+    validateSearch: zodValidator(OrderSearchSchema),
+});
+
+// Child route for order details
+const orderDetailsRoute = createRoute({
+    path: '$orderId',
+    component: OrdersPage,
+    getParentRoute: () => ordersRoute,
+    beforeLoad: authMiddleware,
     validateSearch: zodValidator(OrderSearchSchema),
 });
 
@@ -131,6 +141,7 @@ const onboardingRoute = createRoute({
 rootRoute.addChildren([
     DashboardRoute,
     ordersRoute,
+    orderDetailsRoute,
     productsRoute,
     addProductRoute,
     editProductRoute,
